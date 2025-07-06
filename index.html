@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descent: Cyber Wizardry</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+        <div id="ui-overlay">
+            <div id="character-panel" class="panel">
+                <h3>Party</h3>
+                <div id="party-display"></div>
+            </div>
+            <div id="game-panel" class="panel">
+                <div id="viewport" class="viewport"></div>
+                <div id="message-log" class="message-log"></div>
+            </div>
+            <div id="control-panel" class="panel">
+                <div id="movement-controls">
+                    <button id="move-forward">Forward</button>
+                    <button id="turn-left">Turn Left</button>
+                    <button id="turn-right">Turn Right</button>
+                    <button id="move-backward">Backward</button>
+                </div>
+                <div id="action-controls">
+                    <button id="cast-spell">Cast Spell</button>
+                    <button id="use-item">Use Item</button>
+                    <button id="rest">Rest</button>
+                    <button id="camp">Camp</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Engine -->
+    <script src="src/core/Engine.js"></script>
+    <script src="src/core/GameState.js"></script>
+    <script src="src/core/EventSystem.js"></script>
+    
+    <!-- Utilities -->
+    <script src="src/utils/Random.js"></script>
+    <script src="src/utils/Helpers.js"></script>
+    <script src="src/utils/Storage.js"></script>
+    <script src="src/utils/AttributeRoller.js"></script>
+    
+    <!-- Rendering -->
+    <script src="src/rendering/Renderer.js"></script>
+    <script src="src/rendering/UI.js"></script>
+    <script src="src/rendering/CharacterUI.js"></script>
+    <script src="src/rendering/Viewport3D.js"></script>
+    
+    <!-- Game Logic -->
+    <script src="src/game/Character.js"></script>
+    <script src="src/game/CharacterCreator.js"></script>
+    <script src="src/game/Race.js"></script>
+    <script src="src/game/Class.js"></script>
+    <script src="src/game/Party.js"></script>
+    <script src="src/game/Combat.js"></script>
+    <script src="src/game/Dungeon.js"></script>
+    <script src="src/game/Equipment.js"></script>
+    <script src="src/game/Spells.js"></script>
+    
+    <script>
+        // Initialize game when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const game = new Engine();
+            game.initialize();
+        });
+    </script>
+</body>
+</html>
