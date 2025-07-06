@@ -39,7 +39,7 @@ class Engine {
             
             // Initialize core systems
             this.eventSystem = new EventSystem();
-            this.gameState = new GameState();
+            this.gameState = new GameState(this.eventSystem);
             this.renderer = new Renderer(this.canvas, this.context);
             this.ui = new UI(this.eventSystem);
             
@@ -164,10 +164,14 @@ class Engine {
      */
     handleStateChange(newState) {
         console.log('Game state changed to:', newState);
+        console.log('Party size:', this.party ? this.party.size : 'no party');
+        
+        // Update body class for state-specific styling
+        document.body.className = `game-state-${newState}`;
         
         switch (newState) {
             case 'town':
-                this.ui.showTown();
+                this.ui.showTown(this.party);
                 this.ui.updatePartyDisplay(this.party);
                 break;
                 
@@ -441,8 +445,10 @@ class Engine {
     handleCharacterCreationCancelled() {
         console.log('Character creation cancelled');
         
-        // Always return to training grounds
-        this.gameState.setState('training-grounds');
+        // Return to training grounds only if not already there
+        if (!this.gameState.isState('training-grounds')) {
+            this.gameState.setState('training-grounds');
+        }
         this.ui.addMessage('Character creation cancelled.');
     }
     

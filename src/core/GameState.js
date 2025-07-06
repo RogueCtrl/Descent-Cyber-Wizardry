@@ -3,7 +3,8 @@
  * Handles game state transitions and state-specific logic
  */
 class GameState {
-    constructor() {
+    constructor(eventSystem = null) {
+        this.eventSystem = eventSystem;
         this.currentState = 'loading';
         this.previousState = null;
         this.stateData = {};
@@ -54,9 +55,8 @@ class GameState {
         console.log(`State changed: ${oldState} -> ${newState}`);
         
         // Emit state change event
-        if (typeof EventSystem !== 'undefined') {
-            const eventSystem = window.eventSystem || new EventSystem();
-            eventSystem.emit('game-state-change', newState, oldState, data);
+        if (this.eventSystem) {
+            this.eventSystem.emit('game-state-change', newState, oldState, data);
         }
         
         return true;
