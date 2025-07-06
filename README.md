@@ -1,8 +1,50 @@
 # Descent: Cyber Wizardry
 
-A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic. Explore wireframe dungeons, create unique characters, and engage in tactical turn-based combat.
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
-## Features 
+**Built with:** Cursor + Claude Code | **Models:** Claude 4.0 Sonnet
+
+A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic. Currently in early development with core systems and character creation implemented.
+
+## Current Development Status
+
+🚧 **Early Development** - Foundation systems are in place with character creation and UI systems implemented.
+
+### ✅ Implemented Features
+- **Character Creation System**: Complete with race and class selection
+- **Core Game Engine**: Event system, game state management, and rendering foundation
+- **UI Framework**: Modal dialogs, character interfaces, and game menus
+- **Cyberpunk Aesthetic**: Terminal-inspired interface with retro-modern styling
+
+### 🏗️ In Progress
+- Dungeon exploration and navigation
+- Combat system implementation
+- Party management mechanics
+- 3D wireframe rendering
+
+## Screenshots
+
+### Character Creation Flow
+<div align="center">
+
+**Race Selection**
+![Character Creation - Race Selection](assets/readme/cc-race.jpg)
+
+**Class Selection**
+![Character Creation - Class Selection](assets/readme/cc-class.jpg)
+
+**Character Confirmation**
+![Character Creation - Confirmation](assets/readme/cc-confirmation.jpg)
+
+**Town Menu**
+![Town Menu](assets/readme/town-menu.jpg)
+
+</div>
+
+## Planned Features
 
 - **Classic Dungeon Crawling**: First-person 3D wireframe exploration
 - **Rich Character System**:
@@ -21,8 +63,9 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 
 ## Development
 
-The project uses vanilla JavaScript and HTML5 Canvas for rendering, with a focus on modularity and maintainability. Key directories:
+The project uses vanilla JavaScript and HTML5 Canvas for rendering, with a focus on modularity and maintainability. 
 
+### Project Structure
 ```
 src/
   ├── core/      # Game engine and state management
@@ -31,10 +74,17 @@ src/
   └── utils/     # Helper functions and utilities
 ```
 
+### Key Systems
+- **Engine.js**: Core game loop and initialization
+- **GameState.js**: State management and persistence
+- **EventSystem.js**: Event handling and communication
+- **UI.js**: Interface components and modal systems
+- **CharacterCreator.js**: Character generation system
+
 ## Contributing
 
-Currently in active development. Issues and pull requests welcome.
+Currently in active development. The project is in early stages with core systems being established. Issues and pull requests welcome.
 
 ## License
 
-[License details to be added]
+MIT License - see [LICENSE](LICENSE) file for details.

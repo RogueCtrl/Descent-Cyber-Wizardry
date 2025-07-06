@@ -357,7 +357,7 @@ class UI {
                             </button>
                         </div>
                         
-                        <div class="location-card disabled full-width">
+                        <div class="location-card disabled">
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">🏕️</div>
                                 <div class="location-info">
