@@ -19,6 +19,9 @@ class UI {
         // Character UI
         this.characterUI = new CharacterUI(eventSystem);
         
+        // Town Modal
+        this.townModal = null;
+        
         this.initialize();
     }
     
@@ -281,111 +284,123 @@ class UI {
     }
     
     /**
-     * Show town center launch screen
+     * Show town center as modal overlay
      */
     showTown(party = null) {
         console.log('UI.showTown() called with party:', party);
         
-        // Create town center interface in the game panel viewport
-        const viewport = document.getElementById('viewport');
-        if (viewport) {
-            console.log('Viewport found, creating town center interface');
-            
-            // Use passed party or fallback to engine
-            const partyObj = party || (window.engine ? window.engine.party : null);
-            const partyInfo = this.getPartyStatusInfo(partyObj);
-            const hasActiveParty = partyObj && partyObj.size > 0;
-            const lastSave = this.getLastSaveInfo();
-            
-            console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
-            
-            viewport.innerHTML = `
-                <div class="town-center-interface">
-                    <div class="game-header">
-                        <h1 class="game-title">DESCENT: CYBER WIZARDRY</h1>
-                        <p class="game-subtitle">Welcome to the Mad Overlord's Domain</p>
-                    </div>
+        // Hide any existing town modal
+        this.hideTown();
+        
+        // Use passed party or fallback to engine
+        const partyObj = party || (window.engine ? window.engine.party : null);
+        const partyInfo = this.getPartyStatusInfo(partyObj);
+        const hasActiveParty = partyObj && partyObj.size > 0;
+        const lastSave = this.getLastSaveInfo();
+        
+        console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
+        
+        // Create modal content
+        const townContent = `
+            <div class="town-center-interface">
+                <div class="game-header">
+                    <h1 class="game-title">DESCENT: CYBER WIZARDRY</h1>
+                    <p class="game-subtitle">Welcome to the Mad Overlord's Domain</p>
+                </div>
+                
+                <div class="town-center-content">
+                    <h2 class="town-name">Town Center</h2>
+                    <p class="town-description">The bustling hub of Llylgamyn, where adventurers prepare for their descent into the Mad Overlord's maze.</p>
                     
-                    <div class="town-center-content">
-                        <h2 class="town-name">Town Center</h2>
-                        <p class="town-description">The bustling hub of Llylgamyn, where adventurers prepare for their descent into the Mad Overlord's maze.</p>
+                    <div class="town-locations-grid">
+                        <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
+                            <button id="training-grounds-btn" class="location-btn primary">
+                                <div class="location-icon">⚔️</div>
+                                <div class="location-info">
+                                    <h3>Training Grounds</h3>
+                                    <p>Create and manage your party of adventurers</p>
+                                    <span class="location-status">${hasActiveParty ? 'Manage Party' : 'Create Party'}</span>
+                                </div>
+                            </button>
+                        </div>
                         
-                        <div class="town-locations-grid">
-                            <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
-                                <button id="training-grounds-btn" class="location-btn primary">
-                                    <div class="location-icon">⚔️</div>
-                                    <div class="location-info">
-                                        <h3>Training Grounds</h3>
-                                        <p>Create and manage your party of adventurers</p>
-                                        <span class="location-status">${hasActiveParty ? 'Manage Party' : 'Create Party'}</span>
-                                    </div>
-                                </button>
-                            </div>
-                            
-                            <div class="location-card ${hasActiveParty ? 'enabled' : 'disabled'}">
-                                <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
-                                    <div class="location-icon">🏰</div>
-                                    <div class="location-info">
-                                        <h3>Dungeon Entrance</h3>
-                                        <p>Enter the Mad Overlord's treacherous maze</p>
-                                        <span class="location-status">${hasActiveParty ? 'Enter Dungeon' : 'Party Required'}</span>
-                                    </div>
-                                </button>
-                            </div>
-                            
-                            <div class="location-card disabled">
-                                <button class="location-btn disabled" disabled>
-                                    <div class="location-icon">🏪</div>
-                                    <div class="location-info">
-                                        <h3>Trading Post</h3>
-                                        <p>Buy and sell equipment and supplies</p>
-                                        <span class="location-status">Coming Soon</span>
-                                    </div>
-                                </button>
-                            </div>
-                            
-                            <div class="location-card disabled">
-                                <button class="location-btn disabled" disabled>
-                                    <div class="location-icon">⛪</div>
-                                    <div class="location-info">
-                                        <h3>Temple</h3>
-                                        <p>Heal wounds and resurrect fallen heroes</p>
-                                        <span class="location-status">Coming Soon</span>
-                                    </div>
-                                </button>
-                            </div>
-                            
-                            <div class="location-card disabled full-width">
-                                <button class="location-btn disabled" disabled>
-                                    <div class="location-icon">🏕️</div>
-                                    <div class="location-info">
-                                        <h3>Camp</h3>
-                                        <p>Rest and save your party's progress</p>
-                                        <span class="location-status">Coming Soon</span>
-                                    </div>
-                                </button>
-                            </div>
+                        <div class="location-card ${hasActiveParty ? 'enabled' : 'disabled'}">
+                            <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
+                                <div class="location-icon">🏰</div>
+                                <div class="location-info">
+                                    <h3>Dungeon Entrance</h3>
+                                    <p>Enter the Mad Overlord's treacherous maze</p>
+                                    <span class="location-status">${hasActiveParty ? 'Enter Dungeon' : 'Party Required'}</span>
+                                </div>
+                            </button>
                         </div>
-                    </div>
-                    
-                    <div class="game-status-bar">
-                        <div class="status-section">
-                            <span class="status-label">Party Status:</span>
-                            <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
+                        
+                        <div class="location-card disabled">
+                            <button class="location-btn disabled" disabled>
+                                <div class="location-icon">🏪</div>
+                                <div class="location-info">
+                                    <h3>Trading Post</h3>
+                                    <p>Buy and sell equipment and supplies</p>
+                                    <span class="location-status">Coming Soon</span>
+                                </div>
+                            </button>
                         </div>
-                        <div class="status-section">
-                            <span class="status-label">Last Save:</span>
-                            <span class="status-value">${lastSave}</span>
+                        
+                        <div class="location-card disabled">
+                            <button class="location-btn disabled" disabled>
+                                <div class="location-icon">⛪</div>
+                                <div class="location-info">
+                                    <h3>Temple</h3>
+                                    <p>Heal wounds and resurrect fallen heroes</p>
+                                    <span class="location-status">Coming Soon</span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div class="location-card disabled full-width">
+                            <button class="location-btn disabled" disabled>
+                                <div class="location-icon">🏕️</div>
+                                <div class="location-info">
+                                    <h3>Camp</h3>
+                                    <p>Rest and save your party's progress</p>
+                                    <span class="location-status">Coming Soon</span>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>
-            `;
-            
-            // Add event listeners
-            this.setupTownCenterEventListeners(viewport);
-        } else {
-            console.error('Viewport element not found!');
-        }
+                
+                <div class="game-status-bar">
+                    <div class="status-section">
+                        <span class="status-label">Party Status:</span>
+                        <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
+                    </div>
+                    <div class="status-section">
+                        <span class="status-label">Last Save:</span>
+                        <span class="status-value">${lastSave}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Create and show modal
+        this.townModal = new Modal({
+            className: 'modal town-modal',
+            closeOnEscape: true,
+            closeOnBackdrop: false
+        });
+        
+        // Set up close callback
+        this.townModal.setOnClose(() => {
+            this.hideTown();
+        });
+        
+        // Create and show modal
+        this.townModal.create(townContent);
+        this.townModal.show();
+        
+        // Add event listeners
+        this.setupTownCenterEventListeners(this.townModal.getBody());
     }
     
     /**
@@ -439,12 +454,12 @@ class UI {
     }
     
     /**
-     * Hide town interface
+     * Hide town modal
      */
     hideTown() {
-        const viewport = document.getElementById('viewport');
-        if (viewport) {
-            viewport.innerHTML = '';
+        if (this.townModal) {
+            this.townModal.hide();
+            this.townModal = null;
         }
     }
     

@@ -176,6 +176,7 @@ class Engine {
                 break;
                 
             case 'training-grounds':
+                this.ui.hideTown(); // Hide town modal if open
                 this.ui.showTrainingGrounds();
                 this.ui.updatePartyDisplay(this.party);
                 break;

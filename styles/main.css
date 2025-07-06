@@ -1180,6 +1180,41 @@ h3 {
     animation: pulse 2s ease-in-out infinite;
 }
 
+/* Town Modal */
+.town-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 28, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.town-modal .modal-content {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
+    border: 2px solid var(--border-accent);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glow-lg), var(--shadow-lg);
+    max-width: 1200px;
+    width: 95%;
+    max-height: 95%;
+    overflow: hidden;
+    animation: slideIn var(--transition-normal);
+}
+
+.town-modal .modal-body {
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
 /* Town Center Interface */
 .town-center-interface {
     display: flex;
