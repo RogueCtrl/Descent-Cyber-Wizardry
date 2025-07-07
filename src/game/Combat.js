@@ -482,39 +482,17 @@ class Combat {
      * Execute spell effect
      */
     executeSpellEffect(spell, caster, target) {
-        // Placeholder - would be expanded with actual spell effects
-        if (spell.effect === 'damage') {
-            const damage = Random.dice(spell.dice.count, spell.dice.sides);
-            if (target) {
-                target.currentHP = Math.max(0, target.currentHP - damage);
-                if (target.currentHP <= 0) {
-                    target.isAlive = false;
-                    target.status = 'dead';
-                }
-            }
-            return { message: `Deals ${damage} damage`, damage };
-        } else if (spell.effect === 'heal') {
-            const healing = Random.dice(spell.dice.count, spell.dice.sides);
-            if (target) {
-                target.currentHP = Math.min(target.maxHP, target.currentHP + healing);
-            }
-            return { message: `Heals ${healing} damage`, healing };
-        }
-        
-        return { message: 'Spell effect occurs' };
+        // Use the enhanced Spells class for full spell effects
+        const spellSystem = new Spells();
+        return spellSystem.executeSpellEffect(spell, caster, target);
     }
     
     /**
      * Remove memorized spell from caster
      */
     removeMemorizedSpell(caster, spell) {
-        if (!caster.memorizedSpells || !caster.memorizedSpells[spell.school]) return;
-        
-        const spells = caster.memorizedSpells[spell.school];
-        const index = spells.findIndex(s => s.name === spell.name);
-        if (index !== -1) {
-            spells.splice(index, 1);
-        }
+        const spellSystem = new Spells();
+        spellSystem.removeMemorizedSpell(caster, spell);
     }
     
     /**

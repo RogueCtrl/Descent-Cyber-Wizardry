@@ -115,6 +115,145 @@ class Spells {
                         duration: 'instantaneous',
                         components: ['V', 'S']
                     }
+                },
+                4: {
+                    'Dimension Door': {
+                        name: 'Dimension Door',
+                        school: 'arcane',
+                        level: 4,
+                        description: 'Short-range teleportation',
+                        effect: 'utility',
+                        range: 'long',
+                        duration: 'instantaneous',
+                        components: ['V']
+                    },
+                    'Ice Storm': {
+                        name: 'Ice Storm',
+                        school: 'arcane',
+                        level: 4,
+                        description: 'Hail of ice and cold',
+                        effect: 'damage',
+                        dice: { count: 4, sides: 6 },
+                        range: 'long',
+                        duration: 'instantaneous',
+                        areaEffect: true,
+                        components: ['V', 'S', 'M']
+                    },
+                    'Confusion': {
+                        name: 'Confusion',
+                        school: 'arcane',
+                        level: 4,
+                        description: 'Causes targets to act randomly',
+                        effect: 'control',
+                        range: 'medium',
+                        duration: 'combat',
+                        areaEffect: true,
+                        components: ['V', 'S', 'M']
+                    }
+                },
+                5: {
+                    'Teleport': {
+                        name: 'Teleport',
+                        school: 'arcane',
+                        level: 5,
+                        description: 'Instantly transport party',
+                        effect: 'utility',
+                        range: 'unlimited',
+                        duration: 'instantaneous',
+                        components: ['V']
+                    },
+                    'Cone of Cold': {
+                        name: 'Cone of Cold',
+                        school: 'arcane',
+                        level: 5,
+                        description: 'Blast of freezing air',
+                        effect: 'damage',
+                        dice: { count: 5, sides: 6 },
+                        range: 'medium',
+                        duration: 'instantaneous',
+                        areaEffect: true,
+                        components: ['V', 'S', 'M']
+                    },
+                    'Feeblemind': {
+                        name: 'Feeblemind',
+                        school: 'arcane',
+                        level: 5,
+                        description: 'Destroys target\'s intellect',
+                        effect: 'control',
+                        range: 'medium',
+                        duration: 'permanent',
+                        components: ['V', 'S']
+                    }
+                },
+                6: {
+                    'Death Spell': {
+                        name: 'Death Spell',
+                        school: 'arcane',
+                        level: 6,
+                        description: 'Kills creatures with low hit points',
+                        effect: 'damage',
+                        special: 'death',
+                        range: 'medium',
+                        duration: 'instantaneous',
+                        areaEffect: true,
+                        components: ['V', 'S']
+                    },
+                    'Disintegrate': {
+                        name: 'Disintegrate',
+                        school: 'arcane',
+                        level: 6,
+                        description: 'Reduces target to dust',
+                        effect: 'damage',
+                        dice: { count: 6, sides: 6, bonus: 40 },
+                        range: 'medium',
+                        duration: 'instantaneous',
+                        components: ['V', 'S', 'M']
+                    },
+                    'Mass Invisibility': {
+                        name: 'Mass Invisibility',
+                        school: 'arcane',
+                        level: 6,
+                        description: 'Makes entire party invisible',
+                        effect: 'concealment',
+                        range: 'touch',
+                        duration: 'long',
+                        areaEffect: true,
+                        components: ['V', 'S', 'M']
+                    }
+                },
+                7: {
+                    'Meteor Swarm': {
+                        name: 'Meteor Swarm',
+                        school: 'arcane',
+                        level: 7,
+                        description: 'Devastating rain of meteors',
+                        effect: 'damage',
+                        dice: { count: 8, sides: 6 },
+                        range: 'long',
+                        duration: 'instantaneous',
+                        areaEffect: true,
+                        components: ['V', 'S']
+                    },
+                    'Time Stop': {
+                        name: 'Time Stop',
+                        school: 'arcane',
+                        level: 7,
+                        description: 'Briefly stops time',
+                        effect: 'utility',
+                        range: 'self',
+                        duration: 'special',
+                        components: ['V']
+                    },
+                    'Wish': {
+                        name: 'Wish',
+                        school: 'arcane',
+                        level: 7,
+                        description: 'Alters reality itself',
+                        effect: 'utility',
+                        range: 'unlimited',
+                        duration: 'permanent',
+                        components: ['V']
+                    }
                 }
             },
             // Divine Spells (Priest School)
@@ -219,6 +358,142 @@ class Spells {
                         duration: 'combat',
                         areaEffect: true,
                         components: ['V', 'S', 'F']
+                    }
+                },
+                4: {
+                    'Neutralize Poison': {
+                        name: 'Neutralize Poison',
+                        school: 'divine',
+                        level: 4,
+                        description: 'Cures poison and prevents death',
+                        effect: 'heal',
+                        range: 'touch',
+                        duration: 'instantaneous',
+                        components: ['V', 'S']
+                    },
+                    'Protection from Evil 10\' Radius': {
+                        name: 'Protection from Evil 10\' Radius',
+                        school: 'divine',
+                        level: 4,
+                        description: 'Wards entire party from evil',
+                        effect: 'protection',
+                        acBonus: 2,
+                        range: 'touch',
+                        duration: 'long',
+                        areaEffect: true,
+                        components: ['V', 'S', 'M']
+                    },
+                    'Freedom of Movement': {
+                        name: 'Freedom of Movement',
+                        school: 'divine',
+                        level: 4,
+                        description: 'Protects from paralysis and binding',
+                        effect: 'protection',
+                        range: 'touch',
+                        duration: 'long',
+                        components: ['V', 'S', 'M']
+                    }
+                },
+                5: {
+                    'Flame Strike': {
+                        name: 'Flame Strike',
+                        school: 'divine',
+                        level: 5,
+                        description: 'Column of divine fire',
+                        effect: 'damage',
+                        dice: { count: 6, sides: 8 },
+                        range: 'medium',
+                        duration: 'instantaneous',
+                        components: ['V', 'S', 'F']
+                    },
+                    'Raise Dead': {
+                        name: 'Raise Dead',
+                        school: 'divine',
+                        level: 5,
+                        description: 'Restores life to the dead',
+                        effect: 'resurrection',
+                        range: 'touch',
+                        duration: 'instantaneous',
+                        components: ['V', 'S', 'M']
+                    },
+                    'True Seeing': {
+                        name: 'True Seeing',
+                        school: 'divine',
+                        level: 5,
+                        description: 'Reveals all illusions and hidden things',
+                        effect: 'utility',
+                        range: 'touch',
+                        duration: 'long',
+                        components: ['V', 'S', 'M']
+                    }
+                },
+                6: {
+                    'Heal': {
+                        name: 'Heal',
+                        school: 'divine',
+                        level: 6,
+                        description: 'Restores all hit points and removes ailments',
+                        effect: 'heal',
+                        special: 'full_heal',
+                        range: 'touch',
+                        duration: 'instantaneous',
+                        components: ['V', 'S']
+                    },
+                    'Harm': {
+                        name: 'Harm',
+                        school: 'divine',
+                        level: 6,
+                        description: 'Reduces target to 1 hit point',
+                        effect: 'damage',
+                        special: 'near_death',
+                        range: 'touch',
+                        duration: 'instantaneous',
+                        components: ['V', 'S']
+                    },
+                    'Word of Recall': {
+                        name: 'Word of Recall',
+                        school: 'divine',
+                        level: 6,
+                        description: 'Instantly transports party to safety',
+                        effect: 'utility',
+                        range: 'unlimited',
+                        duration: 'instantaneous',
+                        components: ['V']
+                    }
+                },
+                7: {
+                    'Resurrection': {
+                        name: 'Resurrection',
+                        school: 'divine',
+                        level: 7,
+                        description: 'Restores life without aging penalty',
+                        effect: 'resurrection',
+                        special: 'perfect',
+                        range: 'touch',
+                        duration: 'instantaneous',
+                        components: ['V', 'S', 'M']
+                    },
+                    'Earthquake': {
+                        name: 'Earthquake',
+                        school: 'divine',
+                        level: 7,
+                        description: 'Devastating earth tremor',
+                        effect: 'damage',
+                        dice: { count: 8, sides: 6 },
+                        range: 'long',
+                        duration: 'instantaneous',
+                        areaEffect: true,
+                        components: ['V', 'S', 'F']
+                    },
+                    'Gate': {
+                        name: 'Gate',
+                        school: 'divine',
+                        level: 7,
+                        description: 'Opens portal to other planes',
+                        effect: 'utility',
+                        range: 'medium',
+                        duration: 'long',
+                        components: ['V', 'S', 'M']
                     }
                 }
             }
@@ -413,6 +688,10 @@ class Spells {
                 return this.executeUtilitySpell(spell, caster, target);
             case 'dispel':
                 return this.executeDispelSpell(spell, caster, target);
+            case 'concealment':
+                return this.executeConcealmentSpell(spell, caster, target);
+            case 'resurrection':
+                return this.executeResurrectionSpell(spell, caster, target);
             default:
                 return { message: 'Spell effect unknown' };
         }
@@ -434,6 +713,31 @@ class Spells {
         // Apply caster level bonus for some spells
         if (spell.name === 'Magic Missile') {
             damage += Math.floor(caster.level / 2);
+        }
+        
+        // Special spell effects
+        if (spell.special === 'death') {
+            // Death spell affects creatures with low HP
+            const hpThreshold = caster.level * 4;
+            if (target.currentHP <= hpThreshold) {
+                target.currentHP = 0;
+                target.isAlive = false;
+                target.status = 'dead';
+                return { message: `${target.name || 'Target'} is slain by death magic!` };
+            } else {
+                return { message: `${target.name || 'Target'} resists the death spell` };
+            }
+        }
+        
+        if (spell.special === 'near_death') {
+            // Harm spell (divine equivalent of death)
+            const saveChance = this.calculateSaveChance(target, spell);
+            if (!Random.percent(saveChance)) {
+                target.currentHP = 1;
+                return { message: `${target.name || 'Target'} is reduced to near death!` };
+            } else {
+                damage = Math.floor(damage / 2);
+            }
         }
         
         target.currentHP = Math.max(0, target.currentHP - damage);
@@ -458,6 +762,32 @@ class Spells {
         }
         
         let healing = 0;
+        
+        // Special healing effects
+        if (spell.special === 'full_heal') {
+            // Heal spell restores all HP
+            const oldHP = target.currentHP;
+            target.currentHP = target.maxHP;
+            
+            // Remove all negative effects
+            if (target.temporaryEffects) {
+                target.temporaryEffects = target.temporaryEffects.filter(effect => 
+                    effect.type === 'buff' || effect.type === 'protection'
+                );
+            }
+            
+            // Cure diseases and poison
+            if (target.status && target.status !== 'OK') {
+                target.status = 'OK';
+            }
+            
+            const actualHealing = target.currentHP - oldHP;
+            return {
+                healing: actualHealing,
+                message: `${target.name || 'Target'} is fully healed and cleansed!`
+            };
+        }
+        
         if (spell.dice) {
             healing = Random.dice(spell.dice.count, spell.dice.sides) + (spell.dice.bonus || 0);
         }
@@ -631,6 +961,92 @@ class Spells {
         
         character.memorizedSpells = memorized;
         return memorized;
+    }
+    
+    /**
+     * Execute concealment spell (invisibility, etc.)
+     */
+    executeConcealmentSpell(spell, caster, target) {
+        const targets = spell.areaEffect ? [caster] : [target || caster]; // For mass invisibility
+        
+        targets.forEach(t => {
+            if (t && t.temporaryEffects) {
+                t.addTemporaryEffect({
+                    type: 'concealment',
+                    source: spell.name,
+                    effect: 'invisible',
+                    duration: spell.duration
+                });
+            }
+        });
+        
+        return {
+            message: `${targets.length} target(s) become invisible`
+        };
+    }
+    
+    /**
+     * Execute resurrection spell
+     */
+    executeResurrectionSpell(spell, caster, target) {
+        if (!target) {
+            return { message: 'No target for resurrection spell' };
+        }
+        
+        if (target.isAlive) {
+            return { message: 'Target is already alive' };
+        }
+        
+        // Check if target can be resurrected
+        if (target.status === 'lost') {
+            return { message: 'Target is lost forever and cannot be resurrected' };
+        }
+        
+        // Calculate resurrection chance
+        const baseChance = spell.special === 'perfect' ? 95 : 75; // Perfect resurrection has higher chance
+        const levelPenalty = Math.max(0, (target.level - caster.level) * 5);
+        const vitalityBonus = (target.attributes?.vitality || 10) - 10;
+        
+        const successChance = Math.min(95, Math.max(5, baseChance - levelPenalty + vitalityBonus));
+        
+        if (Random.percent(successChance)) {
+            // Successful resurrection
+            target.isAlive = true;
+            target.status = 'OK';
+            target.currentHP = 1;
+            
+            // Aging effect (unless perfect resurrection)
+            let ageIncrease = 0;
+            if (spell.special !== 'perfect') {
+                ageIncrease = Random.integer(1, 3);
+                if (target.ageCharacter) {
+                    target.ageCharacter(ageIncrease);
+                }
+            }
+            
+            return {
+                success: true,
+                message: `${target.name || 'Target'} is restored to life!`,
+                ageIncrease: ageIncrease
+            };
+        } else {
+            // Failed resurrection - character gets worse
+            if (target.status === 'dead') {
+                target.status = 'ashes';
+                return {
+                    success: false,
+                    message: `Resurrection failed! ${target.name || 'Target'} crumbles to ashes!`
+                };
+            } else if (target.status === 'ashes') {
+                target.status = 'lost';
+                return {
+                    success: false,
+                    message: `Resurrection failed! ${target.name || 'Target'} is lost forever!`
+                };
+            }
+        }
+        
+        return { success: false, message: 'Resurrection failed' };
     }
     
     /**
