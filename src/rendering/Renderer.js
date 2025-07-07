@@ -15,6 +15,9 @@ class Renderer {
         
         this.font = '12px "Courier New", monospace';
         this.lineWidth = 1;
+        
+        // Initialize 3D viewport for dungeon rendering
+        this.viewport3D = new Viewport3D(canvas, context);
     }
     
     /**
@@ -26,16 +29,28 @@ class Renderer {
     }
     
     /**
-     * Render the dungeon view
+     * Render the dungeon view using advanced 3D viewport
      */
     renderDungeon(dungeon, party) {
+        if (dungeon && dungeon.getViewingInfo) {
+            // Use the enhanced 3D viewport for authentic Wizardry rendering
+            this.viewport3D.render(dungeon, party);
+        } else {
+            // Fallback to basic rendering if dungeon system isn't ready
+            this.renderBasicDungeon();
+        }
+    }
+    
+    /**
+     * Render basic fallback dungeon view
+     */
+    renderBasicDungeon() {
         this.clear();
         
-        // For now, render a placeholder 3D wireframe view
+        // Basic 3D corridor effect as fallback
         this.ctx.strokeStyle = this.wireframeColor;
         this.ctx.lineWidth = this.lineWidth;
         
-        // Draw a simple 3D corridor effect
         const centerX = this.width / 2;
         const centerY = this.height / 2;
         const depth = 200;
@@ -72,9 +87,9 @@ class Renderer {
             depth/2
         );
         
-        // Add some atmospheric text
-        this.renderText('You are in a dark corridor...', 10, 20);
-        this.renderText('Press arrow keys to move', 10, 40);
+        // Status text
+        this.renderText('Dungeon system initializing...', 10, 20);
+        this.renderText('Basic rendering mode', 10, 40);
     }
     
     /**
@@ -155,13 +170,18 @@ class Renderer {
     }
     
     /**
-     * Set canvas size
+     * Set canvas size (also updates 3D viewport)
      */
     setSize(width, height) {
         this.canvas.width = width;
         this.canvas.height = height;
         this.width = width;
         this.height = height;
+        
+        // Update 3D viewport size
+        if (this.viewport3D) {
+            this.viewport3D.setSize(width, height);
+        }
     }
     
     /**

@@ -43,12 +43,13 @@ class Engine {
             this.renderer = new Renderer(this.canvas, this.context);
             this.ui = new UI(this.eventSystem);
             
-            // Initialize game objects
-            this.party = new Party();
-            this.dungeon = new Dungeon();
-            
-            // Set up event listeners
-            this.setupEventListeners();
+                    // Initialize game objects
+        this.party = new Party();
+        this.dungeon = new Dungeon();
+        this.combatInterface = new CombatInterface(this.eventSystem);
+        
+        // Set up event listeners
+        this.setupEventListeners();
             
             // Load initial game state
             await this.loadInitialState();
@@ -132,6 +133,32 @@ class Engine {
         
         this.eventSystem.on('training-action', (action) => {
             this.handleTrainingAction(action);
+        });
+        
+        // Dungeon exploration events
+        this.eventSystem.on('encounter-triggered', (data) => {
+            this.handleEncounterTriggered(data);
+        });
+        
+        this.eventSystem.on('trap-triggered', (data) => {
+            this.handleTrapTriggered(data);
+        });
+        
+        this.eventSystem.on('special-square-found', (data) => {
+            this.handleSpecialSquareFound(data);
+        });
+        
+        // Combat events
+        this.eventSystem.on('combat-start', (data) => {
+            this.handleCombatStart(data);
+        });
+        
+        this.eventSystem.on('combat-end', (data) => {
+            this.handleCombatEnd(data);
+        });
+        
+        this.eventSystem.on('combat-flee-success', () => {
+            this.handleCombatFleeSuccess();
         });
     }
     
@@ -393,6 +420,23 @@ class Engine {
                 this.ui.addMessage(`You turn right. Now facing ${this.dungeon.getDirectionName()}.`);
                 break;
                 
+            case 'search':
+                this.handleSearchAction();
+                break;
+                
+            case 'action':
+            case 'interact':
+                this.handleInteractAction();
+                break;
+                
+            case 'stairs-up':
+                this.handleStairsAction('up');
+                break;
+                
+            case 'stairs-down':
+                this.handleStairsAction('down');
+                break;
+                
             case 'cast-spell':
                 this.ui.addMessage('Spell casting will be implemented in Phase 5.');
                 break;
@@ -412,6 +456,225 @@ class Engine {
             default:
                 console.warn('Unknown player action:', action);
         }
+    }
+    
+    /**
+     * Handle search action in dungeon
+     */
+    handleSearchAction() {
+        if (!this.gameState.isState('playing')) {
+            return;
+        }
+        
+        this.ui.addMessage('You search the area carefully...');
+        
+        const discoveries = this.dungeon.searchArea();
+        
+        if (discoveries.length > 0) {
+            discoveries.forEach(discovery => {
+                this.ui.addMessage(discovery.message);
+            });
+        } else {
+            this.ui.addMessage('You find nothing of interest.');
+        }
+    }
+    
+    /**
+     * Handle interaction with special squares
+     */
+    handleInteractAction() {
+        if (!this.gameState.isState('playing')) {
+            return;
+        }
+        
+        // Check for special square at current position
+        const special = this.dungeon.currentFloorData.specialSquares.find(spec =>
+            spec.x === this.dungeon.playerX && spec.y === this.dungeon.playerY
+        );
+        
+        if (!special) {
+            this.ui.addMessage('There is nothing to interact with here.');
+            return;
+        }
+        
+        if (special.used) {
+            this.ui.addMessage('This has already been used.');
+            return;
+        }
+        
+        // Handle special square interaction
+        switch (special.type) {
+            case 'healing_fountain':
+                this.handleHealingFountain(special);
+                break;
+                
+            case 'stamina_fountain':
+                this.handleStaminaFountain(special);
+                break;
+                
+            case 'poison_fountain':
+                this.handlePoisonFountain(special);
+                break;
+                
+            case 'teleporter':
+                this.handleTeleporter(special);
+                break;
+                
+            case 'treasure_chest':
+                this.handleTreasureChest(special);
+                break;
+                
+            default:
+                this.ui.addMessage('You cannot interact with this.');
+        }
+    }
+    
+    /**
+     * Handle stairs movement
+     */
+    handleStairsAction(direction) {
+        if (!this.gameState.isState('playing')) {
+            return;
+        }
+        
+        if (this.dungeon.changeFloor(direction)) {
+            const floorNumber = this.dungeon.currentFloor;
+            this.ui.addMessage(`You ${direction === 'up' ? 'ascend' : 'descend'} to floor ${floorNumber}.`);
+            
+            // Save game when changing floors
+            this.saveGame();
+        } else {
+            this.ui.addMessage(`There are no stairs ${direction} here.`);
+        }
+    }
+    
+    /**
+     * Handle healing fountain interaction
+     */
+    handleHealingFountain(special) {
+        this.ui.addMessage('You drink from the crystal clear waters...');
+        
+        let totalHealed = 0;
+        this.party.members.forEach(member => {
+            if (member.currentHP < member.maxHP) {
+                const healAmount = Random.integer(1, 8);
+                const actualHeal = Math.min(healAmount, member.maxHP - member.currentHP);
+                member.currentHP += actualHeal;
+                totalHealed += actualHeal;
+                
+                if (member.status === 'unconscious' && member.currentHP > 0) {
+                    member.status = 'ok';
+                    this.ui.addMessage(`${member.name} regains consciousness!`);
+                }
+            }
+        });
+        
+        if (totalHealed > 0) {
+            this.ui.addMessage(`The party is healed for ${totalHealed} hit points!`);
+            this.eventSystem.emit('party-update');
+        } else {
+            this.ui.addMessage('The water has no effect on your party.');
+        }
+        
+        special.used = true;
+    }
+    
+    /**
+     * Handle stamina fountain interaction
+     */
+    handleStaminaFountain(special) {
+        this.ui.addMessage('You drink from the energizing waters...');
+        
+        // TODO: Restore spell points when spell system is fully integrated
+        this.ui.addMessage('You feel refreshed! (Spell points would be restored)');
+        
+        special.used = true;
+    }
+    
+    /**
+     * Handle poison fountain interaction
+     */
+    handlePoisonFountain(special) {
+        this.ui.addMessage('You cautiously drink from the tainted waters...');
+        
+        if (Random.chance(0.3)) {
+            // Lucky - actually beneficial
+            const member = Random.arrayElement(this.party.members);
+            member.currentHP = Math.min(member.maxHP, member.currentHP + Random.integer(2, 12));
+            this.ui.addMessage(`Surprisingly, ${member.name} feels invigorated!`);
+        } else {
+            // Poisoned
+            const member = Random.arrayElement(this.party.members);
+            const damage = Random.integer(1, 6);
+            member.currentHP = Math.max(0, member.currentHP - damage);
+            this.ui.addMessage(`${member.name} is poisoned and takes ${damage} damage!`);
+            
+            if (member.currentHP === 0) {
+                member.status = 'unconscious';
+                this.ui.addMessage(`${member.name} collapses from the poison!`);
+            }
+        }
+        
+        this.eventSystem.emit('party-update');
+        special.used = true;
+    }
+    
+    /**
+     * Handle teleporter interaction
+     */
+    handleTeleporter(special) {
+        this.ui.addMessage('You step onto the magical portal...');
+        
+        // Teleport to random location on current floor
+        const newX = Random.integer(1, 19);
+        const newY = Random.integer(1, 19);
+        this.dungeon.playerX = newX;
+        this.dungeon.playerY = newY;
+        
+        this.ui.addMessage('Reality blurs around you as you are teleported elsewhere!');
+        
+        // Teleporters don't get used up - they're permanent
+    }
+    
+    /**
+     * Handle treasure chest interaction
+     */
+    handleTreasureChest(special) {
+        this.ui.addMessage('You attempt to open the treasure chest...');
+        
+        // Check for chest trap
+        if (Random.chance(0.4)) {
+            // Trapped!
+            const damage = Random.integer(1, 6);
+            const target = Random.arrayElement(this.party.members);
+            target.currentHP = Math.max(0, target.currentHP - damage);
+            
+            this.ui.addMessage(`The chest is trapped! ${target.name} takes ${damage} damage from a poison needle.`);
+            
+            if (target.currentHP === 0) {
+                target.status = 'unconscious';
+                this.ui.addMessage(`${target.name} collapses from the trap!`);
+            }
+            
+            this.eventSystem.emit('party-update');
+        }
+        
+        // Generate treasure regardless of trap
+        if (Random.chance(0.8)) {
+            const goldFound = Random.integer(10, 100) * this.dungeon.currentFloor;
+            this.ui.addMessage(`You find ${goldFound} gold pieces!`);
+            // TODO: Add gold to party inventory
+            
+            // Small chance of special item
+            if (Random.chance(0.1)) {
+                this.ui.addMessage('You also find a magical item!');
+                // TODO: Generate and add magical item
+            }
+        } else {
+            this.ui.addMessage('The chest is empty...');
+        }
+        
+        special.used = true;
     }
     
     /**
@@ -546,6 +809,207 @@ class Engine {
     }
     
     /**
+     * Handle encounter triggered in dungeon
+     */
+    handleEncounterTriggered(data) {
+        console.log('Encounter triggered:', data);
+        
+        const { encounter, x, y, floor } = data;
+        
+        // Generate combat encounter based on dungeon encounter
+        const encounterType = encounter.type === 'boss' ? 'boss' : 'normal';
+        const dungeonLevel = floor;
+        
+        this.ui.addMessage(`You are attacked by monsters!`);
+        
+        // Start combat through combat interface
+        this.combatInterface.initiateCombat(this.party, encounterType, dungeonLevel);
+        
+        // Change game state to combat
+        this.gameState.setState('combat');
+    }
+    
+    /**
+     * Handle trap triggered in dungeon
+     */
+    handleTrapTriggered(data) {
+        console.log('Trap triggered:', data);
+        
+        const { type, x, y, floor } = data;
+        let damage = 0;
+        let message = '';
+        
+        switch (type) {
+            case 'pit_trap':
+                damage = Random.integer(1, 6);
+                message = `The floor gives way! You fall into a pit trap for ${damage} damage.`;
+                break;
+                
+            case 'poison_dart':
+                damage = Random.integer(1, 4);
+                message = `A dart shoots from the wall, striking for ${damage} poison damage!`;
+                // TODO: Apply poison effect
+                break;
+                
+            case 'teleport_trap':
+                // Teleport party to random location on same floor
+                const newX = Random.integer(1, 19);
+                const newY = Random.integer(1, 19);
+                this.dungeon.playerX = newX;
+                this.dungeon.playerY = newY;
+                message = `You are suddenly teleported to another part of the dungeon!`;
+                break;
+                
+            case 'alarm_trap':
+                message = `An alarm sounds! Monsters are alerted to your presence.`;
+                // Increase encounter chance for next few moves
+                // TODO: Implement alarm effect
+                break;
+                
+            default:
+                message = `You triggered an unknown trap!`;
+        }
+        
+        this.ui.addMessage(message);
+        
+        // Apply damage to random party member if any
+        if (damage > 0) {
+            const livingMembers = this.party.members.filter(m => m.currentHP > 0);
+            if (livingMembers.length > 0) {
+                const target = Random.arrayElement(livingMembers);
+                target.currentHP = Math.max(0, target.currentHP - damage);
+                
+                this.ui.addMessage(`${target.name} takes ${damage} damage from the trap.`);
+                
+                if (target.currentHP === 0) {
+                    target.status = 'unconscious';
+                    this.ui.addMessage(`${target.name} is knocked unconscious!`);
+                }
+                
+                this.eventSystem.emit('party-update');
+            }
+        }
+    }
+    
+    /**
+     * Handle special square found in dungeon
+     */
+    handleSpecialSquareFound(data) {
+        console.log('Special square found:', data);
+        
+        const { special, x, y, floor } = data;
+        
+        // Display special square message
+        this.ui.addMessage(special.message);
+        
+        switch (special.type) {
+            case 'healing_fountain':
+                this.ui.addMessage('Press SPACE to drink from the healing fountain.');
+                // TODO: Implement fountain interaction
+                break;
+                
+            case 'stamina_fountain':
+                this.ui.addMessage('Press SPACE to drink from the energizing fountain.');
+                // TODO: Implement stamina restoration
+                break;
+                
+            case 'poison_fountain':
+                this.ui.addMessage('This water looks dangerous. Proceed with caution.');
+                // TODO: Implement poison fountain risk/reward
+                break;
+                
+            case 'teleporter':
+                this.ui.addMessage('Press SPACE to activate the teleporter.');
+                // TODO: Implement teleporter mechanics
+                break;
+                
+            case 'message_square':
+                // Generate a random message from ancient carved text
+                const messages = [
+                    'Here lies the bones of forty thieves...',
+                    'Beware the wrath of the Mad Overlord!',
+                    'Only the worthy may claim the sacred amulet.',
+                    'Many have entered, few have returned.',
+                    'The deeper you go, the greater the danger.',
+                    'Trust not the fountains of the lower levels.'
+                ];
+                this.ui.addMessage(`The text reads: "${Random.arrayElement(messages)}"`);
+                break;
+                
+            case 'treasure_chest':
+                this.ui.addMessage('A treasure chest! Press SPACE to attempt to open it.');
+                // TODO: Implement chest mechanics with trap/treasure chances
+                break;
+                
+            default:
+                this.ui.addMessage('You find something unusual here.');
+        }
+    }
+    
+    /**
+     * Handle combat start
+     */
+    handleCombatStart(data) {
+        console.log('Combat started:', data);
+        this.ui.addMessage('Combat begins!');
+        
+        // Update UI to show combat interface
+        this.ui.showCombatInterface();
+    }
+    
+    /**
+     * Handle combat end
+     */
+    handleCombatEnd(data) {
+        console.log('Combat ended:', data);
+        
+        const { victory, fled, casualties } = data;
+        
+        if (victory) {
+            this.ui.addMessage('Victory! The monsters are defeated.');
+            
+            if (data.experience) {
+                this.ui.addMessage(`Your party gains ${data.experience} experience!`);
+                // TODO: Distribute experience to party members
+            }
+            
+            if (data.treasure) {
+                this.ui.addMessage(`You found treasure: ${data.treasure.join(', ')}`);
+                // TODO: Add treasure to party inventory
+            }
+        } else if (fled) {
+            this.ui.addMessage('You successfully fled from combat.');
+        } else {
+            this.ui.addMessage('Your party has been defeated...');
+            // TODO: Handle party defeat (return to town, lost members, etc.)
+        }
+        
+        if (casualties && casualties.length > 0) {
+            casualties.forEach(casualty => {
+                this.ui.addMessage(`${casualty.name} has fallen in battle.`);
+                casualty.status = 'dead';
+            });
+        }
+        
+        // Return to dungeon exploration
+        this.gameState.setState('playing');
+        this.ui.hideCombatInterface();
+        this.eventSystem.emit('party-update');
+    }
+    
+    /**
+     * Handle successful flee from combat
+     */
+    handleCombatFleeSuccess() {
+        console.log('Successfully fled from combat');
+        this.ui.addMessage('You successfully escape from the monsters!');
+        
+        // Return to dungeon exploration
+        this.gameState.setState('playing');
+        this.ui.hideCombatInterface();
+    }
+    
+    /**
      * Get current game statistics
      */
     getStats() {
@@ -553,7 +1017,9 @@ class Engine {
             isRunning: this.isRunning,
             currentState: this.gameState ? this.gameState.currentState : 'uninitialized',
             partySize: this.party ? this.party.size : 0,
-            frameRate: Math.round(1000 / this.frameInterval)
+            frameRate: Math.round(1000 / this.frameInterval),
+            dungeonFloor: this.dungeon ? this.dungeon.currentFloor : 0,
+            combatActive: this.combatInterface ? this.combatInterface.isInCombat() : false
         };
     }
 }
