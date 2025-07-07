@@ -1215,6 +1215,150 @@ h3 {
     overflow: hidden;
 }
 
+/* Training Grounds Modal */
+.training-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 28, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.training-modal .modal-content {
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
+    border: 2px solid var(--border-accent);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glow-lg), var(--shadow-lg);
+    max-width: 800px;
+    width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    animation: slideIn var(--transition-normal);
+}
+
+.training-modal .modal-body {
+    padding: var(--space-8);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.training-grounds-interface {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: var(--text-primary);
+}
+
+.training-header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-6);
+    border-bottom: 2px solid var(--border-accent);
+}
+
+.training-title {
+    font-size: var(--font-size-3xl);
+    color: var(--accent-primary);
+    margin-bottom: var(--space-4);
+    text-shadow: 0 0 20px var(--glow-primary);
+    animation: glow 3s ease-in-out infinite;
+    font-weight: 700;
+}
+
+.training-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--accent-secondary);
+    text-shadow: 0 0 10px var(--glow-secondary);
+    margin: 0;
+}
+
+.training-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.training-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.action-btn.large {
+    display: flex;
+    align-items: center;
+    padding: var(--space-5);
+    min-height: 80px;
+    text-align: left;
+}
+
+.btn-icon {
+    font-size: 2rem;
+    margin-right: var(--space-4);
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.btn-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    text-shadow: 0 0 5px currentColor;
+}
+
+.btn-desc {
+    font-size: var(--font-size-sm);
+    opacity: 0.8;
+}
+
+.party-status-section {
+    padding: var(--space-6);
+    background: linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.party-status-section h3 {
+    color: var(--accent-primary);
+    margin-bottom: var(--space-4);
+    text-shadow: 0 0 10px var(--glow-primary);
+}
+
+.status-ready {
+    color: var(--success);
+    font-weight: 600;
+    margin: 0;
+}
+
+.status-empty {
+    color: var(--warning);
+    font-weight: 600;
+    margin: 0;
+}
+
+.training-footer {
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: center;
+}
+
 /* Town Center Interface */
 .town-center-interface {
     display: flex;

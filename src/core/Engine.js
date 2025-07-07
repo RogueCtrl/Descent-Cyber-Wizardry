@@ -476,11 +476,13 @@ class Engine {
                 break;
                 
             case 'dungeon':
-                if (this.party.size > 0) {
+                if (this.validateDungeonEntry()) {
+                    this.ui.hideTown(); // Ensure town modal is closed
                     this.gameState.setState('playing');
                     this.ui.addMessage('You enter the dungeon...');
                 } else {
-                    this.ui.addMessage('You need at least one character to enter the dungeon!');
+                    // Validation failed - stay in town
+                    this.ui.addMessage('Cannot enter dungeon. Check party requirements.');
                 }
                 break;
                 
@@ -511,6 +513,36 @@ class Engine {
             default:
                 this.ui.addMessage(`Training action ${action} not yet implemented.`);
         }
+    }
+    
+    /**
+     * Validate if party can enter the dungeon
+     */
+    validateDungeonEntry() {
+        // Check if party exists and has members
+        if (!this.party || this.party.size === 0) {
+            this.ui.addMessage('You need at least one character to enter the dungeon!');
+            return false;
+        }
+        
+        // Check if party has any living members
+        const livingMembers = this.party.members.filter(member => 
+            member.status !== 'dead' && member.status !== 'lost'
+        );
+        
+        if (livingMembers.length === 0) {
+            this.ui.addMessage('Your party has no living members! Visit the Temple for resurrections.');
+            return false;
+        }
+        
+        // Check if we're in a valid state to enter dungeon
+        if (!this.gameState.isState('town')) {
+            console.warn('Invalid state for dungeon entry:', this.gameState.currentState);
+            return false;
+        }
+        
+        // All validation passed
+        return true;
     }
     
     /**

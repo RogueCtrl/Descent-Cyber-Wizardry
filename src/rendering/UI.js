@@ -22,6 +22,9 @@ class UI {
         // Town Modal
         this.townModal = null;
         
+        // Training Grounds Modal
+        this.trainingModal = null;
+        
         this.initialize();
     }
     
@@ -359,10 +362,10 @@ class UI {
                         
                         <div class="location-card disabled">
                             <button class="location-btn disabled" disabled>
-                                <div class="location-icon">🏕️</div>
+                                <div class="location-icon">👥</div>
                                 <div class="location-info">
-                                    <h3>Camp</h3>
-                                    <p>Rest and save your party's progress</p>
+                                    <h3>Party Management</h3>
+                                    <p>Manage multiple parties and character roster</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -386,7 +389,7 @@ class UI {
         // Create and show modal
         this.townModal = new Modal({
             className: 'modal town-modal',
-            closeOnEscape: true,
+            closeOnEscape: false, // Town menu should not be dismissible with ESC
             closeOnBackdrop: false
         });
         
@@ -464,63 +467,132 @@ class UI {
     }
     
     /**
-     * Show training grounds interface
+     * Show training grounds as modal overlay
      */
     showTrainingGrounds() {
-        // Create training grounds interface in the game panel viewport
-        const viewport = document.getElementById('viewport');
-        if (viewport) {
-            viewport.innerHTML = `
-                <div class="training-grounds-interface">
-                    <h2>Training Grounds</h2>
-                    <p>Here you can create new characters and manage your party.</p>
+        console.log('UI.showTrainingGrounds() called');
+        
+        // Hide any existing training modal
+        this.hideTrainingGrounds();
+        
+        // Get party info from the engine
+        const party = window.engine ? window.engine.party : null;
+        const hasActiveParty = party && party.size > 0;
+        
+        // Create modal content
+        const trainingContent = `
+            <div class="training-grounds-interface">
+                <div class="training-header">
+                    <h1 class="training-title">Training Grounds</h1>
+                    <p class="training-subtitle">Create and manage your party of adventurers</p>
+                </div>
+                
+                <div class="training-content">
                     <div class="training-actions">
-                        <button id="create-character-btn" class="action-btn primary">Create New Character</button>
-                        <button id="view-party-btn" class="action-btn" ${this.party && this.party.size > 0 ? '' : 'disabled'}>View Party Stats</button>
-                        <button id="delete-character-btn" class="action-btn danger" ${this.party && this.party.size > 0 ? '' : 'disabled'}>Delete Character</button>
-                        <button id="back-to-town-btn" class="action-btn secondary">Back to Town</button>
+                        <button id="create-character-btn" class="action-btn primary large">
+                            <div class="btn-icon">⚔️</div>
+                            <div class="btn-text">
+                                <span class="btn-title">Create New Character</span>
+                                <span class="btn-desc">Roll a new adventurer</span>
+                            </div>
+                        </button>
+                        
+                        <button id="view-party-btn" class="action-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
+                            <div class="btn-icon">👥</div>
+                            <div class="btn-text">
+                                <span class="btn-title">View Party Stats</span>
+                                <span class="btn-desc">Review character details</span>
+                            </div>
+                        </button>
+                        
+                        <button id="delete-character-btn" class="action-btn danger ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
+                            <div class="btn-icon">🗑️</div>
+                            <div class="btn-text">
+                                <span class="btn-title">Delete Character</span>
+                                <span class="btn-desc">Remove from party</span>
+                            </div>
+                        </button>
                     </div>
-                    <div class="party-status">
-                        <h3>Current Party (${this.party ? this.party.size : 0}/6)</h3>
-                        ${this.party && this.party.size > 0 ? 
-                            '<p>You have characters ready for adventure!</p>' : 
-                            '<p>You need to create at least one character to enter the dungeon.</p>'}
+                    
+                    <div class="party-status-section">
+                        <h3>Current Party (${party ? party.size : 0}/6)</h3>
+                        <div class="party-status-info">
+                            ${hasActiveParty ? 
+                                '<p class="status-ready">✅ Your party is ready for adventure!</p>' : 
+                                '<p class="status-empty">⚠️ Create at least one character to enter the dungeon.</p>'}
+                        </div>
                     </div>
                 </div>
-            `;
-            
-            // Add event listeners
-            const createBtn = viewport.querySelector('#create-character-btn');
-            const backBtn = viewport.querySelector('#back-to-town-btn');
-            const viewPartyBtn = viewport.querySelector('#view-party-btn');
-            
-            if (createBtn) {
-                createBtn.addEventListener('click', () => {
-                    this.eventSystem.emit('training-action', 'create-character');
-                });
-            }
-            
-            if (backBtn) {
-                backBtn.addEventListener('click', () => {
-                    this.eventSystem.emit('training-action', 'back-to-town');
-                });
-            }
-            
-            if (viewPartyBtn && !viewPartyBtn.disabled) {
-                viewPartyBtn.addEventListener('click', () => {
-                    this.eventSystem.emit('training-action', 'view-party');
-                });
-            }
+                
+                <div class="training-footer">
+                    <button id="back-to-town-btn" class="action-btn secondary">
+                        <span>← Back to Town</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Create and show modal
+        this.trainingModal = new Modal({
+            className: 'modal training-modal',
+            closeOnEscape: false, // Consistent with town menu
+            closeOnBackdrop: false
+        });
+        
+        // Set up close callback
+        this.trainingModal.setOnClose(() => {
+            this.hideTrainingGrounds();
+        });
+        
+        // Create and show modal
+        this.trainingModal.create(trainingContent);
+        this.trainingModal.show();
+        
+        // Add event listeners
+        this.setupTrainingGroundsEventListeners(this.trainingModal.getBody());
+    }
+    
+    /**
+     * Set up event listeners for training grounds interface
+     */
+    setupTrainingGroundsEventListeners(container) {
+        const createBtn = container.querySelector('#create-character-btn');
+        const backBtn = container.querySelector('#back-to-town-btn');
+        const viewPartyBtn = container.querySelector('#view-party-btn');
+        const deleteBtn = container.querySelector('#delete-character-btn');
+        
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.eventSystem.emit('training-action', 'create-character');
+            });
+        }
+        
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                this.eventSystem.emit('training-action', 'back-to-town');
+            });
+        }
+        
+        if (viewPartyBtn && !viewPartyBtn.disabled) {
+            viewPartyBtn.addEventListener('click', () => {
+                this.eventSystem.emit('training-action', 'view-party');
+            });
+        }
+        
+        if (deleteBtn && !deleteBtn.disabled) {
+            deleteBtn.addEventListener('click', () => {
+                this.eventSystem.emit('training-action', 'delete-character');
+            });
         }
     }
     
     /**
-     * Hide training grounds interface
+     * Hide training grounds modal
      */
     hideTrainingGrounds() {
-        const viewport = document.getElementById('viewport');
-        if (viewport) {
-            viewport.innerHTML = '';
+        if (this.trainingModal) {
+            this.trainingModal.hide();
+            this.trainingModal = null;
         }
     }
     
