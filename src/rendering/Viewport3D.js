@@ -62,11 +62,17 @@ class Viewport3D {
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
         
-        // Render walls and structures in order (far to near)
+        // NEW: Implement occlusion culling
+        const occludedDistances = this.calculateOccludedDistances(viewInfo);
+        
+        // Render walls and structures with occlusion awareness (far to near)
         for (let distance = this.maxViewDistance; distance >= 1; distance--) {
-            this.renderWallsAtDistance(viewInfo, distance, centerX);
-            this.renderDoorsAtDistance(viewInfo, distance, centerX);
-            this.renderPassagesAtDistance(viewInfo, distance, centerX);
+            // Skip rendering if occluded by closer walls
+            if (!occludedDistances.has(distance)) {
+                this.renderWallsAtDistance(viewInfo, distance, centerX);
+                this.renderDoorsAtDistance(viewInfo, distance, centerX);
+                this.renderPassagesAtDistance(viewInfo, distance, centerX);
+            }
         }
         
         // Render status information
@@ -74,6 +80,44 @@ class Viewport3D {
         
         // Render special indicators
         this.renderSpecialIndicators(dungeon);
+    }
+    
+    /**
+     * Calculate which distances are occluded by front walls
+     */
+    calculateOccludedDistances(viewInfo) {
+        const occluded = new Set();
+        let blockingDistance = null;
+        
+        // Find the closest front wall
+        for (let distance = 1; distance <= this.maxViewDistance; distance++) {
+            const frontWalls = viewInfo.walls.filter(wall => 
+                wall.distance === distance && !wall.side
+            );
+            
+            if (frontWalls.length > 0) {
+                blockingDistance = distance;
+                break;
+            }
+        }
+        
+        // If there's a blocking wall, occlude everything behind it
+        if (blockingDistance) {
+            for (let distance = blockingDistance + 1; distance <= this.maxViewDistance; distance++) {
+                occluded.add(distance);
+            }
+        }
+        
+        return occluded;
+    }
+    
+    /**
+     * Check if a wall exists in viewInfo at specific distance and side
+     */
+    hasWallInViewInfo(viewInfo, distance, side) {
+        return viewInfo.walls.some(wall => 
+            wall.distance === distance && wall.side === side
+        );
     }
     
     /**
@@ -107,11 +151,11 @@ class Viewport3D {
         });
         
         leftWalls.forEach(wall => {
-            this.renderLeftWallSegment(perspective, centerX, distance);
+            this.renderLeftWallSegment(perspective, centerX, distance, viewInfo);
         });
         
         rightWalls.forEach(wall => {
-            this.renderRightWallSegment(perspective, centerX, distance);
+            this.renderRightWallSegment(perspective, centerX, distance, viewInfo);
         });
     }
     
@@ -206,39 +250,58 @@ class Viewport3D {
     }
     
     /**
-     * Render left side wall segment with continuity
+     * Render left side wall segment with improved continuity
      */
-    renderLeftWallSegment(perspective, centerX, distance) {
+    renderLeftWallSegment(perspective, centerX, distance, viewInfo) {
         const { leftX, topY, bottomY } = perspective;
         
         this.ctx.beginPath();
         
-        // For distance 1, connect to screen edge
         if (distance === 1) {
-            // Left wall edge from screen to perspective point
-            this.ctx.moveTo(0, 0);
-            this.ctx.lineTo(leftX, topY);
-            this.ctx.moveTo(0, this.height);
-            this.ctx.lineTo(leftX, bottomY);
+            // For distance 1, only connect to screen edge if there's a wall there
+            const hasLeftWallAtDistance1 = this.hasWallInViewInfo(viewInfo, distance, 'left');
             
-            // Left wall face
-            this.ctx.moveTo(0, 0);
-            this.ctx.lineTo(0, this.height);
-            this.ctx.moveTo(leftX, topY);
-            this.ctx.lineTo(leftX, bottomY);
+            if (hasLeftWallAtDistance1) {
+                // Left wall edge from screen to perspective point
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(leftX, topY);
+                this.ctx.moveTo(0, this.height);
+                this.ctx.lineTo(leftX, bottomY);
+                
+                // Left wall face
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(0, this.height);
+                this.ctx.moveTo(leftX, topY);
+                this.ctx.lineTo(leftX, bottomY);
+            }
         } else {
-            // For distance > 1, connect to previous segment
-            const prevPerspective = this.calculatePerspective(distance - 1);
+            // For distance > 1, check for previous wall segment to connect to
+            const hasPreviousWall = this.hasWallInViewInfo(viewInfo, distance - 1, 'left');
+            const hasCurrentWall = this.hasWallInViewInfo(viewInfo, distance, 'left');
             
-            // Horizontal lines connecting to previous segment
-            this.ctx.moveTo(prevPerspective.leftX, prevPerspective.topY);
-            this.ctx.lineTo(leftX, topY);
-            this.ctx.moveTo(prevPerspective.leftX, prevPerspective.bottomY);
-            this.ctx.lineTo(leftX, bottomY);
-            
-            // Vertical line at current distance
-            this.ctx.moveTo(leftX, topY);
-            this.ctx.lineTo(leftX, bottomY);
+            if (hasCurrentWall) {
+                if (hasPreviousWall) {
+                    // Connect to previous segment
+                    const prevPerspective = this.calculatePerspective(distance - 1);
+                    
+                    // Horizontal lines connecting to previous segment
+                    this.ctx.moveTo(prevPerspective.leftX, prevPerspective.topY);
+                    this.ctx.lineTo(leftX, topY);
+                    this.ctx.moveTo(prevPerspective.leftX, prevPerspective.bottomY);
+                    this.ctx.lineTo(leftX, bottomY);
+                } else {
+                    // Start new wall segment (gap in wall)
+                    // Connect to screen edge if no previous wall
+                    this.ctx.moveTo(0, 0);
+                    this.ctx.lineTo(leftX, topY);
+                    this.ctx.moveTo(0, this.height);
+                    this.ctx.lineTo(leftX, bottomY);
+                }
+                
+                // Vertical line at current distance
+                this.ctx.moveTo(leftX, topY);
+                this.ctx.lineTo(leftX, bottomY);
+            }
         }
         
         this.ctx.stroke();
@@ -252,39 +315,58 @@ class Viewport3D {
     }
     
     /**
-     * Render right side wall segment with continuity
+     * Render right side wall segment with improved continuity
      */
-    renderRightWallSegment(perspective, centerX, distance) {
+    renderRightWallSegment(perspective, centerX, distance, viewInfo) {
         const { rightX, topY, bottomY } = perspective;
         
         this.ctx.beginPath();
         
-        // For distance 1, connect to screen edge
         if (distance === 1) {
-            // Right wall edge from screen to perspective point
-            this.ctx.moveTo(this.width, 0);
-            this.ctx.lineTo(rightX, topY);
-            this.ctx.moveTo(this.width, this.height);
-            this.ctx.lineTo(rightX, bottomY);
+            // For distance 1, only connect to screen edge if there's a wall there
+            const hasRightWallAtDistance1 = this.hasWallInViewInfo(viewInfo, distance, 'right');
             
-            // Right wall face
-            this.ctx.moveTo(this.width, 0);
-            this.ctx.lineTo(this.width, this.height);
-            this.ctx.moveTo(rightX, topY);
-            this.ctx.lineTo(rightX, bottomY);
+            if (hasRightWallAtDistance1) {
+                // Right wall edge from screen to perspective point
+                this.ctx.moveTo(this.width, 0);
+                this.ctx.lineTo(rightX, topY);
+                this.ctx.moveTo(this.width, this.height);
+                this.ctx.lineTo(rightX, bottomY);
+                
+                // Right wall face
+                this.ctx.moveTo(this.width, 0);
+                this.ctx.lineTo(this.width, this.height);
+                this.ctx.moveTo(rightX, topY);
+                this.ctx.lineTo(rightX, bottomY);
+            }
         } else {
-            // For distance > 1, connect to previous segment
-            const prevPerspective = this.calculatePerspective(distance - 1);
+            // For distance > 1, check for previous wall segment to connect to
+            const hasPreviousWall = this.hasWallInViewInfo(viewInfo, distance - 1, 'right');
+            const hasCurrentWall = this.hasWallInViewInfo(viewInfo, distance, 'right');
             
-            // Horizontal lines connecting to previous segment
-            this.ctx.moveTo(prevPerspective.rightX, prevPerspective.topY);
-            this.ctx.lineTo(rightX, topY);
-            this.ctx.moveTo(prevPerspective.rightX, prevPerspective.bottomY);
-            this.ctx.lineTo(rightX, bottomY);
-            
-            // Vertical line at current distance
-            this.ctx.moveTo(rightX, topY);
-            this.ctx.lineTo(rightX, bottomY);
+            if (hasCurrentWall) {
+                if (hasPreviousWall) {
+                    // Connect to previous segment
+                    const prevPerspective = this.calculatePerspective(distance - 1);
+                    
+                    // Horizontal lines connecting to previous segment
+                    this.ctx.moveTo(prevPerspective.rightX, prevPerspective.topY);
+                    this.ctx.lineTo(rightX, topY);
+                    this.ctx.moveTo(prevPerspective.rightX, prevPerspective.bottomY);
+                    this.ctx.lineTo(rightX, bottomY);
+                } else {
+                    // Start new wall segment (gap in wall)
+                    // Connect to screen edge if no previous wall
+                    this.ctx.moveTo(this.width, 0);
+                    this.ctx.lineTo(rightX, topY);
+                    this.ctx.moveTo(this.width, this.height);
+                    this.ctx.lineTo(rightX, bottomY);
+                }
+                
+                // Vertical line at current distance
+                this.ctx.moveTo(rightX, topY);
+                this.ctx.lineTo(rightX, bottomY);
+            }
         }
         
         this.ctx.stroke();
@@ -383,11 +465,8 @@ class Viewport3D {
         this.ctx.moveTo(this.width, 0);
         this.ctx.lineTo(farPerspective.rightX, farPerspective.topY);
         
-        // Side walls (if no blocking walls)
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(0, this.height);
-        this.ctx.moveTo(this.width, 0);
-        this.ctx.lineTo(this.width, this.height);
+        // REMOVED: Unconditional side wall rendering
+        // Side walls are now only rendered when they actually exist in dungeon data
         
         this.ctx.stroke();
         
