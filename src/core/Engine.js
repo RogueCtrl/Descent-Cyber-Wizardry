@@ -691,12 +691,7 @@ class Engine {
             // Return to training grounds
             this.gameState.setState('training-grounds');
             
-            // Ask if they want to create another character
-            setTimeout(() => {
-                if (this.party.size < 6 && confirm('Would you like to create another character?')) {
-                    this.gameState.setState('character-creation');
-                }
-            }, 500);
+            // Return to training grounds - player can choose to create another character from the menu
         } else {
             this.ui.addMessage('Party is full! Cannot add more characters.');
             this.gameState.setState('training-grounds');

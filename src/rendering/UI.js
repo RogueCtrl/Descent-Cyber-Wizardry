@@ -117,6 +117,11 @@ class UI {
         this.eventSystem.on('keydown', (event) => {
             this.handleKeydown(event);
         });
+        
+        // Message system
+        this.eventSystem.on('show-message', (data) => {
+            this.addMessage(data.text, data.type);
+        });
     }
     
     /**
@@ -711,10 +716,8 @@ class UI {
         });
         
         modal.querySelector('#new-game').addEventListener('click', () => {
-            if (confirm('Start a new game? This will lose your current progress.')) {
-                this.hideGameMenu();
-                this.eventSystem.emit('game-state-change', 'character-creation');
-            }
+            // Use the game's modal system instead of browser confirm
+            this.showNewGameConfirmation();
         });
         
         this.modals.gameMenu = modal;
@@ -728,6 +731,44 @@ class UI {
             this.modals.gameMenu.remove();
             delete this.modals.gameMenu;
         }
+    }
+    
+    /**
+     * Show new game confirmation modal
+     */
+    showNewGameConfirmation() {
+        const modal = document.createElement('div');
+        modal.className = 'modal confirmation-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>New Game</h3>
+                <p>Start a new game? This will lose your current progress.</p>
+                <div class="modal-buttons">
+                    <button id="cancel-new-game" class="btn-secondary">Cancel</button>
+                    <button id="confirm-new-game" class="btn-primary">New Game</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners
+        modal.querySelector('#cancel-new-game').addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        modal.querySelector('#confirm-new-game').addEventListener('click', () => {
+            modal.remove();
+            this.hideGameMenu();
+            this.eventSystem.emit('game-state-change', 'character-creation');
+        });
+        
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
     }
     
     /**

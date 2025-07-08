@@ -216,6 +216,9 @@ class CharacterUI {
             this.applyRacialModifiers();
             this.renderCurrentStep(); // Re-render to show new attributes
         });
+        
+        // Update button state after initial attributes are set
+        this.updateNextButton();
     }
     
     /**
@@ -536,7 +539,11 @@ class CharacterUI {
             
         } catch (error) {
             console.error('Error creating character:', error);
-            alert('Error creating character: ' + error.message);
+            // Use the game's messaging system instead of browser alert
+            this.eventSystem.emit('show-message', {
+                text: 'Error creating character: ' + error.message,
+                type: 'error'
+            });
         }
     }
     
@@ -544,11 +551,9 @@ class CharacterUI {
      * Cancel character creation
      */
     cancelCreation() {
-        if (confirm('Cancel character creation? All progress will be lost.')) {
-            this.hideCharacterCreation();
-            this.characterData = {};
-            this.eventSystem.emit('character-creation-cancelled');
-        }
+        this.hideCharacterCreation();
+        this.characterData = {};
+        this.eventSystem.emit('character-creation-cancelled');
     }
     
     /**
