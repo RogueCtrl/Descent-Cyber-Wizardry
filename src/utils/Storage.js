@@ -1,7 +1,8 @@
 /**
  * Storage Utilities
- * Handles saving and loading game data using localStorage
+ * Handles saving and loading game data using localStorage and IndexedDB
  * Enhanced with camp/resume mechanics for dungeon exploration
+ * IndexedDB used for character persistence
  */
 class Storage {
     static SAVE_KEY = 'descent_cyber_wizardry_save';
@@ -9,6 +10,15 @@ class Storage {
     static CHARACTERS_KEY = 'descent_cyber_wizardry_characters';
     static CAMP_KEY_PREFIX = 'descent_camp_'; // For individual party camps
     static DUNGEON_STATE_KEY = 'descent_dungeon_states';
+    
+    // IndexedDB configuration
+    static DB_NAME = 'DescentCyberWizardry';
+    static DB_VERSION = 1;
+    static CHARACTER_STORE = 'characters';
+    static ROSTER_STORE = 'roster';
+    
+    static _db = null;
+    static _dbInitialized = false;
     
     /**
      * Save game data
@@ -163,8 +173,358 @@ class Storage {
         };
     }
     
+    // IndexedDB Methods for Character Persistence
+    
     /**
-     * Save character templates
+     * Initialize IndexedDB for character storage
+     * @returns {Promise<boolean>} Success status
+     */
+    static async initializeDB() {
+        if (this._dbInitialized && this._db) {
+            return true;
+        }
+        
+        if (!window.indexedDB) {
+            console.error('IndexedDB not supported');
+            return false;
+        }
+        
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+            
+            request.onerror = () => {
+                console.error('Failed to open IndexedDB:', request.error);
+                reject(false);
+            };
+            
+            request.onsuccess = () => {
+                this._db = request.result;
+                this._dbInitialized = true;
+                console.log('IndexedDB initialized successfully');
+                resolve(true);
+            };
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Create characters store
+                if (!db.objectStoreNames.contains(this.CHARACTER_STORE)) {
+                    const characterStore = db.createObjectStore(this.CHARACTER_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    // Create indexes for efficient queries
+                    characterStore.createIndex('name', 'name', { unique: false });
+                    characterStore.createIndex('race', 'race', { unique: false });
+                    characterStore.createIndex('class', 'class', { unique: false });
+                    characterStore.createIndex('level', 'level', { unique: false });
+                    characterStore.createIndex('status', 'status', { unique: false });
+                    characterStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+                    characterStore.createIndex('lastModified', 'lastModified', { unique: false });
+                }
+                
+                // Create roster store for party management
+                if (!db.objectStoreNames.contains(this.ROSTER_STORE)) {
+                    const rosterStore = db.createObjectStore(this.ROSTER_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    rosterStore.createIndex('name', 'name', { unique: false });
+                    rosterStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+                    rosterStore.createIndex('lastModified', 'lastModified', { unique: false });
+                }
+                
+                console.log('IndexedDB upgrade completed');
+            };
+        });
+    }
+    
+    /**
+     * Save character to IndexedDB
+     * @param {Object} character - Character object to save
+     * @returns {Promise<boolean>} Success status
+     */
+    static async saveCharacter(character) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
+            const store = transaction.objectStore(this.CHARACTER_STORE);
+            
+            // Prepare character data for storage
+            const characterData = {
+                id: character.id,
+                name: character.name,
+                race: character.race,
+                class: character.class,
+                level: character.level,
+                experience: character.experience,
+                attributes: { ...character.attributes },
+                currentHP: character.currentHP,
+                maxHP: character.maxHP,
+                currentSP: character.currentSP,
+                maxSP: character.maxSP,
+                isAlive: character.isAlive,
+                status: character.status,
+                age: character.age,
+                equipment: character.equipment ? { ...character.equipment } : {},
+                inventory: character.inventory ? [...character.inventory] : [],
+                memorizedSpells: character.memorizedSpells ? { ...character.memorizedSpells } : { arcane: [], divine: [] },
+                conditions: character.conditions ? [...character.conditions] : [],
+                temporaryEffects: character.temporaryEffects ? [...character.temporaryEffects] : [],
+                classHistory: character.classHistory ? [...character.classHistory] : [],
+                dateCreated: character.dateCreated || Date.now(),
+                lastModified: Date.now()
+            };
+            
+            return new Promise((resolve, reject) => {
+                const request = store.put(characterData);
+                
+                request.onsuccess = () => {
+                    console.log(`Character ${character.name} saved to IndexedDB`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to save character:', request.error);
+                    reject(false);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to save character:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Load character from IndexedDB
+     * @param {string} characterId - Character ID to load
+     * @returns {Promise<Object|null>} Character data or null
+     */
+    static async loadCharacter(characterId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const store = transaction.objectStore(this.CHARACTER_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get(characterId);
+                
+                request.onsuccess = () => {
+                    const character = request.result;
+                    if (character) {
+                        console.log(`Character ${character.name} loaded from IndexedDB`);
+                    }
+                    resolve(character || null);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load character:', request.error);
+                    reject(null);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load character:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Load all characters from IndexedDB
+     * @returns {Promise<Array>} Array of character objects
+     */
+    static async loadAllCharacters() {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const store = transaction.objectStore(this.CHARACTER_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    const characters = request.result || [];
+                    console.log(`Loaded ${characters.length} characters from IndexedDB`);
+                    resolve(characters);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load characters:', request.error);
+                    reject([]);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load characters:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Delete character from IndexedDB
+     * @param {string} characterId - Character ID to delete
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deleteCharacter(characterId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
+            const store = transaction.objectStore(this.CHARACTER_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.delete(characterId);
+                
+                request.onsuccess = () => {
+                    console.log(`Character ${characterId} deleted from IndexedDB`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to delete character:', request.error);
+                    reject(false);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to delete character:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Query characters by criteria
+     * @param {Object} criteria - Query criteria (race, class, level, status, etc.)
+     * @returns {Promise<Array>} Array of matching characters
+     */
+    static async queryCharacters(criteria = {}) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const store = transaction.objectStore(this.CHARACTER_STORE);
+            
+            // If no criteria, return all characters
+            if (Object.keys(criteria).length === 0) {
+                return this.loadAllCharacters();
+            }
+            
+            // Use index if available
+            const indexName = Object.keys(criteria)[0];
+            const indexValue = criteria[indexName];
+            
+            return new Promise((resolve, reject) => {
+                let request;
+                
+                if (store.indexNames.contains(indexName)) {
+                    const index = store.index(indexName);
+                    request = index.getAll(indexValue);
+                } else {
+                    // Fallback to full scan
+                    request = store.getAll();
+                }
+                
+                request.onsuccess = () => {
+                    let characters = request.result || [];
+                    
+                    // Apply additional filters if using fallback
+                    if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
+                        characters = characters.filter(char => {
+                            return Object.entries(criteria).every(([key, value]) => {
+                                return char[key] === value;
+                            });
+                        });
+                    }
+                    
+                    console.log(`Found ${characters.length} characters matching criteria`);
+                    resolve(characters);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to query characters:', request.error);
+                    reject([]);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to query characters:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Get character statistics
+     * @returns {Promise<Object>} Character statistics
+     */
+    static async getCharacterStatistics() {
+        try {
+            const characters = await this.loadAllCharacters();
+            
+            const stats = {
+                totalCharacters: characters.length,
+                aliveCharacters: characters.filter(c => c.isAlive).length,
+                deadCharacters: characters.filter(c => !c.isAlive).length,
+                byRace: {},
+                byClass: {},
+                byLevel: {},
+                byStatus: {},
+                averageLevel: 0,
+                highestLevel: 0,
+                oldestCharacter: null,
+                newestCharacter: null
+            };
+            
+            if (characters.length > 0) {
+                // Calculate distributions
+                characters.forEach(char => {
+                    // Race distribution
+                    stats.byRace[char.race] = (stats.byRace[char.race] || 0) + 1;
+                    
+                    // Class distribution
+                    stats.byClass[char.class] = (stats.byClass[char.class] || 0) + 1;
+                    
+                    // Level distribution
+                    stats.byLevel[char.level] = (stats.byLevel[char.level] || 0) + 1;
+                    
+                    // Status distribution
+                    stats.byStatus[char.status] = (stats.byStatus[char.status] || 0) + 1;
+                });
+                
+                // Calculate averages and extremes
+                const levels = characters.map(c => c.level);
+                stats.averageLevel = Math.round(levels.reduce((a, b) => a + b, 0) / levels.length);
+                stats.highestLevel = Math.max(...levels);
+                
+                // Find oldest and newest characters
+                const sortedByDate = characters.sort((a, b) => a.dateCreated - b.dateCreated);
+                stats.oldestCharacter = sortedByDate[0];
+                stats.newestCharacter = sortedByDate[sortedByDate.length - 1];
+            }
+            
+            return stats;
+            
+        } catch (error) {
+            console.error('Failed to get character statistics:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Save character templates (legacy localStorage method)
      */
     static saveCharacterTemplates(templates) {
         try {
@@ -616,7 +976,7 @@ class Storage {
             age: member.age,
             equipment: member.equipment ? { ...member.equipment } : {},
             inventory: member.inventory ? [...member.inventory] : [],
-            memorizedSpells: member.memorizedSpells ? [...member.memorizedSpells] : [],
+            memorizedSpells: member.memorizedSpells ? { ...member.memorizedSpells } : { arcane: [], divine: [] },
             conditions: member.conditions ? [...member.conditions] : [],
             temporaryEffects: member.temporaryEffects ? [...member.temporaryEffects] : [],
             classHistory: member.classHistory ? [...member.classHistory] : []
@@ -633,9 +993,9 @@ class Storage {
             // Reconstruct member object with proper structure
             const member = { ...memberData };
             
-            // Ensure arrays are properly reconstructed
+            // Ensure arrays and objects are properly reconstructed
             member.inventory = memberData.inventory || [];
-            member.memorizedSpells = memberData.memorizedSpells || [];
+            member.memorizedSpells = memberData.memorizedSpells || { arcane: [], divine: [] };
             member.conditions = memberData.conditions || [];
             member.temporaryEffects = memberData.temporaryEffects || [];
             member.classHistory = memberData.classHistory || [];

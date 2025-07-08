@@ -943,8 +943,17 @@ class Engine {
     /**
      * Handle character creation completion
      */
-    handleCharacterCreated(character) {
+    async handleCharacterCreated(character) {
         console.log('Character created:', character);
+        
+        // Save character to persistent storage
+        try {
+            await Storage.saveCharacter(character);
+            console.log(`Character ${character.name} saved to persistent storage`);
+        } catch (error) {
+            console.error('Failed to save character to persistent storage:', error);
+            // Still continue with party addition even if persistence fails
+        }
         
         // Add character to party
         if (this.party.addMember(character)) {

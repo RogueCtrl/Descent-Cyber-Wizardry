@@ -155,7 +155,7 @@ class Character {
     /**
      * Level up the character
      */
-    levelUp() {
+    async levelUp() {
         if (this.experience >= this.experienceToNext) {
             this.level++;
             this.experience -= this.experienceToNext;
@@ -176,6 +176,9 @@ class Character {
             
             // Update spell slots
             this.updateSpellSlots();
+            
+            // Save to persistent storage
+            this.saveToStorage();
             
             return { success: true, hpGain, newLevel: this.level };
         }
@@ -299,5 +302,18 @@ class Character {
         this.temporaryEffects = saveData.temporaryEffects || [];
         this.availability = saveData.availability || 'available';
         this.partyId = saveData.partyId || null;
+    }
+    
+    /**
+     * Save character to persistent storage
+     */
+    async saveToStorage() {
+        try {
+            // Import Storage dynamically to avoid circular dependencies
+            const { default: Storage } = await import('../utils/Storage.js');
+            await Storage.saveCharacter(this);
+        } catch (error) {
+            console.error(`Failed to save character ${this.name} to storage:`, error);
+        }
     }
 }

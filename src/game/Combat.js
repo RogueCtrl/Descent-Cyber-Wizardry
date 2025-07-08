@@ -209,6 +209,12 @@ class Combat {
                 target.currentHP = 0;
                 target.isAlive = false;
                 target.status = 'dead';
+                
+                // Save character state to persistent storage
+                if (target.saveToStorage) {
+                    target.saveToStorage();
+                }
+                
                 return {
                     success: true,
                     critical: true,
@@ -229,6 +235,11 @@ class Combat {
                 target.isAlive = false;
                 target.status = target.currentHP <= -10 ? 'dead' : 'unconscious';
                 message += ` ${target.name || 'Target'} falls!`;
+            }
+            
+            // Save character state to persistent storage
+            if (target.saveToStorage) {
+                target.saveToStorage();
             }
             
             return {
