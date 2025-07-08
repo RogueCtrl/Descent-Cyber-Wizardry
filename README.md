@@ -91,3 +91,12 @@ Currently in active development. The project is in early stages with core system
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
+
+
+┌───────────────────────┐
+│ Room A  │   │ Room B  │
+│         └───┘         │
+|          2x1          │
+│         ┌───┐         │
+│    p    │   │         │
+└───────────────────────┘

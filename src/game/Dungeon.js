@@ -18,6 +18,9 @@ class Dungeon {
         this.disarmedTraps = new Set(); // Format: "floor:x:y"
         this.usedSpecials = new Set(); // Format: "floor:x:y" for one-time use items
         
+        // Debug mode for static test map
+        this.testMode = true; // Set to false for random generation
+        
         this.initializeFloor(1);
     }
     
@@ -29,15 +32,21 @@ class Dungeon {
         
         const floor = {
             number: floorNumber,
-            width: 20,
-            height: 20,
-            tiles: this.generateWizardryMaze(20, 20, floorNumber),
+            width: 9,
+            height: 5,
+            tiles: this.testMode ? this.generateTestMap() : this.generateWizardryMaze(20, 20, floorNumber),
             monsters: [],
             treasures: [],
-            encounters: this.generateEncounters(floorNumber),
-            specialSquares: this.generateSpecialSquares(floorNumber),
-            stairs: this.generateStairs(floorNumber)
+            encounters: this.testMode ? [] : this.generateEncounters(floorNumber),
+            specialSquares: this.testMode ? [] : this.generateSpecialSquares(floorNumber),
+            stairs: this.testMode ? {} : this.generateStairs(floorNumber)
         };
+        
+        // Adjust floor size for test mode
+        if (this.testMode) {
+            floor.width = 9;
+            floor.height = 5;
+        }
         
         this.floors.set(floorNumber, floor);
         
@@ -47,6 +56,49 @@ class Dungeon {
         }
         
         console.log(`Floor ${floorNumber} generated with ${floor.encounters.length} encounters and ${floor.specialSquares.length} special features`);
+    }
+    
+    /**
+     * Generate static test map for debugging 3D rendering
+     * Layout: Room A (3x3) - Corridor (2x1) - Room B (3x3)
+     */
+    generateTestMap() {
+        console.log('Generating static test map for rendering debug...');
+        
+        // Create 9x5 grid: 3 (Room A) + 2 (Corridor) + 3 (Room B) + 1 (padding) = 9 width, 5 height
+        const width = 9;
+        const height = 5;
+        const tiles = Array(height).fill().map(() => Array(width).fill('wall'));
+        
+        // Room A (West Chamber) - 3x3 starting at (0,1)
+        for (let y = 1; y <= 3; y++) {
+            for (let x = 0; x <= 2; x++) {
+                tiles[y][x] = 'floor';
+            }
+        }
+        
+        // Corridor (Connection) - 2x1 at (3,2) and (4,2)
+        tiles[2][3] = 'floor';
+        tiles[2][4] = 'floor';
+        
+        // Room B (East Chamber) - 3x3 starting at (5,1)
+        for (let y = 1; y <= 3; y++) {
+            for (let x = 5; x <= 7; x++) {
+                tiles[y][x] = 'floor';
+            }
+        }
+        
+        // Ensure outer walls remain as walls (already set by default)
+        console.log('Test map layout:');
+        console.log('Room A | Corridor | Room B');
+        console.log('█████████');
+        console.log('█...█..█...█');
+        console.log('█.p.....█');
+        console.log('█...█..█...█');
+        console.log('█████████');
+        console.log('(p = player start position)');
+        
+        return tiles;
     }
     
     /**
@@ -458,7 +510,16 @@ class Dungeon {
      * Set starting position on floor
      */
     setStartPosition(floor) {
-        // Find a suitable starting position
+        if (this.testMode) {
+            // Fixed starting position in Room A center for consistent testing
+            this.playerX = 1; // Center of Room A (x: 0-2, center = 1)
+            this.playerY = 2; // Center of Room A (y: 1-3, center = 2)
+            this.playerDirection = 0; // Start facing north
+            console.log(`Test mode: Player positioned at (${this.playerX}, ${this.playerY}) facing North`);
+            return;
+        }
+        
+        // Find a suitable starting position for random maps
         for (let attempts = 0; attempts < 100; attempts++) {
             const x = Random.integer(1, floor.width - 2);
             const y = Random.integer(1, floor.height - 2);
