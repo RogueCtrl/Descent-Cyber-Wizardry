@@ -190,9 +190,13 @@ class UI {
         // Create party header
         const headerElement = document.createElement('div');
         headerElement.className = 'party-header';
+        const gameState = window.engine ? window.engine.gameState : null;
+        const currentState = gameState ? gameState.currentState : null;
+        const showAddButton = (currentState !== 'playing' && currentState !== 'dungeon' && party.size < 6);
+        
         headerElement.innerHTML = `
             <h4>Party (${party.size}/6)</h4>
-            ${party.size < 6 ? '<button id="add-character-btn" class="btn-small">+</button>' : ''}
+            ${showAddButton ? '<button id="add-character-btn" class="btn-small">+</button>' : ''}
         `;
         this.partyDisplay.appendChild(headerElement);
         
@@ -245,14 +249,18 @@ class UI {
             this.partyDisplay.appendChild(characterElement);
         });
         
-        // Add party actions
-        const actionsElement = document.createElement('div');
-        actionsElement.className = 'party-actions';
-        actionsElement.innerHTML = `
-            <button class="btn-small" onclick="engine.ui.showPartyManagement()">Manage Party</button>
-            <button class="btn-small" onclick="engine.ui.showCharacterCreation()">Add Member</button>
-        `;
-        this.partyDisplay.appendChild(actionsElement);
+        // Add party actions only if not in dungeon mode  
+        // Reuse gameState and currentState from above
+        
+        if (currentState !== 'playing' && currentState !== 'dungeon') {
+            const actionsElement = document.createElement('div');
+            actionsElement.className = 'party-actions';
+            actionsElement.innerHTML = `
+                <button class="btn-small" onclick="engine.ui.showPartyManagement()">Manage Party</button>
+                <button class="btn-small" onclick="engine.ui.showCharacterCreation()">Add Member</button>
+            `;
+            this.partyDisplay.appendChild(actionsElement);
+        }
     }
     
     /**
@@ -868,6 +876,18 @@ class UI {
         const viewport = document.getElementById('viewport');
         if (viewport) {
             viewport.style.display = 'block';
+        }
+        
+        // Position canvas inside viewport
+        const canvas = document.getElementById('game-canvas');
+        if (canvas && viewport) {
+            viewport.appendChild(canvas);
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '1';
         }
         
         // Show movement controls

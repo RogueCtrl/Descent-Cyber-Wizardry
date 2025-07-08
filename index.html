@@ -35,10 +35,9 @@
         </div>
     </div>
 
-    <!-- Core Engine -->
-    <script src="src/core/Engine.js"></script>
-    <script src="src/core/GameState.js"></script>
+    <!-- Core Systems (EventSystem first, then GameState) -->
     <script src="src/core/EventSystem.js"></script>
+    <script src="src/core/GameState.js"></script>
     
     <!-- Utilities -->
     <script src="src/utils/Random.js"></script>
@@ -47,11 +46,14 @@
     <script src="src/utils/AttributeRoller.js"></script>
     <script src="src/utils/Modal.js"></script>
     
-    <!-- Rendering -->
-    <script src="src/rendering/Renderer.js"></script>
-    <script src="src/rendering/UI.js"></script>
-    <script src="src/rendering/CharacterUI.js"></script>
+    <!-- Rendering (load before Engine since Engine depends on these) -->
     <script src="src/rendering/Viewport3D.js"></script>
+    <script src="src/rendering/Renderer.js"></script>
+    <script src="src/rendering/CharacterUI.js"></script>
+    <script src="src/rendering/UI.js"></script>
+    
+    <!-- Core Engine (load after all dependencies) -->
+    <script src="src/core/Engine.js"></script>
     
     <!-- Game Logic -->
     <script src="src/game/Character.js"></script>

@@ -10,6 +10,7 @@ class Engine {
         this.ui = null;
         this.party = null;
         this.dungeon = null;
+        this.player = null;
         
         this.isRunning = false;
         this.lastFrameTime = 0;
@@ -47,6 +48,12 @@ class Engine {
         this.party = new Party();
         this.dungeon = new Dungeon();
         this.combatInterface = new CombatInterface(this.eventSystem);
+        
+        // Initialize player position object
+        this.player = {
+            position: { x: 10, y: 10, facing: 'north' },
+            currentFloor: 1
+        };
         
         // Set up event listeners
         this.setupEventListeners();
@@ -251,12 +258,17 @@ class Engine {
         this.ui.showDungeonInterface();
         
         // Initialize player position if not already set
-        if (!this.player.position) {
-            this.player.position = { x: 10, y: 10, facing: 'north' };
-            this.player.currentFloor = 1;
+        if (!this.player || !this.player.position) {
+            this.player = {
+                position: { x: 10, y: 10, facing: 'north' },
+                currentFloor: 1
+            };
         }
         
-        // Update viewport with current dungeon view
+        // Resize canvas to fit the viewport
+        this.resizeCanvasToViewport();
+        
+        // Update viewport with current dungeon view - use renderer directly for now
         this.updateDungeonView();
         
         // Enable movement controls
@@ -266,18 +278,34 @@ class Engine {
     }
     
     /**
+     * Resize canvas to fit the viewport
+     */
+    resizeCanvasToViewport() {
+        const viewport = document.getElementById('viewport');
+        if (viewport && this.canvas) {
+            const rect = viewport.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            
+            // Update renderer with new size
+            if (this.renderer) {
+                this.renderer.setSize(rect.width, rect.height);
+            }
+            
+            console.log('Canvas resized to viewport:', rect.width, 'x', rect.height);
+        }
+    }
+    
+    /**
      * Update the dungeon 3D view
      */
     updateDungeonView() {
-        if (this.dungeon && this.player.position) {
-            const viewData = this.dungeon.getViewData(
-                this.player.position.x, 
-                this.player.position.y, 
-                this.player.position.facing,
-                this.player.currentFloor
-            );
-            
-            this.renderer.renderDungeonView(viewData);
+        if (this.dungeon && this.player && this.player.position) {
+            // Use the renderer's dungeon rendering method
+            this.renderer.renderDungeon(this.dungeon, this.party);
+        } else {
+            // Fallback to basic dungeon rendering
+            this.renderer.renderBasicDungeon();
         }
     }
     
@@ -519,6 +547,20 @@ class Engine {
             return;
         }
         
+        // Handle action object format from new movement system
+        if (typeof action === 'object' && action.type) {
+            const actionType = action.type;
+            const direction = action.direction;
+            
+            if (actionType === 'move') {
+                this.handleMovementAction(direction);
+            } else if (actionType === 'turn') {
+                this.handleTurnAction(direction);
+            }
+            return;
+        }
+        
+        // Handle legacy string format actions
         switch (action) {
             case 'move-forward':
                 if (this.dungeon.movePlayer('forward')) {
@@ -581,6 +623,76 @@ class Engine {
                 
             default:
                 console.warn('Unknown player action:', action);
+        }
+    }
+    
+    /**
+     * Handle movement actions (forward, backward)
+     */
+    handleMovementAction(direction) {
+        console.log('Handling movement action:', direction);
+        
+        if (direction === 'forward') {
+            if (this.dungeon.movePlayer && this.dungeon.movePlayer('forward')) {
+                this.ui.addMessage('You move forward.');
+            } else {
+                this.ui.addMessage('You cannot move forward - there is a wall in the way.');
+            }
+        } else if (direction === 'backward') {
+            if (this.dungeon.movePlayer && this.dungeon.movePlayer('backward')) {
+                this.ui.addMessage('You move backward.');
+            } else {
+                this.ui.addMessage('You cannot move backward - there is a wall in the way.');
+            }
+        }
+        
+        // Update the dungeon view after movement
+        this.updateDungeonView();
+    }
+    
+    /**
+     * Handle turn actions (left, right)
+     */
+    handleTurnAction(direction) {
+        console.log('Handling turn action:', direction);
+        
+        if (direction === 'left') {
+            if (this.dungeon.turnPlayer) {
+                this.dungeon.turnPlayer('left');
+                this.ui.addMessage('You turn left.');
+            } else {
+                // Fallback: update player facing directly
+                this.updatePlayerFacing('left');
+                this.ui.addMessage('You turn left.');
+            }
+        } else if (direction === 'right') {
+            if (this.dungeon.turnPlayer) {
+                this.dungeon.turnPlayer('right');
+                this.ui.addMessage('You turn right.');
+            } else {
+                // Fallback: update player facing directly
+                this.updatePlayerFacing('right');
+                this.ui.addMessage('You turn right.');
+            }
+        }
+        
+        // Update the dungeon view after turning
+        this.updateDungeonView();
+    }
+    
+    /**
+     * Update player facing direction
+     */
+    updatePlayerFacing(turn) {
+        if (!this.player || !this.player.position) return;
+        
+        const directions = ['north', 'east', 'south', 'west'];
+        const currentIndex = directions.indexOf(this.player.position.facing);
+        
+        if (turn === 'left') {
+            this.player.position.facing = directions[(currentIndex - 1 + 4) % 4];
+        } else if (turn === 'right') {
+            this.player.position.facing = directions[(currentIndex + 1) % 4];
         }
     }
     
