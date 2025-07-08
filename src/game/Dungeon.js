@@ -854,7 +854,9 @@ class Dungeon {
         const doors = [];
         const passages = [];
         
-        // Check tiles in front of player up to view distance
+        // Check front tiles until we hit a wall or reach max distance
+        let frontWallDistance = viewDistance + 1; // Default to beyond max distance
+        
         for (let distance = 1; distance <= viewDistance; distance++) {
             let checkX = this.playerX;
             let checkY = this.playerY;
@@ -871,6 +873,7 @@ class Dungeon {
             
             if (tile === 'wall') {
                 walls.push({ distance, x: checkX, y: checkY });
+                frontWallDistance = distance; // Note where the front wall is
                 break; // Can't see past walls
             } else if (tile === 'hidden_door') {
                 const secretKey = `${this.currentFloor}:${checkX}:${checkY}:hidden_door`;
@@ -878,6 +881,7 @@ class Dungeon {
                     doors.push({ distance, x: checkX, y: checkY, type: 'hidden' });
                 } else {
                     walls.push({ distance, x: checkX, y: checkY }); // Appears as wall
+                    frontWallDistance = distance;
                     break;
                 }
             } else if (tile === 'secret_passage') {
@@ -886,15 +890,54 @@ class Dungeon {
                     passages.push({ distance, x: checkX, y: checkY, type: 'secret' });
                 } else {
                     walls.push({ distance, x: checkX, y: checkY }); // Appears as wall
+                    frontWallDistance = distance;
                     break;
                 }
             }
+        }
+        
+        // Check side walls independently - they can be visible even past front walls
+        for (let distance = 1; distance <= viewDistance; distance++) {
+            let checkX = this.playerX;
+            let checkY = this.playerY;
             
-            // Check side walls for each distance
-            const leftX = checkX + (this.playerDirection === 0 || this.playerDirection === 2 ? -1 : 0);
-            const leftY = checkY + (this.playerDirection === 1 || this.playerDirection === 3 ? -1 : 0);
-            const rightX = checkX + (this.playerDirection === 0 || this.playerDirection === 2 ? 1 : 0);
-            const rightY = checkY + (this.playerDirection === 1 || this.playerDirection === 3 ? 1 : 0);
+            // Calculate front position for this distance
+            switch (this.playerDirection) {
+                case 0: checkY -= distance; break; // North
+                case 1: checkX += distance; break; // East
+                case 2: checkY += distance; break; // South
+                case 3: checkX -= distance; break; // West
+            }
+            
+            // Calculate proper left/right based on facing direction
+            let leftX, leftY, rightX, rightY;
+            
+            switch (this.playerDirection) {
+                case 0: // North
+                    leftX = checkX - 1;
+                    leftY = checkY;
+                    rightX = checkX + 1;
+                    rightY = checkY;
+                    break;
+                case 1: // East
+                    leftX = checkX;
+                    leftY = checkY - 1;
+                    rightX = checkX;
+                    rightY = checkY + 1;
+                    break;
+                case 2: // South
+                    leftX = checkX + 1;
+                    leftY = checkY;
+                    rightX = checkX - 1;
+                    rightY = checkY;
+                    break;
+                case 3: // West
+                    leftX = checkX;
+                    leftY = checkY + 1;
+                    rightX = checkX;
+                    rightY = checkY - 1;
+                    break;
+            }
             
             const leftTile = this.getTile(leftX, leftY);
             const rightTile = this.getTile(rightX, rightY);
