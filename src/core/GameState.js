@@ -13,7 +13,7 @@ class GameState {
         // Define valid state transitions
         this.validTransitions = {
             'loading': ['town', 'playing'],
-            'town': ['training-grounds', 'dungeon', 'menu'],
+            'town': ['training-grounds', 'dungeon', 'menu', 'playing'],
             'training-grounds': ['town', 'character-creation'],
             'character-creation': ['training-grounds'],
             'dungeon': ['playing', 'town'],

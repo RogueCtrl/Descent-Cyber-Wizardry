@@ -845,4 +845,64 @@ class UI {
             }
         }, duration);
     }
+    
+    /**
+     * Show dungeon exploration interface
+     */
+    showDungeonInterface() {
+        console.log('UI.showDungeonInterface() called');
+        
+        // Ensure game panels are visible
+        const gameContainer = document.getElementById('game-container');
+        const uiOverlay = document.getElementById('ui-overlay');
+        
+        if (gameContainer) {
+            gameContainer.style.display = 'block';
+        }
+        
+        if (uiOverlay) {
+            uiOverlay.style.display = 'block';
+        }
+        
+        // Make sure viewport is visible
+        const viewport = document.getElementById('viewport');
+        if (viewport) {
+            viewport.style.display = 'block';
+        }
+        
+        // Show movement controls
+        const movementControls = document.getElementById('movement-controls');
+        if (movementControls) {
+            movementControls.style.display = 'block';
+        }
+        
+        // Show action controls
+        const actionControls = document.getElementById('action-controls');
+        if (actionControls) {
+            actionControls.style.display = 'block';
+        }
+        
+        console.log('Dungeon interface elements made visible');
+    }
+    
+    /**
+     * Enable movement controls
+     */
+    enableMovementControls() {
+        console.log('UI.enableMovementControls() called');
+        
+        // Enable all movement buttons
+        const movementButtons = document.querySelectorAll('#movement-controls button');
+        movementButtons.forEach(button => {
+            button.disabled = false;
+        });
+        
+        // Enable action buttons
+        const actionButtons = document.querySelectorAll('#action-controls button');
+        actionButtons.forEach(button => {
+            button.disabled = false;
+        });
+        
+        console.log('Movement and action controls enabled');
+    }
 }

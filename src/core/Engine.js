@@ -214,10 +214,14 @@ class Engine {
                 
             case 'dungeon':
             case 'playing':
+                console.log('Entering playing/dungeon state - initializing dungeon interface');
                 this.ui.hideCharacterCreation();
                 this.ui.hideTown();
                 this.ui.hideTrainingGrounds();
                 this.ui.updatePartyDisplay(this.party);
+                
+                // Initialize dungeon exploration interface
+                this.initializeDungeonInterface();
                 break;
                 
             case 'combat':
@@ -235,6 +239,128 @@ class Engine {
             default:
                 console.warn('Unknown game state:', newState);
         }
+    }
+    
+    /**
+     * Initialize dungeon exploration interface
+     */
+    initializeDungeonInterface() {
+        console.log('Initializing dungeon exploration interface...');
+        
+        // Ensure UI panels are visible
+        this.ui.showDungeonInterface();
+        
+        // Initialize player position if not already set
+        if (!this.player.position) {
+            this.player.position = { x: 10, y: 10, facing: 'north' };
+            this.player.currentFloor = 1;
+        }
+        
+        // Update viewport with current dungeon view
+        this.updateDungeonView();
+        
+        // Enable movement controls
+        this.enableMovementControls();
+        
+        console.log('Dungeon interface initialized');
+    }
+    
+    /**
+     * Update the dungeon 3D view
+     */
+    updateDungeonView() {
+        if (this.dungeon && this.player.position) {
+            const viewData = this.dungeon.getViewData(
+                this.player.position.x, 
+                this.player.position.y, 
+                this.player.position.facing,
+                this.player.currentFloor
+            );
+            
+            this.renderer.renderDungeonView(viewData);
+        }
+    }
+    
+    /**
+     * Enable movement controls for dungeon exploration
+     */
+    enableMovementControls() {
+        // Set up keyboard listeners for movement
+        this.setupMovementEventListeners();
+        
+        // Enable movement buttons
+        this.ui.enableMovementControls();
+    }
+    
+    /**
+     * Setup movement event listeners for dungeon exploration
+     */
+    setupMovementEventListeners() {
+        console.log('Setting up movement event listeners...');
+        
+        // Button event listeners
+        const forwardBtn = document.getElementById('move-forward');
+        const backwardBtn = document.getElementById('move-backward');
+        const leftBtn = document.getElementById('turn-left');
+        const rightBtn = document.getElementById('turn-right');
+        
+        if (forwardBtn) {
+            forwardBtn.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', { type: 'move', direction: 'forward' });
+            });
+        }
+        
+        if (backwardBtn) {
+            backwardBtn.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', { type: 'move', direction: 'backward' });
+            });
+        }
+        
+        if (leftBtn) {
+            leftBtn.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', { type: 'turn', direction: 'left' });
+            });
+        }
+        
+        if (rightBtn) {
+            rightBtn.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', { type: 'turn', direction: 'right' });
+            });
+        }
+        
+        // Keyboard event listeners
+        document.addEventListener('keydown', (event) => {
+            if (this.gameState.isState('playing')) {
+                switch (event.key) {
+                    case 'ArrowUp':
+                    case 'w':
+                    case 'W':
+                        this.eventSystem.emit('player-action', { type: 'move', direction: 'forward' });
+                        event.preventDefault();
+                        break;
+                    case 'ArrowDown':
+                    case 's':
+                    case 'S':
+                        this.eventSystem.emit('player-action', { type: 'move', direction: 'backward' });
+                        event.preventDefault();
+                        break;
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        this.eventSystem.emit('player-action', { type: 'turn', direction: 'left' });
+                        event.preventDefault();
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        this.eventSystem.emit('player-action', { type: 'turn', direction: 'right' });
+                        event.preventDefault();
+                        break;
+                }
+            }
+        });
+        
+        console.log('Movement event listeners set up');
     }
     
     /**
@@ -727,6 +853,7 @@ class Engine {
      */
     handleTownLocationSelection(location) {
         console.log('Town location selected:', location);
+        console.log('Current state before location selection:', this.gameState.currentState);
         
         switch (location) {
             case 'training-grounds':
@@ -734,13 +861,23 @@ class Engine {
                 break;
                 
             case 'dungeon':
+                console.log('Attempting dungeon entry...');
                 if (this.validateDungeonEntry()) {
+                    console.log('Dungeon entry validation passed, entering dungeon...');
                     this.ui.hideTown(); // Ensure town modal is closed
                     this.gameState.setState('playing');
                     this.ui.addMessage('You enter the dungeon...');
+                    // Emit event to notify UI of dungeon entry
+                    this.eventSystem.emit('dungeon-entered');
                 } else {
+                    console.log('Dungeon entry validation failed');
                     // Validation failed - stay in town
                     this.ui.addMessage('Cannot enter dungeon. Check party requirements.');
+                    // Ensure we're still in town state
+                    if (!this.gameState.isState('town')) {
+                        console.log('Forcing state back to town after failed validation');
+                        this.gameState.setState('town');
+                    }
                 }
                 break;
                 
@@ -777,8 +914,14 @@ class Engine {
      * Validate if party can enter the dungeon
      */
     validateDungeonEntry() {
+        console.log('=== Dungeon Entry Validation ===');
+        console.log('Current game state:', this.gameState.currentState);
+        console.log('Party exists:', !!this.party);
+        console.log('Party size:', this.party ? this.party.size : 'N/A');
+        
         // Check if party exists and has members
         if (!this.party || this.party.size === 0) {
+            console.log('Validation failed: No party or empty party');
             this.ui.addMessage('You need at least one character to enter the dungeon!');
             return false;
         }
@@ -788,18 +931,25 @@ class Engine {
             member.status !== 'dead' && member.status !== 'lost'
         );
         
+        console.log('Living members:', livingMembers.length);
+        console.log('Member statuses:', this.party.members.map(m => `${m.name}: ${m.status || 'OK'}`));
+        
         if (livingMembers.length === 0) {
+            console.log('Validation failed: No living members');
             this.ui.addMessage('Your party has no living members! Visit the Temple for resurrections.');
             return false;
         }
         
         // Check if we're in a valid state to enter dungeon
         if (!this.gameState.isState('town')) {
+            console.log('Validation failed: Invalid state for dungeon entry:', this.gameState.currentState);
             console.warn('Invalid state for dungeon entry:', this.gameState.currentState);
+            this.ui.addMessage('You must be in town to enter the dungeon.');
             return false;
         }
         
         // All validation passed
+        console.log('Validation passed: Ready to enter dungeon');
         return true;
     }
     
