@@ -47,6 +47,17 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 
 </div>
 
+## Test room
+
+  0 1 2 3 4 5 6 7 8  (x coordinates)
+0 █ █ █ █ █ █ █ █ █  
+1 . . . █ █ . . . █  (Room A)    (Room B)
+2 . p . . . . . . █  (Room A)(corridor)(Room B)
+3 . . . █ █ . . . █  (Room A)    (Room B)
+4 █ █ █ █ █ █ █ █ █  
+
+There is no Western wall in Room A as that is the Eastern wall of Room B due to our wrap-around mapping implementations
+
 ## Planned Features
 
 - **Classic Dungeon Crawling**: First-person 3D wireframe exploration
@@ -91,12 +102,3 @@ Currently in active development. The project is in early stages with core system
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
-
-┌───────────────────────┐
-│ Room A  │   │ Room B  │
-│         └───┘         │
-|          2x1          │
-│         ┌───┐         │
-│    p    │   │         │
-└───────────────────────┘
