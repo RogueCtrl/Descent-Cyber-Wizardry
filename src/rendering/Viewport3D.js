@@ -52,10 +52,7 @@ class Viewport3D {
         this.clear();
         
         const viewInfo = dungeon.getViewingInfo();
-        const centerX = this.width / 2;
-        
-        // Render floor and ceiling perspective lines first (background framework)
-        this.renderPerspectiveLines(centerX);
+        const centerX = this.width / 2;          s
         
         // Set up drawing context for walls (thicker lines)
         this.ctx.lineWidth = 2;
@@ -436,43 +433,7 @@ class Viewport3D {
         this.ctx.textAlign = 'center';
         this.ctx.fillText('S', (passageLeft + passageRight) / 2, (topY + bottomY) / 2);
         this.ctx.textAlign = 'left';
-    }
-    
-    /**
-     * Render perspective lines for floor and ceiling
-     */
-    renderPerspectiveLines(centerX) {
-        // Use thinner lines for perspective framework (background)
-        this.ctx.strokeStyle = this.colors.wall;
-        this.ctx.lineWidth = 1;
-        this.ctx.lineCap = 'round';
-        this.ctx.lineJoin = 'round';
-        
-        // Get the farthest perspective for vanishing point
-        const farPerspective = this.calculatePerspective(this.maxViewDistance);
-        
-        this.ctx.beginPath();
-        
-        // Floor perspective lines
-        this.ctx.moveTo(0, this.height);
-        this.ctx.lineTo(farPerspective.leftX, farPerspective.bottomY);
-        this.ctx.moveTo(this.width, this.height);
-        this.ctx.lineTo(farPerspective.rightX, farPerspective.bottomY);
-        
-        // Ceiling perspective lines
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(farPerspective.leftX, farPerspective.topY);
-        this.ctx.moveTo(this.width, 0);
-        this.ctx.lineTo(farPerspective.rightX, farPerspective.topY);
-        
-        // REMOVED: Unconditional side wall rendering
-        // Side walls are now only rendered when they actually exist in dungeon data
-        
-        this.ctx.stroke();
-        
-        // Reset line width to 2 for walls (will be set again in main render method)
-        this.ctx.lineWidth = 2;
-    }
+    } 
     
     /**
      * Render status information
