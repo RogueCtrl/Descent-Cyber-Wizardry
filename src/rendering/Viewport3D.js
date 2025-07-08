@@ -52,7 +52,7 @@ class Viewport3D {
         this.clear();
         
         const viewInfo = dungeon.getViewingInfo();
-        const centerX = this.width / 2;          s
+        const centerX = this.width / 2;
         
         // Set up drawing context for walls (thicker lines)
         this.ctx.lineWidth = 2;
