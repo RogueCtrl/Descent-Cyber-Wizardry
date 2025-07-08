@@ -265,6 +265,9 @@ class Engine {
             };
         }
         
+        // Sync player direction with dungeon direction system
+        this.syncPlayerDirectionWithDungeon();
+        
         // Resize canvas to fit the viewport
         this.resizeCanvasToViewport();
         
@@ -658,18 +661,28 @@ class Engine {
         
         if (direction === 'left') {
             if (this.dungeon.turnPlayer) {
+                console.log('Calling dungeon.turnPlayer(left), before:', this.dungeon.playerDirection);
                 this.dungeon.turnPlayer('left');
-                this.ui.addMessage('You turn left.');
+                console.log('After dungeon.turnPlayer(left):', this.dungeon.playerDirection);
+                // Sync the player object with dungeon direction
+                this.syncPlayerDirectionWithDungeon();
+                this.ui.addMessage(`You turn left. Now facing ${this.dungeon.getDirectionName()}.`);
             } else {
+                console.log('Dungeon.turnPlayer not available, using fallback');
                 // Fallback: update player facing directly
                 this.updatePlayerFacing('left');
                 this.ui.addMessage('You turn left.');
             }
         } else if (direction === 'right') {
             if (this.dungeon.turnPlayer) {
+                console.log('Calling dungeon.turnPlayer(right), before:', this.dungeon.playerDirection);
                 this.dungeon.turnPlayer('right');
-                this.ui.addMessage('You turn right.');
+                console.log('After dungeon.turnPlayer(right):', this.dungeon.playerDirection);
+                // Sync the player object with dungeon direction
+                this.syncPlayerDirectionWithDungeon();
+                this.ui.addMessage(`You turn right. Now facing ${this.dungeon.getDirectionName()}.`);
             } else {
+                console.log('Dungeon.turnPlayer not available, using fallback');
                 // Fallback: update player facing directly
                 this.updatePlayerFacing('right');
                 this.ui.addMessage('You turn right.');
@@ -678,6 +691,18 @@ class Engine {
         
         // Update the dungeon view after turning
         this.updateDungeonView();
+    }
+    
+    /**
+     * Sync player object direction with dungeon direction
+     */
+    syncPlayerDirectionWithDungeon() {
+        if (!this.player || !this.player.position || !this.dungeon) return;
+        
+        const directions = ['north', 'east', 'south', 'west'];
+        this.player.position.facing = directions[this.dungeon.playerDirection];
+        
+        console.log('Synced player direction:', this.player.position.facing, 'from dungeon direction:', this.dungeon.playerDirection);
     }
     
     /**

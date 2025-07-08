@@ -107,11 +107,11 @@ class Viewport3D {
         });
         
         leftWalls.forEach(wall => {
-            this.renderLeftWall(perspective, centerX);
+            this.renderLeftWallSegment(perspective, centerX, distance);
         });
         
         rightWalls.forEach(wall => {
-            this.renderRightWall(perspective, centerX);
+            this.renderRightWallSegment(perspective, centerX, distance);
         });
     }
     
@@ -206,47 +206,95 @@ class Viewport3D {
     }
     
     /**
-     * Render left side wall
+     * Render left side wall segment with continuity
      */
-    renderLeftWall(perspective, centerX) {
+    renderLeftWallSegment(perspective, centerX, distance) {
         const { leftX, topY, bottomY } = perspective;
         
         this.ctx.beginPath();
-        // Left wall edge
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(leftX, topY);
-        this.ctx.moveTo(0, this.height);
-        this.ctx.lineTo(leftX, bottomY);
         
-        // Left wall face
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(0, this.height);
-        this.ctx.moveTo(leftX, topY);
-        this.ctx.lineTo(leftX, bottomY);
+        // For distance 1, connect to screen edge
+        if (distance === 1) {
+            // Left wall edge from screen to perspective point
+            this.ctx.moveTo(0, 0);
+            this.ctx.lineTo(leftX, topY);
+            this.ctx.moveTo(0, this.height);
+            this.ctx.lineTo(leftX, bottomY);
+            
+            // Left wall face
+            this.ctx.moveTo(0, 0);
+            this.ctx.lineTo(0, this.height);
+            this.ctx.moveTo(leftX, topY);
+            this.ctx.lineTo(leftX, bottomY);
+        } else {
+            // For distance > 1, connect to previous segment
+            const prevPerspective = this.calculatePerspective(distance - 1);
+            
+            // Horizontal lines connecting to previous segment
+            this.ctx.moveTo(prevPerspective.leftX, prevPerspective.topY);
+            this.ctx.lineTo(leftX, topY);
+            this.ctx.moveTo(prevPerspective.leftX, prevPerspective.bottomY);
+            this.ctx.lineTo(leftX, bottomY);
+            
+            // Vertical line at current distance
+            this.ctx.moveTo(leftX, topY);
+            this.ctx.lineTo(leftX, bottomY);
+        }
         
         this.ctx.stroke();
     }
     
     /**
-     * Render right side wall
+     * Render left side wall (legacy method - kept for compatibility)
      */
-    renderRightWall(perspective, centerX) {
+    renderLeftWall(perspective, centerX) {
+        this.renderLeftWallSegment(perspective, centerX, 1);
+    }
+    
+    /**
+     * Render right side wall segment with continuity
+     */
+    renderRightWallSegment(perspective, centerX, distance) {
         const { rightX, topY, bottomY } = perspective;
         
         this.ctx.beginPath();
-        // Right wall edge
-        this.ctx.moveTo(this.width, 0);
-        this.ctx.lineTo(rightX, topY);
-        this.ctx.moveTo(this.width, this.height);
-        this.ctx.lineTo(rightX, bottomY);
         
-        // Right wall face
-        this.ctx.moveTo(this.width, 0);
-        this.ctx.lineTo(this.width, this.height);
-        this.ctx.moveTo(rightX, topY);
-        this.ctx.lineTo(rightX, bottomY);
+        // For distance 1, connect to screen edge
+        if (distance === 1) {
+            // Right wall edge from screen to perspective point
+            this.ctx.moveTo(this.width, 0);
+            this.ctx.lineTo(rightX, topY);
+            this.ctx.moveTo(this.width, this.height);
+            this.ctx.lineTo(rightX, bottomY);
+            
+            // Right wall face
+            this.ctx.moveTo(this.width, 0);
+            this.ctx.lineTo(this.width, this.height);
+            this.ctx.moveTo(rightX, topY);
+            this.ctx.lineTo(rightX, bottomY);
+        } else {
+            // For distance > 1, connect to previous segment
+            const prevPerspective = this.calculatePerspective(distance - 1);
+            
+            // Horizontal lines connecting to previous segment
+            this.ctx.moveTo(prevPerspective.rightX, prevPerspective.topY);
+            this.ctx.lineTo(rightX, topY);
+            this.ctx.moveTo(prevPerspective.rightX, prevPerspective.bottomY);
+            this.ctx.lineTo(rightX, bottomY);
+            
+            // Vertical line at current distance
+            this.ctx.moveTo(rightX, topY);
+            this.ctx.lineTo(rightX, bottomY);
+        }
         
         this.ctx.stroke();
+    }
+    
+    /**
+     * Render right side wall (legacy method - kept for compatibility)
+     */
+    renderRightWall(perspective, centerX) {
+        this.renderRightWallSegment(perspective, centerX, 1);
     }
     
     /**

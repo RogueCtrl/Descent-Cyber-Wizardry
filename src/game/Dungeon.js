@@ -682,15 +682,27 @@ class Dungeon {
      * Turn player
      */
     turnPlayer(direction) {
+        const oldDirection = this.playerDirection;
+        
         switch (direction) {
             case 'left':
-                this.playerDirection = (this.playerDirection + 3) % 4;
+                // Turn counter-clockwise: North(0) → West(3) → South(2) → East(1) → North(0)
+                this.playerDirection = this.playerDirection - 1;
+                if (this.playerDirection < 0) {
+                    this.playerDirection = 3;
+                }
                 break;
                 
             case 'right':
-                this.playerDirection = (this.playerDirection + 1) % 4;
+                // Turn clockwise: North(0) → East(1) → South(2) → West(3) → North(0)
+                this.playerDirection = this.playerDirection + 1;
+                if (this.playerDirection > 3) {
+                    this.playerDirection = 0;
+                }
                 break;
         }
+        
+        console.log(`Dungeon.turnPlayer(${direction}): ${oldDirection} → ${this.playerDirection}`);
     }
     
     /**

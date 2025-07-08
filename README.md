@@ -42,6 +42,9 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 **Town Menu**
 ![Town Menu](assets/readme/town-menu.jpg)
 
+**Dungeon Interface**
+![Dungeon Interface](assets/readme/dungeon-preview.jpg)
+
 </div>
 
 ## Planned Features

@@ -63,30 +63,7 @@ class UI {
      * Set up event listeners for UI elements
      */
     setupEventListeners() {
-        // Movement controls
-        if (this.controlButtons.moveForward) {
-            this.controlButtons.moveForward.addEventListener('click', () => {
-                this.eventSystem.emit('player-action', 'move-forward');
-            });
-        }
-        
-        if (this.controlButtons.moveBackward) {
-            this.controlButtons.moveBackward.addEventListener('click', () => {
-                this.eventSystem.emit('player-action', 'move-backward');
-            });
-        }
-        
-        if (this.controlButtons.turnLeft) {
-            this.controlButtons.turnLeft.addEventListener('click', () => {
-                this.eventSystem.emit('player-action', 'turn-left');
-            });
-        }
-        
-        if (this.controlButtons.turnRight) {
-            this.controlButtons.turnRight.addEventListener('click', () => {
-                this.eventSystem.emit('player-action', 'turn-right');
-            });
-        }
+        // Movement controls are handled by Engine.js to prevent duplicate event listeners
         
         // Action controls
         if (this.controlButtons.castSpell) {
@@ -129,26 +106,8 @@ class UI {
      */
     handleKeydown(event) {
         switch (event.key) {
-            case 'ArrowUp':
-                event.preventDefault();
-                this.eventSystem.emit('player-action', 'move-forward');
-                break;
-                
-            case 'ArrowDown':
-                event.preventDefault();
-                this.eventSystem.emit('player-action', 'move-backward');
-                break;
-                
-            case 'ArrowLeft':
-                event.preventDefault();
-                this.eventSystem.emit('player-action', 'turn-left');
-                break;
-                
-            case 'ArrowRight':
-                event.preventDefault();
-                this.eventSystem.emit('player-action', 'turn-right');
-                break;
-                
+            // Movement keys are handled by Engine.js to prevent duplicate handling
+            
             case ' ':
                 event.preventDefault();
                 this.eventSystem.emit('player-action', 'action');
