@@ -251,7 +251,7 @@ class Dungeon {
             
             if (availableDirections.length === 0) break;
             
-            const [dx, dy] = Random.arrayElement(availableDirections);
+            const [dx, dy] = Random.choice(availableDirections);
             x += dx;
             y += dy;
             
@@ -259,7 +259,7 @@ class Dungeon {
             
             // Small chance to branch
             if (Random.chance(0.3)) {
-                const branchDir = Random.arrayElement(availableDirections);
+                const branchDir = Random.choice(availableDirections);
                 const bx = x + branchDir[0];
                 const by = y + branchDir[1];
                 if (bx >= 1 && bx < width - 1 && by >= 1 && by < height - 1) {
@@ -314,7 +314,7 @@ class Dungeon {
             const y = Random.integer(1, height - 2);
             
             if (tiles[y][x] === 'floor' && this.canPlaceTrap(tiles, x, y)) {
-                const trapType = Random.arrayElement(trapTypes);
+                const trapType = Random.choice(trapTypes);
                 tiles[y][x] = `trap_${trapType}`;
             }
         }
@@ -370,9 +370,9 @@ class Dungeon {
             specials.push({
                 x: Random.integer(1, 19),
                 y: Random.integer(1, 19),
-                type: Random.arrayElement(specialTypes),
+                type: Random.choice(specialTypes),
                 used: false,
-                message: this.generateSpecialMessage(Random.arrayElement(specialTypes))
+                message: this.generateSpecialMessage(Random.choice(specialTypes))
             });
         }
         

@@ -599,12 +599,12 @@ class Engine {
         
         if (Random.chance(0.3)) {
             // Lucky - actually beneficial
-            const member = Random.arrayElement(this.party.members);
+            const member = Random.choice(this.party.members);
             member.currentHP = Math.min(member.maxHP, member.currentHP + Random.integer(2, 12));
             this.ui.addMessage(`Surprisingly, ${member.name} feels invigorated!`);
         } else {
             // Poisoned
-            const member = Random.arrayElement(this.party.members);
+            const member = Random.choice(this.party.members);
             const damage = Random.integer(1, 6);
             member.currentHP = Math.max(0, member.currentHP - damage);
             this.ui.addMessage(`${member.name} is poisoned and takes ${damage} damage!`);
@@ -646,7 +646,7 @@ class Engine {
         if (Random.chance(0.4)) {
             // Trapped!
             const damage = Random.integer(1, 6);
-            const target = Random.arrayElement(this.party.members);
+            const target = Random.choice(this.party.members);
             target.currentHP = Math.max(0, target.currentHP - damage);
             
             this.ui.addMessage(`The chest is trapped! ${target.name} takes ${damage} damage from a poison needle.`);
@@ -876,7 +876,7 @@ class Engine {
         if (damage > 0) {
             const livingMembers = this.party.members.filter(m => m.currentHP > 0);
             if (livingMembers.length > 0) {
-                const target = Random.arrayElement(livingMembers);
+                const target = Random.choice(livingMembers);
                 target.currentHP = Math.max(0, target.currentHP - damage);
                 
                 this.ui.addMessage(`${target.name} takes ${damage} damage from the trap.`);
@@ -933,7 +933,7 @@ class Engine {
                     'The deeper you go, the greater the danger.',
                     'Trust not the fountains of the lower levels.'
                 ];
-                this.ui.addMessage(`The text reads: "${Random.arrayElement(messages)}"`);
+                this.ui.addMessage(`The text reads: "${Random.choice(messages)}"`);
                 break;
                 
             case 'treasure_chest':
