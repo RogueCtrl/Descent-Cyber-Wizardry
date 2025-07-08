@@ -54,7 +54,10 @@ class Viewport3D {
         const viewInfo = dungeon.getViewingInfo();
         const centerX = this.width / 2;
         
-        // Set up drawing context
+        // Render floor and ceiling perspective lines first (background framework)
+        this.renderPerspectiveLines(centerX);
+        
+        // Set up drawing context for walls (thicker lines)
         this.ctx.lineWidth = 2;
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
@@ -65,9 +68,6 @@ class Viewport3D {
             this.renderDoorsAtDistance(viewInfo, distance, centerX);
             this.renderPassagesAtDistance(viewInfo, distance, centerX);
         }
-        
-        // Render floor and ceiling perspective lines
-        this.renderPerspectiveLines(centerX);
         
         // Render status information
         this.renderStatusInfo(dungeon, viewInfo);
@@ -83,17 +83,35 @@ class Viewport3D {
         const perspective = this.calculatePerspective(distance);
         this.ctx.strokeStyle = this.colors.wall;
         
+        // Separate walls by type for proper depth sorting
+        const frontWalls = [];
+        const leftWalls = [];
+        const rightWalls = [];
+        
         viewInfo.walls.forEach(wall => {
             if (wall.distance === distance) {
                 if (wall.side === 'left') {
-                    this.renderLeftWall(perspective, centerX);
+                    leftWalls.push(wall);
                 } else if (wall.side === 'right') {
-                    this.renderRightWall(perspective, centerX);
+                    rightWalls.push(wall);
                 } else {
                     // Front wall
-                    this.renderFrontWall(perspective, centerX);
+                    frontWalls.push(wall);
                 }
             }
+        });
+        
+        // Render in proper depth order: front walls first (back), then side walls (front)
+        frontWalls.forEach(wall => {
+            this.renderFrontWall(perspective, centerX);
+        });
+        
+        leftWalls.forEach(wall => {
+            this.renderLeftWall(perspective, centerX);
+        });
+        
+        rightWalls.forEach(wall => {
+            this.renderRightWall(perspective, centerX);
         });
     }
     
@@ -294,8 +312,11 @@ class Viewport3D {
      * Render perspective lines for floor and ceiling
      */
     renderPerspectiveLines(centerX) {
+        // Use thinner lines for perspective framework (background)
         this.ctx.strokeStyle = this.colors.wall;
         this.ctx.lineWidth = 1;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
         
         // Get the farthest perspective for vanishing point
         const farPerspective = this.calculatePerspective(this.maxViewDistance);
@@ -321,6 +342,8 @@ class Viewport3D {
         this.ctx.lineTo(this.width, this.height);
         
         this.ctx.stroke();
+        
+        // Reset line width to 2 for walls (will be set again in main render method)
         this.ctx.lineWidth = 2;
     }
     

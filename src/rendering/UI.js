@@ -869,7 +869,7 @@ class UI {
         }
         
         if (uiOverlay) {
-            uiOverlay.style.display = 'block';
+            uiOverlay.style.display = 'grid';
         }
         
         // Make sure viewport is visible
