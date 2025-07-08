@@ -48,13 +48,14 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 </div>
 
 ## Test room
-
+```text
   0 1 2 3 4 5 6 7 8  (x coordinates)
 0 █ █ █ █ █ █ █ █ █  
 1 . . . █ █ . . . █  (Room A)    (Room B)
 2 . p . . . . . . █  (Room A)(corridor)(Room B)
 3 . . . █ █ . . . █  (Room A)    (Room B)
 4 █ █ █ █ █ █ █ █ █  
+```
 
 There is no Western wall in Room A as that is the Eastern wall of Room B due to our wrap-around mapping implementations
 
