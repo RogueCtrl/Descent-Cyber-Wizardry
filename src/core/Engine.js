@@ -44,6 +44,10 @@ class Engine {
             this.renderer = new Renderer(this.canvas, this.context);
             this.ui = new UI(this.eventSystem);
             
+            // Initialize storage and entity systems
+            console.log('Initializing storage and entity systems...');
+            await this.initializeEntitySystems();
+            
                     // Initialize game objects
         this.party = new Party();
         this.dungeon = new Dungeon();
@@ -75,6 +79,40 @@ class Engine {
         } catch (error) {
             console.error('Failed to initialize game:', error);
             this.showErrorMessage('Failed to initialize game: ' + error.message);
+        }
+    }
+    
+    /**
+     * Initialize storage and entity systems
+     */
+    async initializeEntitySystems() {
+        try {
+            // Initialize IndexedDB
+            console.log('Initializing IndexedDB...');
+            await Storage.initializeDB();
+            
+            // Initialize entities from migration files
+            console.log('Loading entities from migration files...');
+            await Storage.loadEntitiesFromJSON();
+            
+            // Initialize individual entity systems
+            console.log('Initializing Equipment system...');
+            const equipment = new Equipment();
+            await equipment.initializeEntities();
+            
+            console.log('Initializing Spells system...');
+            const spells = new Spells();
+            await spells.initializeEntities();
+            
+            console.log('Initializing Monster system...');
+            const monster = new Monster();
+            await monster.initializeEntities();
+            
+            console.log('✓ All entity systems initialized successfully');
+            
+        } catch (error) {
+            console.error('Failed to initialize entity systems:', error);
+            throw error;
         }
     }
     

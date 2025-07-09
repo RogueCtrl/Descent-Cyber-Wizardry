@@ -9,6 +9,7 @@ class CombatInterface {
         this.formation = new Formation();
         this.equipment = new Equipment();
         this.encounterGenerator = new EncounterGenerator();
+        this.equipmentInitialized = false;
         
         this.setupEventListeners();
     }
@@ -25,15 +26,27 @@ class CombatInterface {
     }
     
     /**
+     * Initialize equipment system
+     */
+    async initializeEquipment() {
+        if (!this.equipmentInitialized) {
+            await this.equipment.initializeEntities();
+            this.equipmentInitialized = true;
+        }
+    }
+    
+    /**
      * Initialize combat encounter
      */
-    initiateCombat(party, encounterType = 'random', dungeonLevel = 1) {
+    async initiateCombat(party, encounterType = 'random', dungeonLevel = 1) {
+        // Initialize equipment system
+        await this.initializeEquipment();
         // Generate encounter
         let encounter;
         if (encounterType === 'boss') {
-            encounter = this.encounterGenerator.generateBossEncounter(dungeonLevel);
+            encounter = await this.encounterGenerator.generateBossEncounter(dungeonLevel);
         } else {
-            encounter = this.encounterGenerator.generateEncounter(party.level || 1, dungeonLevel);
+            encounter = await this.encounterGenerator.generateEncounter(party.level || 1, dungeonLevel);
         }
         
         if (encounter.isEmpty) {
@@ -48,7 +61,7 @@ class CombatInterface {
         const formationData = this.formation.setupFromParty(party);
         
         // Start combat
-        const combatStart = this.combat.startCombat(party, encounter.monsters);
+        const combatStart = await this.combat.startCombat(party, encounter.monsters);
         
         // Calculate difficulty
         const difficulty = this.encounterGenerator.calculateDifficulty(

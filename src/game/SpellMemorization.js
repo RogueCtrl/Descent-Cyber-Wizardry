@@ -5,13 +5,26 @@
 class SpellMemorization {
     constructor() {
         this.spellSystem = new Spells();
+        this.spellSystemInitialized = false;
+    }
+    
+    /**
+     * Initialize spell system
+     */
+    async initializeSpellSystem() {
+        if (!this.spellSystemInitialized) {
+            await this.spellSystem.initializeEntities();
+            this.spellSystemInitialized = true;
+        }
     }
     
     /**
      * Prepare spells for character during rest
      */
-    prepareSpells(character, spellSelections) {
-        const result = this.validateSpellSelections(character, spellSelections);
+    async prepareSpells(character, spellSelections) {
+        await this.initializeSpellSystem();
+        
+        const result = await this.validateSpellSelections(character, spellSelections);
         if (!result.valid) {
             return { success: false, reason: result.reason };
         }
@@ -32,7 +45,8 @@ class SpellMemorization {
     /**
      * Validate spell selections against character's capabilities
      */
-    validateSpellSelections(character, spellSelections) {
+    async validateSpellSelections(character, spellSelections) {
+        await this.initializeSpellSystem();
         const classData = Class.getClassData(character.class);
         if (!classData || !classData.spells) {
             return { valid: false, reason: 'Character cannot cast spells' };

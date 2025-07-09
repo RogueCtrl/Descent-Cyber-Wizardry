@@ -7,24 +7,37 @@ class MagicTest {
         this.testResults = [];
         this.spellSystem = new Spells();
         this.memorization = new SpellMemorization();
+        this.initialized = false;
+    }
+    
+    /**
+     * Initialize systems
+     */
+    async initializeSystems() {
+        if (!this.initialized) {
+            await this.spellSystem.initializeEntities();
+            await this.memorization.initializeSpellSystem();
+            this.initialized = true;
+        }
     }
     
     /**
      * Run all magic system tests
      */
-    runAllTests() {
+    async runAllTests() {
         console.log('Starting Magic System Tests...');
         
+        await this.initializeSystems();
         this.testResults = [];
         
         try {
-            this.testSpellDatabase();
-            this.testSpellSlotCalculation();
-            this.testSpellMemorization();
-            this.testSpellCasting();
-            this.testEliteClassSpells();
-            this.testHighLevelSpells();
-            this.testSpellEffects();
+            await this.testSpellDatabase();
+            await this.testSpellSlotCalculation();
+            await this.testSpellMemorization();
+            await this.testSpellCasting();
+            await this.testEliteClassSpells();
+            await this.testHighLevelSpells();
+            await this.testSpellEffects();
             
             this.printTestResults();
             
@@ -41,7 +54,7 @@ class MagicTest {
     /**
      * Test spell database completeness
      */
-    testSpellDatabase() {
+    async testSpellDatabase() {
         console.log('Testing spell database...');
         
         try {
@@ -51,7 +64,7 @@ class MagicTest {
             // Count spells in database
             for (const school of ['arcane', 'divine']) {
                 for (let level = 1; level <= 7; level++) {
-                    const spells = this.spellSystem.getSpellsBySchoolAndLevel(school, level);
+                    const spells = await this.spellSystem.getSpellsBySchoolAndLevel(school, level);
                     spellCount[school] += spells.length;
                     levelCount[school][level] = spells.length;
                 }

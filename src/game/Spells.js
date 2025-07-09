@@ -5,11 +5,43 @@
 class Spells {
     constructor() {
         this.knownSpells = new Map();
-        this.spellDatabase = this.initializeSpellDatabase();
+        this.spellCache = new Map(); // Cache for frequently accessed spells
+        
+        // Initialize entity loading on first use
+        this.entitiesLoaded = false;
     }
     
     /**
-     * Initialize spell database
+     * Initialize spell entities from IndexedDB
+     * @param {boolean} forceReload - Force reload entities from JSON
+     * @returns {Promise<boolean>} Success status
+     */
+    async initializeEntities(forceReload = false) {
+        if (this.entitiesLoaded && !forceReload) return true;
+        
+        try {
+            // Entities are already loaded by Engine.js, just mark as initialized
+            this.entitiesLoaded = true;
+            
+            // Clear cache when entities are reloaded
+            if (forceReload) {
+                this.spellCache.clear();
+                console.log('Spell entity cache cleared');
+                // Force reload entities if requested
+                await Storage.loadEntitiesFromJSON(forceReload);
+            }
+            
+            console.log('Spell entities initialized successfully');
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize spell entities:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * DEPRECATED: Legacy spell database (kept for compatibility)
+     * Use getSpellFromStorage() instead
      */
     initializeSpellDatabase() {
         return {
@@ -509,12 +541,64 @@ class Spells {
     }
     
     /**
-     * Get spell from database
+     * Get spell from storage by entity ID
+     * @param {string} spellId - Spell entity ID
+     * @returns {Promise<Object|null>} Spell data or null
+     */
+    async getSpellFromStorage(spellId) {
+        if (!spellId) return null;
+        
+        // Check cache first
+        if (this.spellCache.has(spellId)) {
+            return { ...this.spellCache.get(spellId) };
+        }
+        
+        await this.initializeEntities();
+        
+        const spell = await Storage.getSpell(spellId);
+        if (spell) {
+            this.spellCache.set(spellId, spell);
+            return { ...spell };
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get spell by name (searches all spell entities)
+     * @param {string} spellName - Name of the spell
+     * @param {string} school - Optional school filter
+     * @returns {Promise<Object|null>} Spell data or null
+     */
+    async getSpellByName(spellName, school = null) {
+        await this.initializeEntities();
+        
+        const criteria = { name: spellName };
+        if (school) {
+            criteria.school = school;
+        }
+        
+        const spells = await Storage.queryEntities(Storage.SPELL_STORE, criteria);
+        if (spells.length > 0) {
+            const spell = spells[0];
+            this.spellCache.set(spell.id, spell);
+            return { ...spell };
+        }
+        
+        return null;
+    }
+    
+    /**
+     * DEPRECATED: Legacy getSpell method (kept for compatibility)
+     * Use getSpellByName() or getSpellFromStorage() instead
      */
     getSpell(spellName, school = null) {
+        // For backward compatibility, use synchronous fallback
+        const spellDatabase = this.initializeSpellDatabase();
+        
         // Search in specified school first
-        if (school && this.spellDatabase[school]) {
-            for (const level of Object.values(this.spellDatabase[school])) {
+        if (school && spellDatabase[school]) {
+            for (const level of Object.values(spellDatabase[school])) {
                 if (level[spellName]) {
                     return level[spellName];
                 }
@@ -522,8 +606,8 @@ class Spells {
         }
         
         // Search all schools if not found or no school specified
-        for (const schoolName of Object.keys(this.spellDatabase)) {
-            for (const level of Object.values(this.spellDatabase[schoolName])) {
+        for (const schoolName of Object.keys(spellDatabase)) {
+            for (const level of Object.values(spellDatabase[schoolName])) {
                 if (level[spellName]) {
                     return level[spellName];
                 }
@@ -534,14 +618,16 @@ class Spells {
     }
     
     /**
-     * Get all spells of a specific school and level
+     * Get all spells of a specific school and level (async version)
+     * @param {string} school - School name
+     * @param {number} level - Spell level
+     * @returns {Promise<Array>} Array of spells
      */
-    getSpellsBySchoolAndLevel(school, level) {
-        if (!this.spellDatabase[school] || !this.spellDatabase[school][level]) {
-            return [];
-        }
+    async getSpellsBySchoolAndLevel(school, level) {
+        await this.initializeEntities();
         
-        return Object.values(this.spellDatabase[school][level]);
+        const spells = await Storage.queryEntities(Storage.SPELL_STORE, { school: school, level: level });
+        return spells;
     }
     
     /**
@@ -584,8 +670,18 @@ class Spells {
     /**
      * Cast a spell
      */
-    castSpell(caster, spellName, target = null) {
-        const spell = this.getSpell(spellName);
+    /**
+     * Cast a spell (async version using entity references)
+     * @param {Object} caster - Character casting the spell
+     * @param {string} spellNameOrId - Spell name or entity ID
+     * @param {Object} target - Target of the spell
+     * @returns {Promise<Object>} Casting result
+     */
+    async castSpell(caster, spellNameOrId, target = null) {
+        let spell = await this.getSpellFromStorage(spellNameOrId);
+        if (!spell) {
+            spell = await this.getSpellByName(spellNameOrId);
+        }
         if (!spell) {
             return { success: false, message: 'Spell not found' };
         }

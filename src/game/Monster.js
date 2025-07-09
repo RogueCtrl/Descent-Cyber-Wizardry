@@ -1,19 +1,83 @@
 /**
  * Monster System
  * Handles enemy creatures and encounter generation
+ * Updated to use entity reference system with IndexedDB storage
  */
 class Monster {
-    constructor(monsterType = 'Kobold') {
-        const data = Monster.getMonsterData(monsterType);
+    constructor(monsterTypeOrId = 'Kobold') {
+        this.entityCache = new Map(); // Cache for monster entities
+        this.entitiesLoaded = false;
         
+        // Initialize with placeholder data - will be populated async
+        this.name = 'Unknown';
+        this.type = 'unknown';
+        this.level = 1;
+        this.hitDie = 6;
+        this.maxHP = 6;
+        this.currentHP = 6;
+        this.isAlive = true;
+        this.status = 'OK';
+        
+        // Attributes (simplified for monsters)
+        this.attributes = {
+            strength: 10,
+            intelligence: 10,
+            agility: 10,
+            vitality: 10
+        };
+        
+        // Combat stats
+        this.armorClass = 10;
+        this.attackBonus = 0;
+        this.damageBonus = 0;
+        this.attacks = [{ name: 'Basic Attack', damage: { dice: 1, sides: 6 } }];
+        
+        // Special abilities
+        this.abilities = [];
+        this.resistances = [];
+        this.immunities = [];
+        
+        // AI behavior
+        this.aiType = 'aggressive';
+        this.preferredTargets = ['front'];
+        
+        // Experience and treasure
+        this.experienceValue = 10;
+        this.treasureType = 'none';
+        
+        // Generate unique ID
+        this.id = Helpers.generateId('monster');
+        
+        // Store the type/id for later initialization
+        this.pendingInitialization = monsterTypeOrId;
+    }
+    
+    /**
+     * Initialize monster from entity data
+     * @param {string} monsterTypeOrId - Monster type name or entity ID
+     */
+    async initializeFromData(monsterTypeOrId) {
+        try {
+            const data = await Monster.getMonsterData(monsterTypeOrId);
+            if (data) {
+                this.applyMonsterData(data);
+            }
+        } catch (error) {
+            console.error('Failed to initialize monster data:', error);
+        }
+    }
+    
+    /**
+     * Apply monster data to this instance
+     * @param {Object} data - Monster data to apply
+     */
+    applyMonsterData(data) {
         this.name = data.name;
         this.type = data.type;
         this.level = data.level;
         this.hitDie = data.hitDie;
         this.maxHP = this.rollHP(data.hitDie, data.level);
         this.currentHP = this.maxHP;
-        this.isAlive = true;
-        this.status = 'OK';
         
         // Attributes (simplified for monsters)
         this.attributes = {
@@ -41,15 +105,116 @@ class Monster {
         // Experience and treasure
         this.experienceValue = data.experienceValue || 10;
         this.treasureType = data.treasureType || 'none';
-        
-        // Generate unique ID
-        this.id = Helpers.generateId('monster');
     }
     
     /**
-     * Monster database
+     * Initialize monster entities from IndexedDB
+     * @param {boolean} forceReload - Force reload entities from JSON
+     * @returns {Promise<boolean>} Success status
      */
-    static getMonsterData(monsterType) {
+    async initializeEntities(forceReload = false) {
+        if (this.entitiesLoaded && !forceReload) return true;
+        
+        try {
+            // Entities are already loaded by Engine.js, just mark as initialized
+            this.entitiesLoaded = true;
+            
+            // Clear cache when entities are reloaded
+            if (forceReload) {
+                this.entityCache.clear();
+                console.log('Monster entity cache cleared');
+                // Force reload entities if requested
+                await Storage.loadEntitiesFromJSON(forceReload);
+            }
+            
+            console.log('Monster entities initialized successfully');
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize monster entities:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Get monster from storage by entity ID
+     * @param {string} monsterId - Monster entity ID
+     * @returns {Promise<Object|null>} Monster data or null
+     */
+    static async getMonsterFromStorage(monsterId) {
+        if (!monsterId) return null;
+        
+        // Check cache first
+        if (Monster.prototype.entityCache && Monster.prototype.entityCache.has(monsterId)) {
+            return { ...Monster.prototype.entityCache.get(monsterId) };
+        }
+        
+        // Initialize entities without creating a Monster instance
+        await Storage.loadEntitiesFromJSON();
+        
+        const data = await Storage.getMonster(monsterId);
+        if (data) {
+            if (Monster.prototype.entityCache) {
+                Monster.prototype.entityCache.set(monsterId, data);
+            }
+            return { ...data };
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get monster by name (searches all monster entities)
+     * @param {string} monsterName - Name of the monster
+     * @returns {Promise<Object|null>} Monster data or null
+     */
+    static async getMonsterByName(monsterName) {
+        const monster = new Monster();
+        await monster.initializeEntities();
+        
+        const monsters = await Storage.queryEntities(Storage.MONSTER_STORE, { name: monsterName });
+        if (monsters.length > 0) {
+            const data = monsters[0];
+            if (Monster.prototype.entityCache) {
+                Monster.prototype.entityCache.set(data.id, data);
+            }
+            return { ...data };
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get monster data by type name or entity ID
+     * @param {string} monsterTypeOrId - Monster type name or entity ID
+     * @returns {Promise<Object|null>} Monster data or null
+     */
+    static async getMonsterData(monsterTypeOrId) {
+        // Try to get by entity ID first
+        let data = await this.getMonsterFromStorage(monsterTypeOrId);
+        if (data) return data;
+        
+        // Try to get by name
+        data = await this.getMonsterByName(monsterTypeOrId);
+        if (data) return data;
+        
+        // Fallback to legacy system
+        return this.getLegacyMonsterData(monsterTypeOrId);
+    }
+    
+    /**
+     * Force reload all monster entities from JSON files
+     * @returns {Promise<boolean>} Success status
+     */
+    static async forceReloadEntities() {
+        const monster = new Monster();
+        return await monster.initializeEntities(true);
+    }
+    
+    /**
+     * DEPRECATED: Legacy monster database (kept for compatibility)
+     * Use getMonsterFromStorage() or getMonsterByName() instead
+     */
+    static getLegacyMonsterData(monsterType) {
         const monsters = {
             // Level 1 Monsters
             'Kobold': {
@@ -283,6 +448,44 @@ class Monster {
         };
         
         return monsters[monsterType] || monsters['Kobold'];
+    }
+    
+    /**
+     * Get monsters by level range (async version using entity references)
+     * @param {number} minLevel - Minimum level
+     * @param {number} maxLevel - Maximum level
+     * @returns {Promise<Array>} Array of monsters in level range
+     */
+    static async getMonstersByLevel(minLevel, maxLevel) {
+        const monster = new Monster();
+        await monster.initializeEntities();
+        
+        const allMonsters = await Storage.getAllMonsters();
+        return allMonsters.filter(m => m.level >= minLevel && m.level <= maxLevel);
+    }
+    
+    /**
+     * Get monsters by type (async version using entity references)
+     * @param {string} type - Monster type (humanoid, beast, undead, etc.)
+     * @returns {Promise<Array>} Array of monsters of the specified type
+     */
+    static async getMonstersByType(type) {
+        const monster = new Monster();
+        await monster.initializeEntities();
+        
+        const monsters = await Storage.queryEntities(Storage.MONSTER_STORE, { type: type });
+        return monsters;
+    }
+    
+    /**
+     * Get all monsters (async version using entity references)
+     * @returns {Promise<Array>} Array of all monsters
+     */
+    static async getAllMonsters() {
+        const monster = new Monster();
+        await monster.initializeEntities();
+        
+        return await Storage.getAllMonsters();
     }
     
     /**
@@ -740,7 +943,7 @@ class EncounterGenerator {
     /**
      * Generate random encounter
      */
-    generateEncounter(partyLevel, dungeonLevel = 1) {
+    async generateEncounter(partyLevel, dungeonLevel = 1) {
         const effectiveLevel = Math.min(5, Math.max(1, dungeonLevel));
         const table = this.encounterTables[effectiveLevel];
         
@@ -763,26 +966,30 @@ class EncounterGenerator {
             return { monsters: [], isEmpty: true };
         }
         
-        // Generate monsters
+        // Generate monsters using async entity loading
         const encounter = { monsters: [], isEmpty: false };
         
-        chosenEncounter.monsters.forEach(monsterType => {
+        for (const monsterType of chosenEncounter.monsters) {
             const count = Array.isArray(chosenEncounter.count) ? 
                 Random.integer(chosenEncounter.count[0], chosenEncounter.count[1]) :
                 chosenEncounter.count;
                 
             for (let i = 0; i < count; i++) {
-                encounter.monsters.push(new Monster(monsterType));
+                const monster = new Monster();
+                await monster.initializeFromData(monsterType);
+                encounter.monsters.push(monster);
             }
-        });
+        }
         
         return encounter;
     }
     
     /**
-     * Generate boss encounter
+     * Generate boss encounter (async version using entity references)
+     * @param {number} dungeonLevel - Dungeon level
+     * @returns {Promise<Object>} Boss encounter data
      */
-    generateBossEncounter(dungeonLevel) {
+    async generateBossEncounter(dungeonLevel) {
         const bossTypes = {
             1: ['Orc Chief'],
             2: ['Orc Chief'],
@@ -796,10 +1003,15 @@ class EncounterGenerator {
         const bossType = Random.choice(possibleBosses);
         
         const encounter = {
-            monsters: [new Monster(bossType)],
+            monsters: [],
             isBoss: true,
             isEmpty: false
         };
+        
+        // Create boss monster
+        const boss = new Monster();
+        await boss.initializeFromData(bossType);
+        encounter.monsters.push(boss);
         
         // Add some minions
         const minionCount = Random.integer(1, 3);
@@ -807,7 +1019,9 @@ class EncounterGenerator {
         
         for (let i = 0; i < minionCount; i++) {
             const minionType = Random.choice(minionTypes);
-            encounter.monsters.push(new Monster(minionType));
+            const minion = new Monster();
+            await minion.initializeFromData(minionType);
+            encounter.monsters.push(minion);
         }
         
         return encounter;
@@ -836,29 +1050,24 @@ class EncounterGenerator {
     /**
      * Get random monsters by type
      */
-    getMonstersByType(type) {
-        const monsterTypes = Object.keys(Monster.getMonsterData());
-        return monsterTypes.filter(monsterType => {
-            const data = Monster.getMonsterData(monsterType);
+    async getMonstersByType(type) {
+        const monsters = await Storage.getAllMonsters();
+        return Object.entries(monsters).filter(([id, data]) => {
             return data.type === type;
-        });
+        }).map(([id, data]) => ({ id, ...data }));
     }
     
     /**
      * Get monsters by level range
      */
-    getMonstersByLevel(minLevel, maxLevel) {
-        const monsterTypes = Object.keys(Monster.getMonsterData());
-        return monsterTypes.filter(monsterType => {
-            const data = Monster.getMonsterData(monsterType);
-            return data.level >= minLevel && data.level <= maxLevel;
-        });
+    async getMonstersByLevel(minLevel, maxLevel) {
+        return await Monster.getMonstersByLevel(minLevel, maxLevel);
     }
     
     /**
      * Generate themed encounter
      */
-    generateThemedEncounter(theme, partyLevel, dungeonLevel) {
+    async generateThemedEncounter(theme, partyLevel, dungeonLevel) {
         const themeTypes = {
             'undead': ['Skeleton'],
             'beasts': ['Giant Rat', 'Wolf', 'Owlbear'],
@@ -867,14 +1076,21 @@ class EncounterGenerator {
             'dragons': ['Young Dragon']
         };
         
-        const availableMonsters = themeTypes[theme] || Object.keys(Monster.getMonsterData());
+        const availableMonsters = themeTypes[theme];
         const encounter = { monsters: [], isEmpty: false, theme: theme };
         
-        // Filter by appropriate level
-        const levelAppropriate = availableMonsters.filter(monsterType => {
-            const data = Monster.getMonsterData(monsterType);
-            return data.level <= dungeonLevel + 1;
-        });
+        if (!availableMonsters) {
+            return { monsters: [], isEmpty: true };
+        }
+        
+        // Filter by appropriate level using async methods
+        const levelAppropriate = [];
+        for (const monsterType of availableMonsters) {
+            const data = await Monster.getMonsterData(monsterType);
+            if (data && data.level <= dungeonLevel + 1) {
+                levelAppropriate.push(monsterType);
+            }
+        }
         
         if (levelAppropriate.length === 0) {
             return { monsters: [], isEmpty: true };
@@ -884,7 +1100,9 @@ class EncounterGenerator {
         const count = Random.integer(1, Math.min(4, levelAppropriate.length));
         for (let i = 0; i < count; i++) {
             const monsterType = Random.choice(levelAppropriate);
-            encounter.monsters.push(new Monster(monsterType));
+            const monster = new Monster();
+            await monster.initializeFromData(monsterType);
+            encounter.monsters.push(monster);
         }
         
         return encounter;
@@ -915,4 +1133,10 @@ class EncounterGenerator {
             theme: encounter.theme || 'mixed'
         };
     }
+}
+
+// Export classes for browser compatibility
+if (typeof window !== 'undefined') {
+    window.Monster = Monster;
+    window.EncounterGenerator = EncounterGenerator;
 }

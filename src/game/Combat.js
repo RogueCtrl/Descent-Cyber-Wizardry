@@ -14,12 +14,29 @@ class Combat {
         this.pendingActions = new Map();
         this.combatLog = [];
         this.surpriseRound = null; // 'party', 'enemies', or null
+        
+        // Initialize spell system
+        this.spellSystem = new Spells();
+        this.spellSystemInitialized = false;
+    }
+    
+    /**
+     * Initialize combat system
+     */
+    async initializeCombat() {
+        if (!this.spellSystemInitialized) {
+            await this.spellSystem.initializeEntities();
+            this.spellSystemInitialized = true;
+        }
     }
     
     /**
      * Start combat
      */
-    startCombat(party, enemies, surpriseType = null) {
+    async startCombat(party, enemies, surpriseType = null) {
+        // Initialize spell system if not done
+        await this.initializeCombat();
+        
         this.isActive = true;
         this.currentTurn = 0;
         this.combatants = [...party.aliveMembers, ...enemies];
@@ -492,18 +509,18 @@ class Combat {
     /**
      * Execute spell effect
      */
-    executeSpellEffect(spell, caster, target) {
-        // Use the enhanced Spells class for full spell effects
-        const spellSystem = new Spells();
-        return spellSystem.executeSpellEffect(spell, caster, target);
+    async executeSpellEffect(spell, caster, target) {
+        // Use the initialized spell system for full spell effects
+        await this.initializeCombat();
+        return this.spellSystem.executeSpellEffect(spell, caster, target);
     }
     
     /**
      * Remove memorized spell from caster
      */
-    removeMemorizedSpell(caster, spell) {
-        const spellSystem = new Spells();
-        spellSystem.removeMemorizedSpell(caster, spell);
+    async removeMemorizedSpell(caster, spell) {
+        await this.initializeCombat();
+        this.spellSystem.removeMemorizedSpell(caster, spell);
     }
     
     /**

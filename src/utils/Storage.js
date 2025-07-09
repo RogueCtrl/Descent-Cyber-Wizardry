@@ -13,12 +13,35 @@ class Storage {
     
     // IndexedDB configuration
     static DB_NAME = 'DescentCyberWizardry';
-    static DB_VERSION = 1;
+    static DB_VERSION = 4; // Incremented for monster store
     static CHARACTER_STORE = 'characters';
     static ROSTER_STORE = 'roster';
+    static CAMP_STORE = 'camps';
+    static WEAPON_STORE = 'weapons';
+    static ARMOR_STORE = 'armor';
+    static SHIELD_STORE = 'shields';
+    static ACCESSORY_STORE = 'accessories';
+    static SPELL_STORE = 'spells';
+    static CONDITION_STORE = 'conditions';
+    static EFFECT_STORE = 'effects';
+    static MONSTER_STORE = 'monsters';
+    static VERSION_STORE = 'entity_versions';
     
     static _db = null;
     static _dbInitialized = false;
+    
+    // Entity version tracking
+    static ENTITY_VERSION = '1.1.0'; // Increment this when migration files change
+    static ENTITY_TYPES = [
+        'weapons',
+        'armor', 
+        'shields',
+        'accessories',
+        'spells',
+        'conditions',
+        'effects',
+        'monsters'
+    ];
     
     /**
      * Save game data
@@ -232,6 +255,134 @@ class Storage {
                     rosterStore.createIndex('name', 'name', { unique: false });
                     rosterStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                     rosterStore.createIndex('lastModified', 'lastModified', { unique: false });
+                }
+                
+                // Create camps store for dungeon camp saves
+                if (!db.objectStoreNames.contains(this.CAMP_STORE)) {
+                    const campStore = db.createObjectStore(this.CAMP_STORE, {
+                        keyPath: 'campId'
+                    });
+                    
+                    campStore.createIndex('partyId', 'partyId', { unique: false });
+                    campStore.createIndex('partyName', 'partyName', { unique: false });
+                    campStore.createIndex('currentFloor', 'location.currentFloor', { unique: false });
+                    campStore.createIndex('campTime', 'campTime', { unique: false });
+                    campStore.createIndex('dungeonId', 'location.dungeonId', { unique: false });
+                    campStore.createIndex('memberCount', 'memberCount', { unique: false });
+                    campStore.createIndex('aliveCount', 'aliveCount', { unique: false });
+                }
+                
+                // Create weapon entity store
+                if (!db.objectStoreNames.contains(this.WEAPON_STORE)) {
+                    const weaponStore = db.createObjectStore(this.WEAPON_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    weaponStore.createIndex('name', 'name', { unique: false });
+                    weaponStore.createIndex('type', 'type', { unique: false });
+                    weaponStore.createIndex('subtype', 'subtype', { unique: false });
+                    weaponStore.createIndex('magical', 'magical', { unique: false });
+                    weaponStore.createIndex('cursed', 'cursed', { unique: false });
+                }
+                
+                // Create armor entity store
+                if (!db.objectStoreNames.contains(this.ARMOR_STORE)) {
+                    const armorStore = db.createObjectStore(this.ARMOR_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    armorStore.createIndex('name', 'name', { unique: false });
+                    armorStore.createIndex('type', 'type', { unique: false });
+                    armorStore.createIndex('subtype', 'subtype', { unique: false });
+                    armorStore.createIndex('magical', 'magical', { unique: false });
+                    armorStore.createIndex('cursed', 'cursed', { unique: false });
+                }
+                
+                // Create shield entity store
+                if (!db.objectStoreNames.contains(this.SHIELD_STORE)) {
+                    const shieldStore = db.createObjectStore(this.SHIELD_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    shieldStore.createIndex('name', 'name', { unique: false });
+                    shieldStore.createIndex('type', 'type', { unique: false });
+                    shieldStore.createIndex('magical', 'magical', { unique: false });
+                    shieldStore.createIndex('cursed', 'cursed', { unique: false });
+                }
+                
+                // Create accessory entity store
+                if (!db.objectStoreNames.contains(this.ACCESSORY_STORE)) {
+                    const accessoryStore = db.createObjectStore(this.ACCESSORY_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    accessoryStore.createIndex('name', 'name', { unique: false });
+                    accessoryStore.createIndex('type', 'type', { unique: false });
+                    accessoryStore.createIndex('subtype', 'subtype', { unique: false });
+                    accessoryStore.createIndex('magical', 'magical', { unique: false });
+                    accessoryStore.createIndex('cursed', 'cursed', { unique: false });
+                    accessoryStore.createIndex('unidentified', 'unidentified', { unique: false });
+                }
+                
+                // Create spell entity store
+                if (!db.objectStoreNames.contains(this.SPELL_STORE)) {
+                    const spellStore = db.createObjectStore(this.SPELL_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    spellStore.createIndex('name', 'name', { unique: false });
+                    spellStore.createIndex('school', 'school', { unique: false });
+                    spellStore.createIndex('level', 'level', { unique: false });
+                    spellStore.createIndex('effect', 'effect', { unique: false });
+                }
+                
+                // Create condition entity store
+                if (!db.objectStoreNames.contains(this.CONDITION_STORE)) {
+                    const conditionStore = db.createObjectStore(this.CONDITION_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    conditionStore.createIndex('name', 'name', { unique: false });
+                    conditionStore.createIndex('type', 'type', { unique: false });
+                    conditionStore.createIndex('category', 'category', { unique: false });
+                    conditionStore.createIndex('severity', 'severity', { unique: false });
+                }
+                
+                // Create effect entity store
+                if (!db.objectStoreNames.contains(this.EFFECT_STORE)) {
+                    const effectStore = db.createObjectStore(this.EFFECT_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    effectStore.createIndex('name', 'name', { unique: false });
+                    effectStore.createIndex('type', 'type', { unique: false });
+                    effectStore.createIndex('category', 'category', { unique: false });
+                    effectStore.createIndex('beneficial', 'beneficial', { unique: false });
+                    effectStore.createIndex('dispellable', 'dispellable', { unique: false });
+                }
+                
+                // Create monster entity store
+                if (!db.objectStoreNames.contains(this.MONSTER_STORE)) {
+                    const monsterStore = db.createObjectStore(this.MONSTER_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    monsterStore.createIndex('name', 'name', { unique: false });
+                    monsterStore.createIndex('type', 'type', { unique: false });
+                    monsterStore.createIndex('level', 'level', { unique: false });
+                    monsterStore.createIndex('aiType', 'aiType', { unique: false });
+                    monsterStore.createIndex('experienceValue', 'experienceValue', { unique: false });
+                    monsterStore.createIndex('treasureType', 'treasureType', { unique: false });
+                }
+                
+                // Create version store for tracking entity updates
+                if (!db.objectStoreNames.contains(this.VERSION_STORE)) {
+                    const versionStore = db.createObjectStore(this.VERSION_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    versionStore.createIndex('version', 'version', { unique: false });
+                    versionStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
                 }
                 
                 console.log('IndexedDB upgrade completed');
@@ -1150,5 +1301,1863 @@ class Storage {
                 error: error.message
             };
         }
+    }
+
+    // Entity Management System
+
+    /**
+     * Load entity data from JSON files into IndexedDB
+     * @returns {Promise<boolean>} Success status
+     */
+    /**
+     * Check if entities need to be updated from JSON files
+     * @returns {Promise<boolean>} Whether entities need updating
+     */
+    static async needsEntityUpdate() {
+        try {
+            if (!await this.initializeDB()) {
+                return true; // If DB fails, assume we need to load
+            }
+            
+            const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
+            const store = transaction.objectStore(this.VERSION_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get('entity_version');
+                
+                request.onsuccess = () => {
+                    const versionRecord = request.result;
+                    if (!versionRecord || versionRecord.version !== this.ENTITY_VERSION) {
+                        console.log('Entity version mismatch or missing, update needed');
+                        resolve(true);
+                    } else {
+                        console.log('Entity version matches, no update needed');
+                        resolve(false);
+                    }
+                };
+                
+                request.onerror = () => {
+                    console.log('Failed to check entity version, assuming update needed');
+                    resolve(true);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Error checking entity version:', error);
+            return true; // If error, assume we need to load
+        }
+    }
+    
+    /**
+     * Update entity version record
+     * @returns {Promise<boolean>} Success status
+     */
+    static async updateEntityVersion() {
+        try {
+            const transaction = this._db.transaction([this.VERSION_STORE], 'readwrite');
+            const store = transaction.objectStore(this.VERSION_STORE);
+            
+            const versionRecord = {
+                id: 'entity_version',
+                version: this.ENTITY_VERSION,
+                lastUpdated: Date.now(),
+                entityTypes: this.ENTITY_TYPES
+            };
+            
+            return new Promise((resolve, reject) => {
+                const request = store.put(versionRecord);
+                
+                request.onsuccess = () => {
+                    console.log(`Entity version updated to ${this.ENTITY_VERSION}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to update entity version:', request.error);
+                    reject(false);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Error updating entity version:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Load entity data from migration files into IndexedDB
+     * @param {boolean} forceReload - Force reload even if version matches
+     * @returns {Promise<boolean>} Success status
+     */
+    static async loadEntitiesFromJSON(forceReload = false) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            // Check if update is needed (unless forced)
+            if (!forceReload && !(await this.needsEntityUpdate())) {
+                console.log('Entities are up to date, skipping migration load');
+                return true;
+            }
+            
+            console.log('Loading entities from migration files...');
+
+            // Load all entities from migrations
+            const weapons = await this.loadEntityMigration('weapons');
+            await this.bulkSaveEntities(this.WEAPON_STORE, weapons);
+            
+            const armor = await this.loadEntityMigration('armor');
+            await this.bulkSaveEntities(this.ARMOR_STORE, armor);
+            
+            const shields = await this.loadEntityMigration('shields');
+            await this.bulkSaveEntities(this.SHIELD_STORE, shields);
+            
+            const accessories = await this.loadEntityMigration('accessories');
+            await this.bulkSaveEntities(this.ACCESSORY_STORE, accessories);
+            
+            const spells = await this.loadEntityMigration('spells');
+            await this.bulkSaveEntities(this.SPELL_STORE, spells);
+            
+            const conditions = await this.loadEntityMigration('conditions');
+            await this.bulkSaveEntities(this.CONDITION_STORE, conditions);
+            
+            const effects = await this.loadEntityMigration('effects');
+            await this.bulkSaveEntities(this.EFFECT_STORE, effects);
+            
+            const monsters = await this.loadEntityMigration('monsters');
+            await this.bulkSaveEntities(this.MONSTER_STORE, monsters);
+
+            // Update version record after successful load
+            await this.updateEntityVersion();
+            
+            console.log('All entities loaded successfully from migration files');
+            return true;
+
+        } catch (error) {
+            console.error('Failed to load entities from migrations:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Bulk save entities to a store
+     * @param {string} storeName - Name of the store
+     * @param {Object} entities - Object containing entities to save
+     * @returns {Promise<boolean>} Success status
+     */
+    static async bulkSaveEntities(storeName, entities) {
+        try {
+            const transaction = this._db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+
+            for (const [id, entity] of Object.entries(entities)) {
+                const entityData = { id, ...entity };
+                store.put(entityData);
+            }
+
+            return new Promise((resolve, reject) => {
+                transaction.oncomplete = () => {
+                    console.log(`Bulk saved ${Object.keys(entities).length} entities to ${storeName}`);
+                    resolve(true);
+                };
+                
+                transaction.onerror = () => {
+                    console.error(`Failed to bulk save entities to ${storeName}:`, transaction.error);
+                    reject(false);
+                };
+            });
+
+        } catch (error) {
+            console.error(`Failed to bulk save entities to ${storeName}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Get entity by ID
+     * @param {string} storeName - Name of the store
+     * @param {string} entityId - Entity ID to retrieve
+     * @returns {Promise<Object|null>} Entity data or null
+     */
+    static async getEntity(storeName, entityId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+
+            return new Promise((resolve, reject) => {
+                const request = store.get(entityId);
+                
+                request.onsuccess = () => {
+                    resolve(request.result || null);
+                };
+                
+                request.onerror = () => {
+                    console.error(`Failed to get entity ${entityId} from ${storeName}:`, request.error);
+                    reject(null);
+                };
+            });
+
+        } catch (error) {
+            console.error(`Failed to get entity ${entityId} from ${storeName}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Get weapon by ID
+     * @param {string} weaponId - Weapon ID to retrieve
+     * @returns {Promise<Object|null>} Weapon data or null
+     */
+    static async getWeapon(weaponId) {
+        return this.getEntity(this.WEAPON_STORE, weaponId);
+    }
+
+    /**
+     * Get armor by ID
+     * @param {string} armorId - Armor ID to retrieve
+     * @returns {Promise<Object|null>} Armor data or null
+     */
+    static async getArmor(armorId) {
+        return this.getEntity(this.ARMOR_STORE, armorId);
+    }
+
+    /**
+     * Get shield by ID
+     * @param {string} shieldId - Shield ID to retrieve
+     * @returns {Promise<Object|null>} Shield data or null
+     */
+    static async getShield(shieldId) {
+        return this.getEntity(this.SHIELD_STORE, shieldId);
+    }
+
+    /**
+     * Get accessory by ID
+     * @param {string} accessoryId - Accessory ID to retrieve
+     * @returns {Promise<Object|null>} Accessory data or null
+     */
+    static async getAccessory(accessoryId) {
+        return this.getEntity(this.ACCESSORY_STORE, accessoryId);
+    }
+
+    /**
+     * Get spell by ID
+     * @param {string} spellId - Spell ID to retrieve
+     * @returns {Promise<Object|null>} Spell data or null
+     */
+    static async getSpell(spellId) {
+        return this.getEntity(this.SPELL_STORE, spellId);
+    }
+
+    /**
+     * Get condition by ID
+     * @param {string} conditionId - Condition ID to retrieve
+     * @returns {Promise<Object|null>} Condition data or null
+     */
+    static async getCondition(conditionId) {
+        return this.getEntity(this.CONDITION_STORE, conditionId);
+    }
+
+    /**
+     * Get effect by ID
+     * @param {string} effectId - Effect ID to retrieve
+     * @returns {Promise<Object|null>} Effect data or null
+     */
+    static async getEffect(effectId) {
+        return this.getEntity(this.EFFECT_STORE, effectId);
+    }
+    
+    /**
+     * Get monster by ID
+     * @param {string} monsterId - Monster ID to retrieve
+     * @returns {Promise<Object|null>} Monster data or null
+     */
+    static async getMonster(monsterId) {
+        return this.getEntity(this.MONSTER_STORE, monsterId);
+    }
+
+    /**
+     * Get all entities from a store
+     * @param {string} storeName - Name of the store
+     * @returns {Promise<Array>} Array of entities
+     */
+    static async getAllEntities(storeName) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+
+            return new Promise((resolve, reject) => {
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    resolve(request.result || []);
+                };
+                
+                request.onerror = () => {
+                    console.error(`Failed to get all entities from ${storeName}:`, request.error);
+                    reject([]);
+                };
+            });
+
+        } catch (error) {
+            console.error(`Failed to get all entities from ${storeName}:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Get all weapons
+     * @returns {Promise<Array>} Array of weapons
+     */
+    static async getAllWeapons() {
+        return this.getAllEntities(this.WEAPON_STORE);
+    }
+
+    /**
+     * Get all armor
+     * @returns {Promise<Array>} Array of armor
+     */
+    static async getAllArmor() {
+        return this.getAllEntities(this.ARMOR_STORE);
+    }
+
+    /**
+     * Get all shields
+     * @returns {Promise<Array>} Array of shields
+     */
+    static async getAllShields() {
+        return this.getAllEntities(this.SHIELD_STORE);
+    }
+
+    /**
+     * Get all accessories
+     * @returns {Promise<Array>} Array of accessories
+     */
+    static async getAllAccessories() {
+        return this.getAllEntities(this.ACCESSORY_STORE);
+    }
+
+    /**
+     * Get all spells
+     * @returns {Promise<Array>} Array of spells
+     */
+    static async getAllSpells() {
+        return this.getAllEntities(this.SPELL_STORE);
+    }
+
+    /**
+     * Get all conditions
+     * @returns {Promise<Array>} Array of conditions
+     */
+    static async getAllConditions() {
+        return this.getAllEntities(this.CONDITION_STORE);
+    }
+
+    /**
+     * Get all effects
+     * @returns {Promise<Array>} Array of effects
+     */
+    static async getAllEffects() {
+        return this.getAllEntities(this.EFFECT_STORE);
+    }
+    
+    /**
+     * Get all monsters
+     * @returns {Promise<Array>} Array of monsters
+     */
+    static async getAllMonsters() {
+        return this.getAllEntities(this.MONSTER_STORE);
+    }
+
+    /**
+     * Query entities by criteria
+     * @param {string} storeName - Name of the store
+     * @param {Object} criteria - Query criteria
+     * @returns {Promise<Array>} Array of matching entities
+     */
+    static async queryEntities(storeName, criteria = {}) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+
+            // If no criteria, return all entities
+            if (Object.keys(criteria).length === 0) {
+                return this.getAllEntities(storeName);
+            }
+
+            // Use index if available
+            const indexName = Object.keys(criteria)[0];
+            const indexValue = criteria[indexName];
+
+            return new Promise((resolve, reject) => {
+                let request;
+                
+                if (store.indexNames.contains(indexName)) {
+                    const index = store.index(indexName);
+                    request = index.getAll(indexValue);
+                } else {
+                    // Fallback to full scan
+                    request = store.getAll();
+                }
+                
+                request.onsuccess = () => {
+                    let entities = request.result || [];
+                    
+                    // Apply additional filters if using fallback or multiple criteria
+                    if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
+                        entities = entities.filter(entity => {
+                            return Object.entries(criteria).every(([key, value]) => {
+                                return entity[key] === value;
+                            });
+                        });
+                    }
+                    
+                    resolve(entities);
+                };
+                
+                request.onerror = () => {
+                    console.error(`Failed to query entities from ${storeName}:`, request.error);
+                    reject([]);
+                };
+            });
+
+        } catch (error) {
+            console.error(`Failed to query entities from ${storeName}:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Camp save/load with entity references
+     */
+
+    /**
+     * Save camp with character entity references
+     * @param {Object} party - Party to save
+     * @param {Object} dungeon - Current dungeon state
+     * @param {Object} gameState - Current game state
+     * @returns {Promise<Object>} Save result
+     */
+    static async saveCampWithEntityReferences(party, dungeon, gameState = {}) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const campId = `camp_${party.id}_${Date.now()}`;
+            
+            const campData = {
+                campId,
+                partyId: party.id,
+                partyName: party.name,
+                
+                // Store character entity references instead of full data
+                memberIds: party.members.map(member => member.id),
+                
+                // Quick stats for indexing
+                memberCount: party.members.length,
+                aliveCount: party.members.filter(m => m.isAlive).length,
+                
+                location: {
+                    currentFloor: dungeon.currentFloor,
+                    playerX: dungeon.playerX,
+                    playerY: dungeon.playerY,
+                    playerDirection: dungeon.playerDirection,
+                    dungeonId: dungeon.id || 'main_dungeon'
+                },
+                
+                campTime: Date.now(),
+                
+                resources: {
+                    gold: party.gold || 0,
+                    food: party.food || 0,
+                    torches: party.torches || 0,
+                    lightRemaining: party.lightRemaining || 0
+                },
+                
+                dungeonProgress: {
+                    floorsExplored: dungeon.floorsExplored || [],
+                    encountersDefeated: dungeon.encountersDefeated || 0,
+                    treasuresFound: dungeon.treasuresFound || 0,
+                    secretsDiscovered: dungeon.secretsDiscovered || 0
+                },
+                
+                gameVersion: '1.0.0',
+                saveType: 'dungeon_camp'
+            };
+
+            // Save to IndexedDB camps store
+            const transaction = this._db.transaction([this.CAMP_STORE], 'readwrite');
+            const store = transaction.objectStore(this.CAMP_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.put(campData);
+                
+                request.onsuccess = () => {
+                    console.log(`Camp saved with entity references: ${campId}`);
+                    resolve({
+                        success: true,
+                        campId,
+                        message: `${party.name} has made camp on floor ${dungeon.currentFloor}.`
+                    });
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to save camp with entity references:', request.error);
+                    reject({
+                        success: false,
+                        error: request.error.message,
+                        message: 'Failed to save camp state.'
+                    });
+                };
+            });
+
+        } catch (error) {
+            console.error('Failed to save camp with entity references:', error);
+            return {
+                success: false,
+                error: error.message,
+                message: 'Failed to save camp state.'
+            };
+        }
+    }
+
+    /**
+     * Resume camp and load characters by entity references
+     * @param {string} campId - Camp ID to resume
+     * @returns {Promise<Object>} Resume result with party and dungeon data
+     */
+    static async resumeCampWithEntityReferences(campId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            // Get camp data
+            const transaction = this._db.transaction([this.CAMP_STORE], 'readonly');
+            const store = transaction.objectStore(this.CAMP_STORE);
+            
+            const campData = await new Promise((resolve, reject) => {
+                const request = store.get(campId);
+                
+                request.onsuccess = () => {
+                    resolve(request.result);
+                };
+                
+                request.onerror = () => {
+                    reject(request.error);
+                };
+            });
+
+            if (!campData) {
+                return {
+                    success: false,
+                    error: 'Camp save not found',
+                    message: 'The specified camp save could not be found.'
+                };
+            }
+
+            // Load characters by entity references
+            const members = [];
+            for (const memberId of campData.memberIds) {
+                const character = await this.loadCharacter(memberId);
+                if (character) {
+                    members.push(character);
+                }
+            }
+
+            const party = {
+                id: campData.partyId,
+                name: campData.partyName,
+                members,
+                gold: campData.resources.gold,
+                food: campData.resources.food,
+                torches: campData.resources.torches,
+                lightRemaining: campData.resources.lightRemaining
+            };
+
+            return {
+                success: true,
+                party,
+                location: campData.location,
+                campTime: campData.campTime,
+                timeCamped: Date.now() - campData.campTime,
+                dungeonProgress: campData.dungeonProgress,
+                message: `${party.name} resumed exploration from floor ${campData.location.currentFloor}.`
+            };
+
+        } catch (error) {
+            console.error('Failed to resume camp with entity references:', error);
+            return {
+                success: false,
+                error: error.message,
+                message: 'Failed to resume from camp.'
+            };
+        }
+    }
+
+    /**
+     * Get all camps with enhanced queries
+     * @param {Object} criteria - Query criteria
+     * @returns {Promise<Array>} Array of camp data
+     */
+    static async getAllCamps(criteria = {}) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            return this.queryEntities(this.CAMP_STORE, criteria);
+
+        } catch (error) {
+            console.error('Failed to get all camps:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Delete camp from IndexedDB
+     * @param {string} campId - Camp ID to delete
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deleteCampFromDB(campId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([this.CAMP_STORE], 'readwrite');
+            const store = transaction.objectStore(this.CAMP_STORE);
+
+            return new Promise((resolve, reject) => {
+                const request = store.delete(campId);
+                
+                request.onsuccess = () => {
+                    console.log(`Camp deleted from IndexedDB: ${campId}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error(`Failed to delete camp from IndexedDB: ${campId}`, request.error);
+                    reject(false);
+                };
+            });
+
+        } catch (error) {
+            console.error(`Failed to delete camp from IndexedDB: ${campId}`, error);
+            return false;
+        }
+    }
+    
+    /**
+     * Force reload entities from JSON files (for development)
+     * @returns {Promise<boolean>} Success status
+     */
+    static async forceReloadEntities() {
+        console.log('Force reloading entities from JSON files...');
+        return await this.loadEntitiesFromJSON(true);
+    }
+    
+    /**
+     * Clear all entity stores (for development)
+     * @returns {Promise<boolean>} Success status
+     */
+    static async clearAllEntities() {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const stores = [
+                this.WEAPON_STORE,
+                this.ARMOR_STORE,
+                this.SHIELD_STORE,
+                this.ACCESSORY_STORE,
+                this.SPELL_STORE,
+                this.CONDITION_STORE,
+                this.EFFECT_STORE,
+                this.MONSTER_STORE,
+                this.VERSION_STORE
+            ];
+            
+            const transaction = this._db.transaction(stores, 'readwrite');
+            
+            return new Promise((resolve, reject) => {
+                let completedStores = 0;
+                
+                stores.forEach(storeName => {
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => {
+                        completedStores++;
+                        console.log(`Cleared ${storeName} store`);
+                        
+                        if (completedStores === stores.length) {
+                            console.log('All entity stores cleared');
+                            resolve(true);
+                        }
+                    };
+                    
+                    request.onerror = () => {
+                        console.error(`Failed to clear ${storeName} store:`, request.error);
+                        reject(false);
+                    };
+                });
+            });
+            
+        } catch (error) {
+            console.error('Failed to clear entity stores:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Get entity version information
+     * @returns {Promise<Object>} Version information
+     */
+    static async getEntityVersionInfo() {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
+            const store = transaction.objectStore(this.VERSION_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get('entity_version');
+                
+                request.onsuccess = () => {
+                    const versionRecord = request.result;
+                    resolve({
+                        currentVersion: this.ENTITY_VERSION,
+                        storedVersion: versionRecord?.version || 'none',
+                        needsUpdate: !versionRecord || versionRecord.version !== this.ENTITY_VERSION,
+                        lastUpdated: versionRecord?.lastUpdated || null,
+                        entityTypes: this.ENTITY_TYPES
+                    });
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to get version info:', request.error);
+                    reject(null);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Error getting version info:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Load entity migration by type
+     */
+    static async loadEntityMigration(entityType) {
+        try {
+            let migration;
+            
+            switch (entityType) {
+                case 'weapons':
+                    migration = window.weaponsMigration;
+                    break;
+                case 'armor':
+                    migration = window.armorMigration;
+                    break;
+                case 'shields':
+                    migration = window.shieldsMigration;
+                    break;
+                case 'accessories':
+                    migration = window.accessoriesMigration;
+                    break;
+                case 'spells':
+                    migration = window.spellsMigration;
+                    break;
+                case 'conditions':
+                    migration = window.conditionsMigration;
+                    break;
+                case 'effects':
+                    migration = window.effectsMigration;
+                    break;
+                case 'monsters':
+                    migration = window.monstersMigration;
+                    break;
+                    
+                default:
+                    throw new Error(`Unknown entity type: ${entityType}`);
+            }
+            
+            // Validate migration
+            if (!migration || !migration.data || !migration.version) {
+                throw new Error(`Invalid migration for ${entityType}`);
+            }
+            
+            console.log(`Loading ${entityType} migration v${migration.version}: ${migration.description}`);
+            
+            // Apply any transformations
+            let data = migration.data;
+            if (migration.transform) {
+                data = Object.entries(data).reduce((acc, [key, value]) => {
+                    acc[key] = migration.transform(value);
+                    return acc;
+                }, {});
+            }
+            
+            // Validate data if validation function exists
+            if (migration.validate) {
+                const invalidEntries = Object.entries(data).filter(([key, value]) => 
+                    !migration.validate(value)
+                );
+                if (invalidEntries.length > 0) {
+                    console.warn(`Invalid entries in ${entityType}:`, invalidEntries);
+                }
+            }
+            
+            return data;
+            
+        } catch (error) {
+            console.error(`Failed to load ${entityType} migration:`, error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get embedded weapons data (CORS fallback)
+     */
+    static async getEmbeddedWeapons() {
+        return {
+            "weapon_dagger_001": {
+                "name": "Dagger",
+                "type": "weapon",
+                "subtype": "dagger",
+                "damage": { "dice": 1, "sides": 4 },
+                "attackBonus": 0,
+                "weight": 1,
+                "value": 20,
+                "allowedClasses": ["all"],
+                "special": ["throwable"]
+            },
+            "weapon_short_sword_001": {
+                "name": "Short Sword",
+                "type": "weapon",
+                "subtype": "sword",
+                "damage": { "dice": 1, "sides": 6 },
+                "attackBonus": 0,
+                "weight": 3,
+                "value": 100,
+                "allowedClasses": ["Fighter", "Thief", "Lord", "Samurai", "Ninja"]
+            },
+            "weapon_long_sword_001": {
+                "name": "Long Sword",
+                "type": "weapon",
+                "subtype": "sword",
+                "damage": { "dice": 1, "sides": 8 },
+                "attackBonus": 0,
+                "weight": 4,
+                "value": 150,
+                "allowedClasses": ["Fighter", "Lord", "Samurai"]
+            },
+            "weapon_mace_001": {
+                "name": "Mace",
+                "type": "weapon",
+                "subtype": "mace",
+                "damage": { "dice": 1, "sides": 6 },
+                "attackBonus": 1,
+                "weight": 4,
+                "value": 80,
+                "allowedClasses": ["Fighter", "Priest", "Lord"]
+            },
+            "weapon_staff_001": {
+                "name": "Staff",
+                "type": "weapon",
+                "subtype": "staff",
+                "damage": { "dice": 1, "sides": 6 },
+                "attackBonus": 0,
+                "spellBonus": 1,
+                "weight": 4,
+                "value": 50,
+                "allowedClasses": ["Mage", "Priest", "Bishop"]
+            },
+            "weapon_spear_001": {
+                "name": "Spear",
+                "type": "weapon",
+                "subtype": "spear",
+                "damage": { "dice": 1, "sides": 6 },
+                "attackBonus": 0,
+                "weight": 6,
+                "value": 20,
+                "allowedClasses": ["Fighter", "Lord", "Samurai"],
+                "special": ["reach", "throwable"]
+            },
+            "weapon_bow_001": {
+                "name": "Bow",
+                "type": "weapon",
+                "subtype": "bow",
+                "damage": { "dice": 1, "sides": 6 },
+                "attackBonus": 0,
+                "range": "long",
+                "weight": 3,
+                "value": 75,
+                "allowedClasses": ["Fighter", "Thief", "Lord", "Samurai", "Ninja"],
+                "ammunition": "arrows"
+            },
+            "weapon_magic_sword_plus_1_001": {
+                "name": "Magic Sword +1",
+                "type": "weapon",
+                "subtype": "sword",
+                "damage": { "dice": 1, "sides": 8, "bonus": 1 },
+                "attackBonus": 1,
+                "weight": 4,
+                "value": 1000,
+                "allowedClasses": ["Fighter", "Lord", "Samurai"],
+                "magical": true
+            },
+            "weapon_cursed_sword_minus_1_001": {
+                "name": "Cursed Sword -1",
+                "type": "weapon",
+                "subtype": "sword",
+                "damage": { "dice": 1, "sides": 8, "bonus": -1 },
+                "attackBonus": -1,
+                "weight": 4,
+                "value": 50,
+                "allowedClasses": ["Fighter", "Lord", "Samurai"],
+                "cursed": true,
+                "curseName": "Binding Curse",
+                "curseEffect": "Cannot be removed, -1 to all attack rolls",
+                "disguisedAs": "Magic Sword +1",
+                "magical": true
+            }
+        };
+    }
+    
+    /**
+     * Get embedded armor data (CORS fallback)
+     */
+    static async getEmbeddedArmor() {
+        return {
+            "armor_leather_001": {
+                "name": "Leather Armor",
+                "type": "armor",
+                "subtype": "light",
+                "acBonus": 2,
+                "weight": 15,
+                "value": 100,
+                "allowedClasses": ["all"]
+            },
+            "armor_studded_leather_001": {
+                "name": "Studded Leather",
+                "type": "armor",
+                "subtype": "light",
+                "acBonus": 3,
+                "weight": 20,
+                "value": 250,
+                "allowedClasses": ["Fighter", "Thief", "Lord", "Samurai", "Ninja"]
+            },
+            "armor_chain_mail_001": {
+                "name": "Chain Mail",
+                "type": "armor",
+                "subtype": "medium",
+                "acBonus": 5,
+                "weight": 40,
+                "value": 750,
+                "allowedClasses": ["Fighter", "Priest", "Lord", "Samurai"]
+            },
+            "armor_plate_mail_001": {
+                "name": "Plate Mail",
+                "type": "armor",
+                "subtype": "heavy",
+                "acBonus": 8,
+                "weight": 50,
+                "value": 1500,
+                "allowedClasses": ["Fighter", "Lord", "Samurai"]
+            },
+            "armor_chain_mail_plus_1_001": {
+                "name": "Chain Mail +1",
+                "type": "armor",
+                "subtype": "medium",
+                "acBonus": 6,
+                "weight": 40,
+                "value": 2000,
+                "allowedClasses": ["Fighter", "Priest", "Lord", "Samurai"],
+                "magical": true
+            },
+            "armor_vulnerability_001": {
+                "name": "Armor of Vulnerability",
+                "type": "armor",
+                "subtype": "medium",
+                "acBonus": -2,
+                "weight": 40,
+                "value": 100,
+                "allowedClasses": ["Fighter", "Priest", "Lord", "Samurai"],
+                "cursed": true,
+                "curseName": "Vulnerability Curse",
+                "curseEffect": "Makes wearer more vulnerable to attacks",
+                "disguisedAs": "Chain Mail +1",
+                "magical": true
+            }
+        };
+    }
+    
+    /**
+     * Get embedded shields data (CORS fallback)
+     */
+    static async getEmbeddedShields() {
+        return {
+            "shield_small_001": {
+                "name": "Small Shield",
+                "type": "shield",
+                "acBonus": 1,
+                "weight": 5,
+                "value": 30,
+                "allowedClasses": ["Fighter", "Priest", "Thief", "Lord", "Samurai"]
+            },
+            "shield_large_001": {
+                "name": "Large Shield",
+                "type": "shield",
+                "acBonus": 2,
+                "weight": 10,
+                "value": 70,
+                "allowedClasses": ["Fighter", "Priest", "Lord", "Samurai"]
+            },
+            "shield_plus_1_001": {
+                "name": "Shield +1",
+                "type": "shield",
+                "acBonus": 3,
+                "weight": 5,
+                "value": 500,
+                "allowedClasses": ["Fighter", "Priest", "Thief", "Lord", "Samurai"],
+                "magical": true
+            },
+            "shield_attraction_001": {
+                "name": "Shield of Attraction",
+                "type": "shield",
+                "acBonus": -1,
+                "weight": 10,
+                "value": 50,
+                "allowedClasses": ["Fighter", "Priest", "Lord", "Samurai"],
+                "cursed": true,
+                "curseName": "Monster Attraction",
+                "curseEffect": "Increases random encounter rate",
+                "disguisedAs": "Shield +1",
+                "magical": true
+            }
+        };
+    }
+    
+    /**
+     * Get embedded accessories data (CORS fallback)
+     */
+    static async getEmbeddedAccessories() {
+        return {
+            "accessory_ring_protection_001": {
+                "name": "Ring of Protection",
+                "type": "accessory",
+                "subtype": "ring",
+                "acBonus": 1,
+                "weight": 0,
+                "value": 2000,
+                "allowedClasses": ["all"],
+                "magical": true
+            },
+            "accessory_amulet_health_001": {
+                "name": "Amulet of Health",
+                "type": "accessory",
+                "subtype": "amulet",
+                "hpBonus": 5,
+                "weight": 0,
+                "value": 1500,
+                "allowedClasses": ["all"],
+                "magical": true
+            },
+            "accessory_cloak_elvenkind_001": {
+                "name": "Cloak of Elvenkind",
+                "type": "accessory",
+                "subtype": "cloak",
+                "stealthBonus": 2,
+                "weight": 1,
+                "value": 2500,
+                "allowedClasses": ["all"],
+                "magical": true
+            },
+            "accessory_ring_weakness_001": {
+                "name": "Ring of Weakness",
+                "type": "accessory",
+                "subtype": "ring",
+                "strengthPenalty": -2,
+                "weight": 0,
+                "value": 50,
+                "allowedClasses": ["all"],
+                "cursed": true,
+                "curseName": "Strength Drain",
+                "curseEffect": "Permanently reduces strength by 2",
+                "disguisedAs": "Ring of Strength",
+                "magical": true
+            },
+            "accessory_cloak_misfortune_001": {
+                "name": "Cloak of Misfortune",
+                "type": "accessory",
+                "subtype": "cloak",
+                "luckPenalty": -3,
+                "weight": 1,
+                "value": 25,
+                "allowedClasses": ["all"],
+                "cursed": true,
+                "curseName": "Misfortune Curse",
+                "curseEffect": "Brings terrible luck to the wearer",
+                "disguisedAs": "Cloak of Luck",
+                "magical": true
+            },
+            "consumable_potion_unknown_001": {
+                "name": "Potion of Unknown Effect",
+                "type": "consumable",
+                "subtype": "potion",
+                "weight": 0.5,
+                "value": 100,
+                "allowedClasses": ["all"],
+                "unidentified": true,
+                "possibleEffects": ["healing", "poison", "strength", "intelligence"],
+                "identificationDC": 15
+            },
+            "consumable_scroll_unknown_001": {
+                "name": "Scroll of Unknown Spell",
+                "type": "consumable",
+                "subtype": "scroll",
+                "weight": 0.1,
+                "value": 200,
+                "allowedClasses": ["Mage", "Priest", "Bishop"],
+                "unidentified": true,
+                "possibleSpells": ["Fireball", "Heal", "Teleport", "Curse"],
+                "identificationDC": 12
+            },
+            "accessory_amulet_mysterious_001": {
+                "name": "Mysterious Amulet",
+                "type": "accessory",
+                "subtype": "amulet",
+                "weight": 0,
+                "value": 500,
+                "allowedClasses": ["all"],
+                "unidentified": true,
+                "possibleEffects": ["protection", "curse", "health", "magic resistance"],
+                "identificationDC": 18
+            }
+        };
+    }
+    
+    /**
+     * Get embedded spells data (CORS fallback)
+     */
+    static async getEmbeddedSpells() {
+        return {
+            // Arcane Level 1
+            "spell_magic_missile_001": {
+                "id": "spell_magic_missile_001",
+                "name": "Magic Missile",
+                "school": "arcane",
+                "level": 1,
+                "description": "Unerring magical projectile",
+                "effect": "damage",
+                "dice": { "count": 1, "sides": 4, "bonus": 1 },
+                "range": "medium",
+                "duration": "instantaneous",
+                "components": ["V", "S"]
+            },
+            "spell_shield_001": {
+                "id": "spell_shield_001",
+                "name": "Shield",
+                "school": "arcane",
+                "level": 1,
+                "description": "Magical armor that blocks attacks",
+                "effect": "protection",
+                "acBonus": 4,
+                "range": "self",
+                "duration": "combat",
+                "components": ["V", "S"]
+            },
+            "spell_light_001": {
+                "id": "spell_light_001",
+                "name": "Light",
+                "school": "arcane",
+                "level": 1,
+                "description": "Creates magical illumination",
+                "effect": "utility",
+                "range": "touch",
+                "duration": "long",
+                "components": ["V", "M"]
+            },
+            // Arcane Level 2
+            "spell_web_001": {
+                "id": "spell_web_001",
+                "name": "Web",
+                "school": "arcane",
+                "level": 2,
+                "description": "Entangles enemies in sticky webs",
+                "effect": "control",
+                "range": "medium",
+                "duration": "combat",
+                "components": ["V", "S", "M"]
+            },
+            "spell_invisibility_001": {
+                "id": "spell_invisibility_001",
+                "name": "Invisibility",
+                "school": "arcane",
+                "level": 2,
+                "description": "Makes target invisible",
+                "effect": "concealment",
+                "range": "touch",
+                "duration": "long",
+                "components": ["V", "S", "M"]
+            },
+            "spell_knock_001": {
+                "id": "spell_knock_001",
+                "name": "Knock",
+                "school": "arcane",
+                "level": 2,
+                "description": "Opens locked doors and containers",
+                "effect": "utility",
+                "range": "medium",
+                "duration": "instantaneous",
+                "components": ["V"]
+            },
+            // Arcane Level 3
+            "spell_fireball_001": {
+                "id": "spell_fireball_001",
+                "name": "Fireball",
+                "school": "arcane",
+                "level": 3,
+                "description": "Explosive sphere of flame",
+                "effect": "damage",
+                "dice": { "count": 3, "sides": 6 },
+                "range": "long",
+                "duration": "instantaneous",
+                "areaEffect": true,
+                "components": ["V", "S", "M"]
+            },
+            "spell_lightning_bolt_001": {
+                "id": "spell_lightning_bolt_001",
+                "name": "Lightning Bolt",
+                "school": "arcane",
+                "level": 3,
+                "description": "Stroke of lightning",
+                "effect": "damage",
+                "dice": { "count": 3, "sides": 6 },
+                "range": "long",
+                "duration": "instantaneous",
+                "components": ["V", "S", "M"]
+            },
+            "spell_dispel_magic_001": {
+                "id": "spell_dispel_magic_001",
+                "name": "Dispel Magic",
+                "school": "arcane",
+                "level": 3,
+                "description": "Removes magical effects",
+                "effect": "dispel",
+                "range": "medium",
+                "duration": "instantaneous",
+                "components": ["V", "S"]
+            },
+            // Divine Level 1
+            "spell_cure_light_wounds_001": {
+                "id": "spell_cure_light_wounds_001",
+                "name": "Cure Light Wounds",
+                "school": "divine",
+                "level": 1,
+                "description": "Heals minor injuries",
+                "effect": "heal",
+                "dice": { "count": 1, "sides": 8, "bonus": 1 },
+                "range": "touch",
+                "duration": "instantaneous",
+                "components": ["V", "S"]
+            },
+            "spell_bless_001": {
+                "id": "spell_bless_001",
+                "name": "Bless",
+                "school": "divine",
+                "level": 1,
+                "description": "Grants divine favor in combat",
+                "effect": "buff",
+                "bonus": 1,
+                "range": "medium",
+                "duration": "combat",
+                "components": ["V", "S", "M"]
+            },
+            "spell_protection_from_evil_001": {
+                "id": "spell_protection_from_evil_001",
+                "name": "Protection from Evil",
+                "school": "divine",
+                "level": 1,
+                "description": "Wards against evil creatures",
+                "effect": "protection",
+                "acBonus": 2,
+                "range": "touch",
+                "duration": "long",
+                "components": ["V", "S", "M"]
+            },
+            // Divine Level 2
+            "spell_hold_person_001": {
+                "id": "spell_hold_person_001",
+                "name": "Hold Person",
+                "school": "divine",
+                "level": 2,
+                "description": "Paralyzes a humanoid",
+                "effect": "control",
+                "range": "medium",
+                "duration": "combat",
+                "components": ["V", "S", "F"]
+            },
+            "spell_silence_001": {
+                "id": "spell_silence_001",
+                "name": "Silence",
+                "school": "divine",
+                "level": 2,
+                "description": "Creates zone of magical silence",
+                "effect": "control",
+                "range": "long",
+                "duration": "combat",
+                "components": ["V", "S"]
+            },
+            "spell_spiritual_hammer_001": {
+                "id": "spell_spiritual_hammer_001",
+                "name": "Spiritual Hammer",
+                "school": "divine",
+                "level": 2,
+                "description": "Conjures magical weapon",
+                "effect": "damage",
+                "dice": { "count": 1, "sides": 6, "bonus": 1 },
+                "range": "medium",
+                "duration": "combat",
+                "components": ["V", "S", "F"]
+            }
+        };
+    }
+    
+    /**
+     * Get embedded conditions data (CORS fallback)
+     */
+    static async getEmbeddedConditions() {
+        return {
+            "condition_poisoned_001": {
+                "name": "Poisoned",
+                "type": "condition",
+                "category": "affliction",
+                "description": "Character is suffering from poison",
+                "effects": {
+                    "hpLoss": 1,
+                    "interval": "turn",
+                    "statPenalty": {
+                        "constitution": -2
+                    }
+                },
+                "duration": "temporary",
+                "removable": true,
+                "removesWith": ["Neutralize Poison", "Cure Disease"],
+                "severity": "moderate"
+            },
+            "condition_cursed_001": {
+                "name": "Cursed",
+                "type": "condition",
+                "category": "magical",
+                "description": "Character is under a magical curse",
+                "effects": {
+                    "statPenalty": {
+                        "luck": -3
+                    },
+                    "combatPenalty": -1
+                },
+                "duration": "permanent",
+                "removable": true,
+                "removesWith": ["Remove Curse"],
+                "severity": "severe"
+            },
+            "condition_paralyzed_001": {
+                "name": "Paralyzed",
+                "type": "condition",
+                "category": "affliction",
+                "description": "Character cannot move or act",
+                "effects": {
+                    "cannotAct": true,
+                    "acPenalty": -4
+                },
+                "duration": "temporary",
+                "removable": true,
+                "removesWith": ["Dispel Magic", "Freedom of Movement"],
+                "severity": "severe"
+            },
+            "condition_blessed_001": {
+                "name": "Blessed",
+                "type": "condition",
+                "category": "beneficial",
+                "description": "Character is under divine blessing",
+                "effects": {
+                    "attackBonus": 1,
+                    "savingThrowBonus": 1
+                },
+                "duration": "temporary",
+                "removable": false,
+                "severity": "beneficial"
+            },
+            "condition_asleep_001": {
+                "name": "Asleep",
+                "type": "condition",
+                "category": "affliction",
+                "description": "Character is magically sleeping",
+                "effects": {
+                    "cannotAct": true,
+                    "vulnerable": true
+                },
+                "duration": "temporary",
+                "removable": true,
+                "removesWith": ["damage", "Dispel Magic"],
+                "severity": "moderate"
+            },
+            "condition_afraid_001": {
+                "name": "Afraid",
+                "type": "condition",
+                "category": "mental",
+                "description": "Character is frightened and less effective",
+                "effects": {
+                    "attackPenalty": -2,
+                    "damagePenalty": -1,
+                    "moralePenalty": -2
+                },
+                "duration": "temporary",
+                "removable": true,
+                "removesWith": ["Bless", "Remove Fear"],
+                "severity": "moderate"
+            },
+            "condition_silenced_001": {
+                "name": "Silenced",
+                "type": "condition",
+                "category": "affliction",
+                "description": "Character cannot speak or cast spells with verbal components",
+                "effects": {
+                    "cannotCastSpells": true,
+                    "verbalSpellsBlocked": true
+                },
+                "duration": "temporary",
+                "removable": true,
+                "removesWith": ["Dispel Magic"],
+                "severity": "moderate"
+            },
+            "condition_aged_001": {
+                "name": "Aged",
+                "type": "condition",
+                "category": "permanent",
+                "description": "Character has been magically aged",
+                "effects": {
+                    "ageIncrease": 1,
+                    "statPenalty": {
+                        "strength": -1,
+                        "constitution": -1
+                    }
+                },
+                "duration": "permanent",
+                "removable": false,
+                "severity": "severe"
+            }
+        };
+    }
+    
+    /**
+     * Get embedded effects data (CORS fallback)
+     */
+    static async getEmbeddedEffects() {
+        return {
+            "effect_haste_001": {
+                "name": "Haste",
+                "type": "effect",
+                "category": "enhancement",
+                "description": "Character moves and acts faster",
+                "effects": {
+                    "attackBonus": 1,
+                    "acBonus": 1,
+                    "extraActions": 1
+                },
+                "duration": "combat",
+                "turnsRemaining": 10,
+                "dispellable": true,
+                "beneficial": true
+            },
+            "effect_slow_001": {
+                "name": "Slow",
+                "type": "effect",
+                "category": "hindrance",
+                "description": "Character moves and acts slower",
+                "effects": {
+                    "attackPenalty": -1,
+                    "acPenalty": -1,
+                    "actionsReduced": 1
+                },
+                "duration": "combat",
+                "turnsRemaining": 10,
+                "dispellable": true,
+                "beneficial": false
+            },
+            "effect_magic_weapon_001": {
+                "name": "Magic Weapon",
+                "type": "effect",
+                "category": "enhancement",
+                "description": "Weapon becomes magical with enhanced damage",
+                "effects": {
+                    "weaponEnhancement": 1,
+                    "damageBonus": 1
+                },
+                "duration": "combat",
+                "turnsRemaining": 20,
+                "dispellable": true,
+                "beneficial": true
+            },
+            "effect_shield_001": {
+                "name": "Shield",
+                "type": "effect",
+                "category": "protection",
+                "description": "Magical armor provides protection",
+                "effects": {
+                    "acBonus": 4,
+                    "magicMissileImmunity": true
+                },
+                "duration": "combat",
+                "turnsRemaining": 15,
+                "dispellable": true,
+                "beneficial": true
+            },
+            "effect_invisibility_001": {
+                "name": "Invisibility",
+                "type": "effect",
+                "category": "concealment",
+                "description": "Character is invisible to enemies",
+                "effects": {
+                    "invisible": true,
+                    "attackBonus": 2,
+                    "acBonus": 2
+                },
+                "duration": "until_broken",
+                "turnsRemaining": null,
+                "dispellable": true,
+                "beneficial": true,
+                "breaksOn": ["attack", "cast_spell"]
+            },
+            "effect_web_001": {
+                "name": "Web",
+                "type": "effect",
+                "category": "control",
+                "description": "Character is entangled in sticky webs",
+                "effects": {
+                    "entangled": true,
+                    "cannotMove": true,
+                    "attackPenalty": -2
+                },
+                "duration": "combat",
+                "turnsRemaining": 5,
+                "dispellable": true,
+                "beneficial": false,
+                "escapeChance": 0.2
+            },
+            "effect_regeneration_001": {
+                "name": "Regeneration",
+                "type": "effect",
+                "category": "healing",
+                "description": "Character slowly regenerates health",
+                "effects": {
+                    "hpRegeneration": 2,
+                    "interval": "turn"
+                },
+                "duration": "temporary",
+                "turnsRemaining": 10,
+                "dispellable": true,
+                "beneficial": true
+            },
+            "effect_strength_001": {
+                "name": "Strength",
+                "type": "effect",
+                "category": "enhancement",
+                "description": "Character gains supernatural strength",
+                "effects": {
+                    "statBonus": {
+                        "strength": 4
+                    },
+                    "attackBonus": 2,
+                    "damageBonus": 2
+                },
+                "duration": "temporary",
+                "turnsRemaining": 30,
+                "dispellable": true,
+                "beneficial": true
+            },
+            "effect_confusion_001": {
+                "name": "Confusion",
+                "type": "effect",
+                "category": "mental",
+                "description": "Character acts randomly and unpredictably",
+                "effects": {
+                    "confused": true,
+                    "randomActions": true
+                },
+                "duration": "combat",
+                "turnsRemaining": 8,
+                "dispellable": true,
+                "beneficial": false
+            },
+            "effect_light_001": {
+                "name": "Light",
+                "type": "effect",
+                "category": "utility",
+                "description": "Magical light illuminates the area",
+                "effects": {
+                    "lightRadius": 30,
+                    "searchBonus": 1
+                },
+                "duration": "long",
+                "turnsRemaining": 100,
+                "dispellable": true,
+                "beneficial": true
+            }
+        };
+    }
+    
+    /**
+     * Get embedded monsters data (CORS fallback)
+     */
+    static async getEmbeddedMonsters() {
+        return {
+            // Level 1 Monsters
+            "monster_kobold_001": {
+                "name": "Kobold",
+                "type": "humanoid",
+                "level": 1,
+                "hitDie": 4,
+                "strength": 8,
+                "intelligence": 10,
+                "agility": 15,
+                "vitality": 9,
+                "armorClass": 7,
+                "attackBonus": 0,
+                "damageBonus": -1,
+                "attacks": [
+                    { "name": "Short Sword", "damage": { "dice": 1, "sides": 6, "bonus": -1 } },
+                    { "name": "Sling", "damage": { "dice": 1, "sides": 4 }, "range": "ranged" }
+                ],
+                "abilities": ["pack_tactics"],
+                "aiType": "cowardly",
+                "preferredTargets": ["weakest"],
+                "experienceValue": 25,
+                "treasureType": "poor"
+            },
+            "monster_giant_rat_001": {
+                "name": "Giant Rat",
+                "type": "beast",
+                "level": 1,
+                "hitDie": 4,
+                "strength": 7,
+                "intelligence": 2,
+                "agility": 15,
+                "vitality": 12,
+                "armorClass": 7,
+                "attackBonus": 1,
+                "damageBonus": -2,
+                "attacks": [
+                    { "name": "Bite", "damage": { "dice": 1, "sides": 3 }, "special": ["disease"] }
+                ],
+                "abilities": ["disease_bite"],
+                "resistances": ["disease"],
+                "aiType": "aggressive",
+                "preferredTargets": ["random"],
+                "experienceValue": 10,
+                "treasureType": "none"
+            },
+            "monster_skeleton_001": {
+                "name": "Skeleton",
+                "type": "undead",
+                "level": 1,
+                "hitDie": 6,
+                "strength": 10,
+                "intelligence": 10,
+                "agility": 14,
+                "vitality": 15,
+                "armorClass": 7,
+                "attackBonus": 0,
+                "damageBonus": 0,
+                "attacks": [
+                    { "name": "Claw", "damage": { "dice": 1, "sides": 6 } }
+                ],
+                "resistances": ["cold", "necrotic"],
+                "immunities": ["poison", "disease"],
+                "aiType": "aggressive",
+                "preferredTargets": ["front"],
+                "experienceValue": 50,
+                "treasureType": "poor"
+            },
+            // Level 2-3 Monsters
+            "monster_orc_001": {
+                "name": "Orc",
+                "type": "humanoid",
+                "level": 2,
+                "hitDie": 6,
+                "strength": 16,
+                "intelligence": 7,
+                "agility": 12,
+                "vitality": 16,
+                "armorClass": 6,
+                "attackBonus": 1,
+                "damageBonus": 3,
+                "attacks": [
+                    { "name": "Battleaxe", "damage": { "dice": 1, "sides": 8, "bonus": 3 } },
+                    { "name": "Javelin", "damage": { "dice": 1, "sides": 6, "bonus": 3 }, "range": "thrown" }
+                ],
+                "abilities": ["aggressive"],
+                "aiType": "aggressive",
+                "preferredTargets": ["strongest"],
+                "experienceValue": 100,
+                "treasureType": "standard"
+            },
+            "monster_wolf_001": {
+                "name": "Wolf",
+                "type": "beast",
+                "level": 2,
+                "hitDie": 6,
+                "strength": 12,
+                "intelligence": 3,
+                "agility": 15,
+                "vitality": 12,
+                "armorClass": 7,
+                "attackBonus": 2,
+                "damageBonus": 1,
+                "attacks": [
+                    { "name": "Bite", "damage": { "dice": 2, "sides": 4, "bonus": 2 }, "special": ["knockdown"] }
+                ],
+                "abilities": ["pack_tactics", "keen_hearing"],
+                "aiType": "pack",
+                "preferredTargets": ["isolated"],
+                "experienceValue": 50,
+                "treasureType": "none"
+            },
+            "monster_hobgoblin_001": {
+                "name": "Hobgoblin",
+                "type": "humanoid",
+                "level": 3,
+                "hitDie": 8,
+                "strength": 13,
+                "intelligence": 12,
+                "agility": 12,
+                "vitality": 12,
+                "armorClass": 5,
+                "attackBonus": 2,
+                "damageBonus": 1,
+                "attacks": [
+                    { "name": "Longsword", "damage": { "dice": 1, "sides": 8, "bonus": 1 } },
+                    { "name": "Longbow", "damage": { "dice": 1, "sides": 8, "bonus": 1 }, "range": "ranged" }
+                ],
+                "abilities": ["martial_advantage"],
+                "aiType": "tactical",
+                "preferredTargets": ["spellcasters"],
+                "experienceValue": 200,
+                "treasureType": "standard"
+            },
+            // Level 4-5 Monsters
+            "monster_ogre_001": {
+                "name": "Ogre",
+                "type": "giant",
+                "level": 4,
+                "hitDie": 10,
+                "strength": 19,
+                "intelligence": 5,
+                "agility": 8,
+                "vitality": 16,
+                "armorClass": 5,
+                "attackBonus": 3,
+                "damageBonus": 4,
+                "attacks": [
+                    { "name": "Greatclub", "damage": { "dice": 2, "sides": 8, "bonus": 4 } },
+                    { "name": "Javelin", "damage": { "dice": 2, "sides": 6, "bonus": 4 }, "range": "thrown" }
+                ],
+                "abilities": ["powerful_build"],
+                "aiType": "aggressive",
+                "preferredTargets": ["front"],
+                "experienceValue": 450,
+                "treasureType": "standard"
+            },
+            "monster_owlbear_001": {
+                "name": "Owlbear",
+                "type": "monstrosity",
+                "level": 5,
+                "hitDie": 10,
+                "strength": 20,
+                "intelligence": 3,
+                "agility": 12,
+                "vitality": 17,
+                "armorClass": 6,
+                "attackBonus": 4,
+                "damageBonus": 5,
+                "attacks": [
+                    { "name": "Claw", "damage": { "dice": 2, "sides": 8, "bonus": 5 } },
+                    { "name": "Bite", "damage": { "dice": 1, "sides": 10, "bonus": 5 } }
+                ],
+                "abilities": ["multiattack", "keen_sight"],
+                "aiType": "aggressive",
+                "preferredTargets": ["random"],
+                "experienceValue": 700,
+                "treasureType": "rich"
+            },
+            // Boss Monsters
+            "monster_orc_chief_001": {
+                "name": "Orc Chief",
+                "type": "humanoid",
+                "level": 6,
+                "hitDie": 8,
+                "strength": 18,
+                "intelligence": 12,
+                "agility": 12,
+                "vitality": 18,
+                "armorClass": 4,
+                "attackBonus": 5,
+                "damageBonus": 4,
+                "attacks": [
+                    { "name": "Magic Axe +1", "damage": { "dice": 1, "sides": 8, "bonus": 5 }, "magical": true },
+                    { "name": "Spear", "damage": { "dice": 1, "sides": 6, "bonus": 4 }, "range": "thrown" }
+                ],
+                "abilities": ["leadership", "aggressive", "multiattack"],
+                "aiType": "tactical",
+                "preferredTargets": ["strongest"],
+                "experienceValue": 1100,
+                "treasureType": "rich"
+            },
+            "monster_young_dragon_001": {
+                "name": "Young Dragon",
+                "type": "dragon",
+                "level": 8,
+                "hitDie": 12,
+                "strength": 23,
+                "intelligence": 14,
+                "agility": 10,
+                "vitality": 21,
+                "armorClass": 2,
+                "attackBonus": 7,
+                "damageBonus": 6,
+                "attacks": [
+                    { "name": "Bite", "damage": { "dice": 2, "sides": 10, "bonus": 6 } },
+                    { "name": "Claw", "damage": { "dice": 2, "sides": 6, "bonus": 6 } },
+                    { "name": "Fire Breath", "damage": { "dice": 8, "sides": 6 }, "range": "area", "special": ["fire"] }
+                ],
+                "abilities": ["multiattack", "breath_weapon", "frightful_presence", "magic_resistance"],
+                "resistances": ["fire", "physical"],
+                "immunities": ["fire", "sleep", "paralysis"],
+                "aiType": "intelligent",
+                "preferredTargets": ["spellcasters"],
+                "experienceValue": 2300,
+                "treasureType": "hoard"
+            }
+        };
     }
 }

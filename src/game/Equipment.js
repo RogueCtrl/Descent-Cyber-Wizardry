@@ -2,11 +2,12 @@
  * Equipment System
  * Handles items, weapons, and armor with combat integration
  * Enhanced with cursed items and identification mechanics
+ * Updated to use entity reference system with IndexedDB storage
  */
 class Equipment {
     constructor() {
         this.items = new Map();
-        this.equipmentDatabase = this.initializeEquipmentDatabase();
+        this.entityCache = new Map(); // Cache for frequently accessed entities
         
         // Item states
         this.ITEM_STATES = {
@@ -15,10 +16,42 @@ class Equipment {
             CURSED: 'cursed',
             BLESSED: 'blessed'
         };
+        
+        // Initialize entity loading on first use
+        this.entitiesLoaded = false;
     }
     
     /**
-     * Initialize equipment database
+     * Initialize entity loading from IndexedDB
+     * @param {boolean} forceReload - Force reload entities from JSON
+     * @returns {Promise<boolean>} Success status
+     */
+    async initializeEntities(forceReload = false) {
+        if (this.entitiesLoaded && !forceReload) return true;
+        
+        try {
+            // Entities are already loaded by Engine.js, just mark as initialized
+            this.entitiesLoaded = true;
+            
+            // Clear cache when entities are reloaded
+            if (forceReload) {
+                this.entityCache.clear();
+                console.log('Equipment entity cache cleared');
+                // Force reload entities if requested
+                await Storage.loadEntitiesFromJSON(forceReload);
+            }
+            
+            console.log('Equipment entities initialized successfully');
+            return true;
+        } catch (error) {
+            console.error('Failed to initialize equipment entities:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * DEPRECATED: Legacy equipment database (kept for compatibility)
+     * Use getEntityFromStorage() instead
      */
     initializeEquipmentDatabase() {
         return {
@@ -336,51 +369,156 @@ class Equipment {
     }
     
     /**
-     * Get item data
+     * Get item data by name (async version using entity references)
+     * @param {string} itemName - Name of the item
+     * @returns {Promise<Object|null>} Item data or null
      */
-    static getItemData(itemName) {
+    static async getItemData(itemName) {
         const equipment = new Equipment();
-        return equipment.getItem(itemName);
+        return await equipment.getItemByName(itemName);
     }
     
     /**
-     * Get item from database
+     * Get item data by entity ID (preferred method)
+     * @param {string} entityId - Entity ID of the item
+     * @returns {Promise<Object|null>} Item data or null
+     */
+    static async getItemById(entityId) {
+        const equipment = new Equipment();
+        return await equipment.getItemFromStorage(entityId);
+    }
+    
+    /**
+     * Force reload all equipment entities from JSON files
+     * @returns {Promise<boolean>} Success status
+     */
+    static async forceReloadEntities() {
+        const equipment = new Equipment();
+        return await equipment.initializeEntities(true);
+    }
+    
+    /**
+     * Get item from storage by entity ID
+     * @param {string} entityId - Entity ID to retrieve
+     * @returns {Promise<Object|null>} Item data or null
+     */
+    async getItemFromStorage(entityId) {
+        if (!entityId) return null;
+        
+        // Check cache first
+        if (this.entityCache.has(entityId)) {
+            return { ...this.entityCache.get(entityId) };
+        }
+        
+        await this.initializeEntities();
+        
+        // Try each entity store
+        let item = await Storage.getWeapon(entityId);
+        if (item) {
+            this.entityCache.set(entityId, item);
+            return { ...item };
+        }
+        
+        item = await Storage.getArmor(entityId);
+        if (item) {
+            this.entityCache.set(entityId, item);
+            return { ...item };
+        }
+        
+        item = await Storage.getShield(entityId);
+        if (item) {
+            this.entityCache.set(entityId, item);
+            return { ...item };
+        }
+        
+        item = await Storage.getAccessory(entityId);
+        if (item) {
+            this.entityCache.set(entityId, item);
+            return { ...item };
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get item by name (searches all entities)
+     * @param {string} itemName - Name of the item
+     * @returns {Promise<Object|null>} Item data or null
+     */
+    async getItemByName(itemName) {
+        await this.initializeEntities();
+        
+        // Search all entity stores for matching name
+        const stores = ['weapons', 'armor', 'shields', 'accessories'];
+        
+        for (const store of stores) {
+            const entities = await Storage.queryEntities(Storage[store.toUpperCase() + '_STORE'], { name: itemName });
+            if (entities.length > 0) {
+                const item = entities[0];
+                this.entityCache.set(item.id, item);
+                return { ...item };
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * DEPRECATED: Legacy getItem method (kept for compatibility)
+     * Use getItemByName() or getItemFromStorage() instead
      */
     getItem(itemName) {
-        // Search all categories
-        for (const category of Object.values(this.equipmentDatabase)) {
+        // For backward compatibility, use synchronous fallback
+        const equipmentDatabase = this.initializeEquipmentDatabase();
+        for (const category of Object.values(equipmentDatabase)) {
             if (category[itemName]) {
-                return { ...category[itemName] }; // Return copy to avoid mutation
+                return { ...category[itemName] };
             }
         }
         return null;
     }
     
     /**
-     * Get items by category
+     * Get items by category (async version using entity references)
+     * @param {string} category - Category name (weapons, armor, shields, accessories)
+     * @returns {Promise<Array>} Array of items in category
      */
-    getItemsByCategory(category) {
-        if (!this.equipmentDatabase[category]) return [];
-        return Object.values(this.equipmentDatabase[category]);
+    async getItemsByCategory(category) {
+        await this.initializeEntities();
+        
+        const storeMap = {
+            'weapons': Storage.WEAPON_STORE,
+            'armor': Storage.ARMOR_STORE,
+            'shields': Storage.SHIELD_STORE,
+            'accessories': Storage.ACCESSORY_STORE
+        };
+        
+        const storeName = storeMap[category];
+        if (!storeName) return [];
+        
+        return await Storage.getAllEntities(storeName);
     }
     
     /**
-     * Get items available to character class
+     * Get items available to character class (async version using entity references)
+     * @param {string} characterClass - Character class name
+     * @param {string} category - Optional category filter
+     * @returns {Promise<Array>} Array of available items
      */
-    getAvailableItems(characterClass, category = null) {
+    async getAvailableItems(characterClass, category = null) {
+        await this.initializeEntities();
+        
         const availableItems = [];
+        const categories = category ? [category] : ['weapons', 'armor', 'shields', 'accessories'];
         
-        const categories = category ? [category] : Object.keys(this.equipmentDatabase);
-        
-        categories.forEach(cat => {
-            if (!this.equipmentDatabase[cat]) return;
-            
-            Object.values(this.equipmentDatabase[cat]).forEach(item => {
+        for (const cat of categories) {
+            const items = await this.getItemsByCategory(cat);
+            items.forEach(item => {
                 if (this.canUseItem(characterClass, item)) {
                     availableItems.push(item);
                 }
             });
-        });
+        }
         
         return availableItems;
     }
@@ -397,18 +535,31 @@ class Equipment {
     /**
      * Calculate weapon damage
      */
-    calculateWeaponDamage(weapon, attacker) {
-        if (!weapon || !weapon.damage) return 1;
+    /**
+     * Calculate weapon damage (supports both entity references and direct objects)
+     * @param {Object|string} weapon - Weapon object or entity ID
+     * @param {Object} attacker - Attacking character
+     * @returns {Promise<number>} Calculated damage
+     */
+    async calculateWeaponDamage(weapon, attacker) {
+        let weaponData = weapon;
         
-        let damage = Random.dice(weapon.damage.dice, weapon.damage.sides);
+        // If weapon is an entity reference, resolve it
+        if (typeof weapon === 'string') {
+            weaponData = await this.getItemFromStorage(weapon) || await this.getItemByName(weapon);
+        }
+        
+        if (!weaponData || !weaponData.damage) return 1;
+        
+        let damage = Random.dice(weaponData.damage.dice, weaponData.damage.sides);
         
         // Add weapon bonus
-        if (weapon.damage.bonus) {
-            damage += weapon.damage.bonus;
+        if (weaponData.damage.bonus) {
+            damage += weaponData.damage.bonus;
         }
         
         // Add strength bonus for melee weapons
-        if (weapon.subtype !== 'bow' && attacker.attributes) {
+        if (weaponData.subtype !== 'bow' && attacker.attributes) {
             const strBonus = Math.floor((attacker.attributes.strength - 10) / 2);
             damage += strBonus;
         }
@@ -419,13 +570,19 @@ class Equipment {
     /**
      * Calculate armor class bonus
      */
-    calculateACBonus(character) {
+    /**
+     * Calculate AC bonus (async version using entity references)
+     * @param {Object} character - Character to calculate AC for
+     * @returns {Promise<number>} Total AC bonus
+     */
+    async calculateACBonus(character) {
         let totalACBonus = 0;
         
         if (character.equipment) {
             // Armor bonus
             if (character.equipment.armor) {
-                const armor = this.getItem(character.equipment.armor.name || character.equipment.armor);
+                const armorId = typeof character.equipment.armor === 'string' ? character.equipment.armor : character.equipment.armor.name;
+                const armor = await this.getItemFromStorage(armorId) || await this.getItemByName(armorId);
                 if (armor && armor.acBonus) {
                     totalACBonus += armor.acBonus;
                 }
@@ -433,7 +590,8 @@ class Equipment {
             
             // Shield bonus
             if (character.equipment.shield) {
-                const shield = this.getItem(character.equipment.shield.name || character.equipment.shield);
+                const shieldId = typeof character.equipment.shield === 'string' ? character.equipment.shield : character.equipment.shield.name;
+                const shield = await this.getItemFromStorage(shieldId) || await this.getItemByName(shieldId);
                 if (shield && shield.acBonus) {
                     totalACBonus += shield.acBonus;
                 }
@@ -441,7 +599,8 @@ class Equipment {
             
             // Accessory bonus
             if (character.equipment.accessory) {
-                const accessory = this.getItem(character.equipment.accessory.name || character.equipment.accessory);
+                const accessoryId = typeof character.equipment.accessory === 'string' ? character.equipment.accessory : character.equipment.accessory.name;
+                const accessory = await this.getItemFromStorage(accessoryId) || await this.getItemByName(accessoryId);
                 if (accessory && accessory.acBonus) {
                     totalACBonus += accessory.acBonus;
                 }
@@ -454,7 +613,12 @@ class Equipment {
     /**
      * Calculate attack bonus
      */
-    calculateAttackBonus(character) {
+    /**
+     * Calculate attack bonus (async version using entity references)
+     * @param {Object} character - Character to calculate attack bonus for
+     * @returns {Promise<number>} Total attack bonus
+     */
+    async calculateAttackBonus(character) {
         let totalAttackBonus = 0;
         
         // Strength bonus
@@ -467,7 +631,8 @@ class Equipment {
         
         // Weapon bonus
         if (character.equipment && character.equipment.weapon) {
-            const weapon = this.getItem(character.equipment.weapon.name || character.equipment.weapon);
+            const weaponId = typeof character.equipment.weapon === 'string' ? character.equipment.weapon : character.equipment.weapon.name;
+            const weapon = await this.getItemFromStorage(weaponId) || await this.getItemByName(weaponId);
             if (weapon && weapon.attackBonus) {
                 totalAttackBonus += weapon.attackBonus;
             }
@@ -572,28 +737,35 @@ class Equipment {
     /**
      * Get character's total encumbrance
      */
-    calculateEncumbrance(character) {
+    /**
+     * Calculate encumbrance (async version using entity references)
+     * @param {Object} character - Character to calculate encumbrance for
+     * @returns {Promise<number>} Total weight
+     */
+    async calculateEncumbrance(character) {
         let totalWeight = 0;
         
         if (character.equipment) {
-            Object.values(character.equipment).forEach(item => {
+            for (const item of Object.values(character.equipment)) {
                 if (item) {
-                    const itemData = this.getItem(item.name || item);
+                    const itemId = typeof item === 'string' ? item : item.name;
+                    const itemData = await this.getItemFromStorage(itemId) || await this.getItemByName(itemId);
                     if (itemData && itemData.weight) {
                         totalWeight += itemData.weight;
                     }
                 }
-            });
+            }
         }
         
         // Add inventory weight (if implemented)
         if (character.inventory) {
-            character.inventory.forEach(item => {
-                const itemData = this.getItem(item.name || item);
+            for (const item of character.inventory) {
+                const itemId = typeof item === 'string' ? item : item.name;
+                const itemData = await this.getItemFromStorage(itemId) || await this.getItemByName(itemId);
                 if (itemData && itemData.weight) {
                     totalWeight += itemData.weight;
                 }
-            });
+            }
         }
         
         return totalWeight;
@@ -602,8 +774,13 @@ class Equipment {
     /**
      * Check if character is encumbered
      */
-    isEncumbered(character) {
-        const totalWeight = this.calculateEncumbrance(character);
+    /**
+     * Check if character is encumbered (async version)
+     * @param {Object} character - Character to check
+     * @returns {Promise<boolean>} Whether character is encumbered
+     */
+    async isEncumbered(character) {
+        const totalWeight = await this.calculateEncumbrance(character);
         const maxWeight = (character.attributes?.strength || 10) * 10; // 10 lbs per strength point
         
         return totalWeight > maxWeight;
@@ -612,19 +789,30 @@ class Equipment {
     /**
      * Generate random loot
      */
-    generateRandomLoot(level = 1, quantity = 1) {
+    /**
+     * Generate random loot (async version using entity references)
+     * @param {number} level - Level for filtering items
+     * @param {number} quantity - Number of items to generate
+     * @returns {Promise<Array>} Array of loot items
+     */
+    async generateRandomLoot(level = 1, quantity = 1) {
         const loot = [];
         const allItems = [];
         
-        // Collect all items
-        Object.values(this.equipmentDatabase).forEach(category => {
-            Object.values(category).forEach(item => {
-                // Simple level-based filtering
-                const itemLevel = item.magical ? 3 : 1;
-                if (itemLevel <= level + 2) {
-                    allItems.push(item);
-                }
-            });
+        await this.initializeEntities();
+        
+        // Collect all items from entity stores
+        const weapons = await Storage.getAllWeapons();
+        const armor = await Storage.getAllArmor();
+        const shields = await Storage.getAllShields();
+        const accessories = await Storage.getAllAccessories();
+        
+        [...weapons, ...armor, ...shields, ...accessories].forEach(item => {
+            // Simple level-based filtering
+            const itemLevel = item.magical ? 3 : 1;
+            if (itemLevel <= level + 2) {
+                allItems.push(item);
+            }
         });
         
         // Select random items
@@ -641,7 +829,12 @@ class Equipment {
     /**
      * Get equipment summary for character
      */
-    getEquipmentSummary(character) {
+    /**
+     * Get equipment summary (async version using entity references)
+     * @param {Object} character - Character to get summary for
+     * @returns {Promise<Object>} Equipment summary
+     */
+    async getEquipmentSummary(character) {
         const summary = {
             weapon: null,
             armor: null,
@@ -654,18 +847,19 @@ class Equipment {
         };
         
         if (character.equipment) {
-            Object.entries(character.equipment).forEach(([slot, item]) => {
+            for (const [slot, item] of Object.entries(character.equipment)) {
                 if (item) {
-                    const itemData = this.getItem(item.name || item);
+                    const itemId = typeof item === 'string' ? item : item.name;
+                    const itemData = await this.getItemFromStorage(itemId) || await this.getItemByName(itemId);
                     summary[slot] = itemData;
                 }
-            });
+            }
         }
         
-        summary.totalACBonus = this.calculateACBonus(character);
-        summary.totalAttackBonus = this.calculateAttackBonus(character);
-        summary.totalWeight = this.calculateEncumbrance(character);
-        summary.isEncumbered = this.isEncumbered(character);
+        summary.totalACBonus = await this.calculateACBonus(character);
+        summary.totalAttackBonus = await this.calculateAttackBonus(character);
+        summary.totalWeight = await this.calculateEncumbrance(character);
+        summary.isEncumbered = await this.isEncumbered(character);
         
         return summary;
     }
@@ -692,10 +886,19 @@ class Equipment {
      * @param {Object} options - Additional options for item creation
      * @returns {Object} Item instance with state
      */
-    createItemInstance(itemName, options = {}) {
-        const itemData = this.getItemData(itemName);
+    /**
+     * Create an item instance with state information (async version)
+     * @param {string} itemNameOrId - Name or ID of the item
+     * @param {Object} options - Additional options for item creation
+     * @returns {Promise<Object>} Item instance with state
+     */
+    async createItemInstance(itemNameOrId, options = {}) {
+        let itemData = await this.getItemFromStorage(itemNameOrId);
         if (!itemData) {
-            throw new Error(`Item not found: ${itemName}`);
+            itemData = await this.getItemByName(itemNameOrId);
+        }
+        if (!itemData) {
+            throw new Error(`Item not found: ${itemNameOrId}`);
         }
 
         const instance = {
@@ -715,9 +918,11 @@ class Equipment {
 
         // If item is cursed and unidentified, show disguised appearance
         if (instance.cursed && !instance.identified && itemData.disguisedAs) {
-            const disguiseData = this.getItemData(itemData.disguisedAs);
-            instance.apparentName = disguiseData.name;
-            instance.apparentDescription = disguiseData.description || disguiseData.name;
+            const disguiseData = await this.getItemByName(itemData.disguisedAs);
+            if (disguiseData) {
+                instance.apparentName = disguiseData.name;
+                instance.apparentDescription = disguiseData.description || disguiseData.name;
+            }
         }
 
         return instance;
@@ -989,38 +1194,44 @@ class Equipment {
      * @param {Object} options - Generation options
      * @returns {Object} Generated item instance
      */
-    generateMagicalItem(level = 1, options = {}) {
+    /**
+     * Generate magical item (async version using entity references)
+     * @param {number} level - Dungeon level for difficulty
+     * @param {Object} options - Generation options
+     * @returns {Promise<Object>} Generated item instance
+     */
+    async generateMagicalItem(level = 1, options = {}) {
         const cursedChance = Math.min(20, level * 2); // 2% per level, max 20%
         const unknownChance = Math.min(30, level * 3); // 3% per level, max 30%
 
+        await this.initializeEntities();
+        
         let itemPool = [];
 
         // Add normal magical items
-        Object.keys(this.equipmentDatabase.weapons).forEach(key => {
-            const item = this.equipmentDatabase.weapons[key];
-            if (item.magical) itemPool.push(key);
-        });
-        Object.keys(this.equipmentDatabase.armor).forEach(key => {
-            const item = this.equipmentDatabase.armor[key];
-            if (item.magical) itemPool.push(key);
-        });
-        Object.keys(this.equipmentDatabase.accessories).forEach(key => {
-            const item = this.equipmentDatabase.accessories[key];
-            if (item.magical) itemPool.push(key);
+        const weapons = await Storage.getAllWeapons();
+        const armor = await Storage.getAllArmor();
+        const shields = await Storage.getAllShields();
+        const accessories = await Storage.getAllAccessories();
+        
+        [...weapons, ...armor, ...shields, ...accessories].forEach(item => {
+            if (item.magical) itemPool.push(item.id);
         });
 
         // Add cursed items based on chance
         if (Random.percent(cursedChance)) {
-            itemPool = [...itemPool, ...Object.keys(this.equipmentDatabase.cursedItems)];
+            const cursedItems = [...weapons, ...armor, ...shields, ...accessories].filter(item => item.cursed);
+            itemPool = [...itemPool, ...cursedItems.map(item => item.id)];
         }
 
         // Add unknown items based on chance
         if (Random.percent(unknownChance)) {
-            itemPool = [...itemPool, ...Object.keys(this.equipmentDatabase.unknownItems)];
+            const unknownItems = [...weapons, ...armor, ...shields, ...accessories].filter(item => item.unidentified);
+            itemPool = [...itemPool, ...unknownItems.map(item => item.id)];
         }
 
-        const selectedItem = Random.choice(itemPool);
-        return this.createItemInstance(selectedItem, {
+        const selectedItemId = Random.choice(itemPool);
+        return await this.createItemInstance(selectedItemId, {
             identified: !Random.percent(unknownChance)
         });
     }

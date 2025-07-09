@@ -39,6 +39,9 @@ class ResourceManagementTest {
             this.deathSystem = deathSystem;
             this.equipment = new Equipment();
             this.storage = Storage;
+            
+            // Initialize equipment entities
+            await this.equipment.initializeEntities();
 
             // Create test data
             this.createTestData();
