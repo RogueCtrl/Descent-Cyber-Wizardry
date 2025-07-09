@@ -469,6 +469,14 @@ class UI {
                             </div>
                         </button>
                         
+                        <button id="view-roster-btn" class="action-btn secondary large">
+                            <div class="btn-icon">📋</div>
+                            <div class="btn-text">
+                                <span class="btn-title">View Roster</span>
+                                <span class="btn-desc">Browse all characters</span>
+                            </div>
+                        </button>
+                        
                         <button id="view-party-btn" class="action-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
                             <div class="btn-icon">👥</div>
                             <div class="btn-text">
@@ -530,6 +538,7 @@ class UI {
     setupTrainingGroundsEventListeners(container) {
         const createBtn = container.querySelector('#create-character-btn');
         const backBtn = container.querySelector('#back-to-town-btn');
+        const viewRosterBtn = container.querySelector('#view-roster-btn');
         const viewPartyBtn = container.querySelector('#view-party-btn');
         const deleteBtn = container.querySelector('#delete-character-btn');
         
@@ -542,6 +551,12 @@ class UI {
         if (backBtn) {
             backBtn.addEventListener('click', () => {
                 this.eventSystem.emit('training-action', 'back-to-town');
+            });
+        }
+        
+        if (viewRosterBtn) {
+            viewRosterBtn.addEventListener('click', () => {
+                this.showCharacterRoster();
             });
         }
         
@@ -621,6 +636,171 @@ class UI {
      */
     hideCharacterCreation() {
         this.characterUI.hideCharacterCreation();
+    }
+    
+    /**
+     * Show character roster interface
+     */
+    async showCharacterRoster() {
+        try {
+            // Get all characters from storage
+            const allCharacters = await Storage.loadAllCharacters();
+            
+            console.log(`Loading character roster: ${allCharacters.length} characters found`);
+            
+            // Create roster modal content
+            const rosterContent = await this.createCharacterRosterContent(allCharacters);
+            
+            // Create and show modal
+            this.rosterModal = new Modal({
+                className: 'modal roster-modal',
+                closeOnEscape: true,
+                closeOnBackdrop: true
+            });
+            
+            // Set up close callback
+            this.rosterModal.setOnClose(() => {
+                this.hideCharacterRoster();
+            });
+            
+            this.rosterModal.create(rosterContent);
+            this.rosterModal.show();
+            
+        } catch (error) {
+            console.error('Failed to show character roster:', error);
+            this.addMessage('Failed to load character roster', 'error');
+        }
+    }
+    
+    /**
+     * Hide character roster interface
+     */
+    hideCharacterRoster() {
+        if (this.rosterModal) {
+            this.rosterModal.hide();
+            this.rosterModal = null;
+        }
+    }
+    
+    /**
+     * Create character roster modal content
+     */
+    async createCharacterRosterContent(characters) {
+        const characterCards = await Promise.all(
+            characters.map(character => this.createCharacterCard(character))
+        );
+        
+        const hasCharacters = characters.length > 0;
+        
+        return `
+            <div class="roster-interface">
+                <div class="roster-header">
+                    <h1 class="roster-title">Character Roster</h1>
+                    <p class="roster-subtitle">All Created Characters (${characters.length})</p>
+                </div>
+                
+                <div class="roster-content">
+                    ${hasCharacters ? `
+                        <div class="character-grid">
+                            ${characterCards.join('')}
+                        </div>
+                    ` : `
+                        <div class="no-characters">
+                            <div class="no-characters-icon">⚔️</div>
+                            <h3>No Characters Created</h3>
+                            <p>Visit the Training Grounds to create your first adventurer!</p>
+                        </div>
+                    `}
+                </div>
+                
+                <div class="roster-footer">
+                    <button id="close-roster-btn" class="action-btn secondary">
+                        <span>← Back to Training Grounds</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Create a character card for the roster
+     */
+    async createCharacterCard(character) {
+        // Determine character location
+        const location = this.getCharacterLocation(character);
+        
+        // Determine character status with proper styling
+        const status = character.status || 'Alive';
+        const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+        
+        // Get class icon (implement later if icons are available)
+        const classIcon = this.getClassIcon(character.class);
+        
+        // Calculate HP percentage for health indicator
+        const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
+        const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
+        
+        return `
+            <div class="character-roster-card" data-character-id="${character.id}">
+                <div class="character-card-header">
+                    <div class="class-icon">${classIcon}</div>
+                    <div class="character-card-name">${character.name}</div>
+                    <div class="character-card-level">Lvl ${character.level}</div>
+                </div>
+                
+                <div class="character-card-info">
+                    <div class="character-card-race-class">${character.race} ${character.class}</div>
+                    <div class="character-card-location">
+                        <span class="location-label">Location:</span>
+                        <span class="location-value">${location}</span>
+                    </div>
+                    <div class="character-card-status">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value status-${statusClass}">${status}</span>
+                    </div>
+                </div>
+                
+                <div class="character-card-health">
+                    <div class="hp-indicator ${hpStatusClass}">
+                        <div class="hp-bar" style="width: ${hpPercentage}%"></div>
+                    </div>
+                    <div class="hp-text">${character.currentHP}/${character.maxHP} HP</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Get character location string
+     */
+    getCharacterLocation(character) {
+        // For now, simple location logic - can be enhanced later
+        if (character.location) {
+            if (character.location.dungeon) {
+                const { floor, x, y } = character.location;
+                return `Dungeon (Lvl.${floor} ${x},${y})`;
+            }
+            return character.location.area || 'Town';
+        }
+        return 'Town';
+    }
+    
+    /**
+     * Get class icon for character
+     */
+    getClassIcon(characterClass) {
+        const classIcons = {
+            'Fighter': '⚔️',
+            'Mage': '🔮',
+            'Priest': '✨',
+            'Thief': '🗡️',
+            'Bishop': '🔯',
+            'Samurai': '🗾',
+            'Lord': '👑',
+            'Ninja': '🥷'
+        };
+        
+        return classIcons[characterClass] || '⚔️';
     }
     
     /**
