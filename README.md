@@ -20,6 +20,7 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 - **Cyberpunk Aesthetic**: Terminal-inspired interface with retro-modern styling
 
 ### 🏗️ In Progress
+- Training Grounds overall
 - Dungeon exploration and navigation
 - Combat system implementation
 - Party management mechanics
@@ -30,6 +31,9 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 ### Character Creation Flow
 <div align="center">
 
+**Town Menu**
+![Town Menu](assets/readme/town-menu.jpg)
+
 **Race Selection**
 ![Character Creation - Race Selection](assets/readme/cc-race.jpg)
 
@@ -39,8 +43,11 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 **Character Confirmation**
 ![Character Creation - Confirmation](assets/readme/cc-confirmation.jpg)
 
-**Town Menu**
-![Town Menu](assets/readme/town-menu.jpg)
+**Character Roster**
+![Character Roster](assets/readme/character-roster.jpg)
+
+**Character Detail**
+![Character Detail](assets/readme/character-detail.jpg)
 
 **Dungeon Interface**
 ![Dungeon Interface](assets/readme/dungeon-preview.jpg)

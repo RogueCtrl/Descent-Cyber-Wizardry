@@ -666,6 +666,9 @@ class UI {
             this.rosterModal.create(rosterContent);
             this.rosterModal.show();
             
+            // Add event listeners after modal is created
+            this.setupRosterEventListeners();
+            
         } catch (error) {
             console.error('Failed to show character roster:', error);
             this.addMessage('Failed to load character roster', 'error');
@@ -679,6 +682,258 @@ class UI {
         if (this.rosterModal) {
             this.rosterModal.hide();
             this.rosterModal = null;
+        }
+    }
+    
+    /**
+     * Set up event listeners for roster modal
+     */
+    setupRosterEventListeners() {
+        const modalBody = this.rosterModal.getBody();
+        
+        // Close button
+        const closeBtn = modalBody.querySelector('#close-roster-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.hideCharacterRoster();
+            });
+        }
+        
+        // Character card click handlers
+        const characterCards = modalBody.querySelectorAll('.character-roster-card');
+        characterCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const characterId = card.dataset.characterId;
+                this.showCharacterDetails(characterId);
+            });
+        });
+    }
+    
+    /**
+     * Show detailed character sheet
+     */
+    async showCharacterDetails(characterId) {
+        try {
+            // Load character data
+            const character = await Storage.loadCharacter(characterId);
+            if (!character) {
+                this.addMessage('Character not found', 'error');
+                return;
+            }
+            
+            console.log(`Loading character details for: ${character.name}`);
+            
+            // Create character sheet content
+            const detailContent = await this.createCharacterDetailContent(character);
+            
+            // Create and show character detail modal
+            this.characterDetailModal = new Modal({
+                className: 'modal character-detail-modal',
+                closeOnEscape: true,
+                closeOnBackdrop: true
+            });
+            
+            this.characterDetailModal.setOnClose(() => {
+                this.hideCharacterDetails();
+            });
+            
+            this.characterDetailModal.create(detailContent);
+            this.characterDetailModal.show();
+            
+            // Add event listeners for character detail modal
+            this.setupCharacterDetailEventListeners();
+            
+        } catch (error) {
+            console.error('Failed to show character details:', error);
+            this.addMessage('Failed to load character details', 'error');
+        }
+    }
+    
+    /**
+     * Hide character details modal
+     */
+    hideCharacterDetails() {
+        if (this.characterDetailModal) {
+            this.characterDetailModal.hide();
+            this.characterDetailModal = null;
+        }
+    }
+    
+    /**
+     * Create character detail modal content
+     */
+    async createCharacterDetailContent(character) {
+        // Calculate derived stats
+        const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
+        const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
+        
+        // Get status and location
+        const status = character.status || 'Alive';
+        const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+        const location = this.getCharacterLocation(character);
+        const classIcon = this.getClassIcon(character.class);
+        
+        // Format attributes (check both direct properties and nested attributes object)
+        const attrs = character.attributes || character;
+        const attributes = [
+            { name: 'Strength', value: attrs.strength || character.strength || 0, abbr: 'STR' },
+            { name: 'Intelligence', value: attrs.intelligence || character.intelligence || 0, abbr: 'INT' },
+            { name: 'Piety', value: attrs.piety || character.piety || 0, abbr: 'PIE' },
+            { name: 'Vitality', value: attrs.vitality || character.vitality || 0, abbr: 'VIT' },
+            { name: 'Agility', value: attrs.agility || character.agility || 0, abbr: 'AGI' },
+            { name: 'Luck', value: attrs.luck || character.luck || 0, abbr: 'LUC' }
+        ];
+        
+        // Format equipment (simplified for now)
+        const equipment = this.formatCharacterEquipment(character);
+        
+        // Format spells (simplified for now)
+        const spells = this.formatCharacterSpells(character);
+        
+        return `
+            <div class="character-detail-interface">
+                <div class="character-detail-header">
+                    <div class="character-detail-title">
+                        <div class="character-detail-icon">${classIcon}</div>
+                        <div class="character-detail-name-block">
+                            <h1 class="character-detail-name">${character.name}</h1>
+                            <p class="character-detail-subtitle">Level ${character.level} ${character.race} ${character.class}</p>
+                        </div>
+                    </div>
+                    <div class="character-detail-status">
+                        <div class="status-badge status-${statusClass}">${status}</div>
+                        <div class="location-badge">${location}</div>
+                    </div>
+                </div>
+                
+                <div class="character-detail-content">
+                    <div class="character-detail-section">
+                        <h3>Attributes</h3>
+                        <div class="attributes-grid">
+                            ${attributes.map(attr => `
+                                <div class="attribute-item">
+                                    <div class="attribute-name">${attr.abbr}</div>
+                                    <div class="attribute-value">${attr.value}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="character-detail-section">
+                        <h3>Health & Experience</h3>
+                        <div class="health-exp-grid">
+                            <div class="health-section">
+                                <div class="health-label">Hit Points</div>
+                                <div class="health-bar-section">
+                                    <div class="hp-indicator ${hpStatusClass}">
+                                        <div class="hp-bar" style="width: ${hpPercentage}%"></div>
+                                    </div>
+                                    <div class="hp-text">${character.currentHP}/${character.maxHP}</div>
+                                </div>
+                            </div>
+                            <div class="exp-section">
+                                <div class="exp-label">Experience</div>
+                                <div class="exp-value">${character.experience || 0}</div>
+                            </div>
+                            ${character.spellPoints !== undefined ? `
+                                <div class="sp-section">
+                                    <div class="sp-label">Spell Points</div>
+                                    <div class="sp-value">${character.currentSP || 0}/${character.spellPoints || 0}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="character-detail-section">
+                        <h3>Equipment</h3>
+                        <div class="equipment-grid">
+                            ${equipment}
+                        </div>
+                    </div>
+                    
+                    ${spells ? `
+                        <div class="character-detail-section">
+                            <h3>Memorized Spells</h3>
+                            <div class="spells-section">
+                                ${spells}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="character-detail-footer">
+                    <button id="close-character-detail-btn" class="action-btn secondary">
+                        <span>← Back to Roster</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Format character equipment for display
+     */
+    formatCharacterEquipment(character) {
+        const equipment = character.equipment || {};
+        const slots = [
+            { key: 'weapon', name: 'Weapon' },
+            { key: 'armor', name: 'Armor' },
+            { key: 'shield', name: 'Shield' },
+            { key: 'accessory', name: 'Accessory' }
+        ];
+        
+        return slots.map(slot => {
+            const item = equipment[slot.key];
+            const itemName = item ? (typeof item === 'string' ? item : item.name || 'Unknown') : 'None';
+            
+            return `
+                <div class="equipment-item">
+                    <div class="equipment-slot">${slot.name}:</div>
+                    <div class="equipment-name">${itemName}</div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    /**
+     * Format character spells for display
+     */
+    formatCharacterSpells(character) {
+        const memorizedSpells = character.memorizedSpells || {};
+        const hasSpells = Object.keys(memorizedSpells).length > 0;
+        
+        if (!hasSpells) {
+            return '<div class="no-spells">No spells memorized</div>';
+        }
+        
+        return Object.entries(memorizedSpells).map(([level, spells]) => {
+            if (!spells || spells.length === 0) return '';
+            
+            return `
+                <div class="spell-level">
+                    <h4>Level ${level}</h4>
+                    <div class="spell-list">
+                        ${spells.map(spell => `
+                            <div class="spell-item">${typeof spell === 'string' ? spell : spell.name || 'Unknown Spell'}</div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    /**
+     * Set up event listeners for character detail modal
+     */
+    setupCharacterDetailEventListeners() {
+        const modalBody = this.characterDetailModal.getBody();
+        
+        // Close button
+        const closeBtn = modalBody.querySelector('#close-character-detail-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.hideCharacterDetails();
+            });
         }
     }
     
