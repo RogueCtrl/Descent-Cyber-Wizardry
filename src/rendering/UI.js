@@ -25,6 +25,9 @@ class UI {
         // Training Grounds Modal
         this.trainingModal = null;
         
+        // Post-Combat Results Modal
+        this.postCombatModal = null;
+        
         this.initialize();
     }
     
@@ -98,6 +101,21 @@ class UI {
         // Message system
         this.eventSystem.on('show-message', (data) => {
             this.addMessage(data.text, data.type);
+        });
+        
+        // Combat ended event
+        this.eventSystem.on('combat-ended', (data) => {
+            this.showPostCombatResults(data.rewards);
+        });
+        
+        // Party defeated event
+        this.eventSystem.on('party-defeated', (data) => {
+            this.showPartyDeathScreen(data.casualties);
+        });
+        
+        // Character updated event (for real-time HP updates)
+        this.eventSystem.on('character-updated', (data) => {
+            this.refreshCombatDisplay();
         });
     }
     
@@ -1224,8 +1242,9 @@ class UI {
                     `;
                 }
                 
-                // Get current enemies (not party members)
-                const enemies = combat.combatants.filter(c => !window.engine.party.aliveMembers.includes(c));
+                // Get current enemies (not party members - both alive and dead)
+                const allPartyMembers = window.engine.party.members || [];
+                const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
                 console.log('Enemies found:', enemies);
                 
                 enemyStatusDiv.innerHTML = enemies.map(enemy => `
@@ -1339,6 +1358,13 @@ class UI {
         
         if (result.success) {
             this.addMessage(result.message, 'combat');
+            
+            // Check if combat ended
+            if (result.combatEnded) {
+                this.handleCombatEnd(result.winner);
+                return;
+            }
+            
             // Update combat status after action and check for next turn
             setTimeout(() => {
                 this.updateCombatStatus();
@@ -1364,6 +1390,12 @@ class UI {
         const aiResult = window.engine.combatInterface.processAITurn(monster);
         
         if (aiResult.success !== false) {
+            // Check if combat ended from AI action
+            if (aiResult.combatEnded) {
+                this.handleCombatEnd(aiResult.winner);
+                return;
+            }
+            
             // Move to next turn after AI action
             setTimeout(() => {
                 this.updateCombatStatus();
@@ -1372,6 +1404,39 @@ class UI {
         } else {
             this.addMessage('Monster AI failed to act!', 'error');
         }
+    }
+    
+    /**
+     * Handle combat end based on winner
+     */
+    handleCombatEnd(winner) {
+        console.log('Combat ended, winner:', winner);
+        
+        if (winner === 'party') {
+            // Player victory - trigger normal combat end
+            window.engine.combatInterface.combat.endCombat();
+        } else {
+            // Enemy victory - trigger death screen
+            const casualties = window.engine.party.members.filter(member => !member.isAlive);
+            
+            // Force end combat without normal rewards
+            window.engine.combatInterface.combat.isActive = false;
+            
+            // Show death screen
+            this.showPartyDeathScreen(casualties);
+        }
+    }
+    
+    /**
+     * Refresh combat display (for real-time HP updates during combat)
+     */
+    refreshCombatDisplay() {
+        // Only update combat status if we're actually in combat
+        if (window.engine?.gameState?.current === 'combat' && window.engine?.combatInterface?.combat?.isActive) {
+            this.updateCombatStatus();
+        }
+        
+        // Don't emit events to avoid recursion
     }
     
     /**
@@ -1438,6 +1503,272 @@ class UI {
         // Re-initialize 3D rendering if needed
         if (window.engine && window.engine.renderer) {
             window.engine.renderer.setupViewport();
+        }
+    }
+    
+    /**
+     * Show post-combat results screen
+     */
+    showPostCombatResults(rewards) {
+        console.log('Showing post-combat results:', rewards);
+        
+        // Hide combat interface first
+        this.hideCombatInterface();
+        
+        // Create post-combat modal
+        this.postCombatModal = new Modal('post-combat-results', {
+            title: '🎉 Victory!',
+            content: this.createPostCombatContent(rewards),
+            buttons: [
+                {
+                    text: 'Continue',
+                    class: 'primary',
+                    action: () => {
+                        this.postCombatModal.hide();
+                        this.postCombatModal = null;
+                        
+                        // Apply rewards to party
+                        this.applyRewardsToParty(rewards);
+                        
+                        // Return to dungeon exploration
+                        if (window.engine) {
+                            window.engine.returnToDungeon();
+                        }
+                    }
+                }
+            ]
+        });
+        
+        this.postCombatModal.show();
+    }
+    
+    /**
+     * Create post-combat results content
+     */
+    createPostCombatContent(rewards) {
+        let content = '<div class="post-combat-results">';
+        
+        // Experience section
+        content += '<div class="reward-section">';
+        content += '<h3>💫 Experience Gained</h3>';
+        content += `<p class="experience-reward">${rewards.experience} XP</p>`;
+        content += '</div>';
+        
+        // Gold section
+        if (rewards.gold > 0) {
+            content += '<div class="reward-section">';
+            content += '<h3>💰 Gold Found</h3>';
+            content += `<p class="gold-reward">${rewards.gold} gold pieces</p>`;
+            content += '</div>';
+        }
+        
+        // Loot section
+        if (rewards.loot && rewards.loot.length > 0) {
+            content += '<div class="reward-section">';
+            content += '<h3>🎁 Treasure Found</h3>';
+            content += '<div class="loot-list">';
+            
+            rewards.loot.forEach(item => {
+                const rarity = item.magical ? 'magical' : 'normal';
+                content += `<div class="loot-item ${rarity}">`;
+                content += `<span class="item-name">${item.name}</span>`;
+                if (item.type) {
+                    content += `<span class="item-type">${item.type}</span>`;
+                }
+                if (item.value) {
+                    content += `<span class="item-value">${item.value} gp</span>`;
+                }
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        } else {
+            content += '<div class="reward-section">';
+            content += '<h3>🔍 Search Results</h3>';
+            content += '<p class="no-loot">No treasure found...</p>';
+            content += '</div>';
+        }
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Apply rewards to party members
+     */
+    applyRewardsToParty(rewards) {
+        if (!window.engine || !window.engine.party) return;
+        
+        const party = window.engine.party;
+        const aliveMembers = party.aliveMembers;
+        
+        if (aliveMembers.length === 0) return;
+        
+        // Distribute experience among alive party members
+        const expPerMember = Math.floor(rewards.experience / aliveMembers.length);
+        
+        aliveMembers.forEach(member => {
+            member.experience = (member.experience || 0) + expPerMember;
+            
+            // Check for level up
+            const newLevel = this.calculateLevel(member.experience);
+            if (newLevel > member.level) {
+                member.level = newLevel;
+                this.addMessage(`${member.name} gained a level! Now level ${newLevel}`, 'level-up');
+                
+                // Increase HP for level up
+                const hpIncrease = Random.die(member.class === 'Fighter' ? 10 : 6);
+                member.maxHP += hpIncrease;
+                member.currentHP += hpIncrease;
+            }
+            
+            // Save character
+            member.saveToStorage();
+        });
+        
+        // Add gold to party
+        party.gold = (party.gold || 0) + rewards.gold;
+        
+        // Add loot to party inventory (if inventory system exists)
+        if (rewards.loot && rewards.loot.length > 0) {
+            rewards.loot.forEach(item => {
+                this.addMessage(`Found: ${item.name}`, 'loot');
+                // TODO: Add to party inventory when inventory system is implemented
+            });
+        }
+    }
+    
+    /**
+     * Calculate character level based on experience
+     */
+    calculateLevel(experience) {
+        // Simple level calculation - every 1000 XP = 1 level
+        return Math.floor(experience / 1000) + 1;
+    }
+    
+    /**
+     * Show party death screen
+     */
+    showPartyDeathScreen(casualties) {
+        console.log('Showing party death screen:', casualties);
+        
+        // Hide combat interface first
+        this.hideCombatInterface();
+        
+        // Create death modal
+        this.deathModal = new Modal('party-death', {
+            title: '💀 Defeat',
+            content: this.createDeathScreenContent(casualties),
+            buttons: [
+                {
+                    text: 'Return to Town',
+                    class: 'primary',
+                    action: () => {
+                        this.deathModal.hide();
+                        this.deathModal = null;
+                        
+                        // Return survivors to town
+                        this.returnToTownAfterDeath();
+                    }
+                },
+                {
+                    text: 'View Character Status',
+                    class: 'secondary',
+                    action: () => {
+                        // Show character status modal
+                        this.characterUI.showCharacterRoster();
+                    }
+                }
+            ]
+        });
+        
+        this.deathModal.show();
+    }
+    
+    /**
+     * Create death screen content
+     */
+    createDeathScreenContent(casualties) {
+        let content = '<div class="death-screen">';
+        
+        // Death message
+        if (casualties.length === window.engine.party.members.length) {
+            content += '<h2>💀 Total Party Kill</h2>';
+            content += '<div class="death-message">Your entire party has been slain in the depths of the dungeon...</div>';
+        } else {
+            content += '<h2>⚰️ Casualties of War</h2>';
+            content += '<div class="death-message">Some of your companions have fallen in battle...</div>';
+        }
+        
+        // Casualties section
+        if (casualties && casualties.length > 0) {
+            content += '<div class="death-details">';
+            content += '<h3>💀 Fallen Heroes</h3>';
+            content += '<div class="casualty-list">';
+            
+            casualties.forEach(casualty => {
+                content += '<div class="casualty-item">';
+                content += `<span class="casualty-name">${casualty.name}</span>`;
+                content += `<span class="casualty-status">${casualty.status === 'dead' ? 'Killed' : 'Unconscious'}</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Survivors section
+        const survivors = window.engine.party.aliveMembers;
+        if (survivors.length > 0) {
+            content += '<div class="death-details">';
+            content += '<h3>🛡️ Survivors</h3>';
+            content += '<div class="casualty-list">';
+            
+            survivors.forEach(survivor => {
+                content += '<div class="casualty-item" style="border-left-color: #10b981;">';
+                content += `<span class="casualty-name">${survivor.name}</span>`;
+                content += `<span class="casualty-status" style="color: #10b981;">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Instructions
+        content += '<div class="death-message">';
+        if (survivors.length > 0) {
+            content += 'The surviving party members retreat to town for healing and rest.';
+        } else {
+            content += 'The adventure ends here. Create new characters to continue exploring.';
+        }
+        content += '</div>';
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Return to town after party death
+     */
+    returnToTownAfterDeath() {
+        console.log('Returning to town after death...');
+        
+        // Change game state to town
+        if (window.engine) {
+            window.engine.gameState.setState('town');
+            
+            // Show town interface
+            this.showTown(window.engine.party);
+            
+            // Add message about returning to town
+            this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+            
+            // Save all character states
+            window.engine.party.members.forEach(member => {
+                member.saveToStorage();
+            });
         }
     }
     

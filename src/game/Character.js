@@ -334,9 +334,12 @@ class Character {
      */
     async saveToStorage() {
         try {
-            // Import Storage dynamically to avoid circular dependencies
-            const { default: Storage } = await import('../utils/Storage.js');
-            await Storage.saveCharacter(this);
+            // Use global Storage class (static methods)
+            if (typeof Storage !== 'undefined' && Storage.saveCharacter) {
+                await Storage.saveCharacter(this);
+            } else {
+                console.warn(`Storage system not available, character ${this.name} not saved`);
+            }
         } catch (error) {
             console.error(`Failed to save character ${this.name} to storage:`, error);
         }

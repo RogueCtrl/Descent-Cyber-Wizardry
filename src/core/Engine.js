@@ -1347,6 +1347,25 @@ class Engine {
     }
     
     /**
+     * Return to dungeon exploration after combat
+     */
+    returnToDungeon() {
+        console.log('Returning to dungeon exploration...');
+        
+        // Change game state back to playing
+        this.gameState.setState('playing');
+        
+        // Re-enable dungeon interface
+        this.ui.showDungeonInterface();
+        
+        // Update party display
+        this.eventSystem.emit('party-update');
+        
+        // Add message about returning to exploration
+        this.ui.addMessage('You continue exploring the dungeon...', 'system');
+    }
+    
+    /**
      * Handle successful flee from combat
      */
     handleCombatFleeSuccess() {

@@ -2424,3 +2424,189 @@ h3 {
         transform: scale(1);
     }
 }
+
+/* Post-Combat Results Styles */
+.post-combat-results {
+    padding: var(--space-6);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.reward-section {
+    margin-bottom: var(--space-6);
+    padding: var(--space-4);
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid var(--accent-primary);
+    border-radius: var(--radius-lg);
+    animation: rewardPulse 2s ease-in-out infinite;
+}
+
+.reward-section h3 {
+    color: var(--accent-primary);
+    margin-bottom: var(--space-3);
+    font-size: var(--font-size-xl);
+    text-shadow: 0 0 10px var(--glow-primary);
+}
+
+.experience-reward {
+    font-size: var(--font-size-3xl);
+    font-weight: bold;
+    color: #ffd700;
+    text-align: center;
+    margin: var(--space-4) 0;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    animation: goldGlow 1.5s ease-in-out infinite;
+}
+
+.gold-reward {
+    font-size: var(--font-size-2xl);
+    font-weight: bold;
+    color: #ffd700;
+    text-align: center;
+    margin: var(--space-4) 0;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.loot-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.loot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--border-primary);
+    transition: all 0.3s ease;
+}
+
+.loot-item:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: translateX(5px);
+}
+
+.loot-item.magical {
+    border-left-color: #9d4edd;
+    background: rgba(157, 78, 221, 0.1);
+}
+
+.loot-item.normal {
+    border-left-color: var(--border-primary);
+}
+
+.item-name {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.item-type {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.item-value {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.no-loot {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: var(--space-6) 0;
+}
+
+/* Death Screen Styles */
+.death-screen {
+    padding: var(--space-8);
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.death-screen h2 {
+    color: var(--danger);
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--space-6);
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    animation: deathPulse 2s ease-in-out infinite;
+}
+
+.death-message {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-6);
+    color: var(--text-primary);
+}
+
+.death-details {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.casualty-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.casualty-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--danger);
+}
+
+.casualty-name {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.casualty-status {
+    color: var(--danger);
+    font-style: italic;
+}
+
+.death-actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+    margin-top: var(--space-6);
+}
+
+/* Animations */
+@keyframes rewardPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    }
+}
+
+@keyframes goldGlow {
+    0%, 100% {
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+    }
+}
+
+@keyframes deathPulse {
+    0%, 100% {
+        text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+    }
+}

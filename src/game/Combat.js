@@ -200,15 +200,120 @@ class Combat {
         this.logMessage(`🏁 ${combatEnd}`, 'combat', '🏁');
         this.logMessage(`The party can rest and recover...`, 'system', '😌');
         
+        // Calculate combat rewards before clearing combat state
+        const combatRewards = this.calculateCombatRewards();
+        
         this.isActive = false;
         this.combatants = [];
         this.actionQueue = [];
+        
+        // Store rewards for post-combat display
+        this.lastCombatRewards = combatRewards;
+        
+        // Clear combat state
         this.playerParty = null;
         this.enemyParties = [];
         this.currentEnemyParty = null;
         this.currentEnemyPartyIndex = 0;
         
         console.log('Combat ended!');
+        
+        // Check if party was defeated
+        const alivePartyMembers = this.combatants.filter(c => 
+            c.hasOwnProperty('class') && c.isAlive
+        ).length;
+        
+        const victory = alivePartyMembers > 0;
+        
+        // Emit combat ended event with rewards or defeat
+        if (window.engine && window.engine.eventSystem) {
+            if (victory) {
+                window.engine.eventSystem.emit('combat-ended', {
+                    victory: true,
+                    rewards: combatRewards
+                });
+            } else {
+                // Party was defeated - show death screen
+                const casualties = this.combatants.filter(c => 
+                    c.hasOwnProperty('class') && !c.isAlive
+                );
+                
+                window.engine.eventSystem.emit('party-defeated', {
+                    victory: false,
+                    casualties: casualties
+                });
+            }
+        }
+    }
+    
+    /**
+     * Calculate combat rewards (experience and loot)
+     */
+    calculateCombatRewards() {
+        const rewards = {
+            experience: 0,
+            loot: [],
+            gold: 0
+        };
+        
+        // Calculate total experience from all defeated enemies
+        const defeatedEnemies = [];
+        this.enemyParties.forEach(party => {
+            const enemies = Array.isArray(party) ? party : [party];
+            enemies.forEach(enemy => {
+                if (!enemy.isAlive) {
+                    defeatedEnemies.push(enemy);
+                    rewards.experience += enemy.experienceValue || 10;
+                    rewards.gold += Random.die(6) * (enemy.level || 1); // Random gold based on enemy level
+                }
+            });
+        });
+        
+        // Generate loot based on defeated enemies
+        this.generateLootFromEnemies(defeatedEnemies, rewards);
+        
+        return rewards;
+    }
+    
+    /**
+     * Generate loot from defeated enemies
+     */
+    async generateLootFromEnemies(defeatedEnemies, rewards) {
+        if (defeatedEnemies.length === 0) return;
+        
+        // Calculate average enemy level for loot generation
+        const avgEnemyLevel = defeatedEnemies.reduce((sum, enemy) => sum + (enemy.level || 1), 0) / defeatedEnemies.length;
+        
+        // Generate loot based on number of enemies and their levels
+        const lootChance = Math.min(80, defeatedEnemies.length * 15 + avgEnemyLevel * 5); // Max 80% chance
+        
+        for (const enemy of defeatedEnemies) {
+            if (Random.percent(lootChance)) {
+                try {
+                    // Use Equipment system to generate level-appropriate loot
+                    if (window.engine && window.engine.equipment) {
+                        const enemyLoot = await window.engine.equipment.generateRandomLoot(enemy.level || 1, 1);
+                        rewards.loot.push(...enemyLoot);
+                    } else {
+                        // Fallback basic loot
+                        rewards.loot.push({
+                            name: 'Coins',
+                            type: 'currency',
+                            value: Random.die(10) * (enemy.level || 1)
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to generate loot:', error);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get last combat rewards
+     */
+    getLastCombatRewards() {
+        return this.lastCombatRewards || null;
     }
     
     /**
@@ -386,6 +491,11 @@ class Combat {
                     target.saveToStorage();
                 }
                 
+                // Emit character update event for UI refresh
+                if (window.engine && window.engine.eventSystem && target.hasOwnProperty('class')) {
+                    window.engine.eventSystem.emit('character-updated', { character: target });
+                }
+                
                 return {
                     success: true,
                     critical: true,
@@ -437,6 +547,11 @@ class Combat {
             // Save character state to persistent storage
             if (target.saveToStorage) {
                 target.saveToStorage();
+            }
+            
+            // Emit character update event for UI refresh
+            if (window.engine && window.engine.eventSystem && target.hasOwnProperty('class')) {
+                window.engine.eventSystem.emit('character-updated', { character: target });
             }
             
             return {
