@@ -1282,6 +1282,9 @@ class UI {
         console.log('Combat action selected:', action);
         this.addMessage(`You selected: ${action}`, 'combat');
         
+        // Disable buttons immediately to prevent double-clicking
+        this.disableCombatButtons();
+        
         // Emit combat action event for the combat system to process
         if (this.eventSystem) {
             this.eventSystem.emit('combat-action-selected', {
@@ -1359,23 +1362,24 @@ class UI {
         // Process the action
         const result = combat.processAction(actionData);
         
-        if (result.success) {
-            this.addMessage(result.message, 'combat');
-            
-            // Check if combat ended
-            if (result.combatEnded) {
-                this.handleCombatEnd(result.winner);
-                return;
-            }
-            
-            // Update combat status after action and check for next turn
-            setTimeout(() => {
-                this.updateCombatStatus();
-                this.checkForPlayerTurn();
-            }, 100);
-        } else {
-            this.addMessage(result.message || 'Action failed!', 'error');
+        // Always log the result message (hit or miss)
+        if (result.message) {
+            const messageType = result.success ? 'combat' : 'combat'; // Both hits and misses are combat messages
+            this.addMessage(result.message, messageType);
         }
+        
+        // Check if combat ended
+        if (result.combatEnded) {
+            this.handleCombatEnd(result.winner);
+            return;
+        }
+        
+        // Always advance to next turn regardless of hit/miss
+        // (Both hits and misses are valid turns)
+        setTimeout(() => {
+            this.updateCombatStatus();
+            this.checkForPlayerTurn();
+        }, 100);
     }
     
     /**
@@ -1388,6 +1392,9 @@ class UI {
             this.addMessage('Combat system not ready!', 'error');
             return;
         }
+        
+        // Disable action buttons during monster turn
+        this.disableCombatButtons();
         
         // Use the combat interface's AI processing
         const aiResult = window.engine.combatInterface.processAITurn(monster);
@@ -1403,6 +1410,7 @@ class UI {
             // (Even a failed attack is still a valid turn)
             setTimeout(() => {
                 this.updateCombatStatus();
+                this.enableCombatButtons(); // Re-enable buttons after AI turn
                 this.checkForPlayerTurn();
             }, 1000); // Small delay for dramatic effect
         } else {
@@ -1412,9 +1420,34 @@ class UI {
             // Still try to continue combat after a delay
             setTimeout(() => {
                 this.updateCombatStatus();
+                this.enableCombatButtons(); // Re-enable buttons even on error
                 this.checkForPlayerTurn();
             }, 1000);
         }
+    }
+    
+    /**
+     * Disable combat action buttons
+     */
+    disableCombatButtons() {
+        const actionButtons = document.querySelectorAll('.combat-action-btn');
+        actionButtons.forEach(button => {
+            button.disabled = true;
+            button.style.opacity = '0.5';
+            button.style.cursor = 'not-allowed';
+        });
+    }
+    
+    /**
+     * Enable combat action buttons
+     */
+    enableCombatButtons() {
+        const actionButtons = document.querySelectorAll('.combat-action-btn');
+        actionButtons.forEach(button => {
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
+        });
     }
     
     /**
@@ -1466,16 +1499,10 @@ class UI {
         
         if (currentActor.isPlayer) {
             // Enable action buttons for player
-            const actionButtons = document.querySelectorAll('.action-buttons button');
-            actionButtons.forEach(button => {
-                button.disabled = false;
-            });
+            this.enableCombatButtons();
         } else {
             // Disable action buttons and process monster turn
-            const actionButtons = document.querySelectorAll('.action-buttons button');
-            actionButtons.forEach(button => {
-                button.disabled = true;
-            });
+            this.disableCombatButtons();
             
             // Process monster turn after a short delay
             setTimeout(() => {

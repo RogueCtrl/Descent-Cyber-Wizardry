@@ -2426,6 +2426,23 @@ h3 {
     box-shadow: 0 0 10px var(--glow-secondary);
 }
 
+.combat-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-secondary);
+    border-color: var(--border-secondary);
+    color: var(--text-muted);
+    transform: none;
+    box-shadow: none;
+}
+
+.combat-action-btn:disabled:hover {
+    border-color: var(--border-secondary);
+    background: var(--bg-secondary);
+    box-shadow: none;
+    transform: none;
+}
+
 .action-number {
     display: flex;
     align-items: center;
