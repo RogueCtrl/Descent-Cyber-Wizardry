@@ -1408,8 +1408,8 @@ class Engine {
         // Change game state back to playing
         this.gameState.setState('playing');
         
-        // Re-enable dungeon interface
-        this.ui.showDungeonInterface();
+        // Initialize full dungeon interface (canvas, renderer, etc.)
+        this.initializeDungeonInterface();
         
         // Update party display
         this.eventSystem.emit('party-update');

@@ -1803,6 +1803,24 @@ class UI {
         // Hide combat interface first
         this.hideCombatInterface();
         
+        // Check for casualties in victory
+        const aliveMembers = window.engine?.party?.aliveMembers || [];
+        const allMembers = window.engine?.party?.members || [];
+        const casualties = allMembers.filter(member => !member.isAlive);
+        
+        console.log('Post-combat analysis:', {
+            aliveMembers: aliveMembers.length,
+            casualties: casualties.length,
+            casualtyDetails: casualties.map(c => ({ name: c.name, isAlive: c.isAlive, isDead: c.isDead, isUnconscious: c.isUnconscious }))
+        });
+        
+        // If there are casualties, show victory with casualties screen instead
+        if (casualties.length > 0) {
+            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards);
+            return;
+        }
+        
+        // No casualties - show normal victory screen
         // Create post-combat modal following town modal pattern
         this.postCombatModal = new Modal({
             className: 'modal post-combat-modal',
@@ -2229,9 +2247,13 @@ class UI {
                 console.log('Continue to dungeon clicked');
                 this.postCombatModal.hide();
                 
-                // Return to dungeon view
-                window.engine.gameState.setState('playing');
-                window.engine.initializeDungeonInterface();
+                // Clear modal reference
+                this.postCombatModal = null;
+                
+                // Return to dungeon exploration using the same method as normal victory
+                if (window.engine) {
+                    window.engine.returnToDungeon();
+                }
                 
                 // Play dungeon music
                 if (window.engine?.audioManager) {
