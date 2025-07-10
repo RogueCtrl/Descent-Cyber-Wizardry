@@ -1712,20 +1712,32 @@ class UI {
                 }, 5000);
             }
             
+            // Let combat system handle victory and rewards
             window.engine.combatInterface.combat.endCombat();
-        } else {
-            // Enemy victory - play death music and trigger death screen
-            if (window.engine?.audioManager) {
-                window.engine.audioManager.fadeToTrack('death');
-            }
             
+        } else {
+            // Enemy victory - check if any party members survived
+            const aliveMembers = window.engine.party.aliveMembers || [];
             const casualties = window.engine.party.members.filter(member => !member.isAlive);
             
-            // Force end combat without normal rewards
-            window.engine.combatInterface.combat.isActive = false;
-            
-            // Show death screen
-            this.showPartyDeathScreen(casualties);
+            if (aliveMembers.length === 0) {
+                // Total party kill - play death music and show death screen
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.fadeToTrack('death');
+                }
+                
+                // Force end combat without rewards
+                window.engine.combatInterface.combat.isActive = false;
+                
+                // Show total party kill screen
+                this.showPartyDeathScreen(casualties);
+            } else {
+                // Some survived - treat as casualty retreat, should show victory screen with casualties
+                console.log('Party has casualties but survivors - treating as victory with casualties');
+                
+                // Let combat system handle as victory with casualties
+                window.engine.combatInterface.combat.endCombat();
+            }
         }
     }
     
@@ -2001,8 +2013,28 @@ class UI {
             
             // In a total party kill, all unconscious characters die
             this.processTotalPartyKill();
+            
+            // Show actual defeat screen
+            this.showTotalPartyKillScreen(casualties);
+        } else {
+            // Survivors exist - this should be a victory with casualties screen instead
+            console.log('Party has survivors - showing victory with casualties instead of defeat');
+            
+            // Calculate rewards and show victory screen with casualties
+            const rewards = window.engine.combatInterface.combat.getLastCombatRewards() || {
+                experience: 0,
+                loot: [],
+                gold: 0
+            };
+            
+            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards);
         }
-        
+    }
+    
+    /**
+     * Show total party kill screen (actual defeat)
+     */
+    showTotalPartyKillScreen(casualties) {
         // Hide combat interface first
         this.hideCombatInterface();
         
@@ -2019,18 +2051,493 @@ class UI {
         });
         
         // Create the modal content with buttons
-        const content = this.createDeathScreenContent(casualties) + 
+        const content = this.createTotalPartyKillContent(casualties) + 
             '<div class="death-actions">' +
             '<button id="return-to-town-btn" class="btn btn-primary">Return to Town</button>' +
             '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
             '</div>';
         
         // Create and show modal
-        this.deathModal.create(content, '💀 Defeat');
+        this.deathModal.create(content, '💀 Total Party Kill');
         this.deathModal.show();
         
         // Add event listeners using getBody() method
         this.setupDeathScreenEventListeners(this.deathModal.getBody());
+    }
+    
+    /**
+     * Show victory with casualties screen
+     */
+    showVictoryWithCasualtiesScreen(casualties, survivors, rewards) {
+        console.log('Showing victory with casualties:', { casualties, survivors, rewards });
+        
+        // Hide combat interface first
+        this.hideCombatInterface();
+        
+        // Create victory modal following post-combat pattern
+        this.postCombatModal = new Modal({
+            className: 'modal post-combat-modal victory-with-casualties',
+            closeOnEscape: false,
+            closeOnBackdrop: false
+        });
+        
+        // Set up close callback
+        this.postCombatModal.setOnClose(() => {
+            this.postCombatModal = null;
+        });
+        
+        // Create the modal content with casualties and rewards
+        const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards) + 
+            '<div class="post-combat-actions">' +
+            '<button id="continue-btn" class="btn btn-primary">Continue to Dungeon</button>' +
+            '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
+            '</div>';
+        
+        // Create and show modal
+        this.postCombatModal.create(content, '⚔️ Victory with Casualties');
+        this.postCombatModal.show();
+        
+        // Add event listeners using getBody() method
+        this.setupVictoryWithCasualtiesEventListeners(this.postCombatModal.getBody(), rewards);
+    }
+    
+    /**
+     * Create victory with casualties content
+     */
+    createVictoryWithCasualtiesContent(casualties, survivors, rewards) {
+        let content = '<div class="victory-with-casualties">';
+        
+        // Victory message
+        content += '<h2>⚔️ Victory with Casualties</h2>';
+        content += '<div class="victory-message">You have emerged victorious, but at a cost...</div>';
+        
+        // Casualties section
+        if (casualties && casualties.length > 0) {
+            content += '<div class="casualties-section">';
+            content += '<h3>💔 Fallen Companions</h3>';
+            content += '<div class="casualty-list">';
+            
+            casualties.forEach(casualty => {
+                const status = casualty.isDead ? 'Killed' : (casualty.isUnconscious ? 'Unconscious' : 'Injured');
+                content += '<div class="casualty-item">';
+                content += `<span class="casualty-name">${casualty.name}</span>`;
+                content += `<span class="casualty-status">${status}</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Survivors section
+        if (survivors && survivors.length > 0) {
+            content += '<div class="survivors-section">';
+            content += '<h3>🛡️ Survivors</h3>';
+            content += '<div class="survivor-list">';
+            
+            survivors.forEach(survivor => {
+                content += '<div class="survivor-item">';
+                content += `<span class="survivor-name">${survivor.name}</span>`;
+                content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Rewards section
+        if (rewards) {
+            content += this.createRewardsSection(rewards);
+        }
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Create total party kill content
+     */
+    createTotalPartyKillContent(casualties) {
+        let content = '<div class="total-party-kill">';
+        
+        // Death message
+        content += '<h2>💀 Total Party Kill</h2>';
+        content += '<div class="death-message">Your entire party has been slain in the depths of the dungeon...</div>';
+        
+        // All casualties
+        if (casualties && casualties.length > 0) {
+            content += '<div class="death-details">';
+            content += '<h3>💀 Fallen Heroes</h3>';
+            content += '<div class="casualty-list">';
+            
+            casualties.forEach(casualty => {
+                content += '<div class="casualty-item">';
+                content += `<span class="casualty-name">${casualty.name}</span>`;
+                content += `<span class="casualty-status">Killed</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        content += '<div class="death-message">The surviving party members retreat to town for healing and rest.</div>';
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Create rewards section content
+     */
+    createRewardsSection(rewards) {
+        let content = '<div class="rewards-section">';
+        content += '<h3>🎁 Battle Rewards</h3>';
+        
+        // Experience
+        if (rewards.experience > 0) {
+            content += `<div class="reward-item"><span class="reward-type">Experience:</span> <span class="reward-value">${rewards.experience} XP</span></div>`;
+        }
+        
+        // Gold
+        if (rewards.gold > 0) {
+            content += `<div class="reward-item"><span class="reward-type">Gold:</span> <span class="reward-value">${rewards.gold} coins</span></div>`;
+        }
+        
+        // Loot
+        if (rewards.loot && rewards.loot.length > 0) {
+            content += '<div class="loot-section">';
+            content += '<h4>🎒 Items Found:</h4>';
+            content += '<div class="loot-list">';
+            
+            rewards.loot.forEach(item => {
+                content += '<div class="loot-item">';
+                content += `<span class="loot-name">${item.name}</span>`;
+                if (item.value) {
+                    content += `<span class="loot-value">(${item.value} value)</span>`;
+                }
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Setup event listeners for victory with casualties screen
+     */
+    setupVictoryWithCasualtiesEventListeners(viewport, rewards) {
+        const continueBtn = viewport.querySelector('#continue-btn');
+        const viewStatusBtn = viewport.querySelector('#view-status-btn');
+        
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                console.log('Continue to dungeon clicked');
+                this.postCombatModal.hide();
+                
+                // Return to dungeon view
+                window.engine.gameState.setState('playing');
+                window.engine.initializeDungeonInterface();
+                
+                // Play dungeon music
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.fadeToTrack('dungeon');
+                }
+            });
+        }
+        
+        if (viewStatusBtn) {
+            viewStatusBtn.addEventListener('click', () => {
+                console.log('View character status clicked');
+                // Close post-combat modal and show character roster
+                this.postCombatModal.hide();
+                this.characterUI.showCharacterRoster();
+            });
+        }
+    }
+    
+    /**
+     * Show dungeon entrance confirmation modal
+     */
+    showDungeonEntranceConfirmation() {
+        console.log('Showing dungeon entrance confirmation');
+        
+        const validation = window.engine.validateDungeonEntry();
+        
+        if (!validation.valid && validation.casualties) {
+            // Show casualty modal instead
+            this.showDungeonEntranceCasualtyModal(validation);
+            return;
+        }
+        
+        // Create confirmation modal
+        this.dungeonEntranceModal = new Modal({
+            className: 'modal dungeon-entrance-modal',
+            closeOnEscape: true,
+            closeOnBackdrop: true
+        });
+        
+        // Set up close callback
+        this.dungeonEntranceModal.setOnClose(() => {
+            this.dungeonEntranceModal = null;
+        });
+        
+        // Create content
+        const content = this.createDungeonEntranceContent(validation) +
+            '<div class="dungeon-entrance-actions">' +
+            '<button id="confirm-enter-btn" class="btn btn-primary">Enter Dungeon</button>' +
+            '<button id="cancel-enter-btn" class="btn btn-secondary">Return to Town</button>' +
+            '</div>';
+        
+        // Create and show modal
+        this.dungeonEntranceModal.create(content, '🏰 Dungeon Entrance');
+        this.dungeonEntranceModal.show();
+        
+        // Add event listeners
+        this.setupDungeonEntranceEventListeners(this.dungeonEntranceModal.getBody(), validation);
+    }
+    
+    /**
+     * Show dungeon entrance casualty modal (when party has casualties)
+     */
+    showDungeonEntranceCasualtyModal(validation) {
+        console.log('Showing dungeon entrance casualty modal');
+        
+        // Create casualty modal
+        this.dungeonCasualtyModal = new Modal({
+            className: 'modal dungeon-casualty-modal',
+            closeOnEscape: true,
+            closeOnBackdrop: true
+        });
+        
+        // Set up close callback
+        this.dungeonCasualtyModal.setOnClose(() => {
+            this.dungeonCasualtyModal = null;
+        });
+        
+        // Create content
+        const content = this.createDungeonCasualtyContent(validation) +
+            '<div class="dungeon-casualty-actions">' +
+            '<button id="clear-party-btn" class="btn btn-danger">Clear Party</button>' +
+            '<button id="cancel-casualty-btn" class="btn btn-secondary">Cancel</button>' +
+            '</div>';
+        
+        // Create and show modal
+        this.dungeonCasualtyModal.create(content, '⚠️ Party Has Casualties');
+        this.dungeonCasualtyModal.show();
+        
+        // Add event listeners
+        this.setupDungeonCasualtyEventListeners(this.dungeonCasualtyModal.getBody(), validation);
+    }
+    
+    /**
+     * Create dungeon entrance confirmation content
+     */
+    createDungeonEntranceContent(validation) {
+        let content = '<div class="dungeon-entrance-confirmation">';
+        
+        if (validation.valid) {
+            content += '<h2>🏰 Enter the Dungeon</h2>';
+            content += '<div class="entrance-message">Your party is ready to brave the Mad Overlord\'s treacherous maze.</div>';
+            
+            // Show party composition
+            content += '<div class="party-composition">';
+            content += '<h3>Party Composition</h3>';
+            content += '<div class="party-cards-grid">';
+            
+            validation.party.forEach(member => {
+                content += this.createDungeonPartyCard(member);
+            });
+            
+            content += '</div>';
+            content += '</div>';
+            
+            content += '<div class="entrance-warning">⚠️ The dungeon is dangerous. Proceed with caution!</div>';
+        } else {
+            content += '<h2>❌ Cannot Enter Dungeon</h2>';
+            content += `<div class="entrance-error">${validation.reason}</div>`;
+        }
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Create a character card for dungeon entrance party display
+     */
+    createDungeonPartyCard(character) {
+        // Get class icon
+        const classIcon = this.getClassIcon(character.class);
+        
+        // Calculate HP percentage for health indicator
+        const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
+        const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
+        
+        // Status is always "Ready" for dungeon entrance since we filter for alive members
+        const status = character.isAlive ? 'Ready' : (character.isUnconscious ? 'Unconscious' : 'Dead');
+        const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+        
+        return `
+            <div class="character-roster-card dungeon-party-card" data-character-id="${character.id}">
+                <div class="character-card-header">
+                    <div class="class-icon">${classIcon}</div>
+                    <div class="character-card-name">${character.name}</div>
+                    <div class="character-card-level">Lvl ${character.level}</div>
+                </div>
+                
+                <div class="character-card-info">
+                    <div class="character-card-race-class">${character.race} ${character.class}</div>
+                    <div class="character-card-location">
+                        <span class="location-label">Location:</span>
+                        <span class="location-value">Town</span>
+                    </div>
+                    <div class="character-card-status">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value status-${statusClass}">${status}</span>
+                    </div>
+                </div>
+                
+                <div class="character-card-health">
+                    <div class="hp-indicator ${hpStatusClass}">
+                        <div class="hp-bar" style="width: ${hpPercentage}%"></div>
+                    </div>
+                    <div class="hp-text">${character.currentHP}/${character.maxHP} HP</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Create dungeon casualty content
+     */
+    createDungeonCasualtyContent(validation) {
+        let content = '<div class="dungeon-casualty-warning">';
+        
+        content += '<h2>⚠️ Party Has Casualties</h2>';
+        content += '<div class="casualty-message">Your party has casualties and cannot enter the dungeon in this state.</div>';
+        
+        // Show casualties
+        if (validation.casualties && validation.casualties.length > 0) {
+            content += '<div class="casualties-list">';
+            content += '<h3>💔 Casualties</h3>';
+            
+            validation.casualties.forEach(casualty => {
+                const status = casualty.isDead ? 'Dead' : 'Unconscious';
+                content += '<div class="casualty-member">';
+                content += `<span class="casualty-name">${casualty.name}</span>`;
+                content += `<span class="casualty-status">${status}</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+        }
+        
+        // Show survivors
+        if (validation.survivors && validation.survivors.length > 0) {
+            content += '<div class="survivors-list">';
+            content += '<h3>🛡️ Survivors</h3>';
+            
+            validation.survivors.forEach(survivor => {
+                content += '<div class="survivor-member">';
+                content += `<span class="survivor-name">${survivor.name}</span>`;
+                content += `<span class="survivor-hp">${survivor.currentHP}/${survivor.maxHP} HP</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+        }
+        
+        content += '<div class="casualty-options">';
+        content += '<p><strong>Options:</strong></p>';
+        content += '<ul>';
+        content += '<li>Clear the party to return to town center</li>';
+        content += '<li>Visit the Temple to resurrect dead members</li>';
+        content += '<li>Use rest areas to heal unconscious members</li>';
+        content += '</ul>';
+        content += '</div>';
+        
+        content += '</div>';
+        return content;
+    }
+    
+    /**
+     * Setup event listeners for dungeon entrance confirmation
+     */
+    setupDungeonEntranceEventListeners(viewport, validation) {
+        console.log('Setting up dungeon entrance event listeners:', {
+            viewport: !!viewport,
+            validation: validation
+        });
+        
+        const confirmBtn = viewport.querySelector('#confirm-enter-btn');
+        const cancelBtn = viewport.querySelector('#cancel-enter-btn');
+        
+        console.log('Found buttons:', {
+            confirmBtn: !!confirmBtn,
+            cancelBtn: !!cancelBtn,
+            validationValid: validation.valid
+        });
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Confirmed dungeon entry');
+                if (validation.valid) {
+                    this.dungeonEntranceModal.hide();
+                    window.engine.enterDungeon();
+                } else {
+                    console.log('Cannot enter dungeon - validation failed');
+                    this.addMessage('Cannot enter dungeon - party validation failed', 'error');
+                }
+            });
+            
+            // Disable button if validation failed
+            if (!validation.valid) {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.add('disabled');
+            }
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Cancelled dungeon entry');
+                this.dungeonEntranceModal.hide();
+            });
+        }
+    }
+    
+    /**
+     * Setup event listeners for dungeon casualty modal
+     */
+    setupDungeonCasualtyEventListeners(viewport, validation) {
+        const clearPartyBtn = viewport.querySelector('#clear-party-btn');
+        const cancelBtn = viewport.querySelector('#cancel-casualty-btn');
+        
+        if (clearPartyBtn) {
+            clearPartyBtn.addEventListener('click', () => {
+                console.log('Clearing party due to casualties');
+                this.dungeonCasualtyModal.hide();
+                
+                // Clear the party
+                window.engine.party.clear();
+                
+                // Return to town center
+                this.addMessage('Party cleared due to casualties. Returning to town center.', 'info');
+                this.showTown();
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                console.log('Cancelled casualty action');
+                this.dungeonCasualtyModal.hide();
+            });
+        }
     }
     
     /**

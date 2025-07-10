@@ -1084,23 +1084,8 @@ class Engine {
                 
             case 'dungeon':
                 console.log('Attempting dungeon entry...');
-                if (this.validateDungeonEntry()) {
-                    console.log('Dungeon entry validation passed, entering dungeon...');
-                    this.ui.hideTown(); // Ensure town modal is closed
-                    this.gameState.setState('playing');
-                    this.ui.addMessage('You enter the dungeon...');
-                    // Emit event to notify UI of dungeon entry
-                    this.eventSystem.emit('dungeon-entered');
-                } else {
-                    console.log('Dungeon entry validation failed');
-                    // Validation failed - stay in town
-                    this.ui.addMessage('Cannot enter dungeon. Check party requirements.');
-                    // Ensure we're still in town state
-                    if (!this.gameState.isState('town')) {
-                        console.log('Forcing state back to town after failed validation');
-                        this.gameState.setState('town');
-                    }
-                }
+                // Show dungeon entrance confirmation modal
+                this.ui.showDungeonEntranceConfirmation();
                 break;
                 
             default:
@@ -1144,35 +1129,66 @@ class Engine {
         // Check if party exists and has members
         if (!this.party || this.party.size === 0) {
             console.log('Validation failed: No party or empty party');
-            this.ui.addMessage('You need at least one character to enter the dungeon!');
-            return false;
+            return { valid: false, reason: 'No party exists. Create characters first.' };
+        }
+        
+        // Check party member status
+        const aliveMembers = this.party.members.filter(member => member.isAlive);
+        const unconsciousMembers = this.party.members.filter(member => member.isUnconscious);
+        const deadMembers = this.party.members.filter(member => member.isDead);
+        
+        console.log('Party status:', {
+            alive: aliveMembers.length,
+            unconscious: unconsciousMembers.length, 
+            dead: deadMembers.length
+        });
+        
+        // Check if party has casualties
+        if (unconsciousMembers.length > 0 || deadMembers.length > 0) {
+            console.log('Validation failed: Party has casualties');
+            return { 
+                valid: false, 
+                reason: 'Party has casualties and cannot enter the dungeon.',
+                casualties: [...unconsciousMembers, ...deadMembers],
+                survivors: aliveMembers
+            };
         }
         
         // Check if party has any living members
-        const livingMembers = this.party.members.filter(member => 
-            member.status !== 'dead' && member.status !== 'lost'
-        );
-        
-        console.log('Living members:', livingMembers.length);
-        console.log('Member statuses:', this.party.members.map(m => `${m.name}: ${m.status || 'OK'}`));
-        
-        if (livingMembers.length === 0) {
+        if (aliveMembers.length === 0) {
             console.log('Validation failed: No living members');
-            this.ui.addMessage('Your party has no living members! Visit the Temple for resurrections.');
-            return false;
+            return { valid: false, reason: 'Your party has no living members! Visit the Temple for resurrections.' };
         }
         
         // Check if we're in a valid state to enter dungeon
         if (!this.gameState.isState('town')) {
             console.log('Validation failed: Invalid state for dungeon entry:', this.gameState.currentState);
-            console.warn('Invalid state for dungeon entry:', this.gameState.currentState);
-            this.ui.addMessage('You must be in town to enter the dungeon.');
-            return false;
+            return { valid: false, reason: 'You must be in town to enter the dungeon.' };
         }
         
         // All validation passed
         console.log('Validation passed: Ready to enter dungeon');
-        return true;
+        return { valid: true, party: aliveMembers };
+    }
+    
+    /**
+     * Actually enter the dungeon (called after confirmation)
+     */
+    enterDungeon() {
+        console.log('Entering dungeon...');
+        const validation = this.validateDungeonEntry();
+        
+        if (validation.valid) {
+            console.log('Dungeon entry validation passed, entering dungeon...');
+            this.ui.hideTown(); // Ensure town modal is closed
+            this.gameState.setState('playing');
+            this.ui.addMessage('You enter the dungeon...');
+            // Emit event to notify UI of dungeon entry
+            this.eventSystem.emit('dungeon-entered');
+        } else {
+            console.log('Dungeon entry validation failed:', validation.reason);
+            this.ui.addMessage(validation.reason);
+        }
     }
     
     /**
