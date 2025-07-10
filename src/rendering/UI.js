@@ -1117,42 +1117,62 @@ class UI {
                     <div class="encounter-message" id="encounter-message"></div>
                 </div>
                 
+                <!-- Wave Indicator Panel -->
+                <div class="combat-wave-indicator" id="combat-wave-indicator">
+                    <div class="wave-display" id="wave-display">Loading...</div>
+                </div>
+                
                 <div class="combat-body">
-                    <div class="combat-status">
-                        <div class="party-status">
+                    <div class="combat-main-area">
+                        <!-- Monster Visual Panel -->
+                        <div class="combat-monster-visual" id="combat-monster-visual">
+                            <div class="monster-ascii-art" id="monster-ascii-art"></div>
+                            <div class="monster-name" id="monster-name"></div>
+                            <div class="monster-status" id="monster-status"></div>
+                        </div>
+                        
+                        <!-- Party Status Panel -->
+                        <div class="combat-party-status">
                             <h3>Your Party</h3>
                             <div id="party-combat-status"></div>
                         </div>
-                        <div class="enemy-status">
-                            <h3 id="enemy-status-header">Enemies</h3>
-                            <div id="wave-info" class="wave-info"></div>
-                            <div id="enemy-combat-status"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="combat-actions">
-                        <h3>Choose Action:</h3>
-                        <div class="action-buttons">
-                            <button id="combat-attack" class="combat-action-btn" data-action="attack">
-                                <span class="action-number">1</span>
-                                <span class="action-text">Attack</span>
-                            </button>
-                            <button id="combat-defend" class="combat-action-btn" data-action="defend">
-                                <span class="action-number">2</span>
-                                <span class="action-text">Defend</span>
-                            </button>
-                            <button id="combat-cast-spell" class="combat-action-btn" data-action="cast-spell">
-                                <span class="action-number">3</span>
-                                <span class="action-text">Cast Spell</span>
-                            </button>
-                            <button id="combat-use-item" class="combat-action-btn" data-action="use-item">
-                                <span class="action-number">4</span>
-                                <span class="action-text">Use Item</span>
-                            </button>
-                            <button id="combat-run" class="combat-action-btn" data-action="run">
-                                <span class="action-number">5</span>
-                                <span class="action-text">Run</span>
-                            </button>
+                        
+                        <!-- Context Action Box -->
+                        <div class="combat-actions-context" id="combat-actions-context">
+                            <div class="action-context-header" id="action-context-header">
+                                <h3>Choose Action:</h3>
+                            </div>
+                            <div class="action-buttons" id="action-buttons">
+                                <button id="combat-attack" class="combat-action-btn" data-action="attack">
+                                    <span class="action-number">1</span>
+                                    <span class="action-text">⚔️ Fight</span>
+                                </button>
+                                <button id="combat-defend" class="combat-action-btn" data-action="defend">
+                                    <span class="action-number">2</span>
+                                    <span class="action-text">🛡️ Defend</span>
+                                </button>
+                                <button id="combat-cast-spell" class="combat-action-btn" data-action="cast-spell">
+                                    <span class="action-number">3</span>
+                                    <span class="action-text">🔮 Cast Spell</span>
+                                </button>
+                                <button id="combat-use-item" class="combat-action-btn" data-action="use-item">
+                                    <span class="action-number">4</span>
+                                    <span class="action-text">💊 Use Item</span>
+                                </button>
+                                <button id="combat-run" class="combat-action-btn" data-action="run">
+                                    <span class="action-number">5</span>
+                                    <span class="action-text">🏃 Run</span>
+                                </button>
+                            </div>
+                            <div class="action-enemy-turn" id="action-enemy-turn" style="display: none;">
+                                <div class="enemy-turn-info" id="enemy-turn-info">
+                                    <h3>Enemy Turn</h3>
+                                    <div id="enemy-action-result"></div>
+                                    <button id="combat-continue" class="combat-action-btn continue-btn">
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1172,15 +1192,27 @@ class UI {
     setupCombatEventListeners() {
         const actionButtons = document.querySelectorAll('.combat-action-btn');
         
-        // Mouse click handlers
+        // Mouse click handlers for action buttons
         actionButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 const action = e.currentTarget.dataset.action;
-                this.handleCombatAction(action);
+                if (action) {
+                    this.handleCombatAction(action);
+                } else if (e.currentTarget.id === 'combat-continue') {
+                    this.handleContinueButton();
+                }
             });
         });
         
-        // Keyboard handlers (1-5 keys)
+        // Specific handler for continue button
+        const continueButton = document.getElementById('combat-continue');
+        if (continueButton) {
+            continueButton.addEventListener('click', () => {
+                this.handleContinueButton();
+            });
+        }
+        
+        // Keyboard handlers (1-5 keys and Enter for continue)
         document.addEventListener('keydown', (e) => {
             if (this.gameState && this.gameState.currentState === 'combat') {
                 const key = e.key;
@@ -1192,6 +1224,15 @@ class UI {
                     case '3': action = 'cast-spell'; break;
                     case '4': action = 'use-item'; break;
                     case '5': action = 'run'; break;
+                    case 'Enter':
+                        // Handle continue button with Enter key
+                        const enemyTurnDiv = document.getElementById('action-enemy-turn');
+                        if (enemyTurnDiv && enemyTurnDiv.style.display !== 'none') {
+                            e.preventDefault();
+                            this.handleContinueButton();
+                            return;
+                        }
+                        break;
                 }
                 
                 if (action) {
@@ -1203,13 +1244,61 @@ class UI {
     }
     
     /**
+     * Handle continue button click during enemy turns
+     */
+    handleContinueButton() {
+        console.log('Continue button clicked');
+        
+        // Play button click sound
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('buttonClick');
+        }
+        
+        // Advance to next turn in combat system
+        const combat = window.engine.combatInterface?.combat;
+        if (combat && combat.isActive) {
+            try {
+                // Move to next combatant's turn
+                combat.nextTurn();
+                
+                // Update combat status and check for next turn
+                this.updateCombatStatus();
+                this.checkForPlayerTurn();
+            } catch (error) {
+                console.error('Error advancing turn:', error);
+                // Fallback: just update status
+                this.updateCombatStatus();
+                this.checkForPlayerTurn();
+            }
+        } else {
+            // Fallback for when combat system isn't available
+            this.updateCombatStatus();
+            this.checkForPlayerTurn();
+        }
+    }
+    
+    /**
      * Update combat status display
      */
     updateCombatStatus() {
         console.log('Updating combat status...');
-        // Get party status
+        
+        // Update party status
+        this.updatePartyStatus();
+        
+        // Update wave indicator and monster visual
+        this.updateWaveIndicator();
+        this.updateMonsterVisual();
+        
+        // Update action context
+        this.updateActionContext();
+    }
+    
+    /**
+     * Update party status in new layout
+     */
+    updatePartyStatus() {
         const partyStatusDiv = document.getElementById('party-combat-status');
-        const enemyStatusDiv = document.getElementById('enemy-combat-status');
         
         if (partyStatusDiv && window.engine && window.engine.party) {
             const party = window.engine.party;
@@ -1228,56 +1317,133 @@ class UI {
                 party: !!window.engine?.party
             });
         }
+    }
+    
+    /**
+     * Update wave indicator panel
+     */
+    updateWaveIndicator() {
+        const waveDisplayDiv = document.getElementById('wave-display');
         
-        if (enemyStatusDiv && window.engine && window.engine.combatInterface) {
-            // Try to get current combat data
+        if (waveDisplayDiv && window.engine && window.engine.combatInterface) {
             const combat = window.engine.combatInterface.combat;
-            console.log('Combat interface data:', {
-                combat: !!combat,
-                isActive: combat?.isActive,
-                combatants: combat?.combatants
-            });
             
             if (combat && combat.isActive) {
-                // Update wave information
-                const waveInfo = combat.getCurrentEnemyPartyInfo();
-                const waveInfoDiv = document.getElementById('wave-info');
-                if (waveInfoDiv) {
-                    waveInfoDiv.innerHTML = `
-                        <div class="wave-counter">Wave ${waveInfo.currentWave} of ${waveInfo.totalWaves}</div>
-                    `;
+                try {
+                    // Get wave information
+                    const waveInfo = combat.getCurrentEnemyPartyInfo();
+                    const allPartyMembers = window.engine.party.members || [];
+                    const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
+                    
+                    if (enemies.length > 0) {
+                        const enemyCount = enemies.length;
+                        const enemyType = enemyCount === 1 ? enemies[0].name : 'Enemies';
+                        const waveText = waveInfo ? ` - Wave ${waveInfo.currentWave} of ${waveInfo.totalWaves}` : '';
+                        
+                        waveDisplayDiv.textContent = `${enemyCount} ${enemyType}${waveText}`;
+                    } else {
+                        waveDisplayDiv.textContent = 'No Enemies';
+                    }
+                } catch (error) {
+                    console.log('Error updating wave indicator:', error);
+                    waveDisplayDiv.textContent = 'Combat Active';
                 }
-                
-                // Get current enemies (not party members - both alive and dead)
-                const allPartyMembers = window.engine.party.members || [];
-                const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
-                console.log('Enemies found:', enemies);
-                
-                enemyStatusDiv.innerHTML = enemies.map(enemy => `
-                    <div class="combatant-status">
-                        <div class="combatant-name">${enemy.name}</div>
-                        <div class="combatant-hp">HP: ${enemy.currentHP}/${enemy.maxHP}</div>
-                        <div class="combatant-threat">Threat Level: High</div>
-                    </div>
-                `).join('');
             } else {
-                // Show placeholder if combat not fully initialized yet
-                console.log('Combat not active, showing loading message');
-                enemyStatusDiv.innerHTML = `
-                    <div class="combatant-status">
-                        <div class="combatant-name">Loading enemies...</div>
-                    </div>
-                `;
-                
-                // Try again in a moment
+                waveDisplayDiv.textContent = 'Loading Combat...';
                 setTimeout(() => this.updateCombatStatus(), 500);
             }
-        } else {
-            console.log('Enemy status div or combat interface not found:', {
-                enemyStatusDiv: !!enemyStatusDiv,
-                engine: !!window.engine,
-                combatInterface: !!window.engine?.combatInterface
-            });
+        }
+    }
+    
+    /**
+     * Update monster visual panel
+     */
+    updateMonsterVisual() {
+        const monsterAsciiDiv = document.getElementById('monster-ascii-art');
+        const monsterNameDiv = document.getElementById('monster-name');
+        const monsterStatusDiv = document.getElementById('monster-status');
+        
+        if (monsterAsciiDiv && monsterNameDiv && monsterStatusDiv && 
+            window.engine && window.engine.combatInterface) {
+            
+            const combat = window.engine.combatInterface.combat;
+            
+            if (combat && combat.isActive) {
+                try {
+                    // Get current enemies
+                    const allPartyMembers = window.engine.party.members || [];
+                    const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
+                    
+                    if (enemies.length > 0) {
+                        const primaryEnemy = enemies[0]; // Show first enemy as primary
+                        
+                        // Display ASCII art
+                        monsterAsciiDiv.textContent = primaryEnemy.asciiArt || '  👹\n /|||\\\n  /\\  ';
+                        
+                        // Display monster name
+                        monsterNameDiv.textContent = primaryEnemy.name;
+                        
+                        // Display monster status
+                        const status = primaryEnemy.isUnconscious ? 'Unconscious' : 
+                                     primaryEnemy.isDead ? 'Dead' : 'Active';
+                        const hpInfo = `HP: ${primaryEnemy.currentHP}/${primaryEnemy.maxHP}`;
+                        monsterStatusDiv.innerHTML = `${status}<br>${hpInfo}`;
+                    } else {
+                        monsterAsciiDiv.textContent = '💀\n /|||\\\n  /\\  ';
+                        monsterNameDiv.textContent = 'No Enemies';
+                        monsterStatusDiv.textContent = 'Wave Clear';
+                    }
+                } catch (error) {
+                    console.log('Error updating monster visual:', error);
+                    monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                    monsterNameDiv.textContent = 'Combat Error';
+                    monsterStatusDiv.textContent = 'Loading...';
+                }
+            } else {
+                monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                monsterNameDiv.textContent = 'Combat Loading';
+                monsterStatusDiv.textContent = 'Preparing...';
+            }
+        }
+    }
+    
+    /**
+     * Update action context based on turn state
+     */
+    updateActionContext() {
+        const actionButtons = document.getElementById('action-buttons');
+        const enemyTurnDiv = document.getElementById('action-enemy-turn');
+        const actionHeader = document.getElementById('action-context-header');
+        
+        if (!actionButtons || !enemyTurnDiv || !actionHeader) return;
+        
+        const combat = window.engine.combatInterface?.combat;
+        if (!combat || !combat.isActive) {
+            return;
+        }
+        
+        try {
+            const currentActor = combat.getCurrentActor();
+            if (!currentActor) {
+                return;
+            }
+            
+            if (currentActor.isPlayer) {
+                // Player turn - show action buttons
+                actionButtons.style.display = 'flex';
+                enemyTurnDiv.style.display = 'none';
+                actionHeader.querySelector('h3').textContent = `${currentActor.combatant.name}'s Options`;
+            } else {
+                // Enemy turn - show enemy turn info
+                actionButtons.style.display = 'none';
+                enemyTurnDiv.style.display = 'block';
+                actionHeader.querySelector('h3').textContent = 'Enemy Turn';
+            }
+        } catch (error) {
+            console.log('Error updating action context:', error);
+            // Default to showing player actions
+            actionButtons.style.display = 'flex';
+            enemyTurnDiv.style.display = 'none';
         }
     }
     
@@ -1404,36 +1570,101 @@ class UI {
             return;
         }
         
-        // Disable action buttons during monster turn
-        this.disableCombatButtons();
+        // Show enemy turn interface immediately
+        this.showEnemyTurnInterface(monster);
         
-        // Use the combat interface's AI processing
-        const aiResult = window.engine.combatInterface.processAITurn(monster);
+        // Process AI turn after a short delay
+        setTimeout(() => {
+            // Use the combat interface's AI processing
+            const aiResult = window.engine.combatInterface.processAITurn(monster);
+            
+            if (aiResult && typeof aiResult === 'object') {
+                // Check if combat ended from AI action
+                if (aiResult.combatEnded) {
+                    this.handleCombatEnd(aiResult.winner);
+                    return;
+                }
+                
+                // Show the result of the enemy action and enable continue
+                this.showEnemyActionResult(monster, aiResult);
+                
+            } else {
+                console.error('AI processing returned invalid result:', aiResult);
+                this.addMessage('Monster AI failed to act!', 'error');
+                this.showEnemyActionResult(monster, { action: 'failed', result: 'Monster AI failed to act!' });
+            }
+        }, 1000);
+    }
+    
+    /**
+     * Show enemy turn interface
+     */
+    showEnemyTurnInterface(monster) {
+        const actionButtons = document.getElementById('action-buttons');
+        const enemyTurnDiv = document.getElementById('action-enemy-turn');
+        const actionHeader = document.getElementById('action-context-header');
+        const enemyActionResult = document.getElementById('enemy-action-result');
+        const continueButton = document.getElementById('combat-continue');
         
-        if (aiResult && typeof aiResult === 'object') {
-            // Check if combat ended from AI action
-            if (aiResult.combatEnded) {
-                this.handleCombatEnd(aiResult.winner);
-                return;
+        if (actionButtons && enemyTurnDiv && actionHeader) {
+            // Hide player actions, show enemy turn
+            actionButtons.style.display = 'none';
+            enemyTurnDiv.style.display = 'block';
+            actionHeader.querySelector('h3').textContent = 'Enemy Turn';
+            
+            // Show "processing" message
+            if (enemyActionResult) {
+                enemyActionResult.innerHTML = `<div class="enemy-action-processing">${monster.name} is preparing to act...</div>`;
             }
             
-            // Move to next turn after AI action, regardless of success
-            // (Even a failed attack is still a valid turn)
-            setTimeout(() => {
-                this.updateCombatStatus();
-                this.enableCombatButtons(); // Re-enable buttons after AI turn
-                this.checkForPlayerTurn();
-            }, 1000); // Small delay for dramatic effect
-        } else {
-            console.error('AI processing returned invalid result:', aiResult);
-            this.addMessage('Monster AI failed to act!', 'error');
+            // Disable continue button until action is complete
+            if (continueButton) {
+                continueButton.disabled = true;
+                continueButton.style.opacity = '0.5';
+            }
+        }
+    }
+    
+    /**
+     * Show enemy action result and enable continue
+     */
+    showEnemyActionResult(monster, aiResult) {
+        const enemyActionResult = document.getElementById('enemy-action-result');
+        const continueButton = document.getElementById('combat-continue');
+        
+        if (enemyActionResult) {
+            let resultMessage = '';
             
-            // Still try to continue combat after a delay
-            setTimeout(() => {
-                this.updateCombatStatus();
-                this.enableCombatButtons(); // Re-enable buttons even on error
-                this.checkForPlayerTurn();
-            }, 1000);
+            if (aiResult.action) {
+                switch(aiResult.action) {
+                    case 'attack':
+                        const target = aiResult.target ? aiResult.target.name : 'party member';
+                        const damage = aiResult.damage || 0;
+                        resultMessage = `${monster.name} attacks ${target} for ${damage} damage!`;
+                        break;
+                    case 'defend':
+                        resultMessage = `${monster.name} takes a defensive stance.`;
+                        break;
+                    case 'cast-spell':
+                        resultMessage = `${monster.name} casts a spell!`;
+                        break;
+                    default:
+                        resultMessage = `${monster.name} ${aiResult.action || 'acts'}.`;
+                }
+            } else {
+                resultMessage = `${monster.name} takes an action.`;
+            }
+            
+            enemyActionResult.innerHTML = `
+                <div class="enemy-action-description">${resultMessage}</div>
+                ${aiResult.result ? `<div class="enemy-action-details">${aiResult.result}</div>` : ''}
+            `;
+        }
+        
+        // Enable continue button
+        if (continueButton) {
+            continueButton.disabled = false;
+            continueButton.style.opacity = '1';
         }
     }
     

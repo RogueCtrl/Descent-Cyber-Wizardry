@@ -33,7 +33,8 @@ window.monstersMigration = {
             "aiType": "cowardly",
             "preferredTargets": ["weakest"],
             "experienceValue": 25,
-            "treasureType": "poor"
+            "treasureType": "poor",
+            "asciiArt": "  👺\n /||\ \n  /\\  "
         },
         "monster_giant_rat_001": {
             "id": "monster_giant_rat_001",
@@ -56,7 +57,8 @@ window.monstersMigration = {
             "aiType": "aggressive",
             "preferredTargets": ["random"],
             "experienceValue": 10,
-            "treasureType": "none"
+            "treasureType": "none",
+            "asciiArt": "  🐀\n /||\\\n  /\\  "
         },
         "monster_skeleton_001": {
             "id": "monster_skeleton_001",
@@ -79,7 +81,8 @@ window.monstersMigration = {
             "aiType": "aggressive",
             "preferredTargets": ["front"],
             "experienceValue": 50,
-            "treasureType": "poor"
+            "treasureType": "poor",
+            "asciiArt": "  💀\n /|||\\\n  /\\  "
         },
         
         // Level 2-3 Monsters
@@ -104,7 +107,8 @@ window.monstersMigration = {
             "aiType": "aggressive",
             "preferredTargets": ["strongest"],
             "experienceValue": 100,
-            "treasureType": "standard"
+            "treasureType": "standard",
+            "asciiArt": "  🗡️\n /|||\\\n  /\\  "
         },
         "monster_wolf_001": {
             "id": "monster_wolf_001",
@@ -126,7 +130,8 @@ window.monstersMigration = {
             "aiType": "pack",
             "preferredTargets": ["isolated"],
             "experienceValue": 50,
-            "treasureType": "none"
+            "treasureType": "none",
+            "asciiArt": "  🐺\n /|||\\\n  /\\  "
         },
         "monster_hobgoblin_001": {
             "id": "monster_hobgoblin_001",
@@ -149,7 +154,8 @@ window.monstersMigration = {
             "aiType": "tactical",
             "preferredTargets": ["spellcasters"],
             "experienceValue": 200,
-            "treasureType": "standard"
+            "treasureType": "standard",
+            "asciiArt": "  👹\n /|||\\\n  /\\  "
         },
         
         // Level 4-5 Monsters
@@ -174,7 +180,8 @@ window.monstersMigration = {
             "aiType": "aggressive",
             "preferredTargets": ["front"],
             "experienceValue": 450,
-            "treasureType": "standard"
+            "treasureType": "standard",
+            "asciiArt": "  👹\n /|||\\\n  /\\  "
         },
         "monster_owlbear_001": {
             "id": "monster_owlbear_001",
@@ -197,7 +204,8 @@ window.monstersMigration = {
             "aiType": "aggressive",
             "preferredTargets": ["random"],
             "experienceValue": 700,
-            "treasureType": "rich"
+            "treasureType": "rich",
+            "asciiArt": "  🦉\n /|||\\\n  /\\  "
         },
         
         // Boss Monsters
@@ -222,7 +230,8 @@ window.monstersMigration = {
             "aiType": "tactical",
             "preferredTargets": ["strongest"],
             "experienceValue": 1100,
-            "treasureType": "rich"
+            "treasureType": "rich",
+            "asciiArt": "  👹\n /|||\\\n  /\\  "
         },
         "monster_young_dragon_001": {
             "id": "monster_young_dragon_001",
@@ -248,7 +257,8 @@ window.monstersMigration = {
             "aiType": "intelligent",
             "preferredTargets": ["spellcasters"],
             "experienceValue": 2300,
-            "treasureType": "hoard"
+            "treasureType": "hoard",
+            "asciiArt": "  🐉\n /|||\\\n  /\\  "
         }
     },
     

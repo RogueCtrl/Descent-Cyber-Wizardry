@@ -2519,6 +2519,218 @@ h3 {
     }
 }
 
+/* Combat Interface Overhaul Styles */
+.combat-wave-indicator {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border: 2px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    text-align: center;
+}
+
+.wave-display {
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    text-shadow: 0 0 8px var(--glow-primary);
+}
+
+.combat-main-area {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    gap: var(--space-4);
+    height: 100%;
+    max-height: calc(100vh - 200px);
+}
+
+.combat-monster-visual {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.monster-ascii-art {
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--accent-secondary);
+    margin-bottom: var(--space-3);
+    white-space: pre;
+    text-shadow: 0 0 10px var(--glow-secondary);
+}
+
+.monster-name {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.monster-status {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.combat-party-status {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    overflow-y: auto;
+}
+
+.combat-party-status h3 {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--accent-primary);
+    text-align: center;
+    border-bottom: 1px solid var(--border-primary);
+    padding-bottom: var(--space-2);
+}
+
+.combat-actions-context {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+}
+
+.action-context-header h3 {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--accent-secondary);
+    text-align: center;
+    border-bottom: 1px solid var(--border-primary);
+    padding-bottom: var(--space-2);
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1;
+}
+
+.combat-action-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 2px solid var(--border-primary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 50px;
+}
+
+.combat-action-btn:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.combat-action-btn:active {
+    transform: translateY(0);
+}
+
+.combat-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.action-number {
+    background: var(--accent-secondary);
+    color: var(--bg-primary);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.action-text {
+    flex: 1;
+    text-align: left;
+}
+
+.action-enemy-turn {
+    text-align: center;
+}
+
+.enemy-turn-info h3 {
+    color: var(--accent-secondary);
+    margin-bottom: var(--space-3);
+}
+
+.continue-btn {
+    background: var(--accent-primary);
+    color: var(--text-primary);
+    justify-content: center;
+    font-weight: 600;
+}
+
+.continue-btn:hover {
+    background: var(--accent-secondary);
+}
+
+.enemy-action-processing {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: var(--space-2);
+}
+
+.enemy-action-description {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.enemy-action-details {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* Mobile Responsiveness for New Layout */
+@media (max-width: 768px) {
+    .combat-main-area {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: var(--space-3);
+    }
+    
+    .combat-monster-visual {
+        order: 1;
+    }
+    
+    .combat-party-status {
+        order: 2;
+    }
+    
+    .combat-actions-context {
+        order: 3;
+    }
+    
+    .monster-ascii-art {
+        font-size: 1.5rem;
+    }
+}
+
 /* Post-Combat Results Styles */
 .post-combat-results {
     padding: var(--space-6);
