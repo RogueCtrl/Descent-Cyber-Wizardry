@@ -398,13 +398,30 @@ class Combat {
             }
         }
         
-        // Normal turn order
-        if (this.currentTurnIndex >= this.turnOrder.length) {
-            this.currentTurn++;
-            this.currentTurnIndex = 0;
+        // Normal turn order - skip unconscious/dead characters
+        let attempts = 0;
+        const maxAttempts = this.turnOrder.length;
+        
+        while (attempts < maxAttempts) {
+            if (this.currentTurnIndex >= this.turnOrder.length) {
+                this.currentTurn++;
+                this.currentTurnIndex = 0;
+            }
+            
+            const currentActor = this.turnOrder[this.currentTurnIndex];
+            
+            // Check if actor is alive and conscious
+            if (currentActor && currentActor.combatant && currentActor.combatant.isAlive) {
+                return currentActor;
+            }
+            
+            // Skip this actor and try next
+            this.currentTurnIndex++;
+            attempts++;
         }
         
-        return this.turnOrder[this.currentTurnIndex];
+        // If we get here, all actors are unconscious/dead
+        return null;
     }
     
     /**

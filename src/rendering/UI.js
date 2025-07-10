@@ -1328,8 +1328,11 @@ class UI {
         
         switch(action) {
             case 'attack':
-                // For attack, we need a target - for now, target the first enemy
-                const enemies = combat.combatants.filter(c => !window.engine.party.aliveMembers.includes(c));
+                // For attack, we need a target - target the first alive enemy
+                const enemies = combat.combatants.filter(c => 
+                    !window.engine.party.aliveMembers.includes(c) && 
+                    c.isAlive
+                );
                 if (enemies.length > 0) {
                     actionData.target = enemies[0];
                     actionData.type = 'attack';
