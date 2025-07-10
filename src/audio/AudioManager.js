@@ -14,7 +14,7 @@ class AudioManager {
         this.tracks = {
             town: {
                 name: 'Town Theme',
-                tempo: 120,
+                tempo: 80, // Much slower, more contemplative
                 pattern: this.createTownTheme()
             },
             dungeon: {
@@ -82,25 +82,55 @@ class AudioManager {
     }
     
     /**
-     * Create town theme - peaceful and welcoming
+     * Create town theme - somber but calm, extended composition
      */
     createTownTheme() {
         return [
-            // Melody pattern (frequencies in Hz)
-            { freq: 523, duration: 0.5, wave: 'square' },  // C5
-            { freq: 659, duration: 0.5, wave: 'square' },  // E5
-            { freq: 784, duration: 0.5, wave: 'square' },  // G5
-            { freq: 659, duration: 0.5, wave: 'square' },  // E5
-            { freq: 523, duration: 0.5, wave: 'square' },  // C5
-            { freq: 587, duration: 0.5, wave: 'square' },  // D5
-            { freq: 659, duration: 1.0, wave: 'square' },  // E5
+            // Part A - Main melancholy melody (lower register, slower tempo)
+            { freq: 349, duration: 1.5, wave: 'sine' },    // F4 (somber start)
+            { freq: 392, duration: 1.0, wave: 'sine' },    // G4
+            { freq: 440, duration: 2.0, wave: 'sine' },    // A4 (hold)
             { freq: 0,   duration: 0.5 },                  // Rest
+            { freq: 349, duration: 1.0, wave: 'sine' },    // F4
+            { freq: 330, duration: 1.5, wave: 'sine' },    // E4
+            { freq: 294, duration: 2.5, wave: 'sine' },    // D4 (long, sad note)
+            { freq: 0,   duration: 1.0 },                  // Rest
             
-            // Bass line
-            { freq: 262, duration: 1.0, wave: 'triangle' }, // C4
-            { freq: 330, duration: 1.0, wave: 'triangle' }, // E4
-            { freq: 392, duration: 1.0, wave: 'triangle' }, // G4
-            { freq: 330, duration: 1.0, wave: 'triangle' }, // E4
+            // Part B - Counter melody with harmonies
+            { freq: 262, duration: 1.0, wave: 'sine' },    // C4
+            { freq: 294, duration: 1.0, wave: 'sine' },    // D4
+            { freq: 330, duration: 1.5, wave: 'sine' },    // E4
+            { freq: 349, duration: 0.5, wave: 'sine' },    // F4
+            { freq: 392, duration: 2.0, wave: 'sine' },    // G4 (hold)
+            { freq: 349, duration: 1.0, wave: 'sine' },    // F4
+            { freq: 330, duration: 3.0, wave: 'sine' },    // E4 (very long)
+            { freq: 0,   duration: 1.5 },                  // Rest
+            
+            // Part C - Deep bass foundation (creates atmosphere)
+            { freq: 131, duration: 4.0, wave: 'triangle' }, // C3 (very low, atmospheric)
+            { freq: 147, duration: 4.0, wave: 'triangle' }, // D3
+            { freq: 165, duration: 4.0, wave: 'triangle' }, // E3
+            { freq: 131, duration: 4.0, wave: 'triangle' }, // C3
+            
+            // Part D - Sparse high notes (like distant bells)
+            { freq: 0,   duration: 2.0 },                  // Rest
+            { freq: 523, duration: 0.75, wave: 'sine' },   // C5 (soft)
+            { freq: 0,   duration: 1.5 },                  // Rest
+            { freq: 494, duration: 0.5, wave: 'sine' },    // B4
+            { freq: 0,   duration: 2.0 },                  // Rest
+            { freq: 440, duration: 1.0, wave: 'sine' },    // A4
+            { freq: 0,   duration: 3.0 },                  // Long rest
+            
+            // Part E - Return to main theme with variation
+            { freq: 349, duration: 1.0, wave: 'sine' },    // F4
+            { freq: 330, duration: 1.0, wave: 'sine' },    // E4
+            { freq: 294, duration: 1.5, wave: 'sine' },    // D4
+            { freq: 262, duration: 2.0, wave: 'sine' },    // C4 (resolution, but sad)
+            { freq: 0,   duration: 2.0 },                  // Rest
+            { freq: 294, duration: 1.5, wave: 'sine' },    // D4
+            { freq: 330, duration: 1.0, wave: 'sine' },    // E4
+            { freq: 349, duration: 3.0, wave: 'sine' },    // F4 (final, long note)
+            { freq: 0,   duration: 4.0 },                  // Long silence before repeat
         ];
     }
     
