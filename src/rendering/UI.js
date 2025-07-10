@@ -1126,15 +1126,10 @@ class UI {
                     <div class="combat-main-area">
                         <!-- Monster Visual Panel -->
                         <div class="combat-monster-visual" id="combat-monster-visual">
+                            <canvas id="monster-portrait-canvas" width="600" height="600" style="display: none;"></canvas>
                             <div class="monster-ascii-art" id="monster-ascii-art"></div>
                             <div class="monster-name" id="monster-name"></div>
                             <div class="monster-status" id="monster-status"></div>
-                        </div>
-                        
-                        <!-- Party Status Panel -->
-                        <div class="combat-party-status">
-                            <h3>Your Party</h3>
-                            <div id="party-combat-status"></div>
                         </div>
                         
                         <!-- Context Action Box -->
@@ -1342,11 +1337,12 @@ class UI {
      * Update monster visual panel
      */
     updateMonsterVisual() {
+        const monsterCanvas = document.getElementById('monster-portrait-canvas');
         const monsterAsciiDiv = document.getElementById('monster-ascii-art');
         const monsterNameDiv = document.getElementById('monster-name');
         const monsterStatusDiv = document.getElementById('monster-status');
         
-        if (monsterAsciiDiv && monsterNameDiv && monsterStatusDiv && 
+        if (monsterNameDiv && monsterStatusDiv && 
             window.engine && window.engine.combatInterface) {
             
             const combat = window.engine.combatInterface.combat;
@@ -1360,8 +1356,32 @@ class UI {
                     if (enemies.length > 0) {
                         const primaryEnemy = enemies[0]; // Show first enemy as primary
                         
-                        // Display ASCII art
-                        monsterAsciiDiv.textContent = primaryEnemy.asciiArt || '  👹\n /|||\\\n  /\\  ';
+                        // Try to use portrait rendering first
+                        if (monsterCanvas && primaryEnemy.portraitModel) {
+                            // Use 3D portrait rendering
+                            monsterCanvas.style.display = 'block';
+                            if (monsterAsciiDiv) monsterAsciiDiv.style.display = 'none';
+                            
+                            // Initialize portrait renderer if needed
+                            if (!this.portraitRenderer) {
+                                const ctx = monsterCanvas.getContext('2d');
+                                this.portraitRenderer = new MonsterPortraitRenderer(monsterCanvas, ctx);
+                            }
+                            
+                            // Render the portrait
+                            this.portraitRenderer.renderMonsterPortrait(primaryEnemy, {
+                                healthRatio: primaryEnemy.currentHP / primaryEnemy.maxHP,
+                                status: primaryEnemy.status,
+                                recentDamage: primaryEnemy.recentDamage || false
+                            });
+                        } else {
+                            // Fallback to ASCII art
+                            if (monsterCanvas) monsterCanvas.style.display = 'none';
+                            if (monsterAsciiDiv) {
+                                monsterAsciiDiv.style.display = 'block';
+                                monsterAsciiDiv.textContent = primaryEnemy.asciiArt || '  👹\n /|||\\\n  /\\  ';
+                            }
+                        }
                         
                         // Display monster name
                         monsterNameDiv.textContent = primaryEnemy.name;
@@ -1372,18 +1392,33 @@ class UI {
                         const hpInfo = `HP: ${primaryEnemy.currentHP}/${primaryEnemy.maxHP}`;
                         monsterStatusDiv.innerHTML = `${status}<br>${hpInfo}`;
                     } else {
-                        monsterAsciiDiv.textContent = '💀\n /|||\\\n  /\\  ';
+                        // No enemies - show clear state
+                        if (monsterCanvas) monsterCanvas.style.display = 'none';
+                        if (monsterAsciiDiv) {
+                            monsterAsciiDiv.style.display = 'block';
+                            monsterAsciiDiv.textContent = '💀\n /|||\\\n  /\\  ';
+                        }
                         monsterNameDiv.textContent = 'No Enemies';
                         monsterStatusDiv.textContent = 'Wave Clear';
                     }
                 } catch (error) {
                     console.log('Error updating monster visual:', error);
-                    monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                    // Error state - show ASCII fallback
+                    if (monsterCanvas) monsterCanvas.style.display = 'none';
+                    if (monsterAsciiDiv) {
+                        monsterAsciiDiv.style.display = 'block';
+                        monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                    }
                     monsterNameDiv.textContent = 'Combat Error';
                     monsterStatusDiv.textContent = 'Loading...';
                 }
             } else {
-                monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                // Combat not active - show loading state
+                if (monsterCanvas) monsterCanvas.style.display = 'none';
+                if (monsterAsciiDiv) {
+                    monsterAsciiDiv.style.display = 'block';
+                    monsterAsciiDiv.textContent = '⚔️\n /|||\\\n  /\\  ';
+                }
                 monsterNameDiv.textContent = 'Combat Loading';
                 monsterStatusDiv.textContent = 'Preparing...';
             }

@@ -1,0 +1,281 @@
+/**
+ * Monster Portrait Renderer
+ * Extends Viewport3D to render 3D wireframe monster portraits in combat interface
+ */
+class MonsterPortraitRenderer extends Viewport3D {
+    constructor(canvas, context) {
+        super(canvas, context);
+        
+        // Portrait-specific rendering parameters
+        this.portraitMode = true;
+        this.portraitScale = 0.8;
+        this.portraitOffset = { x: 0, y: -10 }; // Slight upward offset
+        this.portraitRotation = { x: 0, y: 15, z: 0 }; // Slight angle for depth
+        
+        // Portrait animation parameters
+        this.animationTime = 0;
+        this.animationSpeed = 0.005;
+        this.breathingAmount = 2; // Subtle breathing effect
+        
+        // Portrait-specific colors (inherit from Viewport3D but allow overrides)
+        this.portraitColors = {
+            ...this.colors,
+            healthy: '#00ff00',
+            injured: '#ffaa00',
+            critical: '#ff4400',
+            dead: '#888888'
+        };
+    }
+    
+    /**
+     * Render a monster portrait using wireframe model data
+     */
+    renderMonsterPortrait(monster, options = {}) {
+        if (!monster || !monster.portraitModel) {
+            this.renderFallbackPortrait();
+            return;
+        }
+        
+        this.clear();
+        
+        // Calculate health-based color
+        const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
+        const portraitColor = this.getHealthColor(healthRatio, monster);
+        
+        // Set up portrait rendering context
+        this.ctx.strokeStyle = portraitColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        // Render the portrait model
+        this.renderPortraitModel(monster.portraitModel, {
+            healthRatio,
+            status: monster.status,
+            ...options
+        });
+        
+        // Add subtle effects
+        this.renderPortraitEffects(monster, options);
+        
+        // Update animation time
+        this.animationTime += this.animationSpeed;
+    }
+    
+    /**
+     * Render the 3D wireframe model for the portrait
+     */
+    renderPortraitModel(portraitModel, options = {}) {
+        if (!portraitModel.vertices || !portraitModel.edges) return;
+        
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
+        // Apply portrait transformations
+        const transformedVertices = this.transformPortraitVertices(
+            portraitModel.vertices,
+            portraitModel.scale || 1.0,
+            portraitModel.rotation || [0, 0, 0],
+            options
+        );
+        
+        // Project 3D vertices to 2D screen coordinates
+        const projectedVertices = transformedVertices.map(vertex => 
+            this.projectToPortraitSpace(vertex, centerX, centerY)
+        );
+        
+        // Draw wireframe edges
+        this.ctx.beginPath();
+        portraitModel.edges.forEach(edge => {
+            const [startIdx, endIdx] = edge;
+            if (startIdx < projectedVertices.length && endIdx < projectedVertices.length) {
+                const start = projectedVertices[startIdx];
+                const end = projectedVertices[endIdx];
+                
+                this.ctx.moveTo(start.x, start.y);
+                this.ctx.lineTo(end.x, end.y);
+            }
+        });
+        this.ctx.stroke();
+    }
+    
+    /**
+     * Transform 3D vertices for portrait display
+     */
+    transformPortraitVertices(vertices, scale, rotation, options = {}) {
+        const [rotX, rotY, rotZ] = rotation;
+        const combinedScale = scale * this.portraitScale;
+        
+        // Add subtle breathing animation
+        const breathingScale = 1 + (Math.sin(this.animationTime * 200) * this.breathingAmount * 0.01);
+        const finalScale = combinedScale * breathingScale;
+        
+        return vertices.map(([x, y, z]) => {
+            // Apply scale
+            let transformedX = x * finalScale;
+            let transformedY = y * finalScale;
+            let transformedZ = z * finalScale;
+            
+            // Apply Y rotation (most common for portrait angle)
+            if (rotY !== 0) {
+                const cosY = Math.cos(rotY * Math.PI / 180);
+                const sinY = Math.sin(rotY * Math.PI / 180);
+                const newX = transformedX * cosY - transformedZ * sinY;
+                const newZ = transformedX * sinY + transformedZ * cosY;
+                transformedX = newX;
+                transformedZ = newZ;
+            }
+            
+            // Apply X rotation (pitch)
+            if (rotX !== 0) {
+                const cosX = Math.cos(rotX * Math.PI / 180);
+                const sinX = Math.sin(rotX * Math.PI / 180);
+                const newY = transformedY * cosX - transformedZ * sinX;
+                const newZ = transformedY * sinX + transformedZ * cosX;
+                transformedY = newY;
+                transformedZ = newZ;
+            }
+            
+            return [transformedX, transformedY, transformedZ];
+        });
+    }
+    
+    /**
+     * Project 3D coordinates to 2D portrait space
+     */
+    projectToPortraitSpace(vertex, centerX, centerY) {
+        const [x, y, z] = vertex;
+        
+        // Simple orthographic projection for portrait (no perspective distortion)
+        const scale = 100; // Scale factor for portrait size
+        
+        return {
+            x: centerX + (x * scale) + this.portraitOffset.x,
+            y: centerY - (y * scale) + this.portraitOffset.y // Invert Y for screen coordinates
+        };
+    }
+    
+    /**
+     * Render additional portrait effects based on monster status
+     */
+    renderPortraitEffects(monster, options = {}) {
+        // Add status effects overlay
+        if (monster.isUnconscious) {
+            this.renderUnconscousEffect();
+        } else if (monster.isDead) {
+            this.renderDeadEffect();
+        }
+        
+        // Add damage flash effect (if recently damaged)
+        if (options.recentDamage) {
+            this.renderDamageFlash();
+        }
+    }
+    
+    /**
+     * Render unconscious status effect
+     */
+    renderUnconscousEffect() {
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.strokeStyle = this.portraitColors.dead;
+        this.ctx.lineWidth = 1;
+        
+        // Draw X pattern over portrait
+        this.ctx.beginPath();
+        this.ctx.moveTo(10, 10);
+        this.ctx.lineTo(this.width - 10, this.height - 10);
+        this.ctx.moveTo(this.width - 10, 10);
+        this.ctx.lineTo(10, this.height - 10);
+        this.ctx.stroke();
+        
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Render dead status effect
+     */
+    renderDeadEffect() {
+        // Darken the entire portrait
+        this.ctx.globalAlpha = 0.5;
+        this.ctx.fillStyle = this.portraitColors.dead;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Render damage flash effect
+     */
+    renderDamageFlash() {
+        this.ctx.globalAlpha = 0.2;
+        this.ctx.fillStyle = this.portraitColors.critical;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Get health-based color for portrait
+     */
+    getHealthColor(healthRatio, monster) {
+        if (monster.isDead) return this.portraitColors.dead;
+        if (monster.isUnconscious) return this.portraitColors.dead;
+        
+        if (healthRatio > 0.7) return this.portraitColors.healthy;
+        if (healthRatio > 0.3) return this.portraitColors.injured;
+        return this.portraitColors.critical;
+    }
+    
+    /**
+     * Render fallback portrait when no model data is available
+     */
+    renderFallbackPortrait() {
+        this.clear();
+        
+        // Draw simple geometric placeholder
+        this.ctx.strokeStyle = this.colors.wall;
+        this.ctx.lineWidth = 2;
+        
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const size = 60;
+        
+        // Simple monster silhouette
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY - 20, size * 0.4, 0, Math.PI * 2); // Head
+        this.ctx.moveTo(centerX - size * 0.3, centerY);
+        this.ctx.lineTo(centerX + size * 0.3, centerY); // Shoulders
+        this.ctx.moveTo(centerX, centerY);
+        this.ctx.lineTo(centerX, centerY + size * 0.5); // Body
+        this.ctx.stroke();
+    }
+    
+    /**
+     * Start portrait animation loop
+     */
+    startAnimation() {
+        if (this.animationFrame) return; // Already running
+        
+        const animate = () => {
+            this.animationFrame = requestAnimationFrame(animate);
+            // Animation handled in renderMonsterPortrait call
+        };
+        animate();
+    }
+    
+    /**
+     * Stop portrait animation loop
+     */
+    stopAnimation() {
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
+        }
+    }
+    
+    /**
+     * Clean up resources
+     */
+    destroy() {
+        this.stopAnimation();
+        this.clearCache();
+    }
+}
