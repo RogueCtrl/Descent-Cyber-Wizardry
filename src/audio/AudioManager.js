@@ -289,24 +289,69 @@ class AudioManager {
     }
     
     /**
-     * Create combat theme - intense and driving
+     * Create combat theme - strategic and subtle, mid-range focused
      */
     createCombatTheme() {
         return [
-            { freq: 392, duration: 0.25, wave: 'square' }, // G4
-            { freq: 440, duration: 0.25, wave: 'square' }, // A4
-            { freq: 494, duration: 0.25, wave: 'square' }, // B4
-            { freq: 523, duration: 0.25, wave: 'square' }, // C5
-            { freq: 587, duration: 0.5, wave: 'square' },  // D5
-            { freq: 523, duration: 0.25, wave: 'square' }, // C5
-            { freq: 494, duration: 0.25, wave: 'square' }, // B4
-            { freq: 440, duration: 0.5, wave: 'square' },  // A4
+            // Part A - Main combat theme (mid-range, not piercing)
+            { freq: 294, duration: 0.75, wave: 'sine' },    // D4 (lowered from G4)
+            { freq: 330, duration: 0.5, wave: 'sine' },     // E4 (lowered from A4)
+            { freq: 349, duration: 1.0, wave: 'sine' },     // F4 (lowered from B4)
+            { freq: 0,   duration: 0.25 },                  // Brief rest
+            { freq: 392, duration: 0.5, wave: 'sine' },     // G4 (lowered from C5)
+            { freq: 440, duration: 0.75, wave: 'sine' },    // A4 (lowered from D5)
+            { freq: 392, duration: 0.5, wave: 'sine' },     // G4 (lowered from C5)
+            { freq: 349, duration: 1.0, wave: 'sine' },     // F4 (lowered from B4)
+            { freq: 0,   duration: 0.5 },                   // Rest
             
-            // Driving bass
-            { freq: 196, duration: 0.5, wave: 'triangle' }, // G3
-            { freq: 196, duration: 0.5, wave: 'triangle' }, // G3
-            { freq: 220, duration: 0.5, wave: 'triangle' }, // A3
-            { freq: 220, duration: 0.5, wave: 'triangle' }, // A3
+            // Part B - Lower register melody (warm, not harsh)
+            { freq: 220, duration: 0.75, wave: 'triangle' }, // A3 (warmer wave)
+            { freq: 246, duration: 0.5, wave: 'triangle' },  // B3
+            { freq: 262, duration: 1.0, wave: 'triangle' },  // C4 (hold)
+            { freq: 294, duration: 0.5, wave: 'triangle' },  // D4
+            { freq: 330, duration: 0.75, wave: 'triangle' }, // E4
+            { freq: 294, duration: 0.5, wave: 'triangle' },  // D4
+            { freq: 262, duration: 1.5, wave: 'triangle' },  // C4 (long hold)
+            { freq: 0,   duration: 0.75 },                   // Rest
+            
+            // Part C - Bass foundation (steady, grounding)
+            { freq: 147, duration: 1.0, wave: 'triangle' }, // D3
+            { freq: 165, duration: 1.0, wave: 'triangle' }, // E3
+            { freq: 175, duration: 1.0, wave: 'triangle' }, // F3
+            { freq: 165, duration: 1.0, wave: 'triangle' }, // E3
+            { freq: 147, duration: 2.0, wave: 'triangle' }, // D3 (long)
+            { freq: 0,   duration: 1.0 },                   // Rest
+            
+            // Part D - Subtle tension (no harsh sawtooth)
+            { freq: 277, duration: 1.5, wave: 'sine' },     // C#4 (subtle dissonance)
+            { freq: 311, duration: 1.5, wave: 'sine' },     // D#4 (mild tension)
+            { freq: 0,   duration: 1.0 },                   // Silence for effect
+            { freq: 262, duration: 2.0, wave: 'triangle' }, // C4 (gentle resolution)
+            { freq: 0,   duration: 0.5 },                   // Rest
+            
+            // Part E - Rhythmic variation (gentle, not sharp)
+            { freq: 392, duration: 0.5, wave: 'triangle' }, // G4 (lowered from C5)
+            { freq: 0,   duration: 0.25 },                  // Rest
+            { freq: 349, duration: 0.5, wave: 'triangle' }, // F4 (lowered from B4)
+            { freq: 0,   duration: 0.25 },                  // Rest
+            { freq: 330, duration: 0.75, wave: 'triangle' }, // E4 (lowered from A4)
+            { freq: 294, duration: 0.75, wave: 'triangle' }, // D4 (lowered from G4)
+            { freq: 0,   duration: 0.5 },                   // Rest
+            { freq: 262, duration: 1.0, wave: 'triangle' }, // C4 (lowered from F4)
+            { freq: 0,   duration: 1.0 },                   // Longer rest
+            
+            // Part F - Gentle echoes (no piercing highs)
+            { freq: 440, duration: 0.3, wave: 'triangle' }, // A4 (much lower than G5)
+            { freq: 0,   duration: 0.7 },                   // Rest
+            { freq: 392, duration: 0.3, wave: 'triangle' }, // G4 (much lower than F5)
+            { freq: 0,   duration: 0.7 },                   // Rest
+            { freq: 349, duration: 0.4, wave: 'triangle' }, // F4 (much lower than E5)
+            { freq: 0,   duration: 1.6 },                   // Long rest
+            
+            // Part G - Deep foundation return
+            { freq: 131, duration: 3.0, wave: 'triangle' }, // C3 (very low, warm)
+            { freq: 147, duration: 3.0, wave: 'triangle' }, // D3 (grounding)
+            { freq: 0,   duration: 2.0 },                   // Silence before repeat
         ];
     }
     
