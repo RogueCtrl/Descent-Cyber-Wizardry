@@ -5,10 +5,10 @@
 
 // Global assignment for browser compatibility
 window.monstersMigration = {
-    version: '1.0.0',
+    version: '1.1.0',
     entity: 'monsters',
     store: 'monsters',
-    description: 'Initial monsters data migration',
+    description: 'Initial monsters data migration with vector portraits',
     
     data: {
         // Level 1 Monsters
