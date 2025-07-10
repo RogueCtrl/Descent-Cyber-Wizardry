@@ -1500,10 +1500,7 @@ class UI {
         // Clear combat interface and restore 3D view
         viewport.innerHTML = '';
         
-        // Re-initialize 3D rendering if needed
-        if (window.engine && window.engine.renderer) {
-            window.engine.renderer.setupViewport();
-        }
+        // The 3D rendering will be restored automatically by the engine's render loop
     }
     
     /**
@@ -1515,31 +1512,30 @@ class UI {
         // Hide combat interface first
         this.hideCombatInterface();
         
-        // Create post-combat modal
-        this.postCombatModal = new Modal('post-combat-results', {
-            title: '🎉 Victory!',
-            content: this.createPostCombatContent(rewards),
-            buttons: [
-                {
-                    text: 'Continue',
-                    class: 'primary',
-                    action: () => {
-                        this.postCombatModal.hide();
-                        this.postCombatModal = null;
-                        
-                        // Apply rewards to party
-                        this.applyRewardsToParty(rewards);
-                        
-                        // Return to dungeon exploration
-                        if (window.engine) {
-                            window.engine.returnToDungeon();
-                        }
-                    }
-                }
-            ]
+        // Create post-combat modal following town modal pattern
+        this.postCombatModal = new Modal({
+            className: 'modal post-combat-modal',
+            closeOnEscape: false,
+            closeOnBackdrop: false
         });
         
+        // Set up close callback
+        this.postCombatModal.setOnClose(() => {
+            this.postCombatModal = null;
+        });
+        
+        // Create the modal content with buttons
+        const content = this.createPostCombatContent(rewards) + 
+            '<div class="post-combat-actions">' +
+            '<button id="continue-btn" class="btn btn-primary">Continue</button>' +
+            '</div>';
+        
+        // Create and show modal
+        this.postCombatModal.create(content, '🎉 Victory!');
         this.postCombatModal.show();
+        
+        // Add event listeners using getBody() method
+        this.setupPostCombatEventListeners(this.postCombatModal.getBody(), rewards);
     }
     
     /**
@@ -1592,6 +1588,28 @@ class UI {
         
         content += '</div>';
         return content;
+    }
+    
+    /**
+     * Set up event listeners for post-combat interface
+     */
+    setupPostCombatEventListeners(viewport, rewards) {
+        const continueBtn = viewport.querySelector('#continue-btn');
+        
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                this.postCombatModal.hide();
+                this.postCombatModal = null;
+                
+                // Apply rewards to party
+                this.applyRewardsToParty(rewards);
+                
+                // Return to dungeon exploration
+                if (window.engine) {
+                    window.engine.returnToDungeon();
+                }
+            });
+        }
     }
     
     /**
@@ -1648,42 +1666,92 @@ class UI {
     }
     
     /**
+     * Process total party kill - convert unconscious to dead
+     */
+    processTotalPartyKill() {
+        console.log('Processing total party kill - converting unconscious to dead');
+        
+        if (!window.engine?.party?.members) return;
+        
+        window.engine.party.members.forEach(member => {
+            if (member.status === 'unconscious') {
+                member.status = 'dead';
+                member.currentHP = -10; // Ensure they're truly dead
+                member.isAlive = false;
+                
+                // Save the updated character state
+                member.saveToStorage();
+                
+                this.addMessage(`${member.name} has died from their injuries...`, 'death');
+            }
+        });
+    }
+    
+    /**
      * Show party death screen
      */
     showPartyDeathScreen(casualties) {
         console.log('Showing party death screen:', casualties);
         
+        // Check if entire party is defeated (no alive members)
+        const aliveMembers = window.engine?.party?.aliveMembers || [];
+        const isTotalPartyKill = aliveMembers.length === 0;
+        
+        if (isTotalPartyKill) {
+            // In a total party kill, all unconscious characters die
+            this.processTotalPartyKill();
+        }
+        
         // Hide combat interface first
         this.hideCombatInterface();
         
-        // Create death modal
-        this.deathModal = new Modal('party-death', {
-            title: '💀 Defeat',
-            content: this.createDeathScreenContent(casualties),
-            buttons: [
-                {
-                    text: 'Return to Town',
-                    class: 'primary',
-                    action: () => {
-                        this.deathModal.hide();
-                        this.deathModal = null;
-                        
-                        // Return survivors to town
-                        this.returnToTownAfterDeath();
-                    }
-                },
-                {
-                    text: 'View Character Status',
-                    class: 'secondary',
-                    action: () => {
-                        // Show character status modal
-                        this.characterUI.showCharacterRoster();
-                    }
-                }
-            ]
+        // Create death modal following town modal pattern
+        this.deathModal = new Modal({
+            className: 'modal party-death-modal',
+            closeOnEscape: false,
+            closeOnBackdrop: false
         });
         
+        // Set up close callback
+        this.deathModal.setOnClose(() => {
+            this.deathModal = null;
+        });
+        
+        // Create the modal content with buttons
+        const content = this.createDeathScreenContent(casualties) + 
+            '<div class="death-actions">' +
+            '<button id="return-to-town-btn" class="btn btn-primary">Return to Town</button>' +
+            '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
+            '</div>';
+        
+        // Create and show modal
+        this.deathModal.create(content, '💀 Defeat');
         this.deathModal.show();
+        
+        // Add event listeners using getBody() method
+        this.setupDeathScreenEventListeners(this.deathModal.getBody());
+    }
+    
+    /**
+     * Set up event listeners for death screen interface
+     */
+    setupDeathScreenEventListeners(viewport) {
+        const returnBtn = viewport.querySelector('#return-to-town-btn');
+        const statusBtn = viewport.querySelector('#view-status-btn');
+        
+        if (returnBtn) {
+            returnBtn.addEventListener('click', () => {
+                this.deathModal.hide();
+                this.deathModal = null;
+                this.returnToTownAfterDeath();
+            });
+        }
+        
+        if (statusBtn) {
+            statusBtn.addEventListener('click', () => {
+                this.characterUI.showCharacterRoster();
+            });
+        }
     }
     
     /**
@@ -1755,15 +1823,23 @@ class UI {
     returnToTownAfterDeath() {
         console.log('Returning to town after death...');
         
-        // Change game state to town
         if (window.engine) {
+            // First exit combat (combat → playing)
+            window.engine.gameState.setState('playing');
+            
+            // Then exit dungeon and return to town (playing → town)
             window.engine.gameState.setState('town');
             
             // Show town interface
             this.showTown(window.engine.party);
             
-            // Add message about returning to town
-            this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+            // Add dramatic message about the failed expedition
+            const aliveMembers = window.engine.party.aliveMembers;
+            if (aliveMembers.length === 0) {
+                this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
+            } else {
+                this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+            }
             
             // Save all character states
             window.engine.party.members.forEach(member => {
