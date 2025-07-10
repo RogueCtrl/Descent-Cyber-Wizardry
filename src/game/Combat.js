@@ -491,6 +491,17 @@ class Combat {
         this.logMessage(`Attack roll: ${attackRoll} vs AC ${targetAC}`, 'system', '🎲');
         
         if (attackRoll >= targetAC) {
+            // Play attack sound effect
+            if (window.engine?.audioManager) {
+                if (attacker.hasOwnProperty('class')) {
+                    // Player attack
+                    window.engine.audioManager.playSoundEffect('attack');
+                } else {
+                    // Monster attack
+                    window.engine.audioManager.playSoundEffect('monsterAttack');
+                }
+            }
+            
             const damage = this.rollDamage(attacker);
             const criticalCheck = this.checkCriticalHit(attacker, target, attackRoll);
             
@@ -538,11 +549,27 @@ class Combat {
             
             target.currentHP = Math.max(0, target.currentHP - finalDamage);
             
+            // Play hit sound effect
+            if (window.engine?.audioManager) {
+                if (target.hasOwnProperty('class')) {
+                    // Player hit
+                    window.engine.audioManager.playSoundEffect('hit');
+                } else {
+                    // Monster hit
+                    window.engine.audioManager.playSoundEffect('monsterHit');
+                }
+            }
+            
             this.logMessage(`💥 ${attacker.name} hits ${target.name} ${hitDescription} for ${finalDamage} damage!`, 'combat', '💥');
             
             if (target.currentHP <= 0) {
                 target.isAlive = false;
                 target.status = target.currentHP <= -10 ? 'dead' : 'unconscious';
+                
+                // Play death sound effect
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.playSoundEffect('characterDeath');
+                }
                 
                 if (target.status === 'dead') {
                     this.logMessage(`💀 ${target.name} has been slain!`, 'death', '💀');
@@ -589,6 +616,11 @@ class Combat {
             const missReason = Random.choice(missReasons);
             
             this.logMessage(`💨 ${attacker.name} misses! ${missReason}`, 'combat', '💨');
+            
+            // Play miss sound effect
+            if (window.engine?.audioManager) {
+                window.engine.audioManager.playSoundEffect('miss');
+            }
             
             return {
                 success: false,

@@ -47,6 +47,7 @@ class AudioManager {
         
         this.initializeAudio();
         this.setupUserInteractionListener();
+        this.setupSoundEffects();
     }
     
     /**
@@ -79,6 +80,90 @@ class AudioManager {
         
         document.addEventListener('click', resumeAudio);
         document.addEventListener('keydown', resumeAudio);
+    }
+    
+    /**
+     * Set up sound effect definitions
+     */
+    setupSoundEffects() {
+        this.soundEffects = {
+            // UI Sounds
+            buttonClick: {
+                freq: 800,
+                duration: 0.1,
+                wave: 'square',
+                volume: 0.3
+            },
+            buttonHover: {
+                freq: 600,
+                duration: 0.05,
+                wave: 'sine',
+                volume: 0.2
+            },
+            
+            // Combat Action Sounds
+            attack: {
+                freq: 300,
+                duration: 0.2,
+                wave: 'sawtooth',
+                volume: 0.4,
+                sweep: { start: 300, end: 200 }
+            },
+            hit: {
+                freq: 150,
+                duration: 0.3,
+                wave: 'square',
+                volume: 0.5,
+                sweep: { start: 150, end: 100 }
+            },
+            miss: {
+                freq: 400,
+                duration: 0.15,
+                wave: 'sine',
+                volume: 0.3,
+                sweep: { start: 400, end: 600 }
+            },
+            
+            // Monster Sounds
+            monsterAttack: {
+                freq: 120,
+                duration: 0.4,
+                wave: 'sawtooth',
+                volume: 0.6,
+                sweep: { start: 120, end: 80 }
+            },
+            monsterHit: {
+                freq: 200,
+                duration: 0.25,
+                wave: 'square',
+                volume: 0.4
+            },
+            
+            // Death/Defeat Sounds
+            characterDeath: {
+                freq: 220,
+                duration: 1.0,
+                wave: 'sine',
+                volume: 0.5,
+                sweep: { start: 220, end: 110 }
+            },
+            partyWipe: {
+                freq: 150,
+                duration: 2.0,
+                wave: 'triangle',
+                volume: 0.6,
+                sweep: { start: 150, end: 75 }
+            },
+            
+            // Victory Sounds
+            victory: {
+                freq: 523,
+                duration: 0.5,
+                wave: 'square',
+                volume: 0.4,
+                sweep: { start: 523, end: 784 }
+            }
+        };
     }
     
     /**
@@ -399,6 +484,52 @@ class AudioManager {
         
         console.log(`🎵 Audio ${this.isEnabled ? 'enabled' : 'disabled'}`);
         return this.isEnabled;
+    }
+    
+    /**
+     * Play a sound effect
+     */
+    playSoundEffect(effectName) {
+        if (!this.isEnabled || !this.audioContext || !this.soundEffects[effectName]) return;
+        
+        // Don't play sound effects if audio context is suspended
+        if (this.audioContext.state === 'suspended') return;
+        
+        const effect = this.soundEffects[effectName];
+        const oscillator = this.audioContext.createOscillator();
+        const effectGain = this.audioContext.createGain();
+        
+        oscillator.type = effect.wave;
+        oscillator.frequency.setValueAtTime(effect.freq, this.audioContext.currentTime);
+        
+        // Apply frequency sweep if defined
+        if (effect.sweep) {
+            oscillator.frequency.exponentialRampToValueAtTime(
+                effect.sweep.end, 
+                this.audioContext.currentTime + effect.duration * 0.8
+            );
+        }
+        
+        // Set volume envelope
+        effectGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+        effectGain.gain.linearRampToValueAtTime(effect.volume, this.audioContext.currentTime + 0.01);
+        effectGain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + effect.duration);
+        
+        oscillator.connect(effectGain);
+        effectGain.connect(this.gainNode);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + effect.duration);
+        
+        // Clean up
+        setTimeout(() => {
+            try {
+                oscillator.disconnect();
+                effectGain.disconnect();
+            } catch (e) {
+                // Already disconnected
+            }
+        }, effect.duration * 1000 + 100);
     }
     
     /**

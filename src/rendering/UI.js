@@ -1290,6 +1290,11 @@ class UI {
         console.log('Combat action selected:', action);
         this.addMessage(`You selected: ${action}`, 'combat');
         
+        // Play button click sound
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('buttonClick');
+        }
+        
         // Disable buttons immediately to prevent double-clicking
         this.disableCombatButtons();
         
@@ -1465,8 +1470,9 @@ class UI {
         console.log('Combat ended, winner:', winner);
         
         if (winner === 'party') {
-            // Player victory - play victory music and trigger normal combat end
+            // Player victory - play victory sound and music
             if (window.engine?.audioManager) {
+                window.engine.audioManager.playSoundEffect('victory');
                 window.engine.audioManager.fadeToTrack('victory');
                 
                 // Return to dungeon music after victory fanfare
@@ -1759,6 +1765,11 @@ class UI {
         const isTotalPartyKill = aliveMembers.length === 0;
         
         if (isTotalPartyKill) {
+            // Play party wipe sound effect
+            if (window.engine?.audioManager) {
+                window.engine.audioManager.playSoundEffect('partyWipe');
+            }
+            
             // In a total party kill, all unconscious characters die
             this.processTotalPartyKill();
         }
