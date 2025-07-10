@@ -54,6 +54,12 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 **Dungeon Interface**
 ![Dungeon Interface](assets/readme/dungeon-preview.jpg)
 
+**Encounters & Combat**
+![Combat]()
+
+**Post Combat**
+![Party Wipe](assets/readme/combat-partywipe.jpg)
+
 </div>
 
 ## Test room

@@ -1825,26 +1825,35 @@ class UI {
         
         if (window.engine) {
             // First exit combat (combat → playing)
-            window.engine.gameState.setState('playing');
+            const success1 = window.engine.gameState.setState('playing');
+            console.log('Combat to playing transition:', success1);
             
-            // Then exit dungeon and return to town (playing → town)
-            window.engine.gameState.setState('town');
-            
-            // Show town interface
-            this.showTown(window.engine.party);
-            
-            // Add dramatic message about the failed expedition
-            const aliveMembers = window.engine.party.aliveMembers;
-            if (aliveMembers.length === 0) {
-                this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
-            } else {
-                this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
-            }
-            
-            // Save all character states
-            window.engine.party.members.forEach(member => {
-                member.saveToStorage();
-            });
+            // Add small delay to ensure state change is processed
+            setTimeout(() => {
+                // Then exit dungeon and return to town (playing → town)
+                const success2 = window.engine.gameState.setState('town');
+                console.log('Playing to town transition:', success2);
+                
+                if (success2) {
+                    // Show town interface
+                    this.showTown(window.engine.party);
+                    
+                    // Add dramatic message about the failed expedition
+                    const aliveMembers = window.engine.party.aliveMembers;
+                    if (aliveMembers.length === 0) {
+                        this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
+                    } else {
+                        this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+                    }
+                    
+                    // Save all character states
+                    window.engine.party.members.forEach(member => {
+                        member.saveToStorage();
+                    });
+                } else {
+                    console.error('Failed to transition to town state');
+                }
+            }, 50);
         }
     }
     
