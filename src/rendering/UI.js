@@ -2178,6 +2178,11 @@ class UI {
             
             const status = isEnabled ? 'enabled' : 'disabled';
             this.addMessage(`Music ${status}`, 'system');
+            
+            // Also refresh tracks when toggling to ensure new compositions are loaded
+            if (isEnabled) {
+                window.engine.audioManager.refreshTracks();
+            }
         }
     }
 }

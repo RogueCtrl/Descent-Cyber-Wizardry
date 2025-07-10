@@ -19,7 +19,7 @@ class AudioManager {
             },
             dungeon: {
                 name: 'Dungeon Exploration',
-                tempo: 100,
+                tempo: 60, // Much slower, more atmospheric
                 pattern: this.createDungeonTheme()
             },
             combat: {
@@ -220,21 +220,71 @@ class AudioManager {
     }
     
     /**
-     * Create dungeon theme - mysterious and atmospheric
+     * Create dungeon theme - long, dark, atmospheric with distant sounds
      */
     createDungeonTheme() {
         return [
-            { freq: 220, duration: 1.0, wave: 'sawtooth' }, // A3
-            { freq: 247, duration: 1.0, wave: 'sawtooth' }, // B3
-            { freq: 262, duration: 0.5, wave: 'sawtooth' }, // C4
-            { freq: 294, duration: 0.5, wave: 'sawtooth' }, // D4
-            { freq: 330, duration: 1.0, wave: 'sawtooth' }, // E4
-            { freq: 294, duration: 0.5, wave: 'sawtooth' }, // D4
-            { freq: 262, duration: 0.5, wave: 'sawtooth' }, // C4
-            { freq: 247, duration: 2.0, wave: 'sawtooth' }, // B3
-            
-            // Atmospheric drone
+            // Part A - More audible opening, then fade to atmospheric
+            { freq: 220, duration: 2.0, wave: 'sine' },     // A3 (audible start)
+            { freq: 196, duration: 2.0, wave: 'sine' },     // G3 (descending)
+            { freq: 175, duration: 3.0, wave: 'sine' },     // F3 (getting lower)
+            { freq: 147, duration: 4.0, wave: 'sine' },     // D3 (low but audible)
+            { freq: 0,   duration: 2.0 },                   // Short silence
             { freq: 110, duration: 4.0, wave: 'sine' },     // A2 (low drone)
+            { freq: 0,   duration: 3.0 },                   // Silence
+            
+            // Part B - Distant echoing sounds (like footsteps or dripping)
+            { freq: 220, duration: 0.25, wave: 'sine' },    // A3 (distant sound)
+            { freq: 0,   duration: 1.5 },                   // Silence
+            { freq: 220, duration: 0.25, wave: 'sine' },    // A3 (echo)
+            { freq: 0,   duration: 2.0 },                   // Silence
+            { freq: 196, duration: 0.3, wave: 'sine' },     // G3 (different pitch, like dripping)
+            { freq: 0,   duration: 5.0 },                   // Long silence
+            
+            // Part C - Unsettling harmonic intervals (creates tension)
+            { freq: 147, duration: 4.0, wave: 'triangle' }, // D3 (tritone interval - "devil's interval")
+            { freq: 208, duration: 4.0, wave: 'triangle' }, // G#3 (dissonant harmony)
+            { freq: 0,   duration: 6.0 },                   // Silence
+            
+            // Part D - Very distant, barely audible sounds
+            { freq: 330, duration: 0.2, wave: 'sine' },     // E4 (like a distant scream)
+            { freq: 0,   duration: 8.0 },                   // Long silence
+            { freq: 311, duration: 0.15, wave: 'sine' },    // D#4 (another distant sound)
+            { freq: 0,   duration: 6.0 },                   // Silence
+            
+            // Part E - Subtle movement, like something stalking
+            { freq: 131, duration: 2.0, wave: 'sine' },     // C3 (barely audible)
+            { freq: 139, duration: 2.0, wave: 'sine' },     // C#3 (chromatic movement)
+            { freq: 147, duration: 2.0, wave: 'sine' },     // D3
+            { freq: 0,   duration: 4.0 },                   // Silence
+            { freq: 123, duration: 3.0, wave: 'sine' },     // B2 (lower, more ominous)
+            { freq: 0,   duration: 7.0 },                   // Long silence
+            
+            // Part F - Environmental sounds (wind through passages)
+            { freq: 87,  duration: 12.0, wave: 'triangle' }, // F2 (very low, like wind)
+            { freq: 0,   duration: 5.0 },                    // Silence
+            
+            // Part G - Sparse, eerie high frequencies (like distant whispers)
+            { freq: 523, duration: 0.1, wave: 'sine' },     // C5 (very brief, like a whisper)
+            { freq: 0,   duration: 3.0 },                   // Silence
+            { freq: 466, duration: 0.1, wave: 'sine' },     // A#4 (another whisper)
+            { freq: 0,   duration: 4.0 },                   // Silence
+            { freq: 440, duration: 0.15, wave: 'sine' },    // A4 (slightly longer whisper)
+            { freq: 0,   duration: 8.0 },                   // Long silence
+            
+            // Part H - Return to deep foundation with subtle variation
+            { freq: 104, duration: 6.0, wave: 'sine' },     // G#2 (slightly different from opening)
+            { freq: 0,   duration: 4.0 },                   // Silence
+            { freq: 116, duration: 8.0, wave: 'sine' },     // A#2 (building slight dissonance)
+            { freq: 0,   duration: 6.0 },                   // Silence
+            
+            // Part I - Final distant sounds before cycle
+            { freq: 185, duration: 0.2, wave: 'triangle' }, // F#3 (distant metallic sound)
+            { freq: 0,   duration: 5.0 },                   // Silence
+            { freq: 175, duration: 0.25, wave: 'triangle' }, // F3 (like distant chain)
+            { freq: 0,   duration: 3.0 },                   // Silence
+            { freq: 165, duration: 0.3, wave: 'triangle' }, // E3 (getting closer?)
+            { freq: 0,   duration: 10.0 },                  // Very long silence before repeat
         ];
     }
     
@@ -546,6 +596,56 @@ class AudioManager {
                 this.queuedTrack = null;
                 this.playTrack(trackToPlay);
             }
+        }
+    }
+    
+    /**
+     * Refresh track patterns (useful after updating compositions)
+     */
+    refreshTracks() {
+        const wasPlaying = this.currentTrack;
+        const wasEnabled = this.isEnabled;
+        
+        if (wasPlaying) {
+            this.stopCurrentTrack();
+        }
+        
+        // Reinitialize track patterns
+        this.tracks = {
+            town: {
+                name: 'Town Theme',
+                tempo: 80,
+                pattern: this.createTownTheme()
+            },
+            dungeon: {
+                name: 'Dungeon Exploration',
+                tempo: 60,
+                pattern: this.createDungeonTheme()
+            },
+            combat: {
+                name: 'Battle Music',
+                tempo: 140,
+                pattern: this.createCombatTheme()
+            },
+            victory: {
+                name: 'Victory Fanfare',
+                tempo: 130,
+                pattern: this.createVictoryTheme()
+            },
+            death: {
+                name: 'Defeat',
+                tempo: 80,
+                pattern: this.createDeathTheme()
+            }
+        };
+        
+        console.log('🎵 Audio tracks refreshed');
+        
+        // Restart the same track if it was playing
+        if (wasPlaying && wasEnabled) {
+            setTimeout(() => {
+                this.playTrack(wasPlaying);
+            }, 100);
         }
     }
     
