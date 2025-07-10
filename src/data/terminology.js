@@ -11,6 +11,9 @@ const TERMINOLOGY = {
         party: "Party",
         character: "Character",
         town: "Town",
+        town_description: "The bustling hub of Llylgamyn, where adventurers prepare for their descent into the Mad Overlord's maze.",
+        training_description: "Create and manage your party of adventurers",
+        dungeon_description: "Enter the Mad Overlord's treacherous maze",
         dungeon: "Dungeon",
         level: "Level",
         floor: "Floor",
@@ -58,7 +61,13 @@ const TERMINOLOGY = {
         defend: "Defend",
         move: "Move",
         use: "Use",
-        rest: "Rest"
+        rest: "Rest",
+        
+        // Combat States
+        no_enemies: "No Enemies",
+        combat_active: "Combat Active",
+        loading_combat: "Loading Combat...",
+        wave_clear: "Wave Clear"
     },
     
     cyber: {
@@ -67,6 +76,9 @@ const TERMINOLOGY = {
         party: "Strike Team",
         character: "Agent",
         town: "Terminal Hub",
+        town_description: "The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.",
+        training_description: "Create and manage your strike team of agents",
+        dungeon_description: "Enter the corrupted data maze",
         dungeon: "Grid Sector",
         level: "Clearance Level",
         floor: "Grid Layer",
@@ -114,13 +126,73 @@ const TERMINOLOGY = {
         defend: "Raise Defenses",
         move: "Navigate",
         use: "Access",
-        rest: "System Repair"
+        rest: "System Repair",
+        
+        // Combat States
+        no_enemies: "Grid Clear",
+        combat_active: "Engagement Active",
+        loading_combat: "Connecting to Grid...",
+        wave_clear: "Sector Secured"
+    }
+};
+
+// Dual-display utility functions
+const TerminologyUtils = {
+    /**
+     * Get both classic and cyber names for an entity
+     * @param {Object} entity - Entity with name and cyberName properties
+     * @returns {Object} Object with classic and cyber display names
+     */
+    getDualNames(entity) {
+        return {
+            classic: entity.name || entity.displayName || 'Unknown',
+            cyber: entity.cyberName || entity.name || 'Unknown'
+        };
+    },
+    
+    /**
+     * Format dual display text
+     * @param {Object} entity - Entity with name and cyberName properties
+     * @param {string} separator - Separator between names (default: ' / ')
+     * @returns {string} Formatted dual display string
+     */
+    formatDualDisplay(entity, separator = ' / ') {
+        const names = this.getDualNames(entity);
+        if (names.classic === names.cyber) {
+            return names.classic; // Don't show duplicate names
+        }
+        return `${names.classic}${separator}${names.cyber}`;
+    },
+    
+    /**
+     * Get appropriate name based on current TextManager mode
+     * @param {Object} entity - Entity with name and cyberName properties
+     * @returns {string} Name appropriate for current mode
+     */
+    getContextualName(entity) {
+        if (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) {
+            return entity.cyberName || entity.name || 'Unknown';
+        }
+        return entity.name || entity.displayName || 'Unknown';
+    },
+    
+    /**
+     * Get digital classification display
+     * @param {Object} entity - Entity with classification properties
+     * @returns {string} Formatted classification string
+     */
+    getClassificationDisplay(entity) {
+        if (entity.digitalClassification && entity.programClass) {
+            return `${entity.programClass} (${entity.digitalClassification})`;
+        }
+        return entity.digitalClassification || entity.programClass || entity.type || 'Unknown';
     }
 };
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TERMINOLOGY;
+    module.exports = { TERMINOLOGY, TerminologyUtils };
 } else if (typeof window !== 'undefined') {
     window.TERMINOLOGY = TERMINOLOGY;
+    window.TerminologyUtils = TerminologyUtils;
 }

@@ -335,7 +335,7 @@ class UI {
                 
                 <div class="town-center-content">
                     <h2 class="town-name" data-text-key="town">Terminal Hub</h2>
-                    <p class="town-description">The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.</p>
+                    <p class="town-description" data-text-key="town_description">The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.</p>
                     
                     <div class="town-locations-grid">
                         <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
@@ -343,7 +343,7 @@ class UI {
                                 <div class="location-icon">⚔️</div>
                                 <div class="location-info">
                                     <h3>Training Grounds</h3>
-                                    <p>Create and manage your strike team of agents</p>
+                                    <p data-text-key="training_description">Create and manage your strike team of agents</p>
                                     <span class="location-status">${hasActiveParty ? 'Manage Strike Team' : 'Initialize Strike Team'}</span>
                                 </div>
                             </button>
@@ -354,7 +354,7 @@ class UI {
                                 <div class="location-icon">🏰</div>
                                 <div class="location-info">
                                     <h3 data-text-key="dungeon">Grid Access Point</h3>
-                                    <p>Enter the corrupted data maze</p>
+                                    <p data-text-key="dungeon_description">Enter the corrupted data maze</p>
                                     <span class="location-status">${hasActiveParty ? 'Enter Grid' : 'Strike Team Required'}</span>
                                 </div>
                             </button>
@@ -397,12 +397,19 @@ class UI {
                 
                 <div class="game-status-bar">
                     <div class="status-section">
-                        <span class="status-label">Party Status:</span>
+                        <span class="status-label" data-text-key="party">Strike Team</span><span class="status-label"> Status:</span>
                         <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
                     </div>
                     <div class="status-section">
                         <span class="status-label">Last Save:</span>
                         <span class="status-value">${lastSave}</span>
+                    </div>
+                    <div class="status-section mode-toggle-section">
+                        <span class="status-label">Interface Mode:</span>
+                        <button id="terminology-mode-toggle" class="mode-toggle-btn">
+                            <span id="current-mode-display">Cyber</span>
+                            <span class="toggle-icon">⚡</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -437,6 +444,7 @@ class UI {
     setupTownCenterEventListeners(viewport) {
         const trainingBtn = viewport.querySelector('#training-grounds-btn');
         const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
+        const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
         
         if (trainingBtn) {
             trainingBtn.addEventListener('click', () => {
@@ -449,6 +457,63 @@ class UI {
                 this.eventSystem.emit('town-location-selected', 'dungeon');
             });
         }
+        
+        if (modeToggleBtn) {
+            // Update initial display
+            this.updateModeToggleDisplay(modeToggleBtn);
+            
+            modeToggleBtn.addEventListener('click', () => {
+                this.toggleTerminologyMode();
+            });
+        }
+    }
+    
+    /**
+     * Toggle between Fantasy and Cyber terminology modes
+     */
+    toggleTerminologyMode() {
+        if (typeof TextManager === 'undefined') {
+            console.warn('TextManager not available for mode toggle');
+            return;
+        }
+        
+        // Toggle the mode
+        TextManager.toggleMode();
+        
+        // Update the toggle button display
+        const modeToggleBtn = document.querySelector('#terminology-mode-toggle');
+        if (modeToggleBtn) {
+            this.updateModeToggleDisplay(modeToggleBtn);
+        }
+        
+        // Show feedback message
+        const newMode = TextManager.getMode();
+        const modeLabel = newMode === 'cyber' ? 'Cyber' : 'Fantasy';
+        this.addMessage(`Interface mode switched to ${modeLabel}`, 'info');
+        
+        console.log(`Terminology mode switched to: ${newMode}`);
+    }
+    
+    /**
+     * Update mode toggle button display
+     */
+    updateModeToggleDisplay(toggleBtn) {
+        if (!toggleBtn || typeof TextManager === 'undefined') return;
+        
+        const currentMode = TextManager.getMode();
+        const modeDisplay = toggleBtn.querySelector('#current-mode-display');
+        const toggleIcon = toggleBtn.querySelector('.toggle-icon');
+        
+        if (modeDisplay) {
+            modeDisplay.textContent = currentMode === 'cyber' ? 'Cyber' : 'Fantasy';
+        }
+        
+        if (toggleIcon) {
+            toggleIcon.textContent = currentMode === 'cyber' ? '⚡' : '🏰';
+        }
+        
+        // Update button styling based on mode
+        toggleBtn.className = `mode-toggle-btn ${currentMode}-mode`;
     }
     
     /**
@@ -927,20 +992,35 @@ class UI {
     formatCharacterEquipment(character) {
         const equipment = character.equipment || {};
         const slots = [
-            { key: 'weapon', name: 'Weapon' },
-            { key: 'armor', name: 'Armor' },
-            { key: 'shield', name: 'Shield' },
-            { key: 'accessory', name: 'Accessory' }
+            { key: 'weapon', name: 'Weapon', cyberName: 'Attack Algorithm' },
+            { key: 'armor', name: 'Armor', cyberName: 'Defense Protocol' },
+            { key: 'shield', name: 'Shield', cyberName: 'Firewall Module' },
+            { key: 'accessory', name: 'Accessory', cyberName: 'System Upgrade' }
         ];
         
         return slots.map(slot => {
             const item = equipment[slot.key];
-            const itemName = item ? (typeof item === 'string' ? item : item.name || 'Unknown') : 'None';
+            
+            // Get contextual item name using TerminologyUtils if available
+            let itemName = 'None';
+            if (item) {
+                if (typeof item === 'string') {
+                    itemName = item;
+                } else if (typeof TerminologyUtils !== 'undefined') {
+                    itemName = TerminologyUtils.getContextualName(item);
+                } else {
+                    itemName = item.name || 'Unknown';
+                }
+            }
+            
+            // Get contextual slot name
+            const slotName = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
+                ? slot.cyberName : slot.name;
             
             return `
                 <div class="equipment-item">
-                    <div class="equipment-slot">${slot.name}:</div>
-                    <div class="equipment-name">${itemName}</div>
+                    <div class="equipment-slot">${slotName}:</div>
+                    <div class="equipment-name" data-cyber-enhanced="${typeof TextManager !== 'undefined' && TextManager.isCyberMode()}">${itemName}</div>
                 </div>
             `;
         }).join('');
@@ -953,20 +1033,38 @@ class UI {
         const memorizedSpells = character.memorizedSpells || {};
         const hasSpells = Object.keys(memorizedSpells).length > 0;
         
+        // Get contextual "no spells" message
+        const noSpellsMessage = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
+            ? 'No programs loaded' : 'No spells memorized';
+        
         if (!hasSpells) {
-            return '<div class="no-spells">No spells memorized</div>';
+            return `<div class="no-spells">${noSpellsMessage}</div>`;
         }
+        
+        // Get contextual level label
+        const levelLabel = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
+            ? 'Clearance' : 'Level';
         
         return Object.entries(memorizedSpells).map(([level, spells]) => {
             if (!spells || spells.length === 0) return '';
             
             return `
                 <div class="spell-level">
-                    <h4>Level ${level}</h4>
+                    <h4>${levelLabel} ${level}</h4>
                     <div class="spell-list">
-                        ${spells.map(spell => `
-                            <div class="spell-item">${typeof spell === 'string' ? spell : spell.name || 'Unknown Spell'}</div>
-                        `).join('')}
+                        ${spells.map(spell => {
+                            // Get contextual spell name
+                            let spellName = 'Unknown';
+                            if (typeof spell === 'string') {
+                                spellName = spell;
+                            } else if (typeof TerminologyUtils !== 'undefined') {
+                                spellName = TerminologyUtils.getContextualName(spell);
+                            } else {
+                                spellName = spell.name || 'Unknown Spell';
+                            }
+                            
+                            return `<div class="spell-item" data-cyber-enhanced="${typeof TextManager !== 'undefined' && TextManager.isCyberMode()}">${spellName}</div>`;
+                        }).join('')}
                     </div>
                 </div>
             `;
@@ -1364,14 +1462,17 @@ class UI {
                         
                         waveDisplayDiv.textContent = `${enemyCount} ${enemyType}${waveText}`;
                     } else {
-                        waveDisplayDiv.textContent = 'No Enemies';
+                        waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                            TextManager.getText('no_enemies', 'No Enemies') : 'No Enemies';
                     }
                 } catch (error) {
                     console.log('Error updating wave indicator:', error);
-                    waveDisplayDiv.textContent = 'Combat Active';
+                    waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                        TextManager.getText('combat_active', 'Combat Active') : 'Combat Active';
                 }
             } else {
-                waveDisplayDiv.textContent = 'Loading Combat...';
+                waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                    TextManager.getText('loading_combat', 'Loading Combat...') : 'Loading Combat...';
                 setTimeout(() => this.updateCombatStatus(), 500);
             }
         }
@@ -1427,8 +1528,27 @@ class UI {
                             }
                         }
                         
-                        // Display monster name
-                        monsterNameDiv.textContent = primaryEnemy.name;
+                        // Display monster name with cyber terminology support
+                        if (typeof TerminologyUtils !== 'undefined') {
+                            // Clear existing content
+                            monsterNameDiv.innerHTML = '';
+                            
+                            // Add primary name
+                            const nameText = document.createTextNode(TerminologyUtils.getContextualName(primaryEnemy));
+                            monsterNameDiv.appendChild(nameText);
+                            
+                            // Add classification info for cyber mode
+                            if (typeof TextManager !== 'undefined' && TextManager.isCyberMode() && primaryEnemy.digitalClassification) {
+                                const classificationSpan = document.createElement('span');
+                                classificationSpan.className = 'monster-classification';
+                                classificationSpan.textContent = ` [${primaryEnemy.digitalClassification}]`;
+                                classificationSpan.style.fontSize = '0.8em';
+                                classificationSpan.style.color = '#00ffff';
+                                monsterNameDiv.appendChild(classificationSpan);
+                            }
+                        } else {
+                            monsterNameDiv.textContent = primaryEnemy.name;
+                        }
                         
                         // Display monster status
                         const status = primaryEnemy.isUnconscious ? 'Unconscious' : 
@@ -1442,8 +1562,10 @@ class UI {
                             monsterAsciiDiv.style.display = 'block';
                             monsterAsciiDiv.textContent = '💀\n /|||\\\n  /\\  ';
                         }
-                        monsterNameDiv.textContent = 'No Enemies';
-                        monsterStatusDiv.textContent = 'Wave Clear';
+                        monsterNameDiv.textContent = typeof TextManager !== 'undefined' ? 
+                            TextManager.getText('no_enemies', 'No Enemies') : 'No Enemies';
+                        monsterStatusDiv.textContent = typeof TextManager !== 'undefined' ? 
+                            TextManager.getText('wave_clear', 'Wave Clear') : 'Wave Clear';
                     }
                 } catch (error) {
                     console.log('Error updating monster visual:', error);

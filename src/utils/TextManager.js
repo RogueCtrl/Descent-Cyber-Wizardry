@@ -55,8 +55,8 @@ class TextManager {
         });
         
         // Trigger global UI refresh event
-        if (typeof EventSystem !== 'undefined') {
-            EventSystem.emit('textModeChanged', { newMode, oldMode });
+        if (typeof window !== 'undefined' && window.EventSystem) {
+            window.EventSystem.emit('textModeChanged', { newMode, oldMode });
         }
     }
     

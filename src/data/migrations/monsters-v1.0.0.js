@@ -5,17 +5,21 @@
 
 // Global assignment for browser compatibility
 window.monstersMigration = {
-    version: '1.2.0',
+    version: '1.3.0',
     entity: 'monsters',
     store: 'monsters',
-    description: 'Enhanced monsters data migration with 5 cyberpunk vector portraits',
+    description: 'Enhanced monsters with cyberpunk classifications and 5 vector portraits',
     
     data: {
         // Level 1 Monsters
         "monster_kobold_001": {
             "id": "monster_kobold_001",
             "name": "Kobold",
+            "cyberName": "Scout Program",
             "type": "humanoid",
+            "programClass": "surveillance",
+            "threatLevel": "low",
+            "digitalClassification": "reconnaissance_unit",
             "level": 1,
             "hitDie": 4,
             "strength": 8,
@@ -70,7 +74,11 @@ window.monstersMigration = {
         "monster_giant_rat_001": {
             "id": "monster_giant_rat_001",
             "name": "Giant Rat",
+            "cyberName": "Virus Cluster",
             "type": "beast",
+            "programClass": "malware",
+            "threatLevel": "low",
+            "digitalClassification": "self_replicating_virus",
             "level": 1,
             "hitDie": 4,
             "strength": 7,
@@ -129,7 +137,11 @@ window.monstersMigration = {
         "monster_skeleton_001": {
             "id": "monster_skeleton_001",
             "name": "Skeleton",
+            "cyberName": "Archive Ghost",
             "type": "undead",
+            "programClass": "corrupted_data",
+            "threatLevel": "medium",
+            "digitalClassification": "data_remnant",
             "level": 1,
             "hitDie": 6,
             "strength": 10,
@@ -194,7 +206,11 @@ window.monstersMigration = {
         "monster_orc_001": {
             "id": "monster_orc_001",
             "name": "Orc",
+            "cyberName": "Enforcer Program",
             "type": "humanoid",
+            "programClass": "security",
+            "threatLevel": "medium",
+            "digitalClassification": "combat_routine",
             "level": 2,
             "hitDie": 6,
             "strength": 16,
@@ -305,7 +321,11 @@ window.monstersMigration = {
         "monster_ogre_001": {
             "id": "monster_ogre_001",
             "name": "Ogre",
+            "cyberName": "Recogniser-Class Enforcer",
             "type": "giant",
+            "programClass": "heavy_security",
+            "threatLevel": "high",
+            "digitalClassification": "recogniser_unit",
             "level": 4,
             "hitDie": 10,
             "strength": 19,

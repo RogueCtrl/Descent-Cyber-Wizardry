@@ -2347,6 +2347,106 @@ h3 {
     box-shadow: 0 0 10px var(--glow-secondary);
 }
 
+/* Mode Toggle Button Styling */
+.mode-toggle-section {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.mode-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.mode-toggle-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 5px var(--glow-secondary);
+}
+
+.mode-toggle-btn.cyber-mode {
+    background: linear-gradient(135deg, #0a0f1c 0%, #1a1f3c 100%);
+    border-color: #00ffff;
+    color: #00ffff;
+}
+
+.mode-toggle-btn.cyber-mode:hover {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.mode-toggle-btn.classic-mode {
+    background: linear-gradient(135deg, #1a0a0f 0%, #3c1a1f 100%);
+    border-color: #ffaa00;
+    color: #ffaa00;
+}
+
+.mode-toggle-btn.classic-mode:hover {
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+}
+
+.toggle-icon {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+}
+
+#current-mode-display {
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Monster Classification Display */
+.monster-classification {
+    font-size: 0.8em !important;
+    color: #00ffff !important;
+    font-style: italic;
+    margin-left: var(--space-1);
+}
+
+/* Cyber-Enhanced Equipment and Spell Display */
+.equipment-name[data-cyber-enhanced="true"],
+.spell-item[data-cyber-enhanced="true"] {
+    color: #00ffff;
+    text-shadow: 0 0 3px rgba(0, 255, 255, 0.3);
+    font-family: var(--font-primary);
+}
+
+.equipment-slot {
+    font-weight: bold;
+    margin-bottom: var(--space-1);
+}
+
+.spell-item[data-cyber-enhanced="true"]:before {
+    content: "► ";
+    color: #00ffff;
+    font-size: 0.8em;
+}
+
+.equipment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.equipment-item:last-child {
+    border-bottom: none;
+}
+
 .party-status h3,
 .enemy-status h3 {
     margin: 0 0 var(--space-3) 0;

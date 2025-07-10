@@ -7,7 +7,7 @@
 
 **Built with:** Cursor + Claude Code | **Models:** Claude 4.0 Sonnet
 
-A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic and enhanced with 3D wireframe monster portraits. Experience authentic turn-based RPG combat with striking visual presentation.
+A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic set witin a Tron inspired world. Recently enhanced with 3D wireframe monster portraits. Experience authentic turn-based RPG combat with striking visual presentation.
 
 ## Current Development Status
 
