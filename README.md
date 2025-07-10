@@ -38,36 +38,43 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 <div align="center">
 
 **Town Menu**
+
 ![Town Menu](assets/readme/town-menu.jpg)
 
 **Race Selection**
+
 ![Character Creation - Race Selection](assets/readme/cc-race.jpg)
 
 **Class Selection**
+
 ![Character Creation - Class Selection](assets/readme/cc-class.jpg)
 
 **Character Confirmation**
+
 ![Character Creation - Confirmation](assets/readme/cc-confirmation.jpg)
 
 **Character Roster**
+
 ![Character Roster](assets/readme/character-roster.jpg)
 
 **Character Detail**
+
 ![Character Detail](assets/readme/character-detail.jpg)
 
 **Dungeon Interface**
+
 ![Dungeon Interface](assets/readme/dungeon-preview.jpg)
 
 **Enhanced Combat with 3D Monster Portraits**
+
 ![Monster Vector Portraits](assets/readme/monster-vector-portraits.jpg)
 
-**Classic Combat Interface**
-![Combat](assets/readme/combat.jpg)
-
 **Post Combat**
+
 ![Combat Aftermath](assets/readme/combat-partywipe.jpg)
 
 **Post Combat - Victory**
+
 ![Victory](assets/readme/combat-victory.jpg)
 
 </div>
