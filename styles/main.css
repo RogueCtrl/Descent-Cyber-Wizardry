@@ -187,6 +187,30 @@ body {
     margin-bottom: 20px;
 }
 
+#audio-controls {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-primary);
+}
+
+#toggle-audio {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all var(--transition-fast);
+    width: 100%;
+}
+
+#toggle-audio:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px var(--glow-secondary);
+}
+
 button {
     background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
     color: var(--text-primary);

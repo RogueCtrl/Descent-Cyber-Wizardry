@@ -44,6 +44,7 @@ class Engine {
             this.renderer = new Renderer(this.canvas, this.context);
             this.ui = new UI(this.eventSystem);
             this.ui.gameState = this.gameState; // Pass gameState reference for combat UI
+            this.audioManager = new AudioManager();
             
             // Initialize storage and entity systems
             console.log('Initializing storage and entity systems...');
@@ -242,6 +243,9 @@ class Engine {
         // Update body class for state-specific styling
         document.body.className = `game-state-${newState}`;
         
+        // Handle audio transitions
+        this.handleAudioTransition(newState);
+        
         switch (newState) {
             case 'town':
                 this.ui.showTown(this.party);
@@ -284,6 +288,39 @@ class Engine {
                 
             default:
                 console.warn('Unknown game state:', newState);
+        }
+    }
+    
+    /**
+     * Handle audio transitions based on game state
+     */
+    handleAudioTransition(newState) {
+        if (!this.audioManager) return;
+        
+        // Resume audio context on first user interaction
+        this.audioManager.resumeContext();
+        
+        switch (newState) {
+            case 'town':
+            case 'training-grounds':
+                this.audioManager.fadeToTrack('town');
+                break;
+                
+            case 'playing':
+                this.audioManager.fadeToTrack('dungeon');
+                break;
+                
+            case 'combat':
+                this.audioManager.fadeToTrack('combat');
+                break;
+                
+            case 'game-over':
+                this.audioManager.fadeToTrack('death');
+                break;
+                
+            default:
+                // Keep current track for other states
+                break;
         }
     }
     

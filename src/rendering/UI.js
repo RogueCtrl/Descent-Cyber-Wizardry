@@ -93,6 +93,14 @@ class UI {
             });
         }
         
+        // Audio controls
+        const audioToggle = document.getElementById('toggle-audio');
+        if (audioToggle) {
+            audioToggle.addEventListener('click', () => {
+                this.toggleAudio();
+            });
+        }
+        
         // Keyboard controls
         this.eventSystem.on('keydown', (event) => {
             this.handleKeydown(event);
@@ -1457,10 +1465,25 @@ class UI {
         console.log('Combat ended, winner:', winner);
         
         if (winner === 'party') {
-            // Player victory - trigger normal combat end
+            // Player victory - play victory music and trigger normal combat end
+            if (window.engine?.audioManager) {
+                window.engine.audioManager.fadeToTrack('victory');
+                
+                // Return to dungeon music after victory fanfare
+                setTimeout(() => {
+                    if (window.engine?.gameState?.getState() === 'playing') {
+                        window.engine.audioManager.fadeToTrack('dungeon');
+                    }
+                }, 5000);
+            }
+            
             window.engine.combatInterface.combat.endCombat();
         } else {
-            // Enemy victory - trigger death screen
+            // Enemy victory - play death music and trigger death screen
+            if (window.engine?.audioManager) {
+                window.engine.audioManager.fadeToTrack('death');
+            }
+            
             const casualties = window.engine.party.members.filter(member => !member.isAlive);
             
             // Force end combat without normal rewards
@@ -2127,5 +2150,23 @@ class UI {
         });
         
         console.log('Movement and action controls enabled');
+    }
+    
+    /**
+     * Toggle audio on/off
+     */
+    toggleAudio() {
+        if (window.engine && window.engine.audioManager) {
+            const isEnabled = window.engine.audioManager.toggle();
+            const button = document.getElementById('toggle-audio');
+            
+            if (button) {
+                button.textContent = isEnabled ? '🎵' : '🔇';
+                button.title = isEnabled ? 'Turn Music Off' : 'Turn Music On';
+            }
+            
+            const status = isEnabled ? 'enabled' : 'disabled';
+            this.addMessage(`Music ${status}`, 'system');
+        }
     }
 }
