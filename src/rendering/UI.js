@@ -1392,20 +1392,28 @@ class UI {
         // Use the combat interface's AI processing
         const aiResult = window.engine.combatInterface.processAITurn(monster);
         
-        if (aiResult.success !== false) {
+        if (aiResult && typeof aiResult === 'object') {
             // Check if combat ended from AI action
             if (aiResult.combatEnded) {
                 this.handleCombatEnd(aiResult.winner);
                 return;
             }
             
-            // Move to next turn after AI action
+            // Move to next turn after AI action, regardless of success
+            // (Even a failed attack is still a valid turn)
             setTimeout(() => {
                 this.updateCombatStatus();
                 this.checkForPlayerTurn();
             }, 1000); // Small delay for dramatic effect
         } else {
+            console.error('AI processing returned invalid result:', aiResult);
             this.addMessage('Monster AI failed to act!', 'error');
+            
+            // Still try to continue combat after a delay
+            setTimeout(() => {
+                this.updateCombatStatus();
+                this.checkForPlayerTurn();
+            }, 1000);
         }
     }
     
