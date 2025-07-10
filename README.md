@@ -20,13 +20,15 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 - **Storage System**: Character persistence and game state management
 - **Cyberpunk Aesthetic**: Terminal-inspired interface with retro-modern styling
 - **3D Wireframe Viewport**: Basic dungeon rendering system
+- **Combat System**: Full party vs party turn-based battles with unconscious/death mechanics
+- **Retro Chiptune Audio**: Dynamic background music system with Web Audio API synthesis
+- **Dungeon Encounters**: Fixed boss placement and deterministic encounter triggering
 
 ### 🏗️ In Progress
-- **Training Grounds Enhancement**: Character roster and management improvements
-- **Dungeon Exploration**: Navigation and interaction systems
-- **Combat System**: Turn-based battle mechanics
-- **Magic System**: Spell casting and memorization
-- **Party Management**: Multi-character coordination
+- **Magic System**: Spell casting and memorization mechanics
+- **Equipment System**: Weapon and armor management beyond unarmed combat
+- **Advanced Dungeon Features**: More encounter types, traps, and exploration mechanics
+- **Party Formation**: Strategic positioning and formation-based combat bonuses
 
 ## Screenshots
 
@@ -62,17 +64,29 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 
 </div>
 
-## Test room
+## Test Room & Combat System
+
+### Training Grounds Layout
 ```text
   0 1 2 3 4 5 6 7 8  (x coordinates)
 0 █ █ █ █ █ █ █ █ █  
 1 . . . █ █ . . . █  (Room A)    (Room B)
-2 . p . . . . . . █  (Room A)(corridor)(Room B)
+2 . p . . O . . . █  (Room A)(corridor)(Room B)
 3 . . . █ █ . . . █  (Room A)    (Room B)
 4 █ █ █ █ █ █ █ █ █  
+
+p = player start position (1,2)
+O = fixed Ogre encounter at (4,2)
 ```
 
-There is no Western wall in Room A as that is the Eastern wall of Room B due to our wrap-around mapping implementations
+### First Doomed Exploration
+Players my experience the new encounter, combat, and death system in the test room
+
+### Combat Features
+- **Party vs Party**: Authentic multi-wave encounter system supporting sequential enemy groups
+- **Turn-based Initiative**: Proper Wizardry-style turn order with unconscious character handling
+- **Real-time UI Updates**: Character health and status update dynamically during combat
+- **Dramatic Combat Log**: Color-coded messages with emojis and flavor text for all actions
 
 ## Planned Features
 
@@ -111,10 +125,15 @@ src/
 - **EventSystem.js**: Event handling and communication
 - **UI.js**: Interface components and modal systems
 - **Storage.js**: Data persistence and character management
+- **Combat.js**: Turn-based battle system with party vs party mechanics
+- **AudioManager.js**: Retro chiptune music synthesis and dynamic soundtrack
+- **CombatInterface.js**: Combat UI and player action processing
 
 ## Contributing
 
-Currently in early development with foundational systems being established. The project has basic character creation and UI systems working. Issues and pull requests welcome as development continues.
+Currently in early development with foundational systems being established. The project now features working combat encounters, dynamic chiptune audio, and a working "first doomed exploration" experience in the training grounds. While playable, many RPG systems still need implementation. Issues and pull requests welcome as development continues.
+
+**Current State**: You can create characters, enter the training grounds, face the Ogre in glorious unarmed combat, and experience either victory or a dramatic party wipe with appropriate musical accompaniment. It's rough around the edges but captures the authentic Wizardry feel of sending hapless adventurers to their doom!
 
 ## License
 
