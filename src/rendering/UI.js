@@ -1791,7 +1791,20 @@ class UI {
         // Clear combat interface and restore 3D view
         viewport.innerHTML = '';
         
-        // The 3D rendering will be restored automatically by the engine's render loop
+        // Ensure canvas is properly repositioned in viewport
+        const canvas = document.getElementById('game-canvas');
+        if (canvas && viewport) {
+            viewport.appendChild(canvas);
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '1';
+            canvas.style.display = 'block';
+        }
+        
+        console.log('Dungeon viewport restored with canvas repositioned');
     }
     
     /**
@@ -1811,7 +1824,21 @@ class UI {
         console.log('Post-combat analysis:', {
             aliveMembers: aliveMembers.length,
             casualties: casualties.length,
-            casualtyDetails: casualties.map(c => ({ name: c.name, isAlive: c.isAlive, isDead: c.isDead, isUnconscious: c.isUnconscious }))
+            allMembers: allMembers.map(m => ({ 
+                name: m.name, 
+                isAlive: m.isAlive, 
+                status: m.status, 
+                currentHP: m.currentHP,
+                maxHP: m.maxHP 
+            })),
+            casualtyDetails: casualties.map(c => ({ 
+                name: c.name, 
+                isAlive: c.isAlive, 
+                status: c.status,
+                currentHP: c.currentHP,
+                isDead: c.isDead, 
+                isUnconscious: c.isUnconscious 
+            }))
         });
         
         // If there are casualties, show victory with casualties screen instead
@@ -2070,7 +2097,11 @@ class UI {
      * Show victory with casualties screen
      */
     showVictoryWithCasualtiesScreen(casualties, survivors, rewards) {
-        console.log('Showing victory with casualties:', { casualties, survivors, rewards });
+        console.log('Showing victory with casualties:', { 
+            casualties: casualties.map(c => ({ name: c.name, status: c.status, isAlive: c.isAlive, hp: c.currentHP })), 
+            survivors: survivors.map(s => ({ name: s.name, status: s.status, isAlive: s.isAlive, hp: s.currentHP })), 
+            rewards 
+        });
         
         // Hide combat interface first
         this.hideCombatInterface();

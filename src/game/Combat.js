@@ -203,6 +203,13 @@ class Combat {
         // Calculate combat rewards before clearing combat state
         const combatRewards = this.calculateCombatRewards();
         
+        // Check if party was defeated BEFORE clearing combatants
+        const alivePartyMembers = this.combatants.filter(c => 
+            c.hasOwnProperty('class') && c.isAlive
+        ).length;
+        
+        const victory = alivePartyMembers > 0;
+        
         this.isActive = false;
         this.combatants = [];
         this.actionQueue = [];
@@ -217,13 +224,6 @@ class Combat {
         this.currentEnemyPartyIndex = 0;
         
         console.log('Combat ended!');
-        
-        // Check if party was defeated
-        const alivePartyMembers = this.combatants.filter(c => 
-            c.hasOwnProperty('class') && c.isAlive
-        ).length;
-        
-        const victory = alivePartyMembers > 0;
         
         // Emit combat ended event with rewards or defeat
         if (window.engine && window.engine.eventSystem) {
