@@ -7,19 +7,21 @@
 
 **Built with:** Cursor + Claude Code | **Models:** Claude 4.0 Sonnet
 
-A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic. Currently in early development with foundational systems being built.
+A modern browser-based homage to the classic dungeon crawler Wizardry, reimagined with a cyberpunk aesthetic and enhanced with 3D wireframe monster portraits. Experience authentic turn-based RPG combat with striking visual presentation.
 
 ## Current Development Status
 
-🚧 **Early Development** - Core foundation systems are in place with character creation and basic game structure implemented.
+🎯 **Enhanced Visual Combat** - Core foundation systems are complete with dramatic 3D wireframe monster portraits transforming the combat experience.
 
 ### ✅ Implemented Features
+- **3D Monster Portraits**: Striking wireframe vector graphics with cyberpunk aesthetic
+- **Enhanced Combat Interface**: Dramatic monster-focused layout with health visualization
 - **Character Creation System**: Complete with race and class selection
 - **Core Game Engine**: Event system, game state management, and rendering foundation
 - **UI Framework**: Modal dialogs, character interfaces, and game menus
 - **Storage System**: Character persistence and game state management
 - **Cyberpunk Aesthetic**: Terminal-inspired interface with retro-modern styling
-- **3D Wireframe Viewport**: Basic dungeon rendering system
+- **3D Wireframe Viewport**: Advanced dungeon rendering system with monster portrait integration
 - **Combat System**: Full party vs party turn-based battles with unconscious/death mechanics
 - **Retro Chiptune Audio**: Dynamic background music system with Web Audio API synthesis
 - **Dungeon Encounters**: Fixed boss placement and deterministic encounter triggering
@@ -27,7 +29,7 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 ### 🏗️ In Progress
 - **Magic System**: Spell casting and memorization mechanics
 - **Equipment System**: Weapon and armor management beyond unarmed combat
-- **Advanced Dungeon Features**: More encounter types, traps, and exploration mechanics
+- **Advanced Monster Models**: Additional creature wireframe designs and visual effects
 - **Party Formation**: Strategic positioning and formation-based combat bonuses
 
 ## Screenshots
@@ -56,11 +58,17 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 **Dungeon Interface**
 ![Dungeon Interface](assets/readme/dungeon-preview.jpg)
 
-**Encounters & Combat**
+**Enhanced Combat with 3D Monster Portraits**
+![Monster Vector Portraits](assets/readme/monster-vector-portraits.jpg)
+
+**Classic Combat Interface**
 ![Combat](assets/readme/combat.jpg)
 
 **Post Combat**
-![Party Wipe](assets/readme/combat-partywipe.jpg)
+![Combat Aftermath](assets/readme/combat-partywipe.jpg)
+
+**Post Combat - Victory**
+![Victory](assets/readme/combat-victory.jpg)
 
 </div>
 
@@ -79,10 +87,13 @@ p = player start position (1,2)
 O = fixed Ogre encounter at (4,2)
 ```
 
-### First Doomed Exploration
-Players my experience the new encounter, combat, and death system in the test room
+### Enhanced Combat Experience
+Face the imposing Ogre in dramatic 3D wireframe portrait glory! The new combat interface features:
 
 ### Combat Features
+- **3D Monster Portraits**: Striking wireframe visualizations with authentic cyberpunk aesthetic
+- **Health Visualization**: Dynamic color-coded status (Green → Orange → Red → Gray)
+- **Dramatic Combat Layout**: Monster-focused presentation (2/3 monster vs 1/3 actions)
 - **Party vs Party**: Authentic multi-wave encounter system supporting sequential enemy groups
 - **Turn-based Initiative**: Proper Wizardry-style turn order with unconscious character handling
 - **Real-time UI Updates**: Character health and status update dynamically during combat
@@ -96,8 +107,8 @@ Players my experience the new encounter, combat, and death system in the test ro
   - 8 Character Classes: Fighter, Mage, Priest, Thief + 4 Elite Classes
   - Authentic attribute system with racial modifiers
 - **Party Management**: Form and lead a party of up to 6 adventurers
-- **Turn-Based Combat**: Strategic battles with classic RPG mechanics
-- **Retro-Modern Interface**: Cyberpunk-themed UI with terminal aesthetics
+- **Turn-Based Combat**: Strategic battles with classic RPG mechanics and 3D monster visualization
+- **Retro-Modern Interface**: Cyberpunk-themed UI with terminal aesthetics and wireframe graphics
 
 ## Getting Started
 
@@ -107,13 +118,13 @@ Players my experience the new encounter, combat, and death system in the test ro
 
 ## Development
 
-The project uses vanilla JavaScript and HTML5 Canvas for rendering, with a focus on modularity and maintainability. Early development stage with foundational architecture established.
+The project uses vanilla JavaScript and HTML5 Canvas for rendering, with a focus on modularity and maintainability. Features complete 3D wireframe monster portrait system alongside foundational RPG mechanics.
 
 ### Project Structure
 ```
 src/
   ├── core/      # Game engine and state management
-  ├── rendering/ # Canvas and UI systems
+  ├── rendering/ # Canvas, UI systems, and 3D monster portraits
   ├── game/      # Game logic and mechanics
   ├── utils/     # Helper functions and utilities
   └── data/      # Game data and migrations
@@ -128,12 +139,14 @@ src/
 - **Combat.js**: Turn-based battle system with party vs party mechanics
 - **AudioManager.js**: Retro chiptune music synthesis and dynamic soundtrack
 - **CombatInterface.js**: Combat UI and player action processing
+- **MonsterPortraitRenderer.js**: 3D wireframe monster visualization system
+- **Viewport3D.js**: Advanced 3D rendering engine for dungeon and monster graphics
 
 ## Contributing
 
-Currently in early development with foundational systems being established. The project now features working combat encounters, dynamic chiptune audio, and a working "first doomed exploration" experience in the training grounds. While playable, many RPG systems still need implementation. Issues and pull requests welcome as development continues.
+The project now features a complete visual combat experience with 3D wireframe monster portraits, dynamic chiptune audio, and enhanced combat interface. The "first doomed exploration" in the training grounds showcases dramatic monster visualization with authentic Wizardry mechanics. While core systems are solid, many RPG features await implementation. Issues and pull requests welcome as development continues.
 
-**Current State**: You can create characters, enter the training grounds, face the Ogre in glorious unarmed combat, and experience either victory or a dramatic party wipe with appropriate musical accompaniment. It's rough around the edges but captures the authentic Wizardry feel of sending hapless adventurers to their doom!
+**Current State**: Create characters, enter the training grounds, and face the mighty Ogre rendered in striking 3D wireframe glory! Experience either victory or dramatic party wipe with full audio accompaniment and enhanced visual presentation. The combat interface now features imposing monster portraits that capture the cyberpunk aesthetic while maintaining authentic Wizardry challenge.
 
 ## License
 

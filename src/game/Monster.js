@@ -61,6 +61,8 @@ class Monster {
             const data = await Monster.getMonsterData(monsterTypeOrId);
             if (data) {
                 this.applyMonsterData(data);
+                this.entitiesLoaded = true;
+                console.log('Monster data loaded successfully:', this.name, 'has portraitModel:', !!this.portraitModel);
             }
         } catch (error) {
             console.error('Failed to initialize monster data:', error);
@@ -105,6 +107,10 @@ class Monster {
         // Experience and treasure
         this.experienceValue = data.experienceValue || 10;
         this.treasureType = data.treasureType || 'none';
+        
+        // Visual representation
+        this.asciiArt = data.asciiArt || '  👹\n /|||\\\n  /\\  ';
+        this.portraitModel = data.portraitModel || null;
     }
     
     /**

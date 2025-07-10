@@ -5,10 +5,10 @@
 
 // Global assignment for browser compatibility
 window.monstersMigration = {
-    version: '1.0.0',
+    version: '1.1.0',
     entity: 'monsters',
     store: 'monsters',
-    description: 'Initial monsters data migration',
+    description: 'Initial monsters data migration with vector portraits',
     
     data: {
         // Level 1 Monsters
@@ -181,7 +181,40 @@ window.monstersMigration = {
             "preferredTargets": ["front"],
             "experienceValue": 450,
             "treasureType": "standard",
-            "asciiArt": "  👹\n /|||\\\n  /\\  "
+            "asciiArt": "  👹\n /|||\\\n  /\\  ",
+            "portraitModel": {
+                "type": "wireframe",
+                "vertices": [
+                    // Ogre head (large and brutish)
+                    [0, 0.8, 0],      // Top of head
+                    [-0.6, 0.6, 0],   // Left temple
+                    [0.6, 0.6, 0],    // Right temple  
+                    [-0.7, 0.3, 0],   // Left jaw
+                    [0.7, 0.3, 0],    // Right jaw
+                    [-0.4, 0.4, 0],   // Left eye
+                    [0.4, 0.4, 0],    // Right eye
+                    [0, 0.2, 0],      // Nose bridge
+                    [0, 0.0, 0],      // Nose tip
+                    [0, -0.2, 0],     // Mouth
+                    [0, -0.5, 0],     // Chin
+                    // Shoulders/neck
+                    [-0.5, -0.7, 0],  // Left shoulder
+                    [0.5, -0.7, 0],   // Right shoulder
+                    [0, -0.6, 0]      // Neck
+                ],
+                "edges": [
+                    // Head outline
+                    [0, 1], [1, 3], [3, 10], [10, 4], [4, 2], [2, 0],
+                    // Facial features
+                    [5, 6], [5, 7], [6, 7], [7, 8], [8, 9], [9, 10],
+                    // Neck and shoulders
+                    [10, 13], [13, 11], [13, 12], [11, 12],
+                    // Additional detail lines
+                    [1, 5], [2, 6], [3, 9], [4, 9]
+                ],
+                "scale": 1.3,
+                "rotation": [0, 20, 0]
+            }
         },
         "monster_owlbear_001": {
             "id": "monster_owlbear_001",
