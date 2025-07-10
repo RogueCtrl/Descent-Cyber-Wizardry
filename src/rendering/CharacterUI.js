@@ -39,12 +39,12 @@ class CharacterUI {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Character Creation</h2>
+                    <h2 data-text-key="create_character">Initialize Agent</h2>
                     <div class="step-indicator">
                         <div class="step-progress">
                             <div class="progress-bar" style="width: 0%"></div>
                         </div>
-                        <div class="step-text">Step 1 of 5: Race Selection</div>
+                        <div class="step-text">Step 1 of 5: Platform Type Selection</div>
                     </div>
                 </div>
                 <div class="modal-body">
@@ -62,6 +62,9 @@ class CharacterUI {
         modal.querySelector('#prev-step').addEventListener('click', () => this.previousStep());
         modal.querySelector('#next-step').addEventListener('click', () => this.nextStep());
         modal.querySelector('#cancel-creation').addEventListener('click', () => this.cancelCreation());
+        
+        // Apply TextManager to modal elements
+        this.applyTextManagerToModal(modal);
         
         return modal;
     }
@@ -82,8 +85,8 @@ class CharacterUI {
         const progress = ((this.stepIndex + 1) / this.steps.length) * 100;
         progressBar.style.width = `${progress}%`;
         
-        // Update step indicator
-        const stepNames = ['Race Selection', 'Attribute Generation', 'Class Selection', 'Character Details', 'Confirmation'];
+        // Update step indicator with cyber terminology
+        const stepNames = ['Platform Type Selection', 'Core Parameter Generation', 'Specialization Selection', 'Agent Details', 'Confirmation'];
         stepText.textContent = `Step ${this.stepIndex + 1} of ${this.steps.length}: ${stepNames[this.stepIndex]}`;
         
         // Update button states
@@ -401,8 +404,8 @@ class CharacterUI {
         
         container.innerHTML = `
             <div class="step-content">
-                <h3>Confirm Character Creation</h3>
-                <p>Review your character before adding them to your party.</p>
+                <h3>Confirm Agent Initialization</h3>
+                <p>Review your agent before adding them to your strike team.</p>
                 
                 <div class="character-confirmation">
                     <div class="character-portrait">
@@ -413,18 +416,18 @@ class CharacterUI {
                     
                     <div class="character-details">
                         <h4>${this.characterData.name}</h4>
-                        <p><strong>Race:</strong> ${raceData.name} - ${raceData.description}</p>
-                        <p><strong>Class:</strong> ${classData.name} - ${classData.description}</p>
+                        <p><strong data-text-key="race">Platform Type:</strong> ${raceData.name} - ${raceData.description}</p>
+                        <p><strong data-text-key="class">Specialization:</strong> ${classData.name} - ${classData.description}</p>
                         
                         <div class="final-attributes">
-                            <h5>Attributes</h5>
+                            <h5 data-text-key="attributes">Core Parameters</h5>
                             ${this.renderAttributeGrid()}
                         </div>
                         
                         <div class="calculated-stats">
-                            <h5>Calculated Stats</h5>
-                            <p><strong>Hit Points:</strong> ${this.calculateInitialHP()}</p>
-                            <p><strong>Armor Class:</strong> ${this.calculateInitialAC()}</p>
+                            <h5>System Stats</h5>
+                            <p><strong data-text-key="hp">System Integrity:</strong> ${this.calculateInitialHP()}</p>
+                            <p><strong>Defense Rating:</strong> ${this.calculateInitialAC()}</p>
                         </div>
                     </div>
                 </div>
@@ -433,7 +436,10 @@ class CharacterUI {
         
         // Update button text for final step
         const nextBtn = this.currentModal.querySelector('#next-step');
-        nextBtn.textContent = 'Create Character';
+        nextBtn.textContent = 'Initialize Agent';
+        
+        // Apply TextManager to new elements
+        this.applyTextManagerToModal(container);
     }
     
     /**
@@ -572,5 +578,20 @@ class CharacterUI {
     updateCharacterDisplay(character) {
         // This would update character sheets, party displays, etc.
         console.log('Character display update:', character);
+    }
+    
+    /**
+     * Apply TextManager to modal elements with data-text-key attributes
+     */
+    applyTextManagerToModal(container) {
+        if (typeof TextManager === 'undefined') return;
+        
+        const textElements = container.querySelectorAll('[data-text-key]');
+        textElements.forEach(element => {
+            const textKey = element.getAttribute('data-text-key');
+            if (textKey) {
+                TextManager.applyToElement(element, textKey);
+            }
+        });
     }
 }

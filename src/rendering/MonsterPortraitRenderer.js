@@ -159,7 +159,12 @@ class MonsterPortraitRenderer extends Viewport3D {
      * Render additional portrait effects based on monster status
      */
     renderPortraitEffects(monster, options = {}) {
-        // Add status effects overlay
+        // Enhanced cyberpunk visual effects
+        this.renderGridLines(monster, options);
+        this.renderDataCorruption(monster, options);
+        this.renderSystemPulse(monster, options);
+        
+        // Status effects overlay
         if (monster.isUnconscious) {
             this.renderUnconscousEffect();
         } else if (monster.isDead) {
@@ -170,6 +175,138 @@ class MonsterPortraitRenderer extends Viewport3D {
         if (options.recentDamage) {
             this.renderDamageFlash();
         }
+    }
+    
+    /**
+     * Render grid lines overlay for cyberpunk aesthetic
+     */
+    renderGridLines(monster, options = {}) {
+        const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
+        const gridAlpha = Math.max(0.1, healthRatio * 0.3);
+        
+        this.ctx.globalAlpha = gridAlpha;
+        this.ctx.strokeStyle = '#00ffff';
+        this.ctx.lineWidth = 0.5;
+        
+        const gridSize = 40;
+        
+        // Vertical grid lines
+        for (let x = 0; x < this.width; x += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.height);
+            this.ctx.stroke();
+        }
+        
+        // Horizontal grid lines
+        for (let y = 0; y < this.height; y += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.width, y);
+            this.ctx.stroke();
+        }
+        
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Render data corruption effects for damaged entities
+     */
+    renderDataCorruption(monster, options = {}) {
+        const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
+        const corruptionLevel = 1 - healthRatio;
+        
+        if (corruptionLevel < 0.2) return; // No corruption when healthy
+        
+        const corruptionAlpha = corruptionLevel * 0.4;
+        this.ctx.globalAlpha = corruptionAlpha;
+        
+        // Glitch lines
+        for (let i = 0; i < corruptionLevel * 8; i++) {
+            const y = Math.random() * this.height;
+            const offset = (Math.random() - 0.5) * 20 * corruptionLevel;
+            
+            this.ctx.strokeStyle = '#ff0040';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.width, y + offset);
+            this.ctx.stroke();
+        }
+        
+        // Random corruption pixels
+        for (let i = 0; i < corruptionLevel * 15; i++) {
+            const x = Math.random() * this.width;
+            const y = Math.random() * this.height;
+            const size = Math.random() * 4 + 1;
+            
+            this.ctx.fillStyle = '#ff6600';
+            this.ctx.fillRect(x, y, size, size);
+        }
+        
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Render system pulse animation
+     */
+    renderSystemPulse(monster, options = {}) {
+        if (monster.isDead) return; // No pulse when dead
+        
+        const pulseIntensity = Math.sin(this.animationTime * 150) * 0.5 + 0.5;
+        const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
+        
+        // Pulse color based on health
+        let pulseColor = '#00ff00'; // Healthy green
+        if (healthRatio < 0.7) pulseColor = '#ffaa00'; // Warning orange
+        if (healthRatio < 0.3) pulseColor = '#ff4400'; // Critical red
+        
+        this.ctx.globalAlpha = pulseIntensity * 0.2;
+        this.ctx.strokeStyle = pulseColor;
+        this.ctx.lineWidth = 1;
+        
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        const pulseRadius = 50 + (pulseIntensity * 30);
+        
+        // Pulse rings
+        for (let i = 0; i < 3; i++) {
+            const radius = pulseRadius + (i * 15);
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+        
+        this.ctx.globalAlpha = 1.0;
+    }
+    
+    /**
+     * Render circuit trace patterns
+     */
+    renderCircuitTrace(monster, pathway) {
+        if (monster.isDead) return;
+        
+        const traceAlpha = 0.4;
+        this.ctx.globalAlpha = traceAlpha;
+        this.ctx.strokeStyle = '#00ffff';
+        this.ctx.lineWidth = 1;
+        
+        // Circuit path animation
+        const pathProgress = (this.animationTime * 50) % 100;
+        
+        // Horizontal circuit lines
+        for (let i = 0; i < 5; i++) {
+            const y = (this.height / 6) * (i + 1);
+            const startX = (pathProgress * this.width / 100) - 50;
+            const endX = startX + 30;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(Math.max(0, startX), y);
+            this.ctx.lineTo(Math.min(this.width, endX), y);
+            this.ctx.stroke();
+        }
+        
+        this.ctx.globalAlpha = 1.0;
     }
     
     /**

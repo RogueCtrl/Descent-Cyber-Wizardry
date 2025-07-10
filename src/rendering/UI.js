@@ -52,6 +52,9 @@ class UI {
                 camp: document.getElementById('camp')
             };
             
+            // Apply TextManager to existing UI elements
+            this.applyGlobalTextManager();
+            
             this.setupEventListeners();
             this.isInitialized = true;
             
@@ -60,6 +63,27 @@ class UI {
         } catch (error) {
             console.error('Failed to initialize UI:', error);
         }
+    }
+    
+    /**
+     * Apply TextManager to global UI elements with data-text-key attributes
+     */
+    applyGlobalTextManager() {
+        if (typeof TextManager === 'undefined') {
+            console.warn('TextManager not available during UI initialization');
+            return;
+        }
+        
+        // Apply TextManager to all elements with data-text-key attributes
+        const textElements = document.querySelectorAll('[data-text-key]');
+        textElements.forEach(element => {
+            const textKey = element.getAttribute('data-text-key');
+            if (textKey) {
+                TextManager.applyToElement(element, textKey);
+            }
+        });
+        
+        console.log(`Applied TextManager to ${textElements.length} elements`);
     }
     
     /**
@@ -310,8 +334,8 @@ class UI {
                 </div>
                 
                 <div class="town-center-content">
-                    <h2 class="town-name">Town Center</h2>
-                    <p class="town-description">The bustling hub of Llylgamyn, where adventurers prepare for their descent into the Mad Overlord's maze.</p>
+                    <h2 class="town-name" data-text-key="town">Terminal Hub</h2>
+                    <p class="town-description">The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.</p>
                     
                     <div class="town-locations-grid">
                         <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
@@ -319,8 +343,8 @@ class UI {
                                 <div class="location-icon">⚔️</div>
                                 <div class="location-info">
                                     <h3>Training Grounds</h3>
-                                    <p>Create and manage your party of adventurers</p>
-                                    <span class="location-status">${hasActiveParty ? 'Manage Party' : 'Create Party'}</span>
+                                    <p>Create and manage your strike team of agents</p>
+                                    <span class="location-status">${hasActiveParty ? 'Manage Strike Team' : 'Initialize Strike Team'}</span>
                                 </div>
                             </button>
                         </div>
@@ -329,9 +353,9 @@ class UI {
                             <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
                                 <div class="location-icon">🏰</div>
                                 <div class="location-info">
-                                    <h3>Dungeon Entrance</h3>
-                                    <p>Enter the Mad Overlord's treacherous maze</p>
-                                    <span class="location-status">${hasActiveParty ? 'Enter Dungeon' : 'Party Required'}</span>
+                                    <h3 data-text-key="dungeon">Grid Access Point</h3>
+                                    <p>Enter the corrupted data maze</p>
+                                    <span class="location-status">${hasActiveParty ? 'Enter Grid' : 'Strike Team Required'}</span>
                                 </div>
                             </button>
                         </div>
@@ -340,8 +364,8 @@ class UI {
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">🏪</div>
                                 <div class="location-info">
-                                    <h3>Trading Post</h3>
-                                    <p>Buy and sell equipment and supplies</p>
+                                    <h3>Data Exchange</h3>
+                                    <p>Trade upgrades and system enhancements</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -351,8 +375,8 @@ class UI {
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">⛪</div>
                                 <div class="location-info">
-                                    <h3>Temple</h3>
-                                    <p>Heal wounds and resurrect fallen heroes</p>
+                                    <h3>Restoration Center</h3>
+                                    <p>Repair system damage and restore corrupted agents</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -399,6 +423,9 @@ class UI {
         // Create and show modal
         this.townModal.create(townContent);
         this.townModal.show();
+        
+        // Apply TextManager to town modal elements
+        this.applyGlobalTextManager();
         
         // Add event listeners
         this.setupTownCenterEventListeners(this.townModal.getBody());
@@ -1109,17 +1136,17 @@ class UI {
         const viewport = document.getElementById('viewport');
         if (!viewport) return;
         
-        // Clear viewport and create combat UI
+        // Clear viewport and create combat UI with cyber terminology
         viewport.innerHTML = `
             <div id="combat-interface" class="combat-interface">
                 <div class="combat-header">
-                    <h2>Combat</h2>
+                    <h2>Grid Engagement</h2>
                     <div class="encounter-message" id="encounter-message"></div>
                 </div>
                 
                 <!-- Wave Indicator Panel -->
                 <div class="combat-wave-indicator" id="combat-wave-indicator">
-                    <div class="wave-display" id="wave-display">Loading...</div>
+                    <div class="wave-display" id="wave-display">Connecting...</div>
                 </div>
                 
                 <div class="combat-body">
@@ -1135,33 +1162,33 @@ class UI {
                         <!-- Context Action Box -->
                         <div class="combat-actions-context" id="combat-actions-context">
                             <div class="action-context-header" id="action-context-header">
-                                <h3>Choose Action:</h3>
+                                <h3>Select Operation:</h3>
                             </div>
                             <div class="action-buttons" id="action-buttons">
                                 <button id="combat-attack" class="combat-action-btn" data-action="attack">
                                     <span class="action-number">1</span>
-                                    <span class="action-text">⚔️ Fight</span>
+                                    <span class="action-text" data-text-key="combat_fight">⚔️ Execute</span>
                                 </button>
                                 <button id="combat-defend" class="combat-action-btn" data-action="defend">
                                     <span class="action-number">2</span>
-                                    <span class="action-text">🛡️ Defend</span>
+                                    <span class="action-text" data-text-key="combat_defend">🛡️ Firewall</span>
                                 </button>
                                 <button id="combat-cast-spell" class="combat-action-btn" data-action="cast-spell">
                                     <span class="action-number">3</span>
-                                    <span class="action-text">🔮 Cast Spell</span>
+                                    <span class="action-text" data-text-key="combat_spell">🔮 Run Program</span>
                                 </button>
                                 <button id="combat-use-item" class="combat-action-btn" data-action="use-item">
                                     <span class="action-number">4</span>
-                                    <span class="action-text">💊 Use Item</span>
+                                    <span class="action-text" data-text-key="combat_item">💊 Use Data</span>
                                 </button>
                                 <button id="combat-run" class="combat-action-btn" data-action="run">
                                     <span class="action-number">5</span>
-                                    <span class="action-text">🏃 Run</span>
+                                    <span class="action-text" data-text-key="combat_run">🏃 Disconnect</span>
                                 </button>
                             </div>
                             <div class="action-enemy-turn" id="action-enemy-turn" style="display: none;">
                                 <div class="enemy-turn-info" id="enemy-turn-info">
-                                    <h3>Enemy Turn</h3>
+                                    <h3>Hostile Process Active</h3>
                                     <div id="enemy-action-result"></div>
                                     <button id="combat-continue" class="combat-action-btn continue-btn">
                                         Continue
@@ -1174,11 +1201,28 @@ class UI {
             </div>
         `;
         
+        // Apply TextManager to dynamic text elements
+        this.applyCombatTextManager();
+        
         // Add event listeners for combat actions
         this.setupCombatEventListeners();
         
         // Update combat status with current data
         this.updateCombatStatus();
+    }
+    
+    /**
+     * Apply TextManager to combat interface elements
+     */
+    applyCombatTextManager() {
+        // Apply TextManager to elements with data-text-key attributes
+        const textElements = document.querySelectorAll('[data-text-key]');
+        textElements.forEach(element => {
+            const textKey = element.getAttribute('data-text-key');
+            if (textKey && typeof TextManager !== 'undefined') {
+                TextManager.applyToElement(element, textKey);
+            }
+        });
     }
     
     /**

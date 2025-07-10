@@ -11,7 +11,7 @@
         <canvas id="game-canvas" width="800" height="600"></canvas>
         <div id="ui-overlay">
             <div id="character-panel" class="panel">
-                <h3>Party</h3>
+                <h3 data-text-key="party">Strike Team</h3>
                 <div id="party-display"></div>
             </div>
             <div id="game-panel" class="panel">
@@ -42,12 +42,16 @@
     <script src="src/core/EventSystem.js"></script>
     <script src="src/core/GameState.js"></script>
     
+    <!-- Data Systems -->
+    <script src="src/data/terminology.js"></script>
+    
     <!-- Utilities -->
     <script src="src/utils/Random.js"></script>
     <script src="src/utils/Helpers.js"></script>
     <script src="src/utils/Storage.js"></script>
     <script src="src/utils/AttributeRoller.js"></script>
     <script src="src/utils/Modal.js"></script>
+    <script src="src/utils/TextManager.js"></script>
     
     <!-- Audio System -->
     <script src="src/audio/AudioManager.js"></script>

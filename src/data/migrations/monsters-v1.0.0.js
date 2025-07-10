@@ -5,10 +5,10 @@
 
 // Global assignment for browser compatibility
 window.monstersMigration = {
-    version: '1.1.0',
+    version: '1.2.0',
     entity: 'monsters',
     store: 'monsters',
-    description: 'Initial monsters data migration with vector portraits',
+    description: 'Enhanced monsters data migration with 5 cyberpunk vector portraits',
     
     data: {
         // Level 1 Monsters
@@ -34,7 +34,38 @@ window.monstersMigration = {
             "preferredTargets": ["weakest"],
             "experienceValue": 25,
             "treasureType": "poor",
-            "asciiArt": "  👺\n /||\ \n  /\\  "
+            "asciiArt": "  👺\n /||\ \n  /\\  ",
+            "portraitModel": {
+                "type": "wireframe",
+                "vertices": [
+                    // Scout Program - angular, quick surveillance construct
+                    [0, 0.7, 0],      // Top sensor
+                    [-0.3, 0.5, 0],   // Left antenna
+                    [0.3, 0.5, 0],    // Right antenna
+                    [-0.4, 0.3, 0],   // Left visual sensor
+                    [0.4, 0.3, 0],    // Right visual sensor
+                    [0, 0.2, 0],      // Central processor
+                    [-0.2, 0.0, 0],   // Left data port
+                    [0.2, 0.0, 0],    // Right data port
+                    [0, -0.2, 0],     // Core unit
+                    [-0.3, -0.4, 0],  // Left leg joint
+                    [0.3, -0.4, 0],   // Right leg joint
+                    [-0.2, -0.7, 0],  // Left foot
+                    [0.2, -0.7, 0]    // Right foot
+                ],
+                "edges": [
+                    // Head/sensor array
+                    [0, 1], [0, 2], [1, 3], [2, 4], [3, 5], [4, 5],
+                    // Face sensors
+                    [3, 6], [4, 7], [6, 8], [7, 8],
+                    // Body frame
+                    [5, 8], [8, 9], [8, 10], [9, 11], [10, 12],
+                    // Cross connections for agility
+                    [6, 9], [7, 10], [1, 4], [2, 3]
+                ],
+                "scale": 0.9,
+                "rotation": [0, 15, 0]
+            }
         },
         "monster_giant_rat_001": {
             "id": "monster_giant_rat_001",
@@ -58,7 +89,42 @@ window.monstersMigration = {
             "preferredTargets": ["random"],
             "experienceValue": 10,
             "treasureType": "none",
-            "asciiArt": "  🐀\n /||\\\n  /\\  "
+            "asciiArt": "  🐀\n /||\\\n  /\\  ",
+            "portraitModel": {
+                "type": "wireframe",
+                "vertices": [
+                    // Virus Cluster - chaotic, self-replicating swarm pattern
+                    [0, 0.4, 0],      // Central core
+                    [-0.3, 0.6, 0],   // Left cluster node
+                    [0.3, 0.6, 0],    // Right cluster node
+                    [-0.5, 0.3, 0],   // Left extension
+                    [0.5, 0.3, 0],    // Right extension
+                    [-0.2, 0.1, 0],   // Left replication point
+                    [0.2, 0.1, 0],    // Right replication point
+                    [0, -0.1, 0],     // Core junction
+                    [-0.4, -0.3, 0],  // Left viral spread
+                    [0.4, -0.3, 0],   // Right viral spread
+                    [0, -0.5, 0],     // Lower cluster
+                    [-0.6, 0.0, 0],   // Far left infection
+                    [0.6, 0.0, 0],    // Far right infection
+                    [0, 0.8, 0],      // Top infection spike
+                    [0, -0.7, 0]      // Bottom infection spike
+                ],
+                "edges": [
+                    // Central cluster connections
+                    [0, 1], [0, 2], [0, 7], [1, 3], [2, 4],
+                    // Viral replication patterns
+                    [7, 5], [7, 6], [5, 8], [6, 9], [7, 10],
+                    // Chaotic spread patterns
+                    [3, 11], [4, 12], [1, 13], [2, 13], [10, 14],
+                    // Cross-contamination lines
+                    [1, 5], [2, 6], [8, 11], [9, 12], [5, 6],
+                    // Random viral connections for chaos
+                    [3, 8], [4, 9], [11, 8], [12, 9]
+                ],
+                "scale": 0.8,
+                "rotation": [0, -10, 0]
+            }
         },
         "monster_skeleton_001": {
             "id": "monster_skeleton_001",
@@ -82,7 +148,46 @@ window.monstersMigration = {
             "preferredTargets": ["front"],
             "experienceValue": 50,
             "treasureType": "poor",
-            "asciiArt": "  💀\n /|||\\\n  /\\  "
+            "asciiArt": "  💀\n /|||\\\n  /\\  ",
+            "portraitModel": {
+                "type": "wireframe",
+                "vertices": [
+                    // Archive Ghost - fragmented, corrupted data remnant
+                    [0, 0.8, 0],      // Top data fragment
+                    [-0.4, 0.6, 0],   // Left memory bank (corrupted)
+                    [0.4, 0.6, 0],    // Right memory bank (corrupted)
+                    [-0.3, 0.4, 0],   // Left eye socket (empty)
+                    [0.3, 0.4, 0],    // Right eye socket (empty)
+                    [0, 0.3, 0],      // Central void
+                    [-0.5, 0.2, 0],   // Left skull fragment
+                    [0.5, 0.2, 0],    // Right skull fragment
+                    [0, 0.0, 0],      // Jaw fragment
+                    [-0.2, -0.2, 0],  // Left neck data
+                    [0.2, -0.2, 0],   // Right neck data
+                    [-0.4, -0.5, 0],  // Left shoulder ghost
+                    [0.4, -0.5, 0],   // Right shoulder ghost
+                    [0, -0.7, 0],     // Lower data remnant
+                    // Floating fragments (ghostly)
+                    [-0.7, 0.7, 0],   // Left floating fragment
+                    [0.7, 0.1, 0]     // Right floating fragment
+                ],
+                "edges": [
+                    // Skull outline (fragmented)
+                    [0, 1], [0, 2], [1, 6], [2, 7], [6, 3], [7, 4],
+                    // Eye sockets (empty voids)
+                    [3, 5], [4, 5],
+                    // Jaw connection (partial)
+                    [5, 8], [6, 8], [7, 8],
+                    // Neck/shoulder structure (ghostly)
+                    [8, 9], [8, 10], [9, 11], [10, 12], [11, 13], [12, 13],
+                    // Floating data fragments
+                    [1, 14], [2, 15],
+                    // Corruption lines (data decay)
+                    [3, 9], [4, 10], [6, 11], [7, 12]
+                ],
+                "scale": 1.1,
+                "rotation": [0, 0, 5]
+            }
         },
         
         // Level 2-3 Monsters
@@ -108,7 +213,45 @@ window.monstersMigration = {
             "preferredTargets": ["strongest"],
             "experienceValue": 100,
             "treasureType": "standard",
-            "asciiArt": "  🗡️\n /|||\\\n  /\\  "
+            "asciiArt": "  🗡️\n /|||\\\n  /\\  ",
+            "portraitModel": {
+                "type": "wireframe",
+                "vertices": [
+                    // Enforcer Program - bulky, aggressive security routine
+                    [0, 0.9, 0],      // Top security node
+                    [-0.5, 0.7, 0],   // Left heavy processor
+                    [0.5, 0.7, 0],    // Right heavy processor
+                    [-0.6, 0.4, 0],   // Left armor plating
+                    [0.6, 0.4, 0],    // Right armor plating
+                    [-0.3, 0.5, 0],   // Left security scanner
+                    [0.3, 0.5, 0],    // Right security scanner
+                    [0, 0.2, 0],      // Central targeting system
+                    [-0.4, 0.0, 0],   // Left weapon mount
+                    [0.4, 0.0, 0],    // Right weapon mount
+                    [0, -0.2, 0],     // Core enforcement unit
+                    [-0.7, -0.4, 0],  // Left heavy shoulder
+                    [0.7, -0.4, 0],   // Right heavy shoulder
+                    [-0.3, -0.6, 0],  // Left support strut
+                    [0.3, -0.6, 0],   // Right support strut
+                    [0, -0.8, 0]      // Base platform
+                ],
+                "edges": [
+                    // Heavy head/processor assembly
+                    [0, 1], [0, 2], [1, 3], [2, 4], [3, 5], [4, 6],
+                    // Security scanner array
+                    [5, 7], [6, 7], [1, 5], [2, 6],
+                    // Weapon systems
+                    [7, 8], [7, 9], [8, 10], [9, 10],
+                    // Heavy frame structure
+                    [10, 11], [10, 12], [11, 13], [12, 14], [13, 15], [14, 15],
+                    // Armor plating connections
+                    [3, 8], [4, 9], [8, 11], [9, 12],
+                    // Structural reinforcements
+                    [1, 8], [2, 9], [5, 10], [6, 10]
+                ],
+                "scale": 1.2,
+                "rotation": [0, 0, 0]
+            }
         },
         "monster_wolf_001": {
             "id": "monster_wolf_001",
