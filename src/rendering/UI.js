@@ -613,11 +613,9 @@ class UI {
      * Add a message to the message log
      */
     addMessage(text, type = 'info') {
-        const timestamp = new Date().toLocaleTimeString();
         const message = {
             text: text,
-            type: type,
-            timestamp: timestamp
+            type: type
         };
         
         this.messages.push(message);
@@ -641,7 +639,7 @@ class UI {
         this.messages.forEach(message => {
             const messageElement = document.createElement('div');
             messageElement.className = `message message-${message.type}`;
-            messageElement.innerHTML = `<span class="timestamp">${message.timestamp}</span> ${message.text}`;
+            messageElement.innerHTML = message.text;
             
             this.messageLog.appendChild(messageElement);
         });
