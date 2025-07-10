@@ -2220,8 +2220,8 @@ h3 {
 /* Combat Interface Styles */
 .combat-interface {
     width: 100%;
-    height: 100%;
-    min-height: 400px;
+    height: 100vh;
+    max-height: 100vh;
     background: var(--bg-secondary);
     border: 2px solid var(--border-accent);
     border-radius: var(--radius-lg);
@@ -2231,6 +2231,7 @@ h3 {
     color: var(--text-primary);
     font-family: var(--font-primary);
     box-shadow: 0 0 20px var(--glow-primary);
+    overflow: hidden;
 }
 
 .combat-header {
@@ -2258,6 +2259,8 @@ h3 {
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
+    overflow: hidden;
+    min-height: 0;
 }
 
 .combat-status {
@@ -2268,6 +2271,9 @@ h3 {
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-primary);
+    flex: 0 1 auto;
+    max-height: 35vh;
+    overflow: hidden;
 }
 
 .combatant-status {
@@ -2324,8 +2330,55 @@ h3 {
     font-size: var(--font-size-lg);
 }
 
+.party-status, .enemy-status {
+    display: flex;
+    flex-direction: column;
+    max-height: 30vh;
+    overflow: hidden;
+}
+
+.party-status h3, .enemy-status h3 {
+    flex-shrink: 0;
+    margin: 0 0 var(--space-3) 0;
+    color: var(--accent-secondary);
+    font-size: var(--font-size-lg);
+    text-align: center;
+}
+
+#party-combat-status, #enemy-combat-status {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: var(--space-2);
+}
+
+/* Combat scrollbar styling */
+#party-combat-status::-webkit-scrollbar,
+#enemy-combat-status::-webkit-scrollbar {
+    width: 8px;
+}
+
+#party-combat-status::-webkit-scrollbar-track,
+#enemy-combat-status::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 4px;
+}
+
+#party-combat-status::-webkit-scrollbar-thumb,
+#enemy-combat-status::-webkit-scrollbar-thumb {
+    background: var(--border-accent);
+    border-radius: 4px;
+}
+
+#party-combat-status::-webkit-scrollbar-thumb:hover,
+#enemy-combat-status::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
 .combat-actions {
-    margin-top: auto;
+    flex-shrink: 0;
+    flex-basis: auto;
+    min-height: 200px;
+    margin-top: var(--space-4);
     padding: var(--space-4);
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
