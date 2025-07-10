@@ -2216,3 +2216,211 @@ h3 {
         height: 100px;
     }
 }
+
+/* Combat Interface Styles */
+.combat-interface {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    box-shadow: 0 0 20px var(--glow-primary);
+}
+
+.combat-header {
+    text-align: center;
+    margin-bottom: var(--space-6);
+    border-bottom: 1px solid var(--border-primary);
+    padding-bottom: var(--space-4);
+}
+
+.combat-header h2 {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--accent-primary);
+    font-size: var(--font-size-2xl);
+    text-shadow: 0 0 10px var(--glow-primary);
+}
+
+.encounter-message {
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: var(--space-2);
+}
+
+.combat-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.combat-status {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-primary);
+}
+
+.combatant-status {
+    padding: var(--space-3);
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-primary);
+    margin-bottom: var(--space-2);
+}
+
+.combatant-name {
+    font-weight: bold;
+    color: var(--accent-secondary);
+    margin-bottom: var(--space-1);
+}
+
+.combatant-hp {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-1);
+}
+
+.combatant-weapon {
+    color: var(--text-muted);
+    font-size: var(--font-size-xs);
+    font-style: italic;
+}
+
+.combatant-threat {
+    color: var(--danger);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+}
+
+.wave-info {
+    margin-bottom: var(--space-3);
+}
+
+.wave-counter {
+    background: var(--accent-primary);
+    color: white;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 0 10px var(--glow-secondary);
+}
+
+.party-status h3,
+.enemy-status h3 {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--accent-secondary);
+    font-size: var(--font-size-lg);
+}
+
+.combat-actions {
+    margin-top: auto;
+    padding: var(--space-4);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-primary);
+}
+
+.combat-actions h3 {
+    margin: 0 0 var(--space-4) 0;
+    color: var(--accent-secondary);
+    font-size: var(--font-size-lg);
+    text-align: center;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+}
+
+.combat-action-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-height: 60px;
+}
+
+.combat-action-btn:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
+    box-shadow: 0 0 15px var(--glow-secondary);
+    transform: translateY(-2px);
+}
+
+.combat-action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 0 10px var(--glow-secondary);
+}
+
+.action-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: var(--accent-primary);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+}
+
+.action-text {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+}
+
+/* Responsive combat interface */
+@media (max-width: 768px) {
+    .combat-status {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .combat-action-btn {
+        min-height: 50px;
+        padding: var(--space-3);
+    }
+}
+
+/* Combat interface animations */
+.combat-interface {
+    animation: combatFadeIn 0.3s ease-out;
+}
+
+@keyframes combatFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

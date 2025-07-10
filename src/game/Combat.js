@@ -15,6 +15,12 @@ class Combat {
         this.combatLog = [];
         this.surpriseRound = null; // 'party', 'enemies', or null
         
+        // Party-based combat system
+        this.playerParty = null;
+        this.enemyParties = [];
+        this.currentEnemyPartyIndex = 0;
+        this.currentEnemyParty = null;
+        
         // Initialize spell system
         this.spellSystem = new Spells();
         this.spellSystemInitialized = false;
@@ -31,30 +37,62 @@ class Combat {
     }
     
     /**
-     * Start combat
+     * Start combat with party vs enemy parties
      */
-    async startCombat(party, enemies, surpriseType = null) {
+    async startCombat(playerParty, enemyParties, surpriseType = null) {
         // Initialize spell system if not done
         await this.initializeCombat();
         
         this.isActive = true;
         this.currentTurn = 0;
-        this.combatants = [...party.aliveMembers, ...enemies];
-        this.actionQueue = [];
-        this.combatLog = [];
-        this.surpriseRound = surpriseType;
+        this.playerParty = playerParty;
+        
+        // Ensure enemyParties is an array (backward compatibility)
+        if (!Array.isArray(enemyParties)) {
+            this.enemyParties = [enemyParties];
+        } else {
+            this.enemyParties = enemyParties;
+        }
+        
+        // Start with first enemy party
+        this.currentEnemyPartyIndex = 0;
+        this.currentEnemyParty = this.enemyParties[0];
+        
+        // Set up combatants for current wave
+        this.setupCurrentWave();
         
         // Check for surprise
         if (!surpriseType) {
-            this.surpriseRound = this.checkSurprise(party, enemies);
+            this.surpriseRound = this.checkSurprise(this.playerParty, this.currentEnemyParty);
+        } else {
+            this.surpriseRound = surpriseType;
         }
         
         // Calculate initiative
         this.calculateInitiative();
         
-        this.logMessage('Combat started!');
+        // Dramatic combat start
+        const combatStarts = [
+            'Battle is joined!',
+            'The clash of steel begins!',
+            'Combat erupts!',
+            'Violence breaks out!'
+        ];
+        const combatStart = Random.choice(combatStarts);
+        
+        this.logMessage(`⚔️ ${combatStart}`, 'combat', '⚔️');
+        this.logMessage(`Wave ${this.currentEnemyPartyIndex + 1} of ${this.enemyParties.length}`, 'wave', '🌊');
+        
+        // List initial enemies
+        const enemies = Array.isArray(this.currentEnemyParty) ? this.currentEnemyParty : [this.currentEnemyParty];
+        const enemyNames = enemies.map(enemy => enemy.name).join(', ');
+        this.logMessage(`Enemies: ${enemyNames}`, 'system', '👹');
         if (this.surpriseRound) {
-            this.logMessage(`${this.surpriseRound === 'party' ? 'Party' : 'Enemies'} achieve surprise!`);
+            if (this.surpriseRound === 'party') {
+                this.logMessage(`🎯 The party strikes first! Surprise round!`, 'surprise', '🎯');
+            } else {
+                this.logMessage(`😱 The enemies attack by surprise!`, 'surprise', '😱');
+            }
         }
         
         // Start first turn
@@ -63,12 +101,112 @@ class Combat {
     }
     
     /**
+     * Setup combatants for current combat wave
+     */
+    setupCurrentWave() {
+        this.combatants = [];
+        this.actionQueue = [];
+        this.combatLog = [];
+        
+        // Add player party members
+        this.combatants.push(...this.playerParty.aliveMembers);
+        
+        // Add current enemy party (handle both array of monsters and single monsters)
+        if (Array.isArray(this.currentEnemyParty)) {
+            this.combatants.push(...this.currentEnemyParty);
+        } else {
+            // Single monster - wrap in array for consistency
+            this.combatants.push(this.currentEnemyParty);
+        }
+        
+        console.log(`Wave ${this.currentEnemyPartyIndex + 1}: ${this.combatants.length} combatants`);
+    }
+    
+    /**
+     * Check if current enemy party is defeated
+     */
+    isCurrentEnemyPartyDefeated() {
+        if (Array.isArray(this.currentEnemyParty)) {
+            return this.currentEnemyParty.every(enemy => !enemy.isAlive);
+        } else {
+            return !this.currentEnemyParty.isAlive;
+        }
+    }
+    
+    /**
+     * Advance to next enemy party
+     */
+    advanceToNextEnemyParty() {
+        this.currentEnemyPartyIndex++;
+        
+        if (this.currentEnemyPartyIndex < this.enemyParties.length) {
+            // More enemy parties to fight
+            this.currentEnemyParty = this.enemyParties[this.currentEnemyPartyIndex];
+            this.setupCurrentWave();
+            this.calculateInitiative();
+            
+            // Dramatic wave transition
+            const waveTransitions = [
+                `A new wave of enemies emerges from the shadows!`,
+                `More foes appear to challenge the party!`,
+                `The battle intensifies as reinforcements arrive!`,
+                `Fresh enemies join the fray!`
+            ];
+            const waveTransition = Random.choice(waveTransitions);
+            
+            this.logMessage(`🌊 ${waveTransition}`, 'wave', '🌊');
+            this.logMessage(`Wave ${this.currentEnemyPartyIndex + 1} of ${this.enemyParties.length} begins!`, 'wave', '⚔️');
+            
+            // List new enemies
+            const enemies = Array.isArray(this.currentEnemyParty) ? this.currentEnemyParty : [this.currentEnemyParty];
+            const enemyNames = enemies.map(enemy => enemy.name).join(', ');
+            this.logMessage(`New enemies: ${enemyNames}`, 'system', '👹');
+            
+            this.combatPhase = 'action_selection';
+            return true; // Combat continues
+        } else {
+            // All enemy parties defeated
+            this.logMessage(`🎉 All enemy waves defeated!`, 'victory', '🎉');
+            this.logMessage(`The party stands victorious!`, 'victory', '🏆');
+            this.endCombat();
+            return false; // Combat ends
+        }
+    }
+    
+    /**
+     * Get current enemy party info
+     */
+    getCurrentEnemyPartyInfo() {
+        return {
+            currentWave: this.currentEnemyPartyIndex + 1,
+            totalWaves: this.enemyParties.length,
+            enemies: Array.isArray(this.currentEnemyParty) ? this.currentEnemyParty : [this.currentEnemyParty]
+        };
+    }
+    
+    /**
      * End combat
      */
     endCombat() {
+        // Dramatic combat end
+        const combatEnds = [
+            'The battle comes to an end!',
+            'Combat concludes!',
+            'The clash of weapons falls silent!',
+            'The dust settles on the battlefield!'
+        ];
+        const combatEnd = Random.choice(combatEnds);
+        
+        this.logMessage(`🏁 ${combatEnd}`, 'combat', '🏁');
+        this.logMessage(`The party can rest and recover...`, 'system', '😌');
+        
         this.isActive = false;
         this.combatants = [];
         this.actionQueue = [];
+        this.playerParty = null;
+        this.enemyParties = [];
+        this.currentEnemyParty = null;
+        this.currentEnemyPartyIndex = 0;
         
         console.log('Combat ended!');
     }
@@ -209,20 +347,36 @@ class Combat {
         const { attacker, target } = action;
         
         if (!target || !target.isAlive) {
+            this.logMessage(`${attacker.name || 'Enemy'} swings wildly at nothing!`, 'combat', '💨');
             return { success: false, message: `${attacker.name || 'Enemy'} attacks but target is invalid` };
+        }
+        
+        // Determine weapon type for flavor text
+        const weapon = attacker.getCurrentWeapon ? attacker.getCurrentWeapon() : { name: 'claws', type: 'natural' };
+        const isUnarmed = weapon.type === 'unarmed';
+        
+        // Dramatic attack announcement
+        if (isUnarmed) {
+            this.logMessage(`${attacker.name} throws a desperate punch!`, 'combat', '👊');
+        } else {
+            this.logMessage(`${attacker.name} attacks with ${weapon.name}!`, 'combat', '⚔️');
         }
         
         const attackRoll = Random.die(20) + this.getAttackBonus(attacker);
         const targetAC = this.getArmorClass(target);
+        
+        // Log the attack mechanics for drama
+        this.logMessage(`Attack roll: ${attackRoll} vs AC ${targetAC}`, 'system', '🎲');
         
         if (attackRoll >= targetAC) {
             const damage = this.rollDamage(attacker);
             const criticalCheck = this.checkCriticalHit(attacker, target, attackRoll);
             
             let finalDamage = damage;
-            let message = `${attacker.name || 'Enemy'} hits ${target.name || 'target'}`;
             
             if (criticalCheck.instant) {
+                this.logMessage(`💀 DEVASTATING BLOW! ${target.name} is slain instantly!`, 'critical', '💀');
+                
                 target.currentHP = 0;
                 target.isAlive = false;
                 target.status = 'dead';
@@ -236,22 +390,48 @@ class Combat {
                     success: true,
                     critical: true,
                     instant: true,
-                    message: `${message} for an INSTANT KILL!`
+                    message: `${attacker.name} delivers an INSTANT KILL!`
                 };
             }
             
             if (criticalCheck.multiplier > 1) {
                 finalDamage *= criticalCheck.multiplier;
-                message += ` critically`;
+                this.logMessage(`🎯 CRITICAL HIT! Damage multiplied by ${criticalCheck.multiplier}!`, 'critical', '🎯');
+            }
+            
+            // Dramatic hit descriptions based on damage
+            let hitDescription = '';
+            if (finalDamage >= target.maxHP * 0.5) {
+                hitDescription = finalDamage >= target.maxHP * 0.75 ? 'devastatingly' : 'brutally';
+            } else if (finalDamage >= target.maxHP * 0.25) {
+                hitDescription = 'solidly';
+            } else {
+                hitDescription = isUnarmed ? 'weakly' : 'lightly';
             }
             
             target.currentHP = Math.max(0, target.currentHP - finalDamage);
-            message += ` for ${finalDamage} damage!`;
+            
+            this.logMessage(`💥 ${attacker.name} hits ${target.name} ${hitDescription} for ${finalDamage} damage!`, 'combat', '💥');
             
             if (target.currentHP <= 0) {
                 target.isAlive = false;
                 target.status = target.currentHP <= -10 ? 'dead' : 'unconscious';
-                message += ` ${target.name || 'Target'} falls!`;
+                
+                if (target.status === 'dead') {
+                    this.logMessage(`💀 ${target.name} has been slain!`, 'death', '💀');
+                } else {
+                    this.logMessage(`😵 ${target.name} falls unconscious!`, 'unconscious', '😵');
+                }
+            } else {
+                // Show remaining HP for dramatic effect
+                const hpPercent = (target.currentHP / target.maxHP) * 100;
+                let condition = '';
+                if (hpPercent > 75) condition = 'slightly wounded';
+                else if (hpPercent > 50) condition = 'wounded';
+                else if (hpPercent > 25) condition = 'badly wounded';
+                else condition = 'critically wounded';
+                
+                this.logMessage(`❤️ ${target.name} is ${condition} (${target.currentHP}/${target.maxHP} HP)`, 'status', '❤️');
             }
             
             // Save character state to persistent storage
@@ -263,12 +443,24 @@ class Combat {
                 success: true,
                 damage: finalDamage,
                 critical: criticalCheck.multiplier > 1,
-                message
+                message: `Hit for ${finalDamage} damage!`
             };
         } else {
+            // Dramatic miss descriptions
+            const missReasons = [
+                `${target.name} dodges nimbly!`,
+                `The attack glances off harmlessly!`,
+                `${target.name} steps back just in time!`,
+                `The blow goes wide!`,
+                `${target.name} deflects the attack!`
+            ];
+            const missReason = Random.choice(missReasons);
+            
+            this.logMessage(`💨 ${attacker.name} misses! ${missReason}`, 'combat', '💨');
+            
             return {
                 success: false,
-                message: `${attacker.name || 'Enemy'} misses ${target.name || 'target'}`
+                message: `${attacker.name} misses ${target.name}`
             };
         }
     }
@@ -281,17 +473,46 @@ class Combat {
         
         // Check if caster can cast spell
         if (!this.canCastSpell(caster, spell)) {
+            this.logMessage(`❌ ${caster.name || 'Caster'} cannot cast ${spell.name}!`, 'spell', '❌');
+            this.logMessage(`Spell not memorized or insufficient power`, 'system', '📜');
             return { success: false, message: `${caster.name || 'Caster'} cannot cast ${spell.name}` };
         }
+        
+        // Dramatic spell casting
+        const spellSchool = spell.school || 'arcane';
+        const spellEmoji = spellSchool === 'divine' ? '✨' : '🔮';
+        
+        this.logMessage(`${spellEmoji} ${caster.name} begins casting ${spell.name}!`, 'spell', spellEmoji);
+        this.logMessage(`Weaving ${spellSchool} energies...`, 'system', '🌟');
         
         // Roll for spell success
         const spellSuccess = this.rollSpellSuccess(caster, spell);
         if (!spellSuccess) {
+            const failureMessages = [
+                `The spell fizzles and fails!`,
+                `${caster.name} loses concentration!`,
+                `The magical energies dissipate!`,
+                `The spell backfires harmlessly!`
+            ];
+            const failureMessage = Random.choice(failureMessages);
+            
+            this.logMessage(`💥 ${failureMessage}`, 'spell', '💥');
+            this.logMessage(`${spell.name} is lost from memory`, 'system', '💭');
+            
+            // Remove memorized spell even on failure
+            this.removeMemorizedSpell(caster, spell);
+            
             return { success: false, message: `${caster.name || 'Caster'} fails to cast ${spell.name}` };
         }
         
         // Execute spell effect
         const result = this.executeSpellEffect(spell, caster, target);
+        
+        // Dramatic spell success
+        this.logMessage(`⚡ ${spell.name} is successfully cast!`, 'spell', '⚡');
+        if (result.message) {
+            this.logMessage(`${result.message}`, 'spell', '✨');
+        }
         
         // Remove memorized spell
         this.removeMemorizedSpell(caster, spell);
@@ -311,6 +532,18 @@ class Combat {
         
         // Add defensive bonus (implemented in getArmorClass)
         defender.isDefending = true;
+        
+        // Dramatic defense descriptions
+        const defenseMessages = [
+            `${defender.name} raises their guard!`,
+            `${defender.name} takes a defensive stance!`,
+            `${defender.name} prepares to deflect incoming attacks!`,
+            `${defender.name} focuses on protection!`
+        ];
+        const defenseMessage = Random.choice(defenseMessages);
+        
+        this.logMessage(`🛡️ ${defenseMessage}`, 'combat', '🛡️');
+        this.logMessage(`${defender.name} gains +2 AC until next turn`, 'system', '📊');
         
         return {
             success: true,
@@ -338,7 +571,21 @@ class Combat {
         const { fleer } = action;
         const fleeChance = this.calculateFleeChance(fleer);
         
+        // Dramatic flee attempt
+        const fleeAttempts = [
+            `${fleer.name} tries to escape!`,
+            `${fleer.name} looks for an opening to flee!`,
+            `${fleer.name} attempts to break away from combat!`,
+            `${fleer.name} desperately seeks an escape route!`
+        ];
+        const fleeAttempt = Random.choice(fleeAttempts);
+        
+        this.logMessage(`🏃 ${fleeAttempt}`, 'combat', '🏃');
+        this.logMessage(`Flee chance: ${fleeChance}%`, 'system', '🎲');
+        
         if (Random.percent(fleeChance)) {
+            this.logMessage(`✅ ${fleer.name} successfully escapes from combat!`, 'flee', '✅');
+            this.logMessage(`The party retreats to safety...`, 'system', '🏃‍♂️');
             this.endCombat();
             return {
                 success: true,
@@ -346,6 +593,17 @@ class Combat {
                 message: `${fleer.name || 'Character'} successfully flees from combat!`
             };
         } else {
+            const failureMessages = [
+                `${fleer.name} is blocked by enemies!`,
+                `${fleer.name} stumbles and can't escape!`,
+                `The enemies surround ${fleer.name}!`,
+                `${fleer.name} can't find an opening!`
+            ];
+            const failureMessage = Random.choice(failureMessages);
+            
+            this.logMessage(`❌ ${failureMessage}`, 'flee', '❌');
+            this.logMessage(`${fleer.name} must continue fighting!`, 'system', '⚔️');
+            
             return {
                 success: false,
                 message: `${fleer.name || 'Character'} fails to flee!`
@@ -366,6 +624,29 @@ class Combat {
         
         if (combatant.equipment && combatant.equipment.weapon) {
             bonus += combatant.equipment.weapon.attackBonus || 0;
+        } else {
+            // Unarmed combat attack bonus
+            bonus += this.getUnarmedAttackBonus(combatant);
+        }
+        
+        return bonus;
+    }
+    
+    /**
+     * Get unarmed combat attack bonus
+     */
+    getUnarmedAttackBonus(combatant) {
+        let bonus = 0;
+        
+        if (combatant.attributes) {
+            // Agility helps with unarmed attacks
+            bonus += Math.floor((combatant.attributes.agility - 10) / 4);
+            
+            // Class-based unarmed attack bonus
+            if (combatant.class) {
+                const classBonus = this.getUnarmedClassBonus(combatant.class);
+                bonus += Math.floor(classBonus / 2); // Half damage bonus as attack bonus
+            }
         }
         
         return bonus;
@@ -411,9 +692,50 @@ class Combat {
         
         if (attacker.equipment && attacker.equipment.weapon) {
             damage += attacker.equipment.weapon.damageBonus || 0;
+        } else {
+            // Unarmed combat damage
+            damage = this.getUnarmedDamage(attacker);
         }
         
         return Math.max(1, damage);
+    }
+    
+    /**
+     * Calculate unarmed combat damage
+     */
+    getUnarmedDamage(attacker) {
+        let damage = 1; // Base unarmed damage
+        
+        if (attacker.attributes) {
+            // Strength modifier
+            damage += Math.floor((attacker.attributes.strength - 10) / 2);
+            
+            // Class-based unarmed combat bonus
+            if (attacker.class) {
+                const classBonus = this.getUnarmedClassBonus(attacker.class);
+                damage += classBonus;
+            }
+        }
+        
+        return Math.max(1, damage);
+    }
+    
+    /**
+     * Get unarmed combat bonus based on class
+     */
+    getUnarmedClassBonus(characterClass) {
+        const unarmedBonuses = {
+            'Fighter': 2,    // Fighters are skilled in combat
+            'Thief': 1,      // Thieves are scrappy
+            'Samurai': 3,    // Samurai are disciplined warriors
+            'Lord': 2,       // Lords have combat training
+            'Ninja': 4,      // Ninjas are martial artists
+            'Mage': 0,       // Mages rely on magic
+            'Priest': 0,     // Priests rely on divine magic
+            'Bishop': 1      // Bishops have some combat training
+        };
+        
+        return unarmedBonuses[characterClass] || 0;
     }
     
     /**
@@ -526,13 +848,23 @@ class Combat {
     /**
      * Log combat message
      */
-    logMessage(message) {
-        this.combatLog.push({
+    logMessage(message, type = 'combat', emoji = null) {
+        const logEntry = {
             message,
+            type,
+            emoji,
             timestamp: Date.now(),
             turn: this.currentTurn
-        });
+        };
+        
+        this.combatLog.push(logEntry);
         console.log(`[Turn ${this.currentTurn}] ${message}`);
+        
+        // Send to UI message system
+        if (window.engine && window.engine.ui) {
+            const displayMessage = emoji ? `${emoji} ${message}` : message;
+            window.engine.ui.addMessage(displayMessage, type);
+        }
     }
     
     /**
@@ -552,7 +884,23 @@ class Combat {
             return null;
         }
         
-        this.logMessage(`${currentActor.combatant.name || 'Combatant'}'s turn`);
+        // Dramatic turn announcements
+        const isPlayer = currentActor.isPlayer;
+        const combatant = currentActor.combatant;
+        
+        if (isPlayer) {
+            this.logMessage(`🛡️ ${combatant.name || 'Hero'}'s turn to act!`, 'turn', '🛡️');
+        } else {
+            const enemyTurnMessages = [
+                `${combatant.name} prepares to strike!`,
+                `${combatant.name} eyes the party menacingly!`,
+                `${combatant.name} moves to attack!`,
+                `${combatant.name} snarls and advances!`
+            ];
+            const enemyTurnMessage = Random.choice(enemyTurnMessages);
+            this.logMessage(`👹 ${enemyTurnMessage}`, 'turn', '👹');
+        }
+        
         return currentActor;
     }
 }

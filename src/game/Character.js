@@ -247,6 +247,31 @@ class Character {
     }
     
     /**
+     * Get current weapon information
+     */
+    getCurrentWeapon() {
+        if (this.equipment.weapon) {
+            return this.equipment.weapon;
+        } else {
+            // Return unarmed "weapon" information
+            return {
+                name: 'Unarmed',
+                type: 'unarmed',
+                damageBonus: 0,
+                attackBonus: 0,
+                description: 'Fighting with fists and feet'
+            };
+        }
+    }
+    
+    /**
+     * Check if character is unarmed
+     */
+    isUnarmed() {
+        return !this.equipment.weapon;
+    }
+    
+    /**
      * Get save data
      */
     getSaveData() {

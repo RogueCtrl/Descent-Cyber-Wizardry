@@ -963,11 +963,11 @@ class EncounterGenerator {
         }
         
         if (!chosenEncounter || chosenEncounter.monsters.length === 0) {
-            return { monsters: [], isEmpty: true };
+            return { enemyParties: [], isEmpty: true };
         }
         
-        // Generate monsters using async entity loading
-        const encounter = { monsters: [], isEmpty: false };
+        // Generate enemy party using async entity loading
+        const enemyParty = [];
         
         for (const monsterType of chosenEncounter.monsters) {
             const count = Array.isArray(chosenEncounter.count) ? 
@@ -977,9 +977,17 @@ class EncounterGenerator {
             for (let i = 0; i < count; i++) {
                 const monster = new Monster();
                 await monster.initializeFromData(monsterType);
-                encounter.monsters.push(monster);
+                enemyParty.push(monster);
             }
         }
+        
+        // Return encounter with enemyParties array (single party for now)
+        const encounter = { 
+            enemyParties: [enemyParty], 
+            isEmpty: false,
+            // Backward compatibility
+            monsters: enemyParty
+        };
         
         return encounter;
     }
@@ -1002,18 +1010,15 @@ class EncounterGenerator {
         const possibleBosses = bossTypes[level];
         const bossType = Random.choice(possibleBosses);
         
-        const encounter = {
-            monsters: [],
-            isBoss: true,
-            isEmpty: false
-        };
+        // Create boss party
+        const bossParty = [];
         
         // Create boss monster
         const boss = new Monster();
         await boss.initializeFromData(bossType);
-        encounter.monsters.push(boss);
+        bossParty.push(boss);
         
-        // Add some minions
+        // Add some minions to the boss party
         const minionCount = Random.integer(1, 3);
         const minionTypes = level <= 2 ? ['Orc', 'Kobold'] : ['Hobgoblin', 'Orc'];
         
@@ -1021,8 +1026,17 @@ class EncounterGenerator {
             const minionType = Random.choice(minionTypes);
             const minion = new Monster();
             await minion.initializeFromData(minionType);
-            encounter.monsters.push(minion);
+            bossParty.push(minion);
         }
+        
+        // Create encounter with boss party
+        const encounter = {
+            enemyParties: [bossParty],
+            isBoss: true,
+            isEmpty: false,
+            // Backward compatibility
+            monsters: bossParty
+        };
         
         return encounter;
     }
@@ -1031,9 +1045,22 @@ class EncounterGenerator {
      * Calculate encounter difficulty
      */
     calculateDifficulty(encounter, partyLevel, partySize) {
-        const totalXP = encounter.monsters.reduce((sum, monster) => 
-            sum + monster.experienceValue, 0
-        );
+        // Calculate total XP from all enemy parties
+        let totalXP = 0;
+        
+        if (encounter.enemyParties) {
+            // New format: sum XP from all parties
+            for (const enemyParty of encounter.enemyParties) {
+                totalXP += enemyParty.reduce((sum, monster) => 
+                    sum + monster.experienceValue, 0
+                );
+            }
+        } else if (encounter.monsters) {
+            // Backward compatibility: use monsters array
+            totalXP = encounter.monsters.reduce((sum, monster) => 
+                sum + monster.experienceValue, 0
+            );
+        }
         
         const expectedXPPerCharacter = partyLevel * 100;
         const partyXPBudget = expectedXPPerCharacter * partySize;

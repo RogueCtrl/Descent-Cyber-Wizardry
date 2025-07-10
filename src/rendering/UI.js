@@ -1070,6 +1070,342 @@ class UI {
                 button.disabled = true;
             }
         });
+        
+        // Create combat interface in viewport
+        this.createCombatInterface();
+        
+        // Check if it's a player turn after interface is ready
+        setTimeout(() => this.checkForPlayerTurn(), 100);
+    }
+    
+    /**
+     * Create combat interface in viewport
+     */
+    createCombatInterface() {
+        const viewport = document.getElementById('viewport');
+        if (!viewport) return;
+        
+        // Clear viewport and create combat UI
+        viewport.innerHTML = `
+            <div id="combat-interface" class="combat-interface">
+                <div class="combat-header">
+                    <h2>Combat</h2>
+                    <div class="encounter-message" id="encounter-message"></div>
+                </div>
+                
+                <div class="combat-body">
+                    <div class="combat-status">
+                        <div class="party-status">
+                            <h3>Your Party</h3>
+                            <div id="party-combat-status"></div>
+                        </div>
+                        <div class="enemy-status">
+                            <h3 id="enemy-status-header">Enemies</h3>
+                            <div id="wave-info" class="wave-info"></div>
+                            <div id="enemy-combat-status"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="combat-actions">
+                        <h3>Choose Action:</h3>
+                        <div class="action-buttons">
+                            <button id="combat-attack" class="combat-action-btn" data-action="attack">
+                                <span class="action-number">1</span>
+                                <span class="action-text">Attack</span>
+                            </button>
+                            <button id="combat-defend" class="combat-action-btn" data-action="defend">
+                                <span class="action-number">2</span>
+                                <span class="action-text">Defend</span>
+                            </button>
+                            <button id="combat-cast-spell" class="combat-action-btn" data-action="cast-spell">
+                                <span class="action-number">3</span>
+                                <span class="action-text">Cast Spell</span>
+                            </button>
+                            <button id="combat-use-item" class="combat-action-btn" data-action="use-item">
+                                <span class="action-number">4</span>
+                                <span class="action-text">Use Item</span>
+                            </button>
+                            <button id="combat-run" class="combat-action-btn" data-action="run">
+                                <span class="action-number">5</span>
+                                <span class="action-text">Run</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners for combat actions
+        this.setupCombatEventListeners();
+        
+        // Update combat status with current data
+        this.updateCombatStatus();
+    }
+    
+    /**
+     * Setup combat event listeners
+     */
+    setupCombatEventListeners() {
+        const actionButtons = document.querySelectorAll('.combat-action-btn');
+        
+        // Mouse click handlers
+        actionButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                this.handleCombatAction(action);
+            });
+        });
+        
+        // Keyboard handlers (1-5 keys)
+        document.addEventListener('keydown', (e) => {
+            if (this.gameState && this.gameState.currentState === 'combat') {
+                const key = e.key;
+                let action = null;
+                
+                switch(key) {
+                    case '1': action = 'attack'; break;
+                    case '2': action = 'defend'; break;
+                    case '3': action = 'cast-spell'; break;
+                    case '4': action = 'use-item'; break;
+                    case '5': action = 'run'; break;
+                }
+                
+                if (action) {
+                    e.preventDefault();
+                    this.handleCombatAction(action);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Update combat status display
+     */
+    updateCombatStatus() {
+        console.log('Updating combat status...');
+        // Get party status
+        const partyStatusDiv = document.getElementById('party-combat-status');
+        const enemyStatusDiv = document.getElementById('enemy-combat-status');
+        
+        if (partyStatusDiv && window.engine && window.engine.party) {
+            const party = window.engine.party;
+            console.log('Party data:', party, 'Alive members:', party.aliveMembers);
+            partyStatusDiv.innerHTML = party.aliveMembers.map(member => `
+                <div class="combatant-status">
+                    <div class="combatant-name">${member.name} (${member.class})</div>
+                    <div class="combatant-hp">HP: ${member.currentHP}/${member.maxHP}</div>
+                    <div class="combatant-weapon">${member.getCurrentWeapon().name}</div>
+                </div>
+            `).join('');
+        } else {
+            console.log('Party status div or party not found:', {
+                partyStatusDiv: !!partyStatusDiv,
+                engine: !!window.engine,
+                party: !!window.engine?.party
+            });
+        }
+        
+        if (enemyStatusDiv && window.engine && window.engine.combatInterface) {
+            // Try to get current combat data
+            const combat = window.engine.combatInterface.combat;
+            console.log('Combat interface data:', {
+                combat: !!combat,
+                isActive: combat?.isActive,
+                combatants: combat?.combatants
+            });
+            
+            if (combat && combat.isActive) {
+                // Update wave information
+                const waveInfo = combat.getCurrentEnemyPartyInfo();
+                const waveInfoDiv = document.getElementById('wave-info');
+                if (waveInfoDiv) {
+                    waveInfoDiv.innerHTML = `
+                        <div class="wave-counter">Wave ${waveInfo.currentWave} of ${waveInfo.totalWaves}</div>
+                    `;
+                }
+                
+                // Get current enemies (not party members)
+                const enemies = combat.combatants.filter(c => !window.engine.party.aliveMembers.includes(c));
+                console.log('Enemies found:', enemies);
+                
+                enemyStatusDiv.innerHTML = enemies.map(enemy => `
+                    <div class="combatant-status">
+                        <div class="combatant-name">${enemy.name}</div>
+                        <div class="combatant-hp">HP: ${enemy.currentHP}/${enemy.maxHP}</div>
+                        <div class="combatant-threat">Threat Level: High</div>
+                    </div>
+                `).join('');
+            } else {
+                // Show placeholder if combat not fully initialized yet
+                console.log('Combat not active, showing loading message');
+                enemyStatusDiv.innerHTML = `
+                    <div class="combatant-status">
+                        <div class="combatant-name">Loading enemies...</div>
+                    </div>
+                `;
+                
+                // Try again in a moment
+                setTimeout(() => this.updateCombatStatus(), 500);
+            }
+        } else {
+            console.log('Enemy status div or combat interface not found:', {
+                enemyStatusDiv: !!enemyStatusDiv,
+                engine: !!window.engine,
+                combatInterface: !!window.engine?.combatInterface
+            });
+        }
+    }
+    
+    /**
+     * Handle combat action selection
+     */
+    handleCombatAction(action) {
+        console.log('Combat action selected:', action);
+        this.addMessage(`You selected: ${action}`, 'combat');
+        
+        // Emit combat action event for the combat system to process
+        if (this.eventSystem) {
+            this.eventSystem.emit('combat-action-selected', {
+                action: action,
+                timestamp: Date.now()
+            });
+        }
+        
+        // Also try to process the action directly if combat system is available
+        if (window.engine && window.engine.combatInterface) {
+            this.processCombatAction(action);
+        }
+    }
+    
+    /**
+     * Process combat action
+     */
+    processCombatAction(action) {
+        const combat = window.engine.combatInterface.combat;
+        if (!combat || !combat.isActive) {
+            this.addMessage('Combat system not ready!', 'error');
+            return;
+        }
+        
+        const currentActor = combat.getCurrentActor();
+        if (!currentActor) {
+            this.addMessage('No current actor!', 'error');
+            return;
+        }
+        
+        // Check if it's actually a player turn
+        if (!currentActor.isPlayer) {
+            this.addMessage('It is not your turn!', 'error');
+            // Process monster AI turn instead
+            this.processMonsterTurn(currentActor.combatant);
+            return;
+        }
+        
+        // Create action object based on selected action
+        let actionData = {
+            type: action,
+            attacker: currentActor.combatant // Use correct property name for attack actions
+        };
+        
+        switch(action) {
+            case 'attack':
+                // For attack, we need a target - for now, target the first enemy
+                const enemies = combat.combatants.filter(c => !window.engine.party.aliveMembers.includes(c));
+                if (enemies.length > 0) {
+                    actionData.target = enemies[0];
+                    actionData.type = 'attack';
+                } else {
+                    this.addMessage('No enemies to attack!', 'error');
+                    return;
+                }
+                break;
+                
+            case 'defend':
+                actionData.type = 'defend';
+                actionData.defender = currentActor.combatant;
+                break;
+                
+            case 'run':
+                actionData.type = 'flee';
+                break;
+                
+            default:
+                this.addMessage(`${action} not implemented yet!`, 'warning');
+                return;
+        }
+        
+        // Process the action
+        const result = combat.processAction(actionData);
+        
+        if (result.success) {
+            this.addMessage(result.message, 'combat');
+            // Update combat status after action and check for next turn
+            setTimeout(() => {
+                this.updateCombatStatus();
+                this.checkForPlayerTurn();
+            }, 100);
+        } else {
+            this.addMessage(result.message || 'Action failed!', 'error');
+        }
+    }
+    
+    /**
+     * Process monster AI turn
+     */
+    processMonsterTurn(monster) {
+        console.log('Processing monster turn for:', monster.name);
+        
+        if (!window.engine.combatInterface) {
+            this.addMessage('Combat system not ready!', 'error');
+            return;
+        }
+        
+        // Use the combat interface's AI processing
+        const aiResult = window.engine.combatInterface.processAITurn(monster);
+        
+        if (aiResult.success !== false) {
+            // Move to next turn after AI action
+            setTimeout(() => {
+                this.updateCombatStatus();
+                this.checkForPlayerTurn();
+            }, 1000); // Small delay for dramatic effect
+        } else {
+            this.addMessage('Monster AI failed to act!', 'error');
+        }
+    }
+    
+    /**
+     * Check if it's a player turn and enable/disable actions accordingly
+     */
+    checkForPlayerTurn() {
+        const combat = window.engine.combatInterface?.combat;
+        if (!combat || !combat.isActive) {
+            return;
+        }
+        
+        const currentActor = combat.getCurrentActor();
+        if (!currentActor) {
+            return;
+        }
+        
+        if (currentActor.isPlayer) {
+            // Enable action buttons for player
+            const actionButtons = document.querySelectorAll('.action-buttons button');
+            actionButtons.forEach(button => {
+                button.disabled = false;
+            });
+        } else {
+            // Disable action buttons and process monster turn
+            const actionButtons = document.querySelectorAll('.action-buttons button');
+            actionButtons.forEach(button => {
+                button.disabled = true;
+            });
+            
+            // Process monster turn after a short delay
+            setTimeout(() => {
+                this.processMonsterTurn(currentActor.combatant);
+            }, 500);
+        }
     }
     
     /**
@@ -1084,6 +1420,25 @@ class UI {
                 button.disabled = false;
             }
         });
+        
+        // Restore 3D viewport
+        this.restoreDungeonViewport();
+    }
+    
+    /**
+     * Restore 3D dungeon viewport
+     */
+    restoreDungeonViewport() {
+        const viewport = document.getElementById('viewport');
+        if (!viewport) return;
+        
+        // Clear combat interface and restore 3D view
+        viewport.innerHTML = '';
+        
+        // Re-initialize 3D rendering if needed
+        if (window.engine && window.engine.renderer) {
+            window.engine.renderer.setupViewport();
+        }
     }
     
     /**

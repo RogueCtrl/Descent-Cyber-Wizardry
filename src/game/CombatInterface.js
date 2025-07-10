@@ -36,6 +36,65 @@ class CombatInterface {
     }
     
     /**
+     * Initialize specific combat encounter with specific monster
+     */
+    async initiateSpecificCombat(party, monsterId, message = null) {
+        // Initialize equipment system
+        await this.initializeEquipment();
+        
+        // Create specific monster encounter
+        console.log('Creating monster with ID:', monsterId);
+        const monster = new Monster();
+        await monster.initializeFromData(monsterId);
+        console.log('Monster initialized:', monster);
+        
+        // Create enemy party structure
+        const enemyParty = [monster]; // Single monster in a party
+        const enemyParties = [enemyParty]; // Single enemy party (could have multiple for waves)
+        
+        const encounter = {
+            enemyParties: enemyParties,
+            isBoss: true,
+            isEmpty: false
+        };
+        
+        console.log('Encounter created with enemy parties:', encounter);
+        
+        // Setup formation
+        const formationData = this.formation.setupFromParty(party);
+        
+        // Start combat
+        console.log('Starting combat with party:', party, 'and enemy parties:', encounter.enemyParties);
+        const combatStart = await this.combat.startCombat(party, encounter.enemyParties);
+        console.log('Combat started, first actor:', combatStart);
+        
+        // Calculate difficulty
+        const difficulty = this.encounterGenerator.calculateDifficulty(
+            encounter, 
+            party.averageLevel || 1, 
+            party.size
+        );
+        
+        // Emit combat started event
+        this.eventSystem.emit('combat-started', {
+            encounter,
+            formation: formationData,
+            difficulty,
+            firstActor: combatStart,
+            surpriseRound: this.combat.surpriseRound,
+            message
+        });
+        
+        return {
+            success: true,
+            encounter,
+            formation: formationData,
+            difficulty,
+            currentActor: combatStart
+        };
+    }
+    
+    /**
      * Initialize combat encounter
      */
     async initiateCombat(party, encounterType = 'random', dungeonLevel = 1) {
@@ -57,11 +116,16 @@ class CombatInterface {
             };
         }
         
+        // Convert monsters to enemy party structure for backward compatibility
+        if (encounter.monsters && !encounter.enemyParties) {
+            encounter.enemyParties = [encounter.monsters]; // Wrap monsters in party structure
+        }
+        
         // Setup formation
         const formationData = this.formation.setupFromParty(party);
         
         // Start combat
-        const combatStart = await this.combat.startCombat(party, encounter.monsters);
+        const combatStart = await this.combat.startCombat(party, encounter.enemyParties);
         
         // Calculate difficulty
         const difficulty = this.encounterGenerator.calculateDifficulty(
@@ -495,10 +559,14 @@ class CombatInterface {
         const aiDecision = monster.chooseAction(playerTargets);
         
         if (aiDecision.action === 'attack') {
-            const attackResult = monster.performAttack(
-                aiDecision.attackIndex, 
-                aiDecision.target
-            );
+            // Use the combat system's attack processing instead of monster.performAttack
+            const attackAction = {
+                type: 'attack',
+                attacker: monster,
+                target: aiDecision.target
+            };
+            
+            const attackResult = this.combat.processAction(attackAction);
             
             // Emit AI action event
             this.eventSystem.emit('ai-action-taken', {

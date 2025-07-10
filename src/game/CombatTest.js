@@ -1,1 +1,494 @@
-/**\n * Combat System Test\n * Simple test scenarios to validate combat mechanics\n */\nclass CombatTest {\n    constructor() {\n        this.testResults = [];\n    }\n    \n    /**\n     * Run all combat tests\n     */\n    runAllTests() {\n        console.log('Starting Combat System Tests...');\n        \n        this.testResults = [];\n        \n        try {\n            this.testCharacterCreation();\n            this.testEquipmentSystem();\n            this.testFormationSystem();\n            this.testMonsterCreation();\n            this.testCombatInitiation();\n            this.testCombatActions();\n            this.testEncounterGeneration();\n            \n            this.printTestResults();\n            \n        } catch (error) {\n            console.error('Test failed with error:', error);\n            this.testResults.push({\n                test: 'Critical Error',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test character creation for combat\n     */\n    testCharacterCreation() {\n        console.log('Testing character creation...');\n        \n        try {\n            // Create a test fighter\n            const fighter = new Character('Test Fighter', 'Human', 'Fighter');\n            fighter.attributes = {\n                strength: 16,\n                intelligence: 10,\n                piety: 10,\n                vitality: 14,\n                agility: 12,\n                luck: 10\n            };\n            fighter.level = 3;\n            fighter.maxHP = 25;\n            fighter.currentHP = 25;\n            \n            // Create a test mage\n            const mage = new Character('Test Mage', 'Elf', 'Mage');\n            mage.attributes = {\n                strength: 8,\n                intelligence: 16,\n                piety: 12,\n                vitality: 10,\n                agility: 14,\n                luck: 12\n            };\n            mage.level = 3;\n            mage.maxHP = 15;\n            mage.currentHP = 15;\n            \n            this.testResults.push({\n                test: 'Character Creation',\n                passed: true,\n                details: `Created ${fighter.name} (${fighter.class}) and ${mage.name} (${mage.class})`\n            });\n            \n            return { fighter, mage };\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Character Creation',\n                passed: false,\n                error: error.message\n            });\n            return null;\n        }\n    }\n    \n    /**\n     * Test equipment system\n     */\n    testEquipmentSystem() {\n        console.log('Testing equipment system...');\n        \n        try {\n            const equipment = new Equipment();\n            \n            // Test item retrieval\n            const longSword = equipment.getItem('Long Sword');\n            const chainMail = equipment.getItem('Chain Mail');\n            const largeShield = equipment.getItem('Large Shield');\n            \n            if (!longSword || !chainMail || !largeShield) {\n                throw new Error('Failed to retrieve equipment items');\n            }\n            \n            // Test equipment for character\n            const fighter = new Character('Equipment Test', 'Human', 'Fighter');\n            fighter.attributes = { strength: 16, agility: 12 };\n            \n            const equipResult = equipment.equipItem(fighter, longSword);\n            if (!equipResult.success) {\n                throw new Error('Failed to equip weapon');\n            }\n            \n            // Test combat calculations\n            const attackBonus = equipment.calculateAttackBonus(fighter);\n            const acBonus = equipment.calculateACBonus(fighter);\n            \n            this.testResults.push({\n                test: 'Equipment System',\n                passed: true,\n                details: `Equipment loaded, attack bonus: ${attackBonus}, AC bonus: ${acBonus}`\n            });\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Equipment System',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test formation system\n     */\n    testFormationSystem() {\n        console.log('Testing formation system...');\n        \n        try {\n            const formation = new Formation();\n            const party = this.createTestParty();\n            \n            if (!party) {\n                throw new Error('Failed to create test party');\n            }\n            \n            // Setup formation\n            const formationData = formation.setupFromParty(party);\n            \n            if (formationData.totalMembers !== party.aliveMembers.length) {\n                throw new Error('Formation member count mismatch');\n            }\n            \n            // Test formation validation\n            const validation = formation.validateFormation();\n            if (!validation.valid) {\n                throw new Error('Formation validation failed');\n            }\n            \n            // Test formation effects\n            const frontMember = formationData.frontRow[0];\n            if (frontMember) {\n                const effects = formation.applyFormationEffects(frontMember, 'attack');\n                console.log('Formation effects:', effects);\n            }\n            \n            this.testResults.push({\n                test: 'Formation System',\n                passed: true,\n                details: `Formation setup: ${formationData.frontRow.length} front, ${formationData.backRow.length} back`\n            });\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Formation System',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test monster creation\n     */\n    testMonsterCreation() {\n        console.log('Testing monster creation...');\n        \n        try {\n            // Create various monsters\n            const kobold = new Monster('Kobold');\n            const orc = new Monster('Orc');\n            const dragon = new Monster('Young Dragon');\n            \n            if (!kobold.name || !orc.name || !dragon.name) {\n                throw new Error('Monster creation failed');\n            }\n            \n            // Test monster AI\n            const testTargets = this.createTestParty().aliveMembers;\n            const aiDecision = orc.chooseAction(testTargets);\n            \n            if (!aiDecision.action) {\n                throw new Error('Monster AI decision failed');\n            }\n            \n            this.testResults.push({\n                test: 'Monster Creation',\n                passed: true,\n                details: `Created ${kobold.name}, ${orc.name}, ${dragon.name}. AI decision: ${aiDecision.action}`\n            });\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Monster Creation',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test combat initiation\n     */\n    testCombatInitiation() {\n        console.log('Testing combat initiation...');\n        \n        try {\n            const combat = new Combat();\n            const party = this.createTestParty();\n            const enemies = [new Monster('Orc'), new Monster('Kobold')];\n            \n            if (!party || enemies.length === 0) {\n                throw new Error('Failed to create combat participants');\n            }\n            \n            // Start combat\n            const firstActor = combat.startCombat(party, enemies);\n            \n            if (!combat.isActive) {\n                throw new Error('Combat failed to start');\n            }\n            \n            if (!firstActor) {\n                throw new Error('Failed to determine first actor');\n            }\n            \n            // Test initiative system\n            if (combat.turnOrder.length === 0) {\n                throw new Error('Initiative order not calculated');\n            }\n            \n            this.testResults.push({\n                test: 'Combat Initiation',\n                passed: true,\n                details: `Combat started, ${combat.turnOrder.length} combatants in initiative order`\n            });\n            \n            // Clean up\n            combat.endCombat();\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Combat Initiation',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test combat actions\n     */\n    testCombatActions() {\n        console.log('Testing combat actions...');\n        \n        try {\n            const combat = new Combat();\n            const party = this.createTestParty();\n            const enemies = [new Monster('Kobold')];\n            \n            // Start combat\n            combat.startCombat(party, enemies);\n            \n            // Test attack action\n            const attacker = party.aliveMembers[0];\n            const target = enemies[0];\n            \n            const attackAction = {\n                type: 'attack',\n                attacker: attacker,\n                target: target\n            };\n            \n            const attackResult = combat.processAction(attackAction);\n            \n            if (!attackResult.success && !attackResult.hit !== undefined) {\n                throw new Error('Attack action failed to process');\n            }\n            \n            // Test defend action\n            const defendAction = {\n                type: 'defend',\n                defender: attacker\n            };\n            \n            const defendResult = combat.processAction(defendAction);\n            \n            if (!defendResult.success) {\n                throw new Error('Defend action failed');\n            }\n            \n            this.testResults.push({\n                test: 'Combat Actions',\n                passed: true,\n                details: `Attack processed: ${attackResult.hit ? 'hit' : 'miss'}, Defend: ${defendResult.success}`\n            });\n            \n            combat.endCombat();\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Combat Actions',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Test encounter generation\n     */\n    testEncounterGeneration() {\n        console.log('Testing encounter generation...');\n        \n        try {\n            const generator = new EncounterGenerator();\n            \n            // Test random encounters\n            const encounter1 = generator.generateEncounter(1, 1);\n            const encounter2 = generator.generateEncounter(3, 3);\n            const encounter5 = generator.generateEncounter(5, 5);\n            \n            // Test boss encounter\n            const bossEncounter = generator.generateBossEncounter(3);\n            \n            if (!bossEncounter.isBoss) {\n                throw new Error('Boss encounter not properly marked');\n            }\n            \n            // Test difficulty calculation\n            const party = this.createTestParty();\n            const difficulty = generator.calculateDifficulty(encounter2, 3, party.size);\n            \n            this.testResults.push({\n                test: 'Encounter Generation',\n                passed: true,\n                details: `Generated encounters for levels 1,3,5. Boss encounter: ${bossEncounter.monsters.length} monsters. Difficulty: ${difficulty}`\n            });\n            \n        } catch (error) {\n            this.testResults.push({\n                test: 'Encounter Generation',\n                passed: false,\n                error: error.message\n            });\n        }\n    }\n    \n    /**\n     * Create a test party\n     */\n    createTestParty() {\n        try {\n            const party = new Party();\n            \n            // Create fighter\n            const fighter = new Character('Tank', 'Human', 'Fighter');\n            fighter.attributes = { strength: 16, vitality: 14, agility: 12 };\n            fighter.level = 3;\n            fighter.maxHP = 25;\n            fighter.currentHP = 25;\n            \n            // Create mage\n            const mage = new Character('Wizard', 'Elf', 'Mage');\n            mage.attributes = { intelligence: 16, agility: 14, vitality: 10 };\n            mage.level = 3;\n            mage.maxHP = 15;\n            mage.currentHP = 15;\n            \n            // Create priest\n            const priest = new Character('Healer', 'Human', 'Priest');\n            priest.attributes = { piety: 16, vitality: 12, agility: 10 };\n            priest.level = 3;\n            priest.maxHP = 20;\n            priest.currentHP = 20;\n            \n            party.addMember(fighter);\n            party.addMember(mage);\n            party.addMember(priest);\n            \n            return party;\n            \n        } catch (error) {\n            console.error('Failed to create test party:', error);\n            return null;\n        }\n    }\n    \n    /**\n     * Print test results\n     */\n    printTestResults() {\n        console.log('\\n=== COMBAT SYSTEM TEST RESULTS ===');\n        \n        const passed = this.testResults.filter(result => result.passed).length;\n        const total = this.testResults.length;\n        \n        console.log(`\\nTests Passed: ${passed}/${total}`);\n        \n        this.testResults.forEach(result => {\n            const status = result.passed ? '✅ PASS' : '❌ FAIL';\n            console.log(`\\n${status}: ${result.test}`);\n            \n            if (result.details) {\n                console.log(`   Details: ${result.details}`);\n            }\n            \n            if (result.error) {\n                console.log(`   Error: ${result.error}`);\n            }\n        });\n        \n        if (passed === total) {\n            console.log('\\n🎉 All tests passed! Combat system is ready.');\n        } else {\n            console.log(`\\n⚠️  ${total - passed} test(s) failed. Please review the errors above.`);\n        }\n        \n        console.log('\\n=== END TEST RESULTS ===\\n');\n    }\n    \n    /**\n     * Run a specific test\n     */\n    runSpecificTest(testName) {\n        console.log(`Running specific test: ${testName}`);\n        \n        switch (testName) {\n            case 'character':\n                this.testCharacterCreation();\n                break;\n            case 'equipment':\n                this.testEquipmentSystem();\n                break;\n            case 'formation':\n                this.testFormationSystem();\n                break;\n            case 'monster':\n                this.testMonsterCreation();\n                break;\n            case 'combat':\n                this.testCombatInitiation();\n                break;\n            case 'actions':\n                this.testCombatActions();\n                break;\n            case 'encounters':\n                this.testEncounterGeneration();\n                break;\n            default:\n                console.log('Unknown test name. Available tests: character, equipment, formation, monster, combat, actions, encounters');\n                return;\n        }\n        \n        this.printTestResults();\n    }\n}\n\n// Export for use in browser console or testing\nif (typeof window !== 'undefined') {\n    window.CombatTest = CombatTest;\n}"
+/**
+ * Combat System Test
+ * Simple test scenarios to validate combat mechanics
+ */
+class CombatTest {
+    constructor() {
+        this.testResults = [];
+    }
+    
+    /**
+     * Run all combat tests
+     */
+    runAllTests() {
+        console.log('Starting Combat System Tests...');
+        
+        this.testResults = [];
+        
+        try {
+            this.testCharacterCreation();
+            this.testEquipmentSystem();
+            this.testFormationSystem();
+            this.testMonsterCreation();
+            this.testCombatInitiation();
+            this.testCombatActions();
+            this.testEncounterGeneration();
+            
+            this.printTestResults();
+            
+        } catch (error) {
+            console.error('Test failed with error:', error);
+            this.testResults.push({
+                test: 'Critical Error',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test character creation for combat
+     */
+    testCharacterCreation() {
+        console.log('Testing character creation...');
+        
+        try {
+            // Create a test fighter
+            const fighter = new Character('Test Fighter', 'Human', 'Fighter');
+            fighter.attributes = {
+                strength: 16,
+                intelligence: 10,
+                piety: 10,
+                vitality: 14,
+                agility: 12,
+                luck: 10
+            };
+            fighter.level = 3;
+            fighter.maxHP = 25;
+            fighter.currentHP = 25;
+            
+            // Create a test mage
+            const mage = new Character('Test Mage', 'Elf', 'Mage');
+            mage.attributes = {
+                strength: 8,
+                intelligence: 16,
+                piety: 12,
+                vitality: 10,
+                agility: 14,
+                luck: 12
+            };
+            mage.level = 3;
+            mage.maxHP = 15;
+            mage.currentHP = 15;
+            
+            this.testResults.push({
+                test: 'Character Creation',
+                passed: true,
+                details: `Created ${fighter.name} (${fighter.class}) and ${mage.name} (${mage.class})`
+            });
+            
+            return { fighter, mage };
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Character Creation',
+                passed: false,
+                error: error.message
+            });
+            return null;
+        }
+    }
+    
+    /**
+     * Test equipment system
+     */
+    testEquipmentSystem() {
+        console.log('Testing equipment system...');
+        
+        try {
+            const equipment = new Equipment();
+            
+            // Test item retrieval
+            const longSword = equipment.getItem('Long Sword');
+            const chainMail = equipment.getItem('Chain Mail');
+            const largeShield = equipment.getItem('Large Shield');
+            
+            if (!longSword || !chainMail || !largeShield) {
+                throw new Error('Failed to retrieve equipment items');
+            }
+            
+            // Test equipment for character
+            const fighter = new Character('Equipment Test', 'Human', 'Fighter');
+            fighter.attributes = { strength: 16, agility: 12 };
+            
+            const equipResult = equipment.equipItem(fighter, longSword);
+            if (!equipResult.success) {
+                throw new Error('Failed to equip weapon');
+            }
+            
+            // Test combat calculations
+            const attackBonus = equipment.calculateAttackBonus(fighter);
+            const acBonus = equipment.calculateACBonus(fighter);
+            
+            this.testResults.push({
+                test: 'Equipment System',
+                passed: true,
+                details: `Equipment loaded, attack bonus: ${attackBonus}, AC bonus: ${acBonus}`
+            });
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Equipment System',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test formation system
+     */
+    testFormationSystem() {
+        console.log('Testing formation system...');
+        
+        try {
+            const formation = new Formation();
+            const party = this.createTestParty();
+            
+            if (!party) {
+                throw new Error('Failed to create test party');
+            }
+            
+            // Setup formation
+            const formationData = formation.setupFromParty(party);
+            
+            if (formationData.totalMembers !== party.aliveMembers.length) {
+                throw new Error('Formation member count mismatch');
+            }
+            
+            // Test formation validation
+            const validation = formation.validateFormation();
+            if (!validation.valid) {
+                throw new Error('Formation validation failed');
+            }
+            
+            // Test formation effects
+            const frontMember = formationData.frontRow[0];
+            if (frontMember) {
+                const effects = formation.applyFormationEffects(frontMember, 'attack');
+                console.log('Formation effects:', effects);
+            }
+            
+            this.testResults.push({
+                test: 'Formation System',
+                passed: true,
+                details: `Formation setup: ${formationData.frontRow.length} front, ${formationData.backRow.length} back`
+            });
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Formation System',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test monster creation
+     */
+    testMonsterCreation() {
+        console.log('Testing monster creation...');
+        
+        try {
+            // Create various monsters
+            const kobold = new Monster('Kobold');
+            const orc = new Monster('Orc');
+            const dragon = new Monster('Young Dragon');
+            
+            if (!kobold.name || !orc.name || !dragon.name) {
+                throw new Error('Monster creation failed');
+            }
+            
+            // Test monster AI
+            const testTargets = this.createTestParty().aliveMembers;
+            const aiDecision = orc.chooseAction(testTargets);
+            
+            if (!aiDecision.action) {
+                throw new Error('Monster AI decision failed');
+            }
+            
+            this.testResults.push({
+                test: 'Monster Creation',
+                passed: true,
+                details: `Created ${kobold.name}, ${orc.name}, ${dragon.name}. AI decision: ${aiDecision.action}`
+            });
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Monster Creation',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test combat initiation
+     */
+    testCombatInitiation() {
+        console.log('Testing combat initiation...');
+        
+        try {
+            const combat = new Combat();
+            const party = this.createTestParty();
+            const enemies = [new Monster('Orc'), new Monster('Kobold')];
+            const enemyParties = [enemies]; // Wrap enemies in party structure
+            
+            if (!party || enemies.length === 0) {
+                throw new Error('Failed to create combat participants');
+            }
+            
+            // Start combat with new party-based format
+            const firstActor = combat.startCombat(party, enemyParties);
+            
+            if (!combat.isActive) {
+                throw new Error('Combat failed to start');
+            }
+            
+            if (!firstActor) {
+                throw new Error('Failed to determine first actor');
+            }
+            
+            // Test initiative system
+            if (combat.turnOrder.length === 0) {
+                throw new Error('Initiative order not calculated');
+            }
+            
+            this.testResults.push({
+                test: 'Combat Initiation',
+                passed: true,
+                details: `Combat started, ${combat.turnOrder.length} combatants in initiative order`
+            });
+            
+            // Clean up
+            combat.endCombat();
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Combat Initiation',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test combat actions
+     */
+    testCombatActions() {
+        console.log('Testing combat actions...');
+        
+        try {
+            const combat = new Combat();
+            const party = this.createTestParty();
+            const enemies = [new Monster('Kobold')];
+            const enemyParties = [enemies]; // Wrap enemies in party structure
+            
+            // Start combat with new party-based format
+            combat.startCombat(party, enemyParties);
+            
+            // Test attack action
+            const attacker = party.aliveMembers[0];
+            const target = enemies[0];
+            
+            const attackAction = {
+                type: 'attack',
+                attacker: attacker,
+                target: target
+            };
+            
+            const attackResult = combat.processAction(attackAction);
+            
+            if (!attackResult.success && !attackResult.hit !== undefined) {
+                throw new Error('Attack action failed to process');
+            }
+            
+            // Test defend action
+            const defendAction = {
+                type: 'defend',
+                defender: attacker
+            };
+            
+            const defendResult = combat.processAction(defendAction);
+            
+            if (!defendResult.success) {
+                throw new Error('Defend action failed');
+            }
+            
+            this.testResults.push({
+                test: 'Combat Actions',
+                passed: true,
+                details: `Attack processed: ${attackResult.hit ? 'hit' : 'miss'}, Defend: ${defendResult.success}`
+            });
+            
+            combat.endCombat();
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Combat Actions',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Test encounter generation
+     */
+    testEncounterGeneration() {
+        console.log('Testing encounter generation...');
+        
+        try {
+            const generator = new EncounterGenerator();
+            
+            // Test random encounters
+            const encounter1 = generator.generateEncounter(1, 1);
+            const encounter2 = generator.generateEncounter(3, 3);
+            const encounter5 = generator.generateEncounter(5, 5);
+            
+            // Test boss encounter
+            const bossEncounter = generator.generateBossEncounter(3);
+            
+            if (!bossEncounter.isBoss) {
+                throw new Error('Boss encounter not properly marked');
+            }
+            
+            // Test difficulty calculation
+            const party = this.createTestParty();
+            const difficulty = generator.calculateDifficulty(encounter2, 3, party.size);
+            
+            // Check if encounter has enemyParties or monsters for backward compatibility
+            const enemyCount = bossEncounter.enemyParties ? 
+                bossEncounter.enemyParties[0].length : 
+                bossEncounter.monsters.length;
+            
+            this.testResults.push({
+                test: 'Encounter Generation',
+                passed: true,
+                details: `Generated encounters for levels 1,3,5. Boss encounter: ${enemyCount} monsters. Difficulty: ${difficulty}`
+            });
+            
+        } catch (error) {
+            this.testResults.push({
+                test: 'Encounter Generation',
+                passed: false,
+                error: error.message
+            });
+        }
+    }
+    
+    /**
+     * Create a test party
+     */
+    createTestParty() {
+        try {
+            const party = new Party();
+            
+            // Create fighter
+            const fighter = new Character('Tank', 'Human', 'Fighter');
+            fighter.attributes = { strength: 16, vitality: 14, agility: 12 };
+            fighter.level = 3;
+            fighter.maxHP = 25;
+            fighter.currentHP = 25;
+            
+            // Create mage
+            const mage = new Character('Wizard', 'Elf', 'Mage');
+            mage.attributes = { intelligence: 16, agility: 14, vitality: 10 };
+            mage.level = 3;
+            mage.maxHP = 15;
+            mage.currentHP = 15;
+            
+            // Create priest
+            const priest = new Character('Healer', 'Human', 'Priest');
+            priest.attributes = { piety: 16, vitality: 12, agility: 10 };
+            priest.level = 3;
+            priest.maxHP = 20;
+            priest.currentHP = 20;
+            
+            party.addMember(fighter);
+            party.addMember(mage);
+            party.addMember(priest);
+            
+            return party;
+            
+        } catch (error) {
+            console.error('Failed to create test party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Print test results
+     */
+    printTestResults() {
+        console.log('\n=== COMBAT SYSTEM TEST RESULTS ===');
+        
+        const passed = this.testResults.filter(result => result.passed).length;
+        const total = this.testResults.length;
+        
+        console.log(`\nTests Passed: ${passed}/${total}`);
+        
+        this.testResults.forEach(result => {
+            const status = result.passed ? '✅ PASS' : '❌ FAIL';
+            console.log(`\n${status}: ${result.test}`);
+            
+            if (result.details) {
+                console.log(`   Details: ${result.details}`);
+            }
+            
+            if (result.error) {
+                console.log(`   Error: ${result.error}`);
+            }
+        });
+        
+        if (passed === total) {
+            console.log('\n🎉 All tests passed! Combat system is ready.');
+        } else {
+            console.log(`\n⚠️  ${total - passed} test(s) failed. Please review the errors above.`);
+        }
+        
+        console.log('\n=== END TEST RESULTS ===\n');
+    }
+    
+    /**
+     * Run a specific test
+     */
+    runSpecificTest(testName) {
+        console.log(`Running specific test: ${testName}`);
+        
+        switch (testName) {
+            case 'character':
+                this.testCharacterCreation();
+                break;
+            case 'equipment':
+                this.testEquipmentSystem();
+                break;
+            case 'formation':
+                this.testFormationSystem();
+                break;
+            case 'monster':
+                this.testMonsterCreation();
+                break;
+            case 'combat':
+                this.testCombatInitiation();
+                break;
+            case 'actions':
+                this.testCombatActions();
+                break;
+            case 'encounters':
+                this.testEncounterGeneration();
+                break;
+            default:
+                console.log('Unknown test name. Available tests: character, equipment, formation, monster, combat, actions, encounters');
+                return;
+        }
+        
+        this.printTestResults();
+    }
+}
+
+// Export for use in browser console or testing
+if (typeof window !== 'undefined') {
+    window.CombatTest = CombatTest;
+}

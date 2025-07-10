@@ -37,7 +37,7 @@ class Dungeon {
             tiles: this.testMode ? this.generateTestMap() : this.generateWizardryMaze(20, 20, floorNumber),
             monsters: [],
             treasures: [],
-            encounters: this.testMode ? [] : this.generateEncounters(floorNumber),
+            encounters: this.testMode ? this.generateTrainingGroundsEncounters() : this.generateEncounters(floorNumber),
             specialSquares: this.testMode ? [] : this.generateSpecialSquares(floorNumber),
             stairs: this.testMode ? {} : this.generateStairs(floorNumber)
         };
@@ -407,6 +407,27 @@ class Dungeon {
     }
     
     /**
+     * Generate encounters for training grounds (test mode)
+     */
+    generateTrainingGroundsEncounters() {
+        // Place the deadly boss encounter in the corridor between rooms A and B
+        // Based on the test map: corridor is at (3,2) and (4,2)
+        // We'll place the boss at (4,2) - the entrance to the corridor from Room A
+        const encounters = [{
+            x: 4,
+            y: 2,
+            level: 4, // Ogre level
+            triggered: false,
+            type: 'boss',
+            monsterId: 'monster_ogre_001', // Specific boss monster
+            message: 'A massive ogre blocks your path, wielding a fearsome greatclub!'
+        }];
+        
+        console.log('Training grounds encounters generated:', encounters);
+        return encounters;
+    }
+    
+    /**
      * Generate special squares (fountains, teleporters, etc.)
      */
     generateSpecialSquares(floorNumber) {
@@ -652,7 +673,34 @@ class Dungeon {
      * Check for random encounters
      */
     checkRandomEncounter() {
-        // Base encounter chance per step
+        // Debug: Log current position and available encounters
+        console.log(`Checking encounters at position ${this.playerX}, ${this.playerY}`);
+        console.log('Available encounters:', this.currentFloorData.encounters);
+        
+        // First check for fixed encounters at exact position (training grounds boss)
+        const fixedEncounter = this.currentFloorData.encounters.find(enc => 
+            enc.x === this.playerX && 
+            enc.y === this.playerY && 
+            !enc.triggered
+        );
+        
+        if (fixedEncounter) {
+            fixedEncounter.triggered = true;
+            console.log(`Fixed encounter triggered at ${this.playerX}, ${this.playerY}:`, fixedEncounter);
+            
+            // Emit encounter event
+            if (window.engine && window.engine.eventSystem) {
+                window.engine.eventSystem.emit('encounter-triggered', {
+                    encounter: fixedEncounter,
+                    x: this.playerX,
+                    y: this.playerY,
+                    floor: this.currentFloor
+                });
+            }
+            return; // Don't check for random encounters if fixed encounter triggered
+        }
+        
+        // Base encounter chance per step for random encounters
         const baseChance = 0.02 + (this.currentFloor * 0.005);
         
         if (Random.chance(baseChance)) {
@@ -664,7 +712,7 @@ class Dungeon {
             
             if (encounter) {
                 encounter.triggered = true;
-                console.log(`Encounter triggered at ${this.playerX}, ${this.playerY}`);
+                console.log(`Random encounter triggered at ${this.playerX}, ${this.playerY}`);
                 
                 // Emit encounter event
                 if (window.engine && window.engine.eventSystem) {

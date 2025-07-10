@@ -43,6 +43,7 @@ class Engine {
             this.gameState = new GameState(this.eventSystem);
             this.renderer = new Renderer(this.canvas, this.context);
             this.ui = new UI(this.eventSystem);
+            this.ui.gameState = this.gameState; // Pass gameState reference for combat UI
             
             // Initialize storage and entity systems
             console.log('Initializing storage and entity systems...');
@@ -1149,13 +1150,32 @@ class Engine {
         const encounterType = encounter.type === 'boss' ? 'boss' : 'normal';
         const dungeonLevel = floor;
         
-        this.ui.addMessage(`You are attacked by monsters!`);
+        // Display custom message if available
+        const message = encounter.message || 'You are attacked by monsters!';
+        this.ui.addMessage(message);
         
-        // Start combat through combat interface
-        this.combatInterface.initiateCombat(this.party, encounterType, dungeonLevel);
+        // Start combat through combat interface with specific monster ID if provided
+        if (encounter.monsterId) {
+            this.combatInterface.initiateSpecificCombat(this.party, encounter.monsterId, encounter.message);
+        } else {
+            this.combatInterface.initiateCombat(this.party, encounterType, dungeonLevel);
+        }
         
         // Change game state to combat
         this.gameState.setState('combat');
+        
+        // Show the combat interface with encounter message
+        this.ui.showCombatInterface();
+        
+        // Set encounter message if available
+        if (encounter.message) {
+            setTimeout(() => {
+                const messageElement = document.getElementById('encounter-message');
+                if (messageElement) {
+                    messageElement.textContent = encounter.message;
+                }
+            }, 100);
+        }
     }
     
     /**
