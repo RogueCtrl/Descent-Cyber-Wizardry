@@ -1254,27 +1254,10 @@ class UI {
             window.engine.audioManager.playSoundEffect('buttonClick');
         }
         
-        // Advance to next turn in combat system
-        const combat = window.engine.combatInterface?.combat;
-        if (combat && combat.isActive) {
-            try {
-                // Move to next combatant's turn
-                combat.nextTurn();
-                
-                // Update combat status and check for next turn
-                this.updateCombatStatus();
-                this.checkForPlayerTurn();
-            } catch (error) {
-                console.error('Error advancing turn:', error);
-                // Fallback: just update status
-                this.updateCombatStatus();
-                this.checkForPlayerTurn();
-            }
-        } else {
-            // Fallback for when combat system isn't available
-            this.updateCombatStatus();
-            this.checkForPlayerTurn();
-        }
+        // Simply update combat status and check for next turn
+        // The combat system automatically advances after enemy actions
+        this.updateCombatStatus();
+        this.checkForPlayerTurn();
     }
     
     /**
@@ -2111,7 +2094,28 @@ class UI {
         content += '<h2>⚔️ Victory with Casualties</h2>';
         content += '<div class="victory-message">You have emerged victorious, but at a cost...</div>';
         
-        // Casualties section
+        // Casualties of War section (matching defeat screen layout)
+        content += '<div class="casualties-of-war">';
+        content += '<div class="casualties-grid">';
+        
+        // Survivors section (left side)
+        if (survivors && survivors.length > 0) {
+            content += '<div class="survivors-section">';
+            content += '<h3>🛡️ Survivors</h3>';
+            content += '<div class="survivor-list">';
+            
+            survivors.forEach(survivor => {
+                content += '<div class="survivor-item">';
+                content += `<span class="survivor-name">${survivor.name}</span>`;
+                content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Casualties section (right side)
         if (casualties && casualties.length > 0) {
             content += '<div class="casualties-section">';
             content += '<h3>💔 Fallen Companions</h3>';
@@ -2129,24 +2133,10 @@ class UI {
             content += '</div>';
         }
         
-        // Survivors section
-        if (survivors && survivors.length > 0) {
-            content += '<div class="survivors-section">';
-            content += '<h3>🛡️ Survivors</h3>';
-            content += '<div class="survivor-list">';
-            
-            survivors.forEach(survivor => {
-                content += '<div class="survivor-item">';
-                content += `<span class="survivor-name">${survivor.name}</span>`;
-                content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
-                content += '</div>';
-            });
-            
-            content += '</div>';
-            content += '</div>';
-        }
+        content += '</div>'; // Close casualties-grid
+        content += '</div>'; // Close casualties-of-war
         
-        // Rewards section
+        // Rewards section (below casualties)
         if (rewards) {
             content += this.createRewardsSection(rewards);
         }
@@ -2577,9 +2567,31 @@ class UI {
             content += '<div class="death-message">Some of your companions have fallen in battle...</div>';
         }
         
-        // Casualties section
+        // Casualties of War section (matching victory screen layout)
+        content += '<div class="casualties-of-war">';
+        content += '<div class="casualties-grid">';
+        
+        // Survivors section (left side) - show even in defeat to mirror victory
+        const survivors = window.engine.party.aliveMembers;
+        if (survivors.length > 0) {
+            content += '<div class="survivors-section">';
+            content += '<h3>🛡️ Survivors</h3>';
+            content += '<div class="survivor-list">';
+            
+            survivors.forEach(survivor => {
+                content += '<div class="survivor-item">';
+                content += `<span class="survivor-name">${survivor.name}</span>`;
+                content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
+                content += '</div>';
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Casualties section (right side)
         if (casualties && casualties.length > 0) {
-            content += '<div class="death-details">';
+            content += '<div class="casualties-section">';
             content += '<h3>💀 Fallen Heroes</h3>';
             content += '<div class="casualty-list">';
             
@@ -2594,23 +2606,8 @@ class UI {
             content += '</div>';
         }
         
-        // Survivors section
-        const survivors = window.engine.party.aliveMembers;
-        if (survivors.length > 0) {
-            content += '<div class="death-details">';
-            content += '<h3>🛡️ Survivors</h3>';
-            content += '<div class="casualty-list">';
-            
-            survivors.forEach(survivor => {
-                content += '<div class="casualty-item" style="border-left-color: #10b981;">';
-                content += `<span class="casualty-name">${survivor.name}</span>`;
-                content += `<span class="casualty-status" style="color: #10b981;">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
-                content += '</div>';
-            });
-            
-            content += '</div>';
-            content += '</div>';
-        }
+        content += '</div>'; // Close casualties-grid
+        content += '</div>'; // Close casualties-of-war
         
         // Instructions
         content += '<div class="death-message">';
