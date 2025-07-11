@@ -321,7 +321,6 @@ class UI {
         const partyObj = party || (window.engine ? window.engine.party : null);
         const partyInfo = this.getPartyStatusInfo(partyObj);
         const hasActiveParty = partyObj && partyObj.size > 0;
-        const lastSave = this.getLastSaveInfo();
         
         console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
         
@@ -342,8 +341,8 @@ class UI {
                             <button id="training-grounds-btn" class="location-btn primary">
                                 <div class="location-icon">⚔️</div>
                                 <div class="location-info">
-                                    <h3>Training Grounds</h3>
-                                    <p data-text-key="training_description">Create and manage your strike team of agents</p>
+                                    <h3 data-text-key="training_grounds">Training Grounds</h3>
+                                    <p data-text-key="training_grounds_flavor">Create and manage your party of adventurers</p>
                                     <span class="location-status">${hasActiveParty ? 'Manage Strike Team' : 'Initialize Strike Team'}</span>
                                 </div>
                             </button>
@@ -353,8 +352,8 @@ class UI {
                             <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
                                 <div class="location-icon">🏰</div>
                                 <div class="location-info">
-                                    <h3 data-text-key="dungeon">Grid Access Point</h3>
-                                    <p data-text-key="dungeon_description">Enter the corrupted data maze</p>
+                                    <h3 data-text-key="dungeon">Dungeon</h3>
+                                    <p data-text-key="grid_sector_flavor">Enter the Mad Overlord's treacherous maze</p>
                                     <span class="location-status">${hasActiveParty ? 'Enter Grid' : 'Strike Team Required'}</span>
                                 </div>
                             </button>
@@ -364,8 +363,8 @@ class UI {
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">🏪</div>
                                 <div class="location-info">
-                                    <h3>Data Exchange</h3>
-                                    <p>Trade upgrades and system enhancements</p>
+                                    <h3 data-text-key="data_exchange">Trading Post</h3>
+                                    <p data-text-key="data_exchange_flavor">Trade upgrades and equipment with merchants</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -375,8 +374,8 @@ class UI {
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">⛪</div>
                                 <div class="location-info">
-                                    <h3>Restoration Center</h3>
-                                    <p>Repair system damage and restore corrupted agents</p>
+                                    <h3 data-text-key="restoration_center">Temple</h3>
+                                    <p data-text-key="restoration_center_flavor">Repair damage and restore fallen adventurers</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -386,8 +385,8 @@ class UI {
                             <button class="location-btn disabled" disabled>
                                 <div class="location-icon">👥</div>
                                 <div class="location-info">
-                                    <h3>Party Management</h3>
-                                    <p>Manage multiple parties and character roster</p>
+                                    <h3 data-text-key="party_management">Party Management</h3>
+                                    <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>
                                     <span class="location-status">Coming Soon</span>
                                 </div>
                             </button>
@@ -396,20 +395,20 @@ class UI {
                 </div>
                 
                 <div class="game-status-bar">
-                    <div class="status-section">
-                        <span class="status-label" data-text-key="party">Strike Team</span><span class="status-label"> Status:</span>
-                        <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
-                    </div>
-                    <div class="status-section">
-                        <span class="status-label">Last Save:</span>
-                        <span class="status-value">${lastSave}</span>
+                    <div class="status-section party-status">
+                        <div class="status-content">
+                            <span class="status-label"><span data-text-key="party">Party</span> Status:</span>
+                            <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
+                        </div>
                     </div>
                     <div class="status-section mode-toggle-section">
-                        <span class="status-label">Interface Mode:</span>
-                        <button id="terminology-mode-toggle" class="mode-toggle-btn">
-                            <span id="current-mode-display">Cyber</span>
-                            <span class="toggle-icon">⚡</span>
-                        </button>
+                        <div class="status-content">
+                            <span class="status-label">Interface Mode:</span>
+                            <button id="terminology-mode-toggle" class="mode-toggle-btn">
+                                <span id="current-mode-display">Cyber</span>
+                                <span class="toggle-icon">⚡</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

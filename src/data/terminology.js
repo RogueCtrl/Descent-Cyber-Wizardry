@@ -67,7 +67,20 @@ const TERMINOLOGY = {
         no_enemies: "No Enemies",
         combat_active: "Combat Active",
         loading_combat: "Loading Combat...",
-        wave_clear: "Wave Clear"
+        wave_clear: "Wave Clear",
+        
+        // Town Interface
+        training_grounds: "Training Grounds",
+        party_management: "Party Management",
+        data_exchange: "Trading Post",
+        restoration_center: "Temple",
+        
+        // Town Flavor Text
+        training_grounds_flavor: "Create and manage your party of adventurers",
+        party_management_flavor: "Manage multiple parties and character roster",
+        data_exchange_flavor: "Trade upgrades and equipment with merchants",
+        restoration_center_flavor: "Repair damage and restore fallen adventurers",
+        grid_sector_flavor: "Enter the Mad Overlord's treacherous maze"
     },
     
     cyber: {
@@ -79,7 +92,7 @@ const TERMINOLOGY = {
         town_description: "The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.",
         training_description: "Create and manage your strike team of agents",
         dungeon_description: "Enter the corrupted data maze",
-        dungeon: "Grid Sector",
+        dungeon: "Corrupted Network",
         level: "Clearance Level",
         floor: "Grid Layer",
         
@@ -132,7 +145,20 @@ const TERMINOLOGY = {
         no_enemies: "Grid Clear",
         combat_active: "Engagement Active",
         loading_combat: "Connecting to Grid...",
-        wave_clear: "Sector Secured"
+        wave_clear: "Sector Secured",
+        
+        // Town Interface
+        training_grounds: "AgentOps",
+        party_management: "Strike Team Manifest",
+        data_exchange: "Data Exchange",
+        restoration_center: "Restoration Center",
+        
+        // Town Flavor Text
+        training_grounds_flavor: "Create and manage your strike team of agents",
+        party_management_flavor: "Manage multiple strike teams",
+        data_exchange_flavor: "Trade upgrades and system enhancements",
+        restoration_center_flavor: "Repair system damage and restore corrupted agents",
+        grid_sector_flavor: "Enter the corrupted data network maze"
     }
 };
 
