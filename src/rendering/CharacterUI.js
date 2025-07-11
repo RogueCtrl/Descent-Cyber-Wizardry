@@ -133,10 +133,11 @@ class CharacterUI {
                     ${races.map(raceName => {
                         const raceData = Race.getRaceData(raceName);
                         const raceKey = `race_${raceName.toLowerCase()}`;
+                        const raceDescKey = `race_${raceName.toLowerCase()}_desc`;
                         return `
                             <div class="race-option" data-race="${raceName}">
                                 <h4 data-text-key="${raceKey}">${raceData.name}</h4>
-                                <p class="race-description">${raceData.description}</p>
+                                <p class="race-description" data-text-key="${raceDescKey}">${raceData.description}</p>
                                 <div class="race-modifiers">
                                     ${this.renderRaceModifiers(raceData.modifiers)}
                                 </div>
@@ -427,20 +428,20 @@ class CharacterUI {
         
         container.innerHTML = `
             <div class="step-content">
-                <h3>Confirm Agent Initialization</h3>
-                <p>Review your agent before adding them to your strike team.</p>
+                <h3 data-text-key="confirm_agent_initialization">Confirm Agent Initialization</h3>
+                <p data-text-key="confirm_description">Review your agent before adding them to your strike team.</p>
                 
                 <div class="character-confirmation">
                     <div class="character-portrait">
                         <div class="portrait-placeholder">
-                            ${this.characterData.name}
+                            ${this.getSpecializationIcon(this.characterData.selectedClass)}
                         </div>
                     </div>
                     
                     <div class="character-details">
                         <h4>${this.characterData.name}</h4>
-                        <p><strong data-text-key="race">Platform Type:</strong> ${raceData.name} - ${raceData.description}</p>
-                        <p><strong data-text-key="class">Specialization:</strong> ${classData.name} - ${classData.description}</p>
+                        <p><strong data-text-key="summary_race">Platform:</strong> <span data-text-key="race_${this.characterData.selectedRace.toLowerCase()}">${raceData.name}</span> - <span data-text-key="race_${this.characterData.selectedRace.toLowerCase()}_desc">${raceData.description}</span></p>
+                        <p><strong data-text-key="summary_class">Specialization:</strong> <span data-text-key="class_${this.characterData.selectedClass.toLowerCase()}">${classData.name}</span> - <span data-text-key="class_${this.characterData.selectedClass.toLowerCase()}_desc">${classData.description}</span></p>
                         
                         <div class="final-attributes">
                             <h5 data-text-key="attributes">Core Parameters</h5>
@@ -448,18 +449,20 @@ class CharacterUI {
                         </div>
                         
                         <div class="calculated-stats">
-                            <h5>System Stats</h5>
-                            <p><strong data-text-key="hp">System Integrity:</strong> ${this.calculateInitialHP()}</p>
-                            <p><strong>Defense Rating:</strong> ${this.calculateInitialAC()}</p>
+                            <h5 data-text-key="system_stats">System Stats</h5>
+                            <p><strong data-text-key="system_integrity">System Integrity:</strong> ${this.calculateInitialHP()}</p>
+                            <p><strong data-text-key="defense_rating">Defense Rating:</strong> ${this.calculateInitialAC()}</p>
                         </div>
                     </div>
                 </div>
             </div>
         `;
         
-        // Update button text for final step
+        // Update button text for final step based on current mode
         const nextBtn = this.currentModal.querySelector('#next-step');
-        nextBtn.textContent = 'Initialize Agent';
+        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
+        nextBtn.textContent = isCyberMode ? 'Initialize Agent' : 'Create Character';
+        nextBtn.setAttribute('data-text-key', 'initialize_agent');
         
         // Apply TextManager to new elements
         this.applyTextManagerToModal(container);
@@ -480,6 +483,24 @@ class CharacterUI {
     calculateInitialAC() {
         const agiModifier = Math.floor((this.characterData.attributes.agility - 10) / 2);
         return Math.max(-10, 10 - agiModifier);
+    }
+    
+    /**
+     * Get specialization icon for the selected class
+     */
+    getSpecializationIcon(className) {
+        const icons = {
+            'Fighter': '⚔️',
+            'Mage': '🔮',
+            'Priest': '✨',
+            'Thief': '🗡️',
+            'Bishop': '📜',
+            'Samurai': '🏯',
+            'Lord': '👑',
+            'Ninja': '🥷'
+        };
+        
+        return icons[className] || '⚡';
     }
     
     /**

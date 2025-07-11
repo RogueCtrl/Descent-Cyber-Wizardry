@@ -691,17 +691,15 @@ h3 {
 }
 
 .portrait-placeholder {
-    width: 120px;
+    width: 100px;
     height: 120px;
-    border: 2px solid #00ff00;
-    background-color: rgba(0, 255, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    color: #00ff00;
     text-align: center;
     word-break: break-word;
+    font-size: 2rem;
 }
 
 .character-details {

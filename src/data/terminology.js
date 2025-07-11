@@ -35,6 +35,13 @@ const TERMINOLOGY = {
         race_hobbit: "Hobbit",
         race_gnome: "Gnome",
         
+        // Race Descriptions
+        race_human_desc: "Balanced and adaptable",
+        race_elf_desc: "Graceful and intelligent",
+        race_dwarf_desc: "Hardy and resilient",
+        race_hobbit_desc: "Small but lucky",
+        race_gnome_desc: "Intellectually gifted",
+        
         // Character Creation Step 2 - Attribute Generation
         your_attributes: "Your Attributes",
         attributes_description: "These are your character's base attributes, modified by your race.",
@@ -96,6 +103,18 @@ const TERMINOLOGY = {
         summary_race: "Race:",
         summary_class: "Class:",
         summary_attributes: "Attributes:",
+        
+        // Character Creation Step 5 - Confirmation
+        confirm_agent_initialization: "Confirm Character Creation",
+        confirm_description: "Review your character before adding them to your party.",
+        
+        // System Stats
+        system_stats: "Character Stats",
+        defense_rating: "Defense Rating:",
+        system_integrity: "Hit Points:",
+        
+        // Final Button
+        initialize_agent: "Create Character",
         
         // Combat Interface
         combat_fight: "⚔️ Fight",
@@ -202,6 +221,13 @@ const TERMINOLOGY = {
         race_hobbit: "Embedded System",
         race_gnome: "Blockchain Node",
         
+        // Platform Descriptions
+        race_human_desc: "Stable core architecture with flexible configurations",
+        race_elf_desc: "High-performance quantum processing with elegant algorithms",
+        race_dwarf_desc: "Hardened security kernel with robust error handling",
+        race_hobbit_desc: "Lightweight embedded system with optimized random generators",
+        race_gnome_desc: "Advanced blockchain node with distributed intelligence protocols",
+        
         // Character Creation Step 2 - Core Parameter Generation
         your_attributes: "Your Configuration",
         attributes_description: "These are your agent's base configuration, modified by platform.",
@@ -262,7 +288,19 @@ const TERMINOLOGY = {
         character_summary: "Agent Summary",
         summary_race: "Platform:",
         summary_class: "Specialization:",
-        summary_attributes: "Configurations:", 
+        summary_attributes: "Configurations:",
+        
+        // Character Creation Step 5 - Agent Initialization Confirmation
+        confirm_agent_initialization: "Confirm Agent Initialization",
+        confirm_description: "Review your agent before adding them to your strike team.",
+        
+        // System Stats
+        system_stats: "System Stats",
+        defense_rating: "Firewalls:",
+        system_integrity: "System Integrity:",
+        
+        // Final Button
+        initialize_agent: "Initialize Agent", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",
