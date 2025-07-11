@@ -91,15 +91,18 @@ class Dungeon {
         // Add exit tile at player spawn position (1, 2)
         tiles[2][1] = 'exit';
         
+        // Add treasure chest in center of Room B (6, 2)
+        tiles[2][6] = 'treasure';
+        
         // Ensure outer walls remain as walls (already set by default)
         console.log('Test map layout:');
         console.log('Room A | Corridor | Room B');
         console.log('█████████');
-        console.log('█...█..█...█');
+        console.log('█...█..█T..█');
         console.log('█.E.....█');
         console.log('█...█..█...█');
         console.log('█████████');
-        console.log('(E = exit tile - player spawn position)');
+        console.log('(E = exit tile, T = treasure chest)');
         
         return tiles;
     }
@@ -586,7 +589,7 @@ class Dungeon {
     isWalkable(x, y, floor = null) {
         const tile = this.getTile(x, y, floor);
         const walkableTiles = [
-            'floor', 'hidden_door', 'secret_passage', 'exit',
+            'floor', 'hidden_door', 'secret_passage', 'exit', 'treasure',
             'trap_pit_trap', 'trap_poison_dart', 'trap_teleport_trap', 'trap_alarm_trap'
         ];
         return walkableTiles.includes(tile);
@@ -655,6 +658,11 @@ class Dungeon {
             this.triggerExitTile();
         }
         
+        // Handle treasure tile
+        if (tile === 'treasure') {
+            this.triggerTreasureTile();
+        }
+        
         // Handle traps
         if (tile.startsWith('trap_')) {
             this.triggerTrap(tile);
@@ -688,6 +696,38 @@ class Dungeon {
         // Emit event to notify UI that player left exit tile
         if (window.engine && window.engine.eventSystem) {
             window.engine.eventSystem.emit('exit-tile-left');
+        }
+    }
+    
+    /**
+     * Trigger treasure tile - notify UI to show treasure button
+     */
+    triggerTreasureTile() {
+        // Check if treasure has already been looted
+        const treasureKey = `${this.currentFloor}:${this.playerX}:${this.playerY}`;
+        if (this.usedSpecials.has(treasureKey)) {
+            // Treasure already looted
+            return;
+        }
+        
+        // Emit event to notify UI that player is on treasure tile
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('treasure-tile-entered', {
+                x: this.playerX,
+                y: this.playerY,
+                floor: this.currentFloor,
+                treasureKey: treasureKey
+            });
+        }
+    }
+    
+    /**
+     * Trigger treasure tile left - notify UI to hide treasure button
+     */
+    triggerTreasureTileLeft() {
+        // Emit event to notify UI that player left treasure tile
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('treasure-tile-left');
         }
     }
     

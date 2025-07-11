@@ -63,6 +63,7 @@ const TERMINOLOGY = {
         use: "Use",
         rest: "Rest",
         exit_dungeon: "⚡ Exit to Town",
+        open_treasure: "💎 Open Chest",
         
         // Combat States
         no_enemies: "No Enemies",
@@ -156,6 +157,7 @@ const TERMINOLOGY = {
         use: "Access",
         rest: "System Repair",
         exit_dungeon: "⚡ Jack Out",
+        open_treasure: "🔶 Access Cache",
         
         // Combat States
         no_enemies: "Grid Clear",

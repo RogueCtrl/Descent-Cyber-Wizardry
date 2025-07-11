@@ -267,6 +267,33 @@ button:disabled {
     }
 }
 
+/* Treasure button styling */
+.treasure-btn {
+    background: linear-gradient(145deg, #10b981, #34d399) !important;
+    color: white !important;
+    border-color: #34d399 !important;
+    font-weight: bold;
+}
+
+.treasure-btn:hover {
+    background: linear-gradient(145deg, #34d399, #6ee7b7) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px #10b981, var(--shadow-md);
+}
+
+.treasure-glow {
+    animation: treasurePulse 1.5s infinite;
+}
+
+@keyframes treasurePulse {
+    0%, 100% { 
+        box-shadow: 0 0 10px #10b981; 
+    }
+    50% { 
+        box-shadow: 0 0 20px #10b981, 0 0 30px #34d399; 
+    }
+}
+
 button:disabled:hover {
     background: linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
     color: var(--text-muted);
@@ -3827,6 +3854,64 @@ h3 {
 
 .loot-item.normal {
     border-left-color: var(--border-primary);
+}
+
+/* Treasure modal specific styling */
+.treasure-modal-content {
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.treasure-modal-content h3 {
+    color: var(--success);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-4);
+    text-shadow: 0 0 10px var(--success);
+}
+
+.treasure-modal-content .loot-list {
+    text-align: left;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: var(--space-6);
+}
+
+.treasure-modal-content .loot-item {
+    padding: var(--space-3);
+    border: 1px solid var(--border-primary);
+    border-left: 4px solid var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.treasure-modal-content .loot-icon {
+    font-size: var(--font-size-lg);
+    min-width: 24px;
+}
+
+.treasure-modal-content .loot-name {
+    flex: 1;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.treasure-modal-content .loot-type {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    text-transform: capitalize;
+}
+
+.treasure-modal-content .no-loot {
+    color: var(--text-muted);
+    font-style: italic;
+    margin: var(--space-6) 0;
+}
+
+.treasure-modal-content .modal-actions {
+    margin-top: var(--space-6);
 }
 
 .item-name {

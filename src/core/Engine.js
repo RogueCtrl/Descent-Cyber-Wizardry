@@ -224,6 +224,15 @@ class Engine {
         this.eventSystem.on('exit-tile-left', () => {
             this.ui.hideExitButton();
         });
+        
+        // Listen for treasure tile events
+        this.eventSystem.on('treasure-tile-entered', (data) => {
+            this.ui.showTreasureButton(data);
+        });
+        
+        this.eventSystem.on('treasure-tile-left', () => {
+            this.ui.hideTreasureButton();
+        });
     }
     
     /**

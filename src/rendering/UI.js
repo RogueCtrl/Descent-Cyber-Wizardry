@@ -28,6 +28,9 @@ class UI {
         // Post-Combat Results Modal
         this.postCombatModal = null;
         
+        // Treasure Modal
+        this.treasureModal = null;
+        
         this.initialize();
     }
     
@@ -3344,6 +3347,11 @@ class UI {
             return; // Button already shown
         }
         
+        // Play sound effect when exit becomes available
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('exitAvailable');
+        }
+        
         // Find the control panel to add the exit button
         const controlPanel = document.getElementById('control-panel');
         const actionControls = document.getElementById('action-controls');
@@ -3385,6 +3393,244 @@ class UI {
     }
     
     /**
+     * Show treasure button when player is on treasure tile
+     */
+    showTreasureButton(data) {
+        // Check if button already exists
+        const existingButton = document.getElementById('treasure-btn');
+        if (existingButton) {
+            return; // Button already shown
+        }
+        
+        // Play sound effect when treasure becomes available
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('treasureAvailable');
+        }
+        
+        // Find the control panel to add the treasure button
+        const controlPanel = document.getElementById('control-panel');
+        const actionControls = document.getElementById('action-controls');
+        
+        if (actionControls) {
+            // Create treasure button
+            const treasureButton = document.createElement('button');
+            treasureButton.id = 'treasure-btn';
+            treasureButton.className = 'btn btn-success treasure-btn treasure-glow';
+            treasureButton.innerHTML = '<span data-text-key="open_treasure">💎 Open Chest</span>';
+            treasureButton.title = 'Open the treasure chest';
+            
+            // Apply TextManager if available
+            if (typeof TextManager !== 'undefined') {
+                const span = treasureButton.querySelector('[data-text-key]');
+                if (span) {
+                    TextManager.applyToElement(span, 'open_treasure');
+                }
+            }
+            
+            // Add click handler
+            treasureButton.addEventListener('click', () => {
+                this.handleTreasureOpen(data);
+            });
+            
+            // Add to action controls
+            actionControls.appendChild(treasureButton);
+        }
+    }
+    
+    /**
+     * Hide treasure button when player leaves treasure tile
+     */
+    hideTreasureButton() {
+        const treasureButton = document.getElementById('treasure-btn');
+        if (treasureButton) {
+            treasureButton.remove();
+        }
+    }
+    
+    /**
+     * Handle treasure chest opening - generate loot and show rewards
+     */
+    async handleTreasureOpen(data) {
+        console.log('Opening treasure chest at', data);
+        
+        // Play treasure opening sound effect
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('treasureOpen');
+        }
+        
+        // Hide the treasure button immediately
+        this.hideTreasureButton();
+        
+        // Mark treasure as looted in dungeon
+        if (window.engine && window.engine.dungeon) {
+            window.engine.dungeon.usedSpecials.add(data.treasureKey);
+        }
+        
+        // Generate loot from migration files
+        const loot = this.generateTreasureLoot();
+        
+        // Show loot modal
+        this.showTreasureLootModal(loot);
+        
+        // Add to party inventory if inventory system exists
+        if (loot.length > 0 && window.engine && window.engine.party) {
+            // Add message about finding treasure
+            this.addMessage(`You open the treasure chest and find valuable items!`, 'success');
+            
+            // TODO: Add items to party inventory when inventory system is integrated
+            loot.forEach(item => {
+                this.addMessage(`Found: ${item.name}`, 'treasure');
+            });
+        } else {
+            this.addMessage('The treasure chest is empty...', 'info');
+        }
+    }
+    
+    /**
+     * Generate random loot from migration files
+     */
+    generateTreasureLoot() {
+        const loot = [];
+        const lootCount = Math.floor(Math.random() * 3) + 1; // 1-3 items
+        
+        // Define loot pools from migration files
+        const weaponIds = [
+            'weapon_dagger_001', 'weapon_short_sword_001', 'weapon_long_sword_001',
+            'weapon_staff_001', 'weapon_mace_001', 'weapon_bow_001', 'weapon_crossbow_001',
+            'weapon_war_hammer_001', 'weapon_katana_001', 'weapon_ninja_blade_001'
+        ];
+        
+        const armorIds = [
+            'armor_leather_001', 'armor_studded_leather_001', 'armor_chain_mail_001',
+            'armor_plate_mail_001', 'armor_chain_mail_plus_1_001', 'armor_cloth_001',
+            'armor_banded_mail_001'
+        ];
+        
+        const shieldIds = [
+            'shield_small_001', 'shield_large_001', 'shield_plus_1_001', 'shield_attraction_001'
+        ];
+        
+        const accessoryIds = [
+            'accessory_ring_protection_001', 'accessory_amulet_health_001', 
+            'accessory_cloak_elvenkind_001', 'accessory_ring_weakness_001',
+            'accessory_cloak_misfortune_001', 'accessory_amulet_mysterious_001'
+        ];
+        
+        // All item pools combined
+        const allItemIds = [...weaponIds, ...armorIds, ...shieldIds, ...accessoryIds];
+        
+        // Generate random loot
+        for (let i = 0; i < lootCount; i++) {
+            const randomIndex = Math.floor(Math.random() * allItemIds.length);
+            const itemId = allItemIds[randomIndex];
+            
+            // Create basic item info (would normally come from migration data)
+            const item = {
+                id: itemId,
+                name: this.getItemDisplayName(itemId),
+                type: this.getItemType(itemId)
+            };
+            
+            loot.push(item);
+        }
+        
+        return loot;
+    }
+    
+    /**
+     * Get display name for item ID
+     */
+    getItemDisplayName(itemId) {
+        // Simple name extraction from ID
+        const parts = itemId.split('_');
+        let name = parts.slice(1, -1).join(' ');
+        
+        // Capitalize words
+        name = name.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        return name;
+    }
+    
+    /**
+     * Get item type from ID
+     */
+    getItemType(itemId) {
+        if (itemId.startsWith('weapon_')) return 'weapon';
+        if (itemId.startsWith('armor_')) return 'armor';
+        if (itemId.startsWith('shield_')) return 'shield';
+        if (itemId.startsWith('accessory_')) return 'accessory';
+        return 'unknown';
+    }
+    
+    /**
+     * Show treasure loot modal with found items
+     */
+    showTreasureLootModal(loot) {
+        // Create modal content
+        let content = '<div class="treasure-modal-content">';
+        content += '<h3>🏆 Treasure Found!</h3>';
+        
+        if (loot.length > 0) {
+            content += '<div class="loot-list">';
+            loot.forEach(item => {
+                const typeIcon = this.getItemTypeIcon(item.type);
+                content += `<div class="loot-item">`;
+                content += `<span class="loot-icon">${typeIcon}</span>`;
+                content += `<span class="loot-name">${item.name}</span>`;
+                content += `<span class="loot-type">(${item.type})</span>`;
+                content += `</div>`;
+            });
+            content += '</div>';
+        } else {
+            content += '<p class="no-loot">The chest is empty...</p>';
+        }
+        
+        content += '<div class="modal-actions">';
+        content += '<button id="treasure-continue-btn" class="btn btn-primary">Continue</button>';
+        content += '</div>';
+        content += '</div>';
+        
+        // Create treasure modal if it doesn't exist
+        if (!this.treasureModal) {
+            this.treasureModal = new Modal({
+                id: 'treasure-modal',
+                classes: ['treasure-modal'],
+                onClose: () => {
+                    // Modal closed
+                }
+            });
+        }
+        
+        // Create and show modal
+        this.treasureModal.create(content, '💎 Treasure Chest');
+        this.treasureModal.show();
+        
+        // Add continue button handler
+        const modalBody = this.treasureModal.getBody();
+        const continueBtn = modalBody.querySelector('#treasure-continue-btn');
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                this.treasureModal.hide();
+            });
+        }
+    }
+    
+    /**
+     * Get icon for item type
+     */
+    getItemTypeIcon(type) {
+        switch(type) {
+            case 'weapon': return '⚔️';
+            case 'armor': return '🛡️';
+            case 'shield': return '🔰';
+            case 'accessory': return '💍';
+            default: return '❓';
+        }
+    }
+    
+    /**
      * Handle dungeon exit - save state and return to town
      */
     async handleDungeonExit() {
@@ -3393,6 +3639,11 @@ class UI {
         console.log('Dungeon exists:', !!window.engine?.dungeon);
         console.log('Party exists:', !!window.engine?.party);
         console.log('Party ID:', window.engine?.party?.id);
+        
+        // Play exit sound effect
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('exitDungeon');
+        }
         
         if (window.engine) {
             // Save dungeon state and characters before exiting

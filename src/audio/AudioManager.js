@@ -162,6 +162,36 @@ class AudioManager {
                 wave: 'square',
                 volume: 0.4,
                 sweep: { start: 523, end: 784 }
+            },
+            
+            // Special Action Sounds
+            exitAvailable: {
+                freq: 440,
+                duration: 0.3,
+                wave: 'sine',
+                volume: 0.4,
+                sweep: { start: 440, end: 880 }
+            },
+            treasureAvailable: {
+                freq: 523,
+                duration: 0.4,
+                wave: 'triangle',
+                volume: 0.5,
+                sweep: { start: 523, end: 1047 }
+            },
+            treasureOpen: {
+                freq: 784,
+                duration: 0.6,
+                wave: 'sine',
+                volume: 0.6,
+                sweep: { start: 784, end: 1568 }
+            },
+            exitDungeon: {
+                freq: 880,
+                duration: 0.5,
+                wave: 'square',
+                volume: 0.5,
+                sweep: { start: 880, end: 440 }
             }
         };
     }

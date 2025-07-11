@@ -5,7 +5,7 @@
 
 // Global assignment for browser compatibility
 window.monstersMigration = {
-    version: '1.3.0',
+    version: '1.0.0',
     entity: 'monsters',
     store: 'monsters',
     description: 'Enhanced monsters with cyberpunk classifications and 5 vector portraits',
