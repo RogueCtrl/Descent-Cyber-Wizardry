@@ -85,8 +85,11 @@ class CharacterUI {
         const progress = ((this.stepIndex + 1) / this.steps.length) * 100;
         progressBar.style.width = `${progress}%`;
         
-        // Update step indicator with cyber terminology
-        const stepNames = ['Platform Type Selection', 'Core Parameter Generation', 'Specialization Selection', 'Agent Details', 'Confirmation'];
+        // Update step indicator based on current mode
+        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
+        const stepNames = isCyberMode ? 
+            ['Platform Type Selection', 'Core Parameter Generation', 'Specialization Selection', 'Agent Details', 'Confirmation'] :
+            ['Race Selection', 'Attribute Generation', 'Class Selection', 'Character Details', 'Confirmation'];
         stepText.textContent = `Step ${this.stepIndex + 1} of ${this.steps.length}: ${stepNames[this.stepIndex]}`;
         
         // Update button states
