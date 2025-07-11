@@ -123,15 +123,16 @@ class CharacterUI {
         
         container.innerHTML = `
             <div class="step-content">
-                <h3>Choose Your Race</h3>
-                <p>Each race has unique characteristics that will affect your character's abilities.</p>
+                <h3 data-text-key="choose_race">Choose Your Race</h3>
+                <p data-text-key="race_selection_description">Each race has unique characteristics that will affect your character's abilities.</p>
                 
                 <div class="race-grid">
                     ${races.map(raceName => {
                         const raceData = Race.getRaceData(raceName);
+                        const raceKey = `race_${raceName.toLowerCase()}`;
                         return `
                             <div class="race-option" data-race="${raceName}">
-                                <h4>${raceData.name}</h4>
+                                <h4 data-text-key="${raceKey}">${raceData.name}</h4>
                                 <p class="race-description">${raceData.description}</p>
                                 <div class="race-modifiers">
                                     ${this.renderRaceModifiers(raceData.modifiers)}
@@ -167,6 +168,9 @@ class CharacterUI {
                 this.updateNextButton();
             });
         });
+        
+        // Apply TextManager to the new content
+        this.applyTextManagerToModal(container);
     }
     
     /**

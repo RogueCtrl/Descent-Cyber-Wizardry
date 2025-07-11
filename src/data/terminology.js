@@ -24,6 +24,17 @@ const TERMINOLOGY = {
         class: "Class",
         attributes: "Attributes",
         
+        // Character Creation Step 1 - Race Selection
+        choose_race: "Choose Your Race",
+        race_selection_description: "Each race has unique characteristics that will affect your character's abilities.",
+        
+        // Individual Races
+        race_human: "Human",
+        race_elf: "Elf", 
+        race_dwarf: "Dwarf",
+        race_hobbit: "Hobbit",
+        race_gnome: "Gnome",
+        
         // Combat Interface
         combat_fight: "⚔️ Fight",
         combat_defend: "🛡️ Defend", 
@@ -117,6 +128,17 @@ const TERMINOLOGY = {
         race: "Platform Type",
         class: "Specialization",
         attributes: "Core Parameters",
+        
+        // Character Creation Step 1 - Platform Type Selection
+        choose_race: "Choose Your Platform Type",
+        race_selection_description: "Each platform type has unique parameters that will affect your agent's core systems.",
+        
+        // Individual Platform Types  
+        race_human: "Core Shell",
+        race_elf: "Quantum Thread",
+        race_dwarf: "Iron Kernel", 
+        race_hobbit: "Embedded System",
+        race_gnome: "Blockchain Node", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",

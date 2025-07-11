@@ -34,8 +34,33 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
 
 ## Screenshots
 
-### Character Creation Flow
 <div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/mm-cyber.jpg" alt="Cyber Wizardry" width="550"/><br/>
+      <b>Cyber Wizardry</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/mm-fantasy.jpg" alt="Fantasy Wizardry" width="550"/><br/>
+      <b>Fantasy Wizardry</b>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" style="height: 10px; background: #222;"></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/ao-step1.jpg" alt="Cyber Wizardry" width="350"/><br/>
+      <b>Initialize Agent - Platform</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/tg-step1.jpg" alt="Fantasy Wizardry" width="350"/><br/>
+      <b>Create Character - Race</b>
+    </td>
+  </tr>
+</table>
 
 **Town Menu**
 
