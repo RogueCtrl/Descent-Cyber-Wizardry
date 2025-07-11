@@ -144,8 +144,8 @@ class UI {
         });
         
         // Party defeated event
-        this.eventSystem.on('party-defeated', (data) => {
-            this.showPartyDeathScreen(data.casualties);
+        this.eventSystem.on('party-defeated', async (data) => {
+            await this.showPartyDeathScreen(data.casualties);
         });
         
         // Character updated event (for real-time HP updates)
@@ -1393,10 +1393,10 @@ class UI {
         
         // Mouse click handlers for action buttons
         actionButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => {
                 const action = e.currentTarget.dataset.action;
                 if (action) {
-                    this.handleCombatAction(action);
+                    await this.handleCombatAction(action);
                 } else if (e.currentTarget.id === 'combat-continue') {
                     this.handleContinueButton();
                 }
@@ -1412,7 +1412,7 @@ class UI {
         }
         
         // Keyboard handlers (1-5 keys and Enter for continue)
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', async (e) => {
             if (this.gameState && this.gameState.currentState === 'combat') {
                 const key = e.key;
                 let action = null;
@@ -1436,7 +1436,7 @@ class UI {
                 
                 if (action) {
                     e.preventDefault();
-                    this.handleCombatAction(action);
+                    await this.handleCombatAction(action);
                 }
             }
         });
@@ -1696,7 +1696,7 @@ class UI {
     /**
      * Handle combat action selection
      */
-    handleCombatAction(action) {
+    async handleCombatAction(action) {
         console.log('Combat action selected:', action);
         this.addMessage(`You selected: ${action}`, 'combat');
         
@@ -1718,14 +1718,14 @@ class UI {
         
         // Also try to process the action directly if combat system is available
         if (window.engine && window.engine.combatInterface) {
-            this.processCombatAction(action);
+            await this.processCombatAction(action);
         }
     }
     
     /**
      * Process combat action
      */
-    processCombatAction(action) {
+    async processCombatAction(action) {
         const combat = window.engine.combatInterface.combat;
         if (!combat || !combat.isActive) {
             this.addMessage('Combat system not ready!', 'error');
@@ -1793,7 +1793,7 @@ class UI {
         
         // Check if combat ended
         if (result.combatEnded) {
-            this.handleCombatEnd(result.winner);
+            await this.handleCombatEnd(result.winner);
             return;
         }
         
@@ -1820,14 +1820,14 @@ class UI {
         this.showEnemyTurnInterface(monster);
         
         // Process AI turn after a short delay
-        setTimeout(() => {
+        setTimeout(async () => {
             // Use the combat interface's AI processing
             const aiResult = window.engine.combatInterface.processAITurn(monster);
             
             if (aiResult && typeof aiResult === 'object') {
                 // Check if combat ended from AI action
                 if (aiResult.combatEnded) {
-                    this.handleCombatEnd(aiResult.winner);
+                    await this.handleCombatEnd(aiResult.winner);
                     return;
                 }
                 
@@ -1941,7 +1941,7 @@ class UI {
     /**
      * Handle combat end based on winner
      */
-    handleCombatEnd(winner) {
+    async handleCombatEnd(winner) {
         console.log('Combat ended, winner:', winner);
         
         if (winner === 'party') {
@@ -1976,7 +1976,7 @@ class UI {
                 window.engine.combatInterface.combat.isActive = false;
                 
                 // Show total party kill screen
-                this.showPartyDeathScreen(casualties);
+                await this.showPartyDeathScreen(casualties);
             } else {
                 // Some survived - treat as casualty retreat, should show victory screen with casualties
                 console.log('Party has casualties but survivors - treating as victory with casualties');
@@ -2275,29 +2275,33 @@ class UI {
     /**
      * Process total party kill - convert unconscious to dead
      */
-    processTotalPartyKill() {
+    async processTotalPartyKill() {
         console.log('Processing total party kill - converting unconscious to dead');
         
         if (!window.engine?.party?.members) return;
         
-        window.engine.party.members.forEach(member => {
+        for (const member of window.engine.party.members) {
             if (member.status === 'unconscious') {
                 member.status = 'dead';
                 member.currentHP = -10; // Ensure they're truly dead
                 member.isAlive = false;
                 
                 // Save the updated character state
-                member.saveToStorage();
+                try {
+                    await member.saveToStorage();
+                } catch (error) {
+                    console.error(`Failed to save character ${member.name}:`, error);
+                }
                 
                 this.addMessage(`${member.name} has died from their injuries...`, 'death');
             }
-        });
+        }
     }
     
     /**
      * Show party death screen
      */
-    showPartyDeathScreen(casualties) {
+    async showPartyDeathScreen(casualties) {
         console.log('Showing party death screen:', casualties);
         
         // Check if entire party is defeated (no alive members)
@@ -2311,7 +2315,7 @@ class UI {
             }
             
             // In a total party kill, all unconscious characters die
-            this.processTotalPartyKill();
+            await this.processTotalPartyKill();
             
             // Show actual defeat screen
             this.showTotalPartyKillScreen(casualties);
@@ -2808,7 +2812,7 @@ class UI {
         });
         
         if (confirmBtn) {
-            confirmBtn.addEventListener('click', (e) => {
+            confirmBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 console.log('Confirmed dungeon entry');
                 if (validation.valid) {
@@ -2821,7 +2825,7 @@ class UI {
                         window.engine.audioManager.fadeToTrack('dungeon');
                     }
                     
-                    window.engine.enterDungeon(fromAgentOps, postCombatReturn);
+                    await window.engine.enterDungeon(fromAgentOps, postCombatReturn);
                 } else {
                     console.log('Cannot enter dungeon - validation failed');
                     this.addMessage('Cannot enter dungeon - party validation failed', 'error');
@@ -2845,6 +2849,17 @@ class UI {
                 if (this.dungeonEntranceOrigin === 'agentops') {
                     this.showTrainingGrounds();
                 } else if (this.dungeonEntranceOrigin === 'post-combat') {
+                    // Remove casualties from party before returning to town
+                    if (window.engine.party) {
+                        const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                        
+                        // Show messages for each casualty
+                        casualties.forEach(casualty => {
+                            const status = casualty.status || 'dead';
+                            this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                        });
+                    }
+                    
                     // Return to town after post-combat cancellation
                     const success = window.engine.gameState.setState('town');
                     console.log('Combat to town transition:', success);
@@ -2856,6 +2871,20 @@ class UI {
                         }
                         
                         this.showTown();
+                        
+                        // Check if party is wiped and handle accordingly
+                        if (window.engine.party.members.length === 0) {
+                            this.addMessage('No one survived to return to town.', 'error');
+                            
+                            // Handle party wipe - create new party
+                            setTimeout(async () => {
+                                await window.engine.handlePartyWipe();
+                                this.updatePartyDisplay(window.engine.party);
+                            }, 1000); // Brief delay for dramatic effect
+                        } else {
+                            this.addMessage('The survivors return to town...', 'success');
+                            this.updatePartyDisplay(window.engine.party);
+                        }
                     }
                 }
                 // If origin is 'town', we don't need to do anything as the modal just closes
@@ -3018,7 +3047,29 @@ class UI {
             console.log('Combat to playing transition:', success1);
             
             // Add small delay to ensure state change is processed
-            setTimeout(() => {
+            setTimeout(async () => {
+                // Remove casualties from party before returning to town
+                if (window.engine.party) {
+                    const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                    
+                    // Show messages for each casualty
+                    casualties.forEach(casualty => {
+                        const status = casualty.status || 'dead';
+                        this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                    });
+                    
+                    // Mark party as returning to town
+                    window.engine.party.returnToTown();
+                    
+                    // Save party state
+                    try {
+                        await window.engine.party.save();
+                        console.log('Party status updated to in town after death');
+                    } catch (error) {
+                        console.error('Failed to save party town status after death:', error);
+                    }
+                }
+                
                 // Then exit dungeon and return to town (playing → town)
                 const success2 = window.engine.gameState.setState('town');
                 console.log('Playing to town transition:', success2);
@@ -3027,17 +3078,25 @@ class UI {
                     // Show town interface
                     this.showTown(window.engine.party);
                     
-                    // Add dramatic message about the failed expedition
-                    const aliveMembers = window.engine.party.aliveMembers;
-                    if (aliveMembers.length === 0) {
+                    // Check if party is wiped and handle accordingly
+                    if (window.engine.party.members.length === 0) {
                         this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
+                        
+                        // Handle party wipe - create new party
+                        setTimeout(async () => {
+                            await window.engine.handlePartyWipe();
+                            this.updatePartyDisplay(window.engine.party);
+                        }, 1000); // Brief delay for dramatic effect
                     } else {
                         this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+                        this.updatePartyDisplay(window.engine.party);
                     }
                     
-                    // Save all character states
+                    // Save all remaining character states
                     window.engine.party.members.forEach(member => {
-                        member.saveToStorage();
+                        if (member.saveToStorage) {
+                            member.saveToStorage();
+                        }
                     });
                 } else {
                     console.error('Failed to transition to town state');
@@ -3674,6 +3733,28 @@ class UI {
             // Hide the exit button
             this.hideExitButton();
             
+            // Remove casualties from party before returning to town
+            if (window.engine.party) {
+                const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                
+                // Show messages for each casualty
+                casualties.forEach(casualty => {
+                    const status = casualty.status || 'dead';
+                    this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                });
+                
+                // Mark party as returning to town
+                window.engine.party.returnToTown();
+                
+                // Save party state
+                try {
+                    await window.engine.party.save();
+                    console.log('Party status updated to in town');
+                } catch (error) {
+                    console.error('Failed to save party town status:', error);
+                }
+            }
+            
             // Transition to town
             const success = window.engine.gameState.setState('town');
             
@@ -3685,7 +3766,20 @@ class UI {
                 
                 // Show town interface
                 this.showTown(window.engine.party);
-                this.addMessage('You safely return to town with your party intact.', 'success');
+                
+                // Check if party is wiped and handle accordingly
+                if (window.engine.party.members.length === 0) {
+                    this.addMessage('No one survived to return to town.', 'error');
+                    
+                    // Handle party wipe - create new party
+                    setTimeout(async () => {
+                        await window.engine.handlePartyWipe();
+                        this.updatePartyDisplay(window.engine.party);
+                    }, 1000); // Brief delay for dramatic effect
+                } else {
+                    this.addMessage('The survivors return to town...', 'success');
+                    this.updatePartyDisplay(window.engine.party);
+                }
             } else {
                 console.error('Failed to transition to town state');
                 this.addMessage('Failed to return to town.', 'error');

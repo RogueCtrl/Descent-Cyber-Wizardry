@@ -1232,9 +1232,25 @@ class Dungeon {
      */
     async saveToDatabase(partyId) {
         try {
-            const dungeonId = await Storage.saveDungeon(this, partyId);
-            console.log(`Dungeon saved to database with ID: ${dungeonId}`);
-            return dungeonId;
+            // Save shared dungeon structure
+            await Storage.saveDungeon(this, partyId);
+            
+            // Save party position and state separately
+            const positionData = {
+                currentFloor: this.currentFloor,
+                playerX: this.playerX,
+                playerY: this.playerY,
+                playerDirection: this.playerDirection,
+                testMode: this.testMode,
+                discoveredSecrets: this.discoveredSecrets,
+                disarmedTraps: this.disarmedTraps,
+                usedSpecials: this.usedSpecials
+            };
+            
+            await Storage.savePartyPosition(partyId, 'corrupted_network', positionData);
+            
+            console.log(`Dungeon and party position saved for party: ${partyId}`);
+            return 'corrupted_network';
         } catch (error) {
             console.error('Failed to save dungeon to database:', error);
             throw error;
@@ -1243,11 +1259,13 @@ class Dungeon {
     
     /**
      * Load dungeon state from IndexedDB
-     * @param {string} dungeonId - ID of the dungeon to load
+     * @param {string} dungeonId - ID of the dungeon to load (always 'corrupted_network')
+     * @param {string} partyId - ID of the party to load position for
      * @returns {Promise<boolean>} Success status
      */
-    async loadFromDatabase(dungeonId) {
+    async loadFromDatabase(dungeonId, partyId) {
         try {
+            // Load shared dungeon structure
             const dungeonData = await Storage.loadDungeon(dungeonId);
             
             if (!dungeonData) {
@@ -1255,17 +1273,35 @@ class Dungeon {
                 return false;
             }
             
-            // Apply loaded data to this instance
-            this.currentFloor = dungeonData.currentFloor;
+            // Apply shared dungeon data to this instance
             this.maxFloors = dungeonData.maxFloors;
-            this.playerX = dungeonData.playerX;
-            this.playerY = dungeonData.playerY;
-            this.playerDirection = dungeonData.playerDirection;
             this.testMode = dungeonData.testMode;
             this.floors = dungeonData.floors;
-            this.discoveredSecrets = dungeonData.discoveredSecrets;
-            this.disarmedTraps = dungeonData.disarmedTraps;
-            this.usedSpecials = dungeonData.usedSpecials;
+            
+            // Load party position if provided
+            if (partyId) {
+                const positionData = await Storage.loadPartyPosition(partyId);
+                
+                if (positionData) {
+                    // Apply party position data
+                    this.currentFloor = positionData.currentFloor;
+                    this.playerX = positionData.playerX;
+                    this.playerY = positionData.playerY;
+                    this.playerDirection = positionData.playerDirection;
+                    this.discoveredSecrets = positionData.discoveredSecrets;
+                    this.disarmedTraps = positionData.disarmedTraps;
+                    this.usedSpecials = positionData.usedSpecials;
+                    
+                    console.log(`Party position loaded: Floor ${this.currentFloor}, Position (${this.playerX}, ${this.playerY})`);
+                } else {
+                    // Use default starting position
+                    this.setStartPosition(this.floors.get(1));
+                    console.log('No saved position found, using default starting position');
+                }
+            } else {
+                // Use default starting position
+                this.setStartPosition(this.floors.get(1));
+            }
             
             // Set current floor data
             this.currentFloorData = this.floors.get(this.currentFloor);
@@ -1282,31 +1318,20 @@ class Dungeon {
     /**
      * Create a new Dungeon instance from saved data
      * @param {string} dungeonId - ID of the dungeon to load
+     * @param {string} partyId - ID of the party to load position for
      * @returns {Promise<Dungeon|null>} New dungeon instance or null if not found
      */
-    static async createFromDatabase(dungeonId) {
+    static async createFromDatabase(dungeonId, partyId) {
         try {
-            const dungeonData = await Storage.loadDungeon(dungeonId);
-            
-            if (!dungeonData) {
-                return null;
-            }
-            
             // Create new dungeon instance
             const dungeon = new Dungeon();
             
-            // Override the default initialization with loaded data
-            dungeon.currentFloor = dungeonData.currentFloor;
-            dungeon.maxFloors = dungeonData.maxFloors;
-            dungeon.playerX = dungeonData.playerX;
-            dungeon.playerY = dungeonData.playerY;
-            dungeon.playerDirection = dungeonData.playerDirection;
-            dungeon.testMode = dungeonData.testMode;
-            dungeon.floors = dungeonData.floors;
-            dungeon.discoveredSecrets = dungeonData.discoveredSecrets;
-            dungeon.disarmedTraps = dungeonData.disarmedTraps;
-            dungeon.usedSpecials = dungeonData.usedSpecials;
-            dungeon.currentFloorData = dungeonData.floors.get(dungeonData.currentFloor);
+            // Load the dungeon and party position
+            const success = await dungeon.loadFromDatabase(dungeonId, partyId);
+            
+            if (!success) {
+                return null;
+            }
             
             return dungeon;
             
@@ -1317,13 +1342,13 @@ class Dungeon {
     }
     
     /**
-     * Get all saved dungeons for a party
+     * Get all saved dungeons for a party (now returns party position data)
      * @param {string} partyId - Party ID to find dungeons for
-     * @returns {Promise<Array>} Array of dungeon records
+     * @returns {Promise<Array>} Array of party position records
      */
     static async getSavedDungeonsForParty(partyId) {
         try {
-            return await Storage.getDungeonsForParty(partyId);
+            return await Storage.getSavedDungeonsForParty(partyId);
         } catch (error) {
             console.error('Failed to get saved dungeons for party:', error);
             return [];

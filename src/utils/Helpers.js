@@ -369,4 +369,44 @@ class Helpers {
             }
         };
     }
+    
+    /**
+     * Remove casualties from party and return info about removed members
+     * @param {Party} party - The party object to process
+     * @returns {Object} Object containing casualties array and survivors array
+     */
+    static removeCasualtiesFromParty(party) {
+        if (!party || !party.members) {
+            return { casualties: [], survivors: [] };
+        }
+        
+        const casualties = [];
+        const survivors = [];
+        
+        // Separate casualties from survivors
+        party.members.forEach(member => {
+            if (member.status === 'unconscious' || 
+                member.status === 'dead' || 
+                member.status === 'ashes' || 
+                member.status === 'lost' ||
+                !member.isAlive) {
+                casualties.push(member);
+            } else {
+                survivors.push(member);
+            }
+        });
+        
+        // Update party with only survivors
+        party.members = survivors;
+        
+        // Log casualties
+        if (casualties.length > 0) {
+            console.log(`Removing ${casualties.length} casualties from party:`, casualties.map(c => ({
+                name: c.name,
+                status: c.status || 'dead'
+            })));
+        }
+        
+        return { casualties, survivors };
+    }
 }

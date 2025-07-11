@@ -53,10 +53,10 @@ class Engine {
             console.log('Initializing storage and entity systems...');
             await this.initializeEntitySystems();
             
-                    // Initialize game objects
-        this.party = new Party();
-        this.dungeon = new Dungeon();
-        this.combatInterface = new CombatInterface(this.eventSystem);
+            // Initialize game objects
+            await this.initializeParty();
+            this.dungeon = new Dungeon();
+            this.combatInterface = new CombatInterface(this.eventSystem);
         
         // Initialize player position object
         this.player = {
@@ -84,6 +84,234 @@ class Engine {
         } catch (error) {
             console.error('Failed to initialize game:', error);
             this.showErrorMessage('Failed to initialize game: ' + error.message);
+        }
+    }
+    
+    /**
+     * Initialize party system - load existing active party or create new one
+     */
+    async initializeParty() {
+        try {
+            console.log('Initializing party system...');
+            
+            // Try to load the existing active party
+            const activePartyId = Storage.getActivePartyId();
+            let party = null;
+            
+            if (activePartyId) {
+                party = await Party.load(activePartyId);
+            }
+            
+            if (party) {
+                console.log(`Loaded existing active party: ${party.id}`);
+                this.party = party;
+                
+                // Validate party state - if wiped, create new party
+                if (this.isPartyWiped(party)) {
+                    console.log('Active party is wiped, creating new party...');
+                    await this.handlePartyWipe();
+                }
+            } else {
+                console.log('No active party found, creating new party...');
+                party = await this.createNewParty();
+                this.party = party;
+            }
+            
+            if (!this.party) {
+                console.error('Failed to initialize party, creating fallback party');
+                this.party = new Party();
+            }
+            
+            console.log(`Party initialized: ${this.party.id} (${this.party.members.length} members)`);
+            
+        } catch (error) {
+            console.error('Failed to initialize party system:', error);
+            this.party = new Party(); // Fallback
+        }
+    }
+    
+    /**
+     * Check if a party is considered wiped (no alive members)
+     */
+    isPartyWiped(party) {
+        if (!party || !party.members || party.members.length === 0) {
+            return true;
+        }
+        
+        const aliveMembers = party.members.filter(member => 
+            member.isAlive && 
+            member.status !== 'dead' && 
+            member.status !== 'ashes' && 
+            member.status !== 'lost'
+        );
+        
+        return aliveMembers.length === 0;
+    }
+    
+    /**
+     * Create a new party and set it as active
+     */
+    async createNewParty(name = null) {
+        try {
+            const party = new Party();
+            if (name) {
+                party.name = name;
+            }
+            
+            // Save the party
+            await party.save();
+            
+            // Set as active party
+            Storage.setActiveParty(party.id);
+            
+            console.log(`Created new party: ${party.id}`);
+            return party;
+            
+        } catch (error) {
+            console.error('Failed to create new party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Handle party camping - make current party inactive and create new one
+     */
+    async handlePartyCamp() {
+        try {
+            console.log('Handling party camp - making party inactive...');
+            
+            if (this.party) {
+                console.log(`Party ${this.party.id} is now camping and inactive`);
+                
+                // Clear this party as the active party (but keep it in database)
+                Storage.setActiveParty(null);
+            }
+            
+            // Create new active party
+            const newParty = await this.createNewParty();
+            this.party = newParty;
+            
+            // Update UI
+            if (this.ui) {
+                this.ui.updatePartyDisplay(this.party);
+                this.ui.addMessage('A new expedition team has been assembled while your previous party rests...', 'system');
+            }
+            
+            return newParty;
+            
+        } catch (error) {
+            console.error('Failed to handle party camp:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Handle party wipe - remove current party and create new one
+     */
+    async handlePartyWipe() {
+        try {
+            console.log('Handling party wipe...');
+            
+            if (this.party) {
+                // Clear active party reference but keep the party record for history
+                Storage.setActiveParty(null);
+                console.log(`Party ${this.party.id} removed as active (wiped)`);
+            }
+            
+            // Create new party
+            const newParty = await this.createNewParty();
+            this.party = newParty;
+            
+            // Update UI
+            if (this.ui) {
+                this.ui.updatePartyDisplay(this.party);
+                this.ui.addMessage('A new expedition team has been assembled...', 'system');
+            }
+            
+            return newParty;
+            
+        } catch (error) {
+            console.error('Failed to handle party wipe:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Resume a camped party and make it active
+     * @param {string} partyId - ID of the party to resume
+     * @returns {Promise<boolean>} Success status
+     */
+    async resumeCampedParty(partyId) {
+        try {
+            console.log(`Resuming camped party: ${partyId}`);
+            
+            // Load the party
+            const party = await Party.load(partyId);
+            if (!party) {
+                console.error('Failed to load party for resumption');
+                this.ui.addMessage('Failed to find the party to resume.', 'error');
+                return false;
+            }
+            
+            // Verify the party has a camp
+            if (!party.campId) {
+                console.error('Party does not have a camp to resume from');
+                this.ui.addMessage('This party is not camping and cannot be resumed.', 'error');
+                return false;
+            }
+            
+            // Load the camp data to get the saved position
+            const resumeResult = await Storage.resumeCampWithEntityReferences(party.campId);
+            if (!resumeResult.success) {
+                console.error('Failed to load camp data:', resumeResult.error);
+                this.ui.addMessage('Failed to load camp data. The save may be corrupted.', 'error');
+                return false;
+            }
+            
+            // Clear the camp reference from the party
+            party.clearCamp();
+            party.leaveTown(); // They're going back into the dungeon
+            await party.save();
+            
+            // Save the current active party (if it has members) before switching
+            if (this.party && this.party.members.length > 0) {
+                await this.party.save(false); // Save without setting as active
+                console.log(`Saved previous active party: ${this.party.id}`);
+            }
+            
+            // Set the resumed party as the new active party
+            Storage.setActiveParty(party.id);
+            this.party = party;
+            
+            // Load the dungeon state from the party position
+            const positionData = await Storage.loadPartyPosition(party.id);
+            if (positionData) {
+                // Restore dungeon state
+                this.dungeon.currentFloor = positionData.currentFloor;
+                this.dungeon.playerX = positionData.playerX;
+                this.dungeon.playerY = positionData.playerY;
+                this.dungeon.playerDirection = positionData.playerDirection;
+                this.dungeon.testMode = positionData.testMode;
+                this.dungeon.discoveredSecrets = new Set(positionData.discoveredSecrets || []);
+                this.dungeon.disarmedTraps = new Set(positionData.disarmedTraps || []);
+                this.dungeon.usedSpecials = new Set(positionData.usedSpecials || []);
+                
+                console.log(`Restored party to floor ${positionData.currentFloor} at (${positionData.playerX}, ${positionData.playerY})`);
+            }
+            
+            // Switch to dungeon state
+            this.gameState.setState('playing');
+            
+            // Update UI
+            this.ui.updatePartyDisplay(this.party);
+            this.ui.addMessage(`${party.name || 'Your party'} resumes exploration from their camp...`, 'success');
+            
+            return true;
+            
+        } catch (error) {
+            console.error('Failed to resume camped party:', error);
+            this.ui.addMessage('An error occurred while resuming the party.', 'error');
+            return false;
         }
     }
     
@@ -158,8 +386,8 @@ class Engine {
         });
         
         // Player action events
-        this.eventSystem.on('player-action', (action) => {
-            this.handlePlayerAction(action);
+        this.eventSystem.on('player-action', async (action) => {
+            await this.handlePlayerAction(action);
         });
         
         // Character creation events
@@ -651,7 +879,7 @@ class Engine {
     /**
      * Handle player actions
      */
-    handlePlayerAction(action) {
+    async handlePlayerAction(action) {
         if (!this.gameState.isState('playing')) {
             return;
         }
@@ -727,11 +955,101 @@ class Engine {
                 break;
                 
             case 'camp':
-                this.ui.addMessage('Camping will be implemented in Phase 6.');
+                await this.handleCampAction();
                 break;
                 
             default:
                 console.warn('Unknown player action:', action);
+        }
+    }
+    
+    /**
+     * Handle camp action
+     */
+    async handleCampAction() {
+        try {
+            // Check if party is in dungeon
+            if (!this.party || this.party.inTown) {
+                this.ui.addMessage('You can only camp in a dungeon.');
+                return;
+            }
+            
+            // Check if party has any alive members
+            if (!this.party.aliveMembers || this.party.aliveMembers.length === 0) {
+                this.ui.addMessage('No alive party members to make camp.');
+                return;
+            }
+            
+            // Check if already camping
+            if (this.party.campId) {
+                this.ui.addMessage('Your party is already camping.');
+                return;
+            }
+            
+            // Check if in combat (if combat system is active)
+            if (this.gameState && this.gameState.currentState === 'combat') {
+                this.ui.addMessage('You cannot camp while in combat.');
+                return;
+            }
+            
+            // Save current party state
+            await this.party.save();
+            
+            // Save party position
+            await Storage.savePartyPosition(this.party.id, 'corrupted_network', {
+                currentFloor: this.dungeon.currentFloor,
+                playerX: this.dungeon.playerX,
+                playerY: this.dungeon.playerY,
+                playerDirection: this.dungeon.playerDirection,
+                testMode: this.dungeon.testMode,
+                discoveredSecrets: this.dungeon.discoveredSecrets,
+                disarmedTraps: this.dungeon.disarmedTraps,
+                usedSpecials: this.dungeon.usedSpecials
+            });
+            
+            // Create camp
+            const campResult = await Storage.saveCampWithEntityReferences(this.party, this.dungeon, this.gameState);
+            
+            if (campResult.success) {
+                // Update party with camp reference
+                this.party.setCamp(campResult.campId);
+                await this.party.save(false); // Don't set as active since they're camping
+                
+                this.ui.addMessage(`Camp established! ${campResult.message}`);
+                this.ui.addMessage('Your party is now resting safely. They can resume exploration later.');
+                
+                // Make the camped party inactive and create a new active party
+                await this.handlePartyCamp();
+                
+                // Return to town with the new party
+                await this.returnToTown();
+            } else {
+                this.ui.addMessage('Failed to establish camp. Please try again.');
+            }
+            
+        } catch (error) {
+            console.error('Failed to handle camp action:', error);
+            this.ui.addMessage('An error occurred while trying to camp.');
+        }
+    }
+    
+    /**
+     * Return party to town
+     */
+    async returnToTown() {
+        try {
+            if (this.party) {
+                this.party.returnToTown();
+                await this.party.save();
+            }
+            
+            // Switch to town state
+            this.gameState.switchToTown();
+            this.ui.addMessage('Party returned to town.');
+            
+        } catch (error) {
+            console.error('Failed to return to town:', error);
+            this.ui.addMessage('An error occurred while returning to town.');
         }
     }
     
@@ -1215,12 +1533,24 @@ class Engine {
      * @param {boolean} fromAgentOps - Whether the request is coming from AgentOps modal
      * @param {boolean} postCombatReturn - Whether this is a post-combat return
      */
-    enterDungeon(fromAgentOps = false, postCombatReturn = false) {
+    async enterDungeon(fromAgentOps = false, postCombatReturn = false) {
         console.log('Entering dungeon...', { fromAgentOps, postCombatReturn });
         const validation = this.validateDungeonEntry(fromAgentOps, postCombatReturn);
         
         if (validation.valid) {
             console.log('Dungeon entry validation passed, entering dungeon...');
+            
+            // Mark party as leaving town
+            if (this.party) {
+                this.party.leaveTown();
+                try {
+                    await this.party.save();
+                    console.log('Party status saved: left town');
+                } catch (error) {
+                    console.error('Failed to save party dungeon status:', error);
+                }
+            }
+            
             this.ui.hideTown(); // Ensure town modal is closed
             if (fromAgentOps) {
                 this.ui.hideTrainingGrounds(); // Ensure AgentOps modal is closed
@@ -1516,7 +1846,7 @@ class Engine {
                 )[0];
                 
                 console.log(`Found saved dungeon: ${mostRecent.dungeonId}, attempting to load...`);
-                const loadedDungeon = await Dungeon.createFromDatabase(mostRecent.dungeonId);
+                const loadedDungeon = await Dungeon.createFromDatabase('corrupted_network', this.party.id);
                 
                 if (loadedDungeon) {
                     this.dungeon = loadedDungeon;

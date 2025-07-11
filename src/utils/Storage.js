@@ -10,13 +10,15 @@ class Storage {
     static CHARACTERS_KEY = 'descent_cyber_wizardry_characters';
     static CAMP_KEY_PREFIX = 'descent_camp_'; // For individual party camps
     static DUNGEON_STATE_KEY = 'descent_dungeon_states';
+    static ACTIVE_PARTY_KEY = 'descent_active_party'; // For tracking current active party
     
     // IndexedDB configuration
     static DB_NAME = 'DescentCyberWizardry';
-    static DB_VERSION = 5; // Incremented for dungeon store
+    static DB_VERSION = 7; // Incremented for party store
     static CHARACTER_STORE = 'characters';
     static ROSTER_STORE = 'roster';
     static CAMP_STORE = 'camps';
+    static PARTY_STORE = 'parties';
     static WEAPON_STORE = 'weapons';
     static ARMOR_STORE = 'armor';
     static SHIELD_STORE = 'shields';
@@ -27,6 +29,7 @@ class Storage {
     static MONSTER_STORE = 'monsters';
     static VERSION_STORE = 'entity_versions';
     static DUNGEON_STORE = 'dungeons';
+    static PARTY_POSITION_STORE = 'party_positions';
     
     static _db = null;
     static _dbInitialized = false;
@@ -386,17 +389,42 @@ class Storage {
                     versionStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
                 }
                 
-                // Create dungeon store for saving dungeon states
+                // Create dungeon store for saving dungeon states (now for shared dungeon instances)
                 if (!db.objectStoreNames.contains(this.DUNGEON_STORE)) {
                     const dungeonStore = db.createObjectStore(this.DUNGEON_STORE, {
                         keyPath: 'dungeonId'
                     });
                     
-                    dungeonStore.createIndex('partyId', 'partyId', { unique: false });
-                    dungeonStore.createIndex('currentFloor', 'currentFloor', { unique: false });
+                    dungeonStore.createIndex('dungeonType', 'dungeonType', { unique: false });
                     dungeonStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                     dungeonStore.createIndex('lastModified', 'lastModified', { unique: false });
                     dungeonStore.createIndex('testMode', 'testMode', { unique: false });
+                }
+                
+                // Create party store for persistent party data
+                if (!db.objectStoreNames.contains(this.PARTY_STORE)) {
+                    const partyStore = db.createObjectStore(this.PARTY_STORE, {
+                        keyPath: 'id'
+                    });
+                    
+                    partyStore.createIndex('name', 'name', { unique: false });
+                    partyStore.createIndex('inTown', 'inTown', { unique: false });
+                    partyStore.createIndex('campId', 'campId', { unique: false });
+                    partyStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+                    partyStore.createIndex('lastModified', 'lastModified', { unique: false });
+                    partyStore.createIndex('memberCount', 'memberCount', { unique: false });
+                    partyStore.createIndex('aliveCount', 'aliveCount', { unique: false });
+                }
+                
+                // Create party position store for tracking party locations/state in dungeons
+                if (!db.objectStoreNames.contains(this.PARTY_POSITION_STORE)) {
+                    const partyPositionStore = db.createObjectStore(this.PARTY_POSITION_STORE, {
+                        keyPath: 'partyId'
+                    });
+                    
+                    partyPositionStore.createIndex('dungeonId', 'dungeonId', { unique: false });
+                    partyPositionStore.createIndex('currentFloor', 'currentFloor', { unique: false });
+                    partyPositionStore.createIndex('lastSaved', 'lastSaved', { unique: false });
                 }
                 
                 console.log('IndexedDB upgrade completed');
@@ -3187,27 +3215,19 @@ class Storage {
                 throw new Error('Failed to initialize database');
             }
             
-            const dungeonId = `dungeon_${partyId}_${Date.now()}`;
+            // Use fixed dungeon ID for shared instance
+            const dungeonId = 'corrupted_network';
             const now = new Date().toISOString();
             
-            // Create deep copy of dungeon state
+            // Create deep copy of dungeon structure (without party-specific data)
             const dungeonData = {
                 dungeonId,
-                partyId,
-                currentFloor: dungeon.currentFloor,
+                dungeonType: 'corrupted_network',
                 maxFloors: dungeon.maxFloors,
-                playerX: dungeon.playerX,
-                playerY: dungeon.playerY,
-                playerDirection: dungeon.playerDirection,
                 testMode: dungeon.testMode,
                 
                 // Convert Map to serializable object
                 floors: {},
-                
-                // Convert Sets to arrays for serialization
-                discoveredSecrets: Array.from(dungeon.discoveredSecrets || []),
-                disarmedTraps: Array.from(dungeon.disarmedTraps || []),
-                usedSpecials: Array.from(dungeon.usedSpecials || []),
                 
                 // Metadata
                 dateCreated: now,
@@ -3235,7 +3255,7 @@ class Storage {
             const store = transaction.objectStore(this.DUNGEON_STORE);
             
             return new Promise((resolve, reject) => {
-                const request = store.add(dungeonData);
+                const request = store.put(dungeonData);
                 
                 request.onsuccess = () => {
                     console.log(`Dungeon saved with ID: ${dungeonId}`);
@@ -3279,22 +3299,26 @@ class Storage {
                         return;
                     }
                     
-                    // Reconstruct dungeon object with proper data types
+                    // Reconstruct dungeon object (shared structure only)
                     const reconstructedDungeon = {
-                        currentFloor: dungeonData.currentFloor,
+                        dungeonId: dungeonData.dungeonId,
+                        dungeonType: dungeonData.dungeonType,
                         maxFloors: dungeonData.maxFloors,
-                        playerX: dungeonData.playerX,
-                        playerY: dungeonData.playerY,
-                        playerDirection: dungeonData.playerDirection,
                         testMode: dungeonData.testMode,
                         
                         // Reconstruct Map from serialized object
                         floors: new Map(),
                         
-                        // Reconstruct Sets from arrays
-                        discoveredSecrets: new Set(dungeonData.discoveredSecrets || []),
-                        disarmedTraps: new Set(dungeonData.disarmedTraps || []),
-                        usedSpecials: new Set(dungeonData.usedSpecials || [])
+                        // Initialize empty sets for party-specific data (will be loaded separately)
+                        discoveredSecrets: new Set(),
+                        disarmedTraps: new Set(),
+                        usedSpecials: new Set(),
+                        
+                        // Default position (will be overridden by party position data)
+                        currentFloor: 1,
+                        playerX: 1,
+                        playerY: 2,
+                        playerDirection: 0
                     };
                     
                     // Reconstruct floors Map
@@ -3302,7 +3326,7 @@ class Storage {
                         reconstructedDungeon.floors.set(parseInt(floorNumber), floorData);
                     }
                     
-                    // Set current floor data
+                    // Set initial current floor data
                     reconstructedDungeon.currentFloorData = reconstructedDungeon.floors.get(reconstructedDungeon.currentFloor);
                     
                     resolve(reconstructedDungeon);
@@ -3321,20 +3345,16 @@ class Storage {
     }
     
     /**
-     * Get all dungeons for a party
-     * @param {string} partyId - Party ID to find dungeons for
-     * @returns {Promise<Array>} Array of dungeon records
+     * Get saved dungeons for a party (now returns party position data)
+     * @param {string} partyId - Party ID to find position for
+     * @returns {Promise<Array>} Array containing party position if it exists
      */
-    static async getDungeonsForParty(partyId) {
+    static async getSavedDungeonsForParty(partyId) {
         try {
-            if (!await this.initializeDB()) {
-                throw new Error('Failed to initialize database');
-            }
-            
-            return this.queryEntities(this.DUNGEON_STORE, { partyId });
-            
+            const partyPosition = await this.loadPartyPosition(partyId);
+            return partyPosition ? [partyPosition] : [];
         } catch (error) {
-            console.error('Failed to get dungeons for party:', error);
+            console.error('Failed to get saved dungeons for party:', error);
             return [];
         }
     }
@@ -3370,6 +3390,534 @@ class Storage {
         } catch (error) {
             console.error('Failed to delete dungeon:', error);
             return false;
+        }
+    }
+    
+    /**
+     * Save party position and state in a dungeon
+     * @param {string} partyId - Party ID
+     * @param {string} dungeonId - Dungeon ID 
+     * @param {Object} positionData - Party position and state data
+     * @returns {Promise<boolean>} Success status
+     */
+    static async savePartyPosition(partyId, dungeonId, positionData) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const now = new Date().toISOString();
+            
+            const partyPositionData = {
+                partyId,
+                dungeonId,
+                currentFloor: positionData.currentFloor,
+                playerX: positionData.playerX,
+                playerY: positionData.playerY,
+                playerDirection: positionData.playerDirection,
+                testMode: positionData.testMode,
+                
+                // Convert Sets to arrays for serialization
+                discoveredSecrets: Array.from(positionData.discoveredSecrets || []),
+                disarmedTraps: Array.from(positionData.disarmedTraps || []),
+                usedSpecials: Array.from(positionData.usedSpecials || []),
+                
+                // Metadata
+                lastSaved: now
+            };
+            
+            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
+            const store = transaction.objectStore(this.PARTY_POSITION_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.put(partyPositionData);
+                
+                request.onsuccess = () => {
+                    console.log(`Party position saved: ${partyId} in ${dungeonId}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to save party position:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to save party position:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Load party position and state from a dungeon
+     * @param {string} partyId - Party ID
+     * @returns {Promise<Object|null>} Party position data or null if not found
+     */
+    static async loadPartyPosition(partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
+            const store = transaction.objectStore(this.PARTY_POSITION_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get(partyId);
+                
+                request.onsuccess = () => {
+                    const positionData = request.result;
+                    
+                    if (!positionData) {
+                        resolve(null);
+                        return;
+                    }
+                    
+                    // Reconstruct position data with proper data types
+                    const reconstructedPosition = {
+                        partyId: positionData.partyId,
+                        dungeonId: positionData.dungeonId,
+                        currentFloor: positionData.currentFloor,
+                        playerX: positionData.playerX,
+                        playerY: positionData.playerY,
+                        playerDirection: positionData.playerDirection,
+                        testMode: positionData.testMode,
+                        
+                        // Reconstruct Sets from arrays
+                        discoveredSecrets: new Set(positionData.discoveredSecrets || []),
+                        disarmedTraps: new Set(positionData.disarmedTraps || []),
+                        usedSpecials: new Set(positionData.usedSpecials || []),
+                        
+                        lastSaved: positionData.lastSaved
+                    };
+                    
+                    resolve(reconstructedPosition);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load party position:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load party position:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Get all parties in a specific dungeon
+     * @param {string} dungeonId - Dungeon ID to search for parties
+     * @returns {Promise<Array>} Array of party position records
+     */
+    static async getPartiesInDungeon(dungeonId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
+            const store = transaction.objectStore(this.PARTY_POSITION_STORE);
+            const index = store.index('dungeonId');
+            
+            return new Promise((resolve, reject) => {
+                const request = index.getAll(dungeonId);
+                
+                request.onsuccess = () => {
+                    resolve(request.result || []);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to get parties in dungeon:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to get parties in dungeon:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Delete party position data
+     * @param {string} partyId - Party ID to delete position for
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deletePartyPosition(partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
+            const store = transaction.objectStore(this.PARTY_POSITION_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.delete(partyId);
+                
+                request.onsuccess = () => {
+                    console.log(`Party position deleted: ${partyId}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to delete party position:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to delete party position:', error);
+            return false;
+        }
+    }
+    
+    // Party Management Methods
+    
+    /**
+     * Save party to IndexedDB
+     * @param {Object} party - Party object to save
+     * @returns {Promise<boolean>} Success status
+     */
+    static async saveParty(party) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const now = Date.now();
+            const partyData = {
+                id: party.id,
+                name: party.name || 'Unnamed Party',
+                memberIds: party.members.map(member => member.id),
+                memberCount: party.members.length,
+                aliveCount: party.members.filter(m => m.isAlive).length,
+                formation: party.formation || 'default',
+                gold: party.gold || 0,
+                experience: party.experience || 0,
+                currentLeaderId: party.currentLeader ? party.currentLeader.id : null,
+                inTown: party.inTown || true,
+                campId: party.campId || null,
+                dateCreated: party.dateCreated || now,
+                lastModified: now
+            };
+            
+            const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
+            const store = transaction.objectStore(this.PARTY_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.put(partyData);
+                
+                request.onsuccess = () => {
+                    console.log(`Party saved: ${party.id}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to save party:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to save party:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Load party from IndexedDB
+     * @param {string} partyId - Party ID to load
+     * @returns {Promise<Object|null>} Party data or null if not found
+     */
+    static async loadParty(partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const store = transaction.objectStore(this.PARTY_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get(partyId);
+                
+                request.onsuccess = () => {
+                    const party = request.result;
+                    if (party) {
+                        console.log(`Party loaded: ${partyId}`);
+                    }
+                    resolve(party || null);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load party:', request.error);
+                    reject(null);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Load all parties from IndexedDB
+     * @returns {Promise<Array>} Array of party objects
+     */
+    static async loadAllParties() {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const store = transaction.objectStore(this.PARTY_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    const parties = request.result || [];
+                    console.log(`Loaded ${parties.length} parties from IndexedDB`);
+                    resolve(parties);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load parties:', request.error);
+                    reject([]);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load parties:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Query parties by criteria
+     * @param {Object} criteria - Query criteria (inTown, campId, etc.)
+     * @returns {Promise<Array>} Array of matching parties
+     */
+    static async queryParties(criteria = {}) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const store = transaction.objectStore(this.PARTY_STORE);
+            
+            // If no criteria, return all parties
+            if (Object.keys(criteria).length === 0) {
+                return this.loadAllParties();
+            }
+            
+            // Use index if available
+            const indexName = Object.keys(criteria)[0];
+            const indexValue = criteria[indexName];
+            
+            return new Promise((resolve, reject) => {
+                let request;
+                
+                if (store.indexNames.contains(indexName)) {
+                    const index = store.index(indexName);
+                    request = index.getAll(indexValue);
+                } else {
+                    // Fallback to full scan
+                    request = store.getAll();
+                }
+                
+                request.onsuccess = () => {
+                    let parties = request.result || [];
+                    
+                    // Apply additional filters if using fallback
+                    if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
+                        parties = parties.filter(party => {
+                            return Object.entries(criteria).every(([key, value]) => {
+                                return party[key] === value;
+                            });
+                        });
+                    }
+                    
+                    console.log(`Found ${parties.length} parties matching criteria`);
+                    resolve(parties);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to query parties:', request.error);
+                    reject([]);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to query parties:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Delete party from IndexedDB
+     * @param {string} partyId - Party ID to delete
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deleteParty(partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
+            const store = transaction.objectStore(this.PARTY_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.delete(partyId);
+                
+                request.onsuccess = () => {
+                    console.log(`Party deleted: ${partyId}`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to delete party:', request.error);
+                    reject(false);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to delete party:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Set the active party ID
+     * @param {string} partyId - Party ID to set as active
+     * @returns {boolean} Success status
+     */
+    static setActiveParty(partyId) {
+        try {
+            if (partyId) {
+                localStorage.setItem(this.ACTIVE_PARTY_KEY, partyId);
+                console.log(`Active party set to: ${partyId}`);
+            } else {
+                localStorage.removeItem(this.ACTIVE_PARTY_KEY);
+                console.log('Active party cleared');
+            }
+            return true;
+        } catch (error) {
+            console.error('Failed to set active party:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Get the active party ID
+     * @returns {string|null} Active party ID or null if none set
+     */
+    static getActivePartyId() {
+        try {
+            return localStorage.getItem(this.ACTIVE_PARTY_KEY);
+        } catch (error) {
+            console.error('Failed to get active party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Load the active party
+     * @returns {Promise<Object|null>} Active party object or null if none exists
+     */
+    static async loadActiveParty() {
+        try {
+            const activePartyId = this.getActivePartyId();
+            if (!activePartyId) {
+                return null;
+            }
+            
+            const party = await this.loadParty(activePartyId);
+            if (!party) {
+                // Clear invalid active party reference
+                this.setActiveParty(null);
+                return null;
+            }
+            
+            return party;
+        } catch (error) {
+            console.error('Failed to load active party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Create and set a new active party
+     * @param {string} name - Optional party name
+     * @returns {Promise<Object|null>} New party object or null if creation failed
+     */
+    static async createNewActiveParty(name = null) {
+        try {
+            // Import Party class dynamically
+            const party = new Party();
+            if (name) {
+                party.name = name;
+            }
+            
+            // Save the party
+            const saveSuccess = await this.saveParty(party);
+            if (!saveSuccess) {
+                console.error('Failed to save new party');
+                return null;
+            }
+            
+            // Set as active party
+            this.setActiveParty(party.id);
+            
+            console.log(`Created new active party: ${party.id}`);
+            return party;
+        } catch (error) {
+            console.error('Failed to create new active party:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Get all camping parties (parties with campId)
+     * @returns {Promise<Array>} Array of camping parties
+     */
+    static async getCampingParties() {
+        try {
+            // Get all parties and filter for those with campId
+            const allParties = await this.loadAllParties();
+            return allParties.filter(party => party.campId != null);
+        } catch (error) {
+            console.error('Failed to get camping parties:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Get all non-active parties (lost parties)
+     * @returns {Promise<Array>} Array of lost parties
+     */
+    static async getLostParties() {
+        try {
+            const activePartyId = this.getActivePartyId();
+            const allParties = await this.loadAllParties();
+            
+            // Filter out the active party and camping parties
+            return allParties.filter(party => 
+                party.id !== activePartyId && 
+                !party.campId && 
+                !party.inTown
+            );
+        } catch (error) {
+            console.error('Failed to get lost parties:', error);
+            return [];
         }
     }
 }
