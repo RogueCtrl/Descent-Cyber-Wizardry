@@ -1286,6 +1286,13 @@ class UI {
         const viewport = document.getElementById('viewport');
         if (!viewport) return;
         
+        // IMPORTANT: Move canvas to hidden storage before clearing viewport
+        const canvas = document.getElementById('game-canvas');
+        const canvasStorage = document.getElementById('canvas-storage');
+        if (canvas && canvasStorage) {
+            canvasStorage.appendChild(canvas);
+        }
+        
         // Clear viewport and create combat UI with cyber terminology
         viewport.innerHTML = `
             <div id="combat-interface" class="combat-interface">
@@ -2041,23 +2048,35 @@ class UI {
         const viewport = document.getElementById('viewport');
         if (!viewport) return;
         
+        // CRITICAL: Force cleanup all modals first to prevent z-index blocking
+        this.clearAllModals();
+        
         // Clear combat interface and restore 3D view
         viewport.innerHTML = '';
         
-        // Ensure canvas is properly repositioned in viewport
+        // Retrieve canvas from hidden storage
         const canvas = document.getElementById('game-canvas');
+        const canvasStorage = document.getElementById('canvas-storage');
+        
         if (canvas && viewport) {
+            // Move canvas from storage back to viewport
             viewport.appendChild(canvas);
             canvas.style.position = 'absolute';
             canvas.style.top = '0';
             canvas.style.left = '0';
             canvas.style.width = '100%';
             canvas.style.height = '100%';
-            canvas.style.zIndex = '1';
+            canvas.style.zIndex = '500'; // Match CSS z-index value
             canvas.style.display = 'block';
         }
         
-        console.log('Dungeon viewport restored with canvas repositioned');
+        // Force renderer reinitialization after viewport restoration
+        // This ensures the 3D view renders properly after being moved
+        if (window.engine?.renderer) {
+            setTimeout(() => {
+                window.engine.renderer.reinitialize();
+            }, 50);
+        }
     }
     
     /**
@@ -3264,5 +3283,39 @@ class UI {
                 window.engine.audioManager.refreshTracks();
             }
         }
+    }
+    
+    /**
+     * Force cleanup of all modals to prevent z-index layering issues
+     * This is necessary when transitioning back to dungeon view after combat
+     */
+    clearAllModals() {
+        // List of all possible modal properties
+        const modalProperties = [
+            'postCombatModal',
+            'dungeonEntranceModal', 
+            'dungeonCasualtyModal',
+            'townModal',
+            'trainingModal',
+            'rosterModal',
+            'characterDetailModal',
+            'deathModal'
+        ];
+        
+        // Destroy modal objects if they exist
+        modalProperties.forEach(modalName => {
+            if (this[modalName]) {
+                this[modalName].destroy();
+                this[modalName] = null;
+            }
+        });
+        
+        // Also clear any orphaned modal elements from the DOM
+        const orphanedModals = document.querySelectorAll('.modal');
+        orphanedModals.forEach((modal) => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        });
     }
 }

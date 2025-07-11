@@ -29,6 +29,23 @@ class Renderer {
     }
     
     /**
+     * Reinitialize the renderer and viewport3D
+     * Useful for clearing stuck rendering states after combat
+     */
+    reinitialize() {
+        // Update canvas dimensions
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        
+        // Clear canvas completely
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.clear();
+        
+        // Recreate the 3D viewport
+        this.viewport3D = new Viewport3D(this.canvas, this.ctx);
+    }
+    
+    /**
      * Render the dungeon view using advanced 3D viewport
      */
     renderDungeon(dungeon, party) {

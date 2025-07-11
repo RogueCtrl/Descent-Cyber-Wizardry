@@ -91,6 +91,7 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-glow);
     display: none; /* Hidden by default, shown only in dungeon mode */
+    z-index: 500; /* Ensure canvas is above normal elements but below modals */
 }
 
 /* Show canvas only in dungeon/playing states */
