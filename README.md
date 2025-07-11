@@ -9,6 +9,10 @@
 
 A modern browser-based homage to the classic dungeon crawler Wizardry, featuring a unique dual-mode system that switches between classic fantasy and cyberpunk aesthetics. Experience authentic turn-based RPG combat with striking 3D wireframe monster portraits in a persistent dungeon world.
 
+> **⚠️ Breaking Change:**  
+> This update is not compatible with previous versions.  
+> Please delete your `DescentCyberWizardy` IndexedDB instance before running the new version.
+
 ## Current Development Status
 
 🎯 **Persistent Dungeon World** - Core RPG systems are implemented with a complete dual-terminology system supporting both classic fantasy and cyberpunk themes. Recent focus on treasure mechanics and shared dungeon architecture.
