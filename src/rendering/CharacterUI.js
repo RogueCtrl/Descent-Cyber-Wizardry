@@ -285,8 +285,8 @@ class CharacterUI {
         
         container.innerHTML = `
             <div class="step-content">
-                <h3>Choose Your Class</h3>
-                <p>Your attributes determine which classes are available to you.</p>
+                <h3 data-text-key="choose_class">Choose Your Class</h3>
+                <p data-text-key="class_selection_description">Your attributes determine which classes are available to you.</p>
                 
                 <div class="class-grid">
                     ${allClasses.map(className => {
@@ -294,19 +294,21 @@ class CharacterUI {
                         const isAvailable = availableClasses.includes(className);
                         const meetsRequirements = Class.checkRequirements(className, this.characterData.attributes);
                         
+                        const classKey = `class_${className.toLowerCase()}`;
+                        const classDescKey = `class_${className.toLowerCase()}_desc`;
                         return `
                             <div class="class-option ${isAvailable ? '' : 'disabled'}" data-class="${className}">
-                                <h4>${classData.name}</h4>
-                                <p class="class-description">${classData.description}</p>
+                                <h4 data-text-key="${classKey}">${classData.name}</h4>
+                                <p class="class-description" data-text-key="${classDescKey}">${classData.description}</p>
                                 <div class="class-requirements">
-                                    <strong>Requirements:</strong><br>
+                                    <strong data-text-key="class_requirements">Requirements:</strong><br>
                                     ${this.renderClassRequirements(classData.requirements, meetsRequirements)}
                                 </div>
                                 <div class="class-stats">
-                                    <strong>Hit Die:</strong> d${classData.hitDie}<br>
-                                    <strong>Spells:</strong> ${classData.spells || 'None'}
+                                    <strong data-text-key="class_hit_die">Hit Die:</strong> d${classData.hitDie}<br>
+                                    <strong data-text-key="class_spells">Spells:</strong> ${classData.spells || 'None'}
                                 </div>
-                                ${!isAvailable ? '<div class="unavailable-reason">Requirements not met</div>' : ''}
+                                ${!isAvailable ? `<div class="unavailable-reason" data-text-key="requirements_not_met">Requirements not met</div>` : ''}
                             </div>
                         `;
                     }).join('')}
@@ -328,6 +330,9 @@ class CharacterUI {
                 this.updateNextButton();
             });
         });
+        
+        // Apply TextManager to the new content
+        this.applyTextManagerToModal(container);
     }
     
     /**
@@ -356,8 +361,9 @@ class CharacterUI {
             const currentValue = this.characterData.attributes[stat];
             const meets = currentValue >= minValue;
             const className = meets ? 'requirement-met' : 'requirement-failed';
+            const statKey = `attr_${stat}`;
             
-            return `<span class="${className}">${Helpers.capitalize(stat)}: ${minValue} (You have: ${currentValue})</span>`;
+            return `<span class="${className}"><span data-text-key="${statKey}">${Helpers.capitalize(stat)}</span>: ${minValue} (You have: ${currentValue})</span>`;
         }).join('<br>');
     }
     

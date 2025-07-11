@@ -52,6 +52,36 @@ const TERMINOLOGY = {
         reroll_description: "You can reroll if you're not satisfied with these attributes.",
         total_label: "Total",
         
+        // Character Creation Step 3 - Class Selection
+        choose_class: "Choose Your Class",
+        class_selection_description: "Your attributes determine which classes are available to you.",
+        
+        // Individual Classes
+        class_fighter: "Fighter",
+        class_mage: "Mage",
+        class_priest: "Priest",
+        class_thief: "Thief",
+        class_bishop: "Bishop",
+        class_samurai: "Samurai",
+        class_lord: "Lord",
+        class_ninja: "Ninja",
+        
+        // Class Descriptions
+        class_fighter_desc: "Melee combat specialist",
+        class_mage_desc: "Arcane spellcaster",
+        class_priest_desc: "Divine spellcaster",
+        class_thief_desc: "Stealth and utility specialist",
+        class_bishop_desc: "Master of both arcane and divine magic",
+        class_samurai_desc: "Elite warrior with limited magical ability",
+        class_lord_desc: "Noble warrior with divine blessing",
+        class_ninja_desc: "Master of stealth and shadow magic",
+        
+        // Class UI Elements
+        class_requirements: "Requirements:",
+        class_hit_die: "Hit Die:",
+        class_spells: "Spells:",
+        requirements_not_met: "Requirements not met",
+        
         // Combat Interface
         combat_fight: "⚔️ Fight",
         combat_defend: "🛡️ Defend", 
@@ -172,7 +202,37 @@ const TERMINOLOGY = {
         // Parameter Generation UI
         reroll_attributes: "Reroll Parameters",
         reroll_description: "You can reroll if you're not satisfied with these parameters.",
-        total_label: "System Total", 
+        total_label: "System Total",
+        
+        // Character Creation Step 3 - Specialization Selection
+        choose_class: "Choose Your Specialization",
+        class_selection_description: "Your configurations determine which specializations are available to you.",
+        
+        // Individual Specializations
+        class_fighter: "Hacker",
+        class_mage: "Vibecoder",
+        class_priest: "Infrastructure",
+        class_thief: "Trojan",
+        class_bishop: "Architect",
+        class_samurai: "CircutBreaker",
+        class_lord: "SysAdmin",
+        class_ninja: "Backdoor",
+        
+        // Specialization Descriptions
+        class_fighter_desc: "Brute force protocols",
+        class_mage_desc: "Random protocols and programs - feeling the vibes",
+        class_priest_desc: "Distributed support and maintenance protocols",
+        class_thief_desc: "Network infiltration protocols",
+        class_bishop_desc: "Adaptive protocols with reverse engineering capabilities",
+        class_samurai_desc: "Purpose-built disruption protocols with limited program access",
+        class_lord_desc: "Root-level protocols with administrative privileges",
+        class_ninja_desc: "Experimental infiltration protocols with limited program access",
+        
+        // Specialization UI Elements
+        class_requirements: "Prerequisites:",
+        class_hit_die: "Core Stability:",
+        class_spells: "Programs:",
+        requirements_not_met: "Prerequisites not satisfied", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",
