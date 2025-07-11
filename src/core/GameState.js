@@ -18,7 +18,7 @@ class GameState {
             'character-creation': ['training-grounds'],
             'dungeon': ['playing', 'town'],
             'playing': ['combat', 'menu', 'paused', 'town'],
-            'combat': ['playing', 'game-over'],
+            'combat': ['playing', 'game-over', 'town'],
             'menu': ['town', 'playing'],
             'paused': ['playing', 'menu'],
             'game-over': ['town']

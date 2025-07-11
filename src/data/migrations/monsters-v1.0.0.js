@@ -327,7 +327,7 @@ window.monstersMigration = {
             "threatLevel": "high",
             "digitalClassification": "recogniser_unit",
             "level": 4,
-            "hitDie": 10,
+            "hitDie": 1,
             "strength": 19,
             "intelligence": 5,
             "agility": 8,

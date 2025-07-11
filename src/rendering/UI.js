@@ -2193,10 +2193,13 @@ class UI {
                 // Apply rewards to party
                 this.applyRewardsToParty(rewards);
                 
-                // Return to dungeon exploration
-                if (window.engine) {
-                    window.engine.returnToDungeon();
+                // Stop victory music before showing dungeon entry modal
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.stopCurrentTrack();
                 }
+                
+                // Show dungeon entry modal for post-combat return (with casualties allowed)
+                this.showDungeonEntranceConfirmation(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
     }
@@ -2534,15 +2537,13 @@ class UI {
                 // Clear modal reference
                 this.postCombatModal = null;
                 
-                // Return to dungeon exploration using the same method as normal victory
-                if (window.engine) {
-                    window.engine.returnToDungeon();
+                // Stop victory music before showing dungeon entry modal
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.stopCurrentTrack();
                 }
                 
-                // Play dungeon music
-                if (window.engine?.audioManager) {
-                    window.engine.audioManager.fadeToTrack('dungeon');
-                }
+                // Show dungeon entry modal for post-combat return (with casualties allowed)
+                this.showDungeonEntranceConfirmation(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
         
@@ -2559,13 +2560,14 @@ class UI {
     /**
      * Show dungeon entrance confirmation modal
      */
-    showDungeonEntranceConfirmation(fromAgentOps = false) {
-        console.log('Showing dungeon entrance confirmation', { fromAgentOps });
+    showDungeonEntranceConfirmation(fromAgentOps = false, postCombatReturn = false) {
+        console.log('Showing dungeon entrance confirmation', { fromAgentOps, postCombatReturn });
         
-        // Store where we came from for the cancel button
-        this.dungeonEntranceOrigin = fromAgentOps ? 'agentops' : 'town';
+        // Store where we came from for the cancel button and modal context
+        this.dungeonEntranceOrigin = fromAgentOps ? 'agentops' : (postCombatReturn ? 'post-combat' : 'town');
+        this.postCombatReturn = postCombatReturn;
         
-        const validation = window.engine.validateDungeonEntry(fromAgentOps);
+        const validation = window.engine.validateDungeonEntry(fromAgentOps, postCombatReturn);
         
         if (!validation.valid && validation.casualties) {
             // Show casualty modal instead
@@ -2585,11 +2587,19 @@ class UI {
             this.dungeonEntranceModal = null;
         });
         
-        // Create content
-        const returnText = this.dungeonEntranceOrigin === 'agentops' ? 'Return to AgentOps' : 'Return to Town';
+        // Create content with appropriate button text based on context
+        let enterText, returnText;
+        if (postCombatReturn) {
+            enterText = 'Return to Grid';
+            returnText = 'Exit to Town';
+        } else {
+            enterText = 'Enter Dungeon';
+            returnText = this.dungeonEntranceOrigin === 'agentops' ? 'Return to AgentOps' : 'Return to Town';
+        }
+        
         const content = this.createDungeonEntranceContent(validation) +
             '<div class="dungeon-entrance-actions">' +
-            '<button id="confirm-enter-btn" class="btn btn-primary">Enter Dungeon</button>' +
+            `<button id="confirm-enter-btn" class="btn btn-primary">${enterText}</button>` +
             `<button id="cancel-enter-btn" class="btn btn-secondary">${returnText}</button>` +
             '</div>';
         
@@ -2789,7 +2799,14 @@ class UI {
                 if (validation.valid) {
                     this.dungeonEntranceModal.hide();
                     const fromAgentOps = this.dungeonEntranceOrigin === 'agentops';
-                    window.engine.enterDungeon(fromAgentOps);
+                    const postCombatReturn = this.postCombatReturn || false;
+                    
+                    // Play dungeon music when entering/returning to dungeon
+                    if (window.engine?.audioManager) {
+                        window.engine.audioManager.fadeToTrack('dungeon');
+                    }
+                    
+                    window.engine.enterDungeon(fromAgentOps, postCombatReturn);
                 } else {
                     console.log('Cannot enter dungeon - validation failed');
                     this.addMessage('Cannot enter dungeon - party validation failed', 'error');
@@ -2812,6 +2829,19 @@ class UI {
                 // Return to the appropriate location
                 if (this.dungeonEntranceOrigin === 'agentops') {
                     this.showTrainingGrounds();
+                } else if (this.dungeonEntranceOrigin === 'post-combat') {
+                    // Return to town after post-combat cancellation
+                    const success = window.engine.gameState.setState('town');
+                    console.log('Combat to town transition:', success);
+                    
+                    if (success) {
+                        // Play town music when exiting to town
+                        if (window.engine?.audioManager) {
+                            window.engine.audioManager.fadeToTrack('town');
+                        }
+                        
+                        this.showTown();
+                    }
                 }
                 // If origin is 'town', we don't need to do anything as the modal just closes
             });

@@ -207,6 +207,11 @@ class Engine {
         this.eventSystem.on('combat-flee-success', () => {
             this.handleCombatFleeSuccess();
         });
+        
+        // Listen for dungeon entry event
+        this.eventSystem.on('dungeon-entered', () => {
+            this.handleDungeonEntered();
+        });
     }
     
     /**
@@ -1120,10 +1125,13 @@ class Engine {
     /**
      * Validate if party can enter the dungeon
      * @param {boolean} fromAgentOps - Whether the request is coming from AgentOps modal
+     * @param {boolean} postCombatReturn - Whether this is a post-combat return with casualties allowed
      */
-    validateDungeonEntry(fromAgentOps = false) {
+    validateDungeonEntry(fromAgentOps = false, postCombatReturn = false) {
         console.log('=== Dungeon Entry Validation ===');
         console.log('Current game state:', this.gameState.currentState);
+        console.log('From AgentOps:', fromAgentOps);
+        console.log('Post-combat return:', postCombatReturn);
         console.log('Party exists:', !!this.party);
         console.log('Party size:', this.party ? this.party.size : 'N/A');
         
@@ -1144,8 +1152,8 @@ class Engine {
             dead: deadMembers.length
         });
         
-        // Check if party has casualties
-        if (unconsciousMembers.length > 0 || deadMembers.length > 0) {
+        // Check if party has casualties (skip this check for post-combat returns)
+        if (!postCombatReturn && (unconsciousMembers.length > 0 || deadMembers.length > 0)) {
             console.log('Validation failed: Party has casualties');
             return { 
                 valid: false, 
@@ -1162,8 +1170,11 @@ class Engine {
         }
         
         // Check if we're in a valid state to enter dungeon
-        // Allow entry from town state OR training-grounds state (AgentOps)
+        // Allow entry from town state, training-grounds state (AgentOps), or combat state (post-combat return)
         const validStates = ['town', 'training-grounds'];
+        if (postCombatReturn) {
+            validStates.push('combat'); // Allow return from combat with casualties
+        }
         if (!validStates.includes(this.gameState.currentState)) {
             console.log('Validation failed: Invalid state for dungeon entry:', this.gameState.currentState);
             return { valid: false, reason: 'You must be in town to enter the dungeon.' };
@@ -1177,10 +1188,11 @@ class Engine {
     /**
      * Actually enter the dungeon (called after confirmation)
      * @param {boolean} fromAgentOps - Whether the request is coming from AgentOps modal
+     * @param {boolean} postCombatReturn - Whether this is a post-combat return
      */
-    enterDungeon(fromAgentOps = false) {
-        console.log('Entering dungeon...', { fromAgentOps });
-        const validation = this.validateDungeonEntry(fromAgentOps);
+    enterDungeon(fromAgentOps = false, postCombatReturn = false) {
+        console.log('Entering dungeon...', { fromAgentOps, postCombatReturn });
+        const validation = this.validateDungeonEntry(fromAgentOps, postCombatReturn);
         
         if (validation.valid) {
             console.log('Dungeon entry validation passed, entering dungeon...');
@@ -1189,9 +1201,17 @@ class Engine {
                 this.ui.hideTrainingGrounds(); // Ensure AgentOps modal is closed
             }
             this.gameState.setState('playing');
-            this.ui.addMessage('You enter the dungeon...');
-            // Emit event to notify UI of dungeon entry
-            this.eventSystem.emit('dungeon-entered');
+            
+            // Different behavior for post-combat return vs new entry
+            if (postCombatReturn) {
+                this.ui.addMessage('You continue exploring the corrupted network...');
+                // Initialize dungeon interface without generating new dungeon
+                this.initializeDungeonInterface();
+            } else {
+                this.ui.addMessage('You enter the dungeon...');
+                // Emit event to notify UI of dungeon entry (generates new dungeon)
+                this.eventSystem.emit('dungeon-entered');
+            }
         } else {
             console.log('Dungeon entry validation failed:', validation.reason);
             this.ui.addMessage(validation.reason);
@@ -1435,6 +1455,28 @@ class Engine {
         // Return to dungeon exploration
         this.gameState.setState('playing');
         this.ui.hideCombatInterface();
+    }
+    
+    /**
+     * Handle dungeon entry - generates new dungeon only if needed
+     */
+    handleDungeonEntered() {
+        console.log('Handling dungeon entry...');
+        console.log('Current dungeon exists:', !!this.dungeon);
+        console.log('Current dungeon testMode:', this.dungeon?.testMode);
+        
+        // Only generate a new dungeon if we don't have one or it's explicitly a new game
+        if (!this.dungeon) {
+            console.log('No existing dungeon found - generating new dungeon...');
+            this.dungeon = new Dungeon();
+        } else {
+            console.log('Using existing dungeon...');
+        }
+        
+        // Note: initializeDungeonInterface() is called by the state change to 'playing'
+        // so we don't need to call it again here to avoid duplicate event listeners
+        
+        console.log('Dungeon entry handled - interface will be initialized by state change');
     }
     
     /**
