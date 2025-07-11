@@ -4,6 +4,7 @@
  */
 class Party {
     constructor() {
+        this.id = `party_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.members = [];
         this.maxSize = 6;
         this.currentLeader = null;
@@ -106,6 +107,7 @@ class Party {
     loadFromSave(saveData) {
         if (!saveData) return;
         
+        this.id = saveData.id || this.id; // Keep existing ID if not in save data
         this.maxSize = saveData.maxSize || 6;
         this.formation = saveData.formation || 'default';
         this.gold = saveData.gold || 0;
@@ -117,5 +119,20 @@ class Party {
         if (saveData.currentLeader && this.members.length > 0) {
             this.currentLeader = this.members.find(member => member.id === saveData.currentLeader) || this.members[0];
         }
+    }
+    
+    /**
+     * Convert party to save data
+     */
+    toSaveData() {
+        return {
+            id: this.id,
+            maxSize: this.maxSize,
+            formation: this.formation,
+            gold: this.gold,
+            experience: this.experience,
+            members: this.members,
+            currentLeader: this.currentLeader ? this.currentLeader.id : null
+        };
     }
 }

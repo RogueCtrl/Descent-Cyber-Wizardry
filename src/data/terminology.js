@@ -62,6 +62,7 @@ const TERMINOLOGY = {
         move: "Move",
         use: "Use",
         rest: "Rest",
+        exit_dungeon: "⚡ Exit to Town",
         
         // Combat States
         no_enemies: "No Enemies",
@@ -154,6 +155,7 @@ const TERMINOLOGY = {
         move: "Navigate",
         use: "Access",
         rest: "System Repair",
+        exit_dungeon: "⚡ Jack Out",
         
         // Combat States
         no_enemies: "Grid Clear",

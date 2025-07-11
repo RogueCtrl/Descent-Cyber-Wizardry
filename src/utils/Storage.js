@@ -13,7 +13,7 @@ class Storage {
     
     // IndexedDB configuration
     static DB_NAME = 'DescentCyberWizardry';
-    static DB_VERSION = 4; // Incremented for monster store
+    static DB_VERSION = 5; // Incremented for dungeon store
     static CHARACTER_STORE = 'characters';
     static ROSTER_STORE = 'roster';
     static CAMP_STORE = 'camps';
@@ -26,6 +26,7 @@ class Storage {
     static EFFECT_STORE = 'effects';
     static MONSTER_STORE = 'monsters';
     static VERSION_STORE = 'entity_versions';
+    static DUNGEON_STORE = 'dungeons';
     
     static _db = null;
     static _dbInitialized = false;
@@ -383,6 +384,19 @@ class Storage {
                     
                     versionStore.createIndex('version', 'version', { unique: false });
                     versionStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
+                }
+                
+                // Create dungeon store for saving dungeon states
+                if (!db.objectStoreNames.contains(this.DUNGEON_STORE)) {
+                    const dungeonStore = db.createObjectStore(this.DUNGEON_STORE, {
+                        keyPath: 'dungeonId'
+                    });
+                    
+                    dungeonStore.createIndex('partyId', 'partyId', { unique: false });
+                    dungeonStore.createIndex('currentFloor', 'currentFloor', { unique: false });
+                    dungeonStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+                    dungeonStore.createIndex('lastModified', 'lastModified', { unique: false });
+                    dungeonStore.createIndex('testMode', 'testMode', { unique: false });
                 }
                 
                 console.log('IndexedDB upgrade completed');
@@ -3159,5 +3173,203 @@ class Storage {
                 "treasureType": "hoard"
             }
         };
+    }
+    
+    /**
+     * Save dungeon state to IndexedDB
+     * @param {Object} dungeon - Dungeon object to save
+     * @param {string} partyId - ID of the party that owns this dungeon
+     * @returns {Promise<string>} Dungeon ID if successful
+     */
+    static async saveDungeon(dungeon, partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const dungeonId = `dungeon_${partyId}_${Date.now()}`;
+            const now = new Date().toISOString();
+            
+            // Create deep copy of dungeon state
+            const dungeonData = {
+                dungeonId,
+                partyId,
+                currentFloor: dungeon.currentFloor,
+                maxFloors: dungeon.maxFloors,
+                playerX: dungeon.playerX,
+                playerY: dungeon.playerY,
+                playerDirection: dungeon.playerDirection,
+                testMode: dungeon.testMode,
+                
+                // Convert Map to serializable object
+                floors: {},
+                
+                // Convert Sets to arrays for serialization
+                discoveredSecrets: Array.from(dungeon.discoveredSecrets || []),
+                disarmedTraps: Array.from(dungeon.disarmedTraps || []),
+                usedSpecials: Array.from(dungeon.usedSpecials || []),
+                
+                // Metadata
+                dateCreated: now,
+                lastModified: now
+            };
+            
+            // Serialize floors Map to object
+            if (dungeon.floors && dungeon.floors instanceof Map) {
+                for (const [floorNumber, floorData] of dungeon.floors) {
+                    dungeonData.floors[floorNumber] = {
+                        number: floorData.number,
+                        width: floorData.width,
+                        height: floorData.height,
+                        tiles: floorData.tiles, // 2D array
+                        monsters: floorData.monsters || [],
+                        treasures: floorData.treasures || [],
+                        encounters: floorData.encounters || [],
+                        specialSquares: floorData.specialSquares || [],
+                        stairs: floorData.stairs || {}
+                    };
+                }
+            }
+            
+            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const store = transaction.objectStore(this.DUNGEON_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.add(dungeonData);
+                
+                request.onsuccess = () => {
+                    console.log(`Dungeon saved with ID: ${dungeonId}`);
+                    resolve(dungeonId);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to save dungeon:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to save dungeon:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Load dungeon state from IndexedDB
+     * @param {string} dungeonId - ID of the dungeon to load
+     * @returns {Promise<Object|null>} Dungeon data or null if not found
+     */
+    static async loadDungeon(dungeonId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readonly');
+            const store = transaction.objectStore(this.DUNGEON_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.get(dungeonId);
+                
+                request.onsuccess = () => {
+                    const dungeonData = request.result;
+                    
+                    if (!dungeonData) {
+                        resolve(null);
+                        return;
+                    }
+                    
+                    // Reconstruct dungeon object with proper data types
+                    const reconstructedDungeon = {
+                        currentFloor: dungeonData.currentFloor,
+                        maxFloors: dungeonData.maxFloors,
+                        playerX: dungeonData.playerX,
+                        playerY: dungeonData.playerY,
+                        playerDirection: dungeonData.playerDirection,
+                        testMode: dungeonData.testMode,
+                        
+                        // Reconstruct Map from serialized object
+                        floors: new Map(),
+                        
+                        // Reconstruct Sets from arrays
+                        discoveredSecrets: new Set(dungeonData.discoveredSecrets || []),
+                        disarmedTraps: new Set(dungeonData.disarmedTraps || []),
+                        usedSpecials: new Set(dungeonData.usedSpecials || [])
+                    };
+                    
+                    // Reconstruct floors Map
+                    for (const [floorNumber, floorData] of Object.entries(dungeonData.floors || {})) {
+                        reconstructedDungeon.floors.set(parseInt(floorNumber), floorData);
+                    }
+                    
+                    // Set current floor data
+                    reconstructedDungeon.currentFloorData = reconstructedDungeon.floors.get(reconstructedDungeon.currentFloor);
+                    
+                    resolve(reconstructedDungeon);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to load dungeon:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to load dungeon:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get all dungeons for a party
+     * @param {string} partyId - Party ID to find dungeons for
+     * @returns {Promise<Array>} Array of dungeon records
+     */
+    static async getDungeonsForParty(partyId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            return this.queryEntities(this.DUNGEON_STORE, { partyId });
+            
+        } catch (error) {
+            console.error('Failed to get dungeons for party:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Delete a saved dungeon
+     * @param {string} dungeonId - ID of the dungeon to delete
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deleteDungeon(dungeonId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+            
+            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const store = transaction.objectStore(this.DUNGEON_STORE);
+            
+            return new Promise((resolve, reject) => {
+                const request = store.delete(dungeonId);
+                
+                request.onsuccess = () => {
+                    console.log(`Dungeon ${dungeonId} deleted successfully`);
+                    resolve(true);
+                };
+                
+                request.onerror = () => {
+                    console.error('Failed to delete dungeon:', request.error);
+                    reject(request.error);
+                };
+            });
+            
+        } catch (error) {
+            console.error('Failed to delete dungeon:', error);
+            return false;
+        }
     }
 }

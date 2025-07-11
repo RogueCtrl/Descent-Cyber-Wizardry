@@ -88,15 +88,18 @@ class Dungeon {
             }
         }
         
+        // Add exit tile at player spawn position (1, 2)
+        tiles[2][1] = 'exit';
+        
         // Ensure outer walls remain as walls (already set by default)
         console.log('Test map layout:');
         console.log('Room A | Corridor | Room B');
         console.log('█████████');
         console.log('█...█..█...█');
-        console.log('█.p.....█');
+        console.log('█.E.....█');
         console.log('█...█..█...█');
         console.log('█████████');
-        console.log('(p = player start position)');
+        console.log('(E = exit tile - player spawn position)');
         
         return tiles;
     }
@@ -537,6 +540,12 @@ class Dungeon {
             this.playerY = 2; // Center of Room A (y: 1-3, center = 2)
             this.playerDirection = 0; // Start facing north
             console.log(`Test mode: Player positioned at (${this.playerX}, ${this.playerY}) facing North`);
+            
+            // Check for position events at start position (like exit tile)
+            setTimeout(() => {
+                this.checkPositionEvents();
+            }, 100);
+            
             return;
         }
         
@@ -577,7 +586,7 @@ class Dungeon {
     isWalkable(x, y, floor = null) {
         const tile = this.getTile(x, y, floor);
         const walkableTiles = [
-            'floor', 'hidden_door', 'secret_passage',
+            'floor', 'hidden_door', 'secret_passage', 'exit',
             'trap_pit_trap', 'trap_poison_dart', 'trap_teleport_trap', 'trap_alarm_trap'
         ];
         return walkableTiles.includes(tile);
@@ -615,8 +624,16 @@ class Dungeon {
         newY = ((newY % this.currentFloorData.height) + this.currentFloorData.height) % this.currentFloorData.height;
         
         if (this.isWalkable(newX, newY)) {
+            // Check if player is leaving exit tile
+            const previousTile = this.getTile(this.playerX, this.playerY);
+            
             this.playerX = newX;
             this.playerY = newY;
+            
+            // Check if player left exit tile
+            if (previousTile === 'exit' && this.getTile(newX, newY) !== 'exit') {
+                this.triggerExitTileLeft();
+            }
             
             // Check for events at new position
             this.checkPositionEvents();
@@ -633,6 +650,11 @@ class Dungeon {
     checkPositionEvents() {
         const tile = this.getTile(this.playerX, this.playerY);
         
+        // Handle exit tile
+        if (tile === 'exit') {
+            this.triggerExitTile();
+        }
+        
         // Handle traps
         if (tile.startsWith('trap_')) {
             this.triggerTrap(tile);
@@ -643,6 +665,30 @@ class Dungeon {
         
         // Check for special squares
         this.checkSpecialSquare();
+    }
+    
+    /**
+     * Trigger exit tile - notify UI to show exit button
+     */
+    triggerExitTile() {
+        // Emit event to notify UI that player is on exit tile
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('exit-tile-entered', {
+                x: this.playerX,
+                y: this.playerY,
+                floor: this.currentFloor
+            });
+        }
+    }
+    
+    /**
+     * Trigger exit tile left - notify UI to hide exit button
+     */
+    triggerExitTileLeft() {
+        // Emit event to notify UI that player left exit tile
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('exit-tile-left');
+        }
     }
     
     /**
@@ -1137,5 +1183,124 @@ class Dungeon {
         
         // For regular mode, wrap-around handles all coordinates
         return true;
+    }
+    
+    /**
+     * Save dungeon state to IndexedDB
+     * @param {string} partyId - ID of the party that owns this dungeon
+     * @returns {Promise<string>} Dungeon ID if successful
+     */
+    async saveToDatabase(partyId) {
+        try {
+            const dungeonId = await Storage.saveDungeon(this, partyId);
+            console.log(`Dungeon saved to database with ID: ${dungeonId}`);
+            return dungeonId;
+        } catch (error) {
+            console.error('Failed to save dungeon to database:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Load dungeon state from IndexedDB
+     * @param {string} dungeonId - ID of the dungeon to load
+     * @returns {Promise<boolean>} Success status
+     */
+    async loadFromDatabase(dungeonId) {
+        try {
+            const dungeonData = await Storage.loadDungeon(dungeonId);
+            
+            if (!dungeonData) {
+                console.warn(`No dungeon found with ID: ${dungeonId}`);
+                return false;
+            }
+            
+            // Apply loaded data to this instance
+            this.currentFloor = dungeonData.currentFloor;
+            this.maxFloors = dungeonData.maxFloors;
+            this.playerX = dungeonData.playerX;
+            this.playerY = dungeonData.playerY;
+            this.playerDirection = dungeonData.playerDirection;
+            this.testMode = dungeonData.testMode;
+            this.floors = dungeonData.floors;
+            this.discoveredSecrets = dungeonData.discoveredSecrets;
+            this.disarmedTraps = dungeonData.disarmedTraps;
+            this.usedSpecials = dungeonData.usedSpecials;
+            
+            // Set current floor data
+            this.currentFloorData = this.floors.get(this.currentFloor);
+            
+            console.log(`Dungeon loaded from database: Floor ${this.currentFloor}, Position (${this.playerX}, ${this.playerY})`);
+            return true;
+            
+        } catch (error) {
+            console.error('Failed to load dungeon from database:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * Create a new Dungeon instance from saved data
+     * @param {string} dungeonId - ID of the dungeon to load
+     * @returns {Promise<Dungeon|null>} New dungeon instance or null if not found
+     */
+    static async createFromDatabase(dungeonId) {
+        try {
+            const dungeonData = await Storage.loadDungeon(dungeonId);
+            
+            if (!dungeonData) {
+                return null;
+            }
+            
+            // Create new dungeon instance
+            const dungeon = new Dungeon();
+            
+            // Override the default initialization with loaded data
+            dungeon.currentFloor = dungeonData.currentFloor;
+            dungeon.maxFloors = dungeonData.maxFloors;
+            dungeon.playerX = dungeonData.playerX;
+            dungeon.playerY = dungeonData.playerY;
+            dungeon.playerDirection = dungeonData.playerDirection;
+            dungeon.testMode = dungeonData.testMode;
+            dungeon.floors = dungeonData.floors;
+            dungeon.discoveredSecrets = dungeonData.discoveredSecrets;
+            dungeon.disarmedTraps = dungeonData.disarmedTraps;
+            dungeon.usedSpecials = dungeonData.usedSpecials;
+            dungeon.currentFloorData = dungeonData.floors.get(dungeonData.currentFloor);
+            
+            return dungeon;
+            
+        } catch (error) {
+            console.error('Failed to create dungeon from database:', error);
+            return null;
+        }
+    }
+    
+    /**
+     * Get all saved dungeons for a party
+     * @param {string} partyId - Party ID to find dungeons for
+     * @returns {Promise<Array>} Array of dungeon records
+     */
+    static async getSavedDungeonsForParty(partyId) {
+        try {
+            return await Storage.getDungeonsForParty(partyId);
+        } catch (error) {
+            console.error('Failed to get saved dungeons for party:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * Delete a saved dungeon
+     * @param {string} dungeonId - ID of the dungeon to delete
+     * @returns {Promise<boolean>} Success status
+     */
+    static async deleteSavedDungeon(dungeonId) {
+        try {
+            return await Storage.deleteDungeon(dungeonId);
+        } catch (error) {
+            console.error('Failed to delete saved dungeon:', error);
+            return false;
+        }
     }
 }

@@ -2897,10 +2897,10 @@ class UI {
         const statusBtn = viewport.querySelector('#view-status-btn');
         
         if (returnBtn) {
-            returnBtn.addEventListener('click', () => {
+            returnBtn.addEventListener('click', async () => {
                 this.deathModal.hide();
                 this.deathModal = null;
-                this.returnToTownAfterDeath();
+                await this.returnToTownAfterDeath();
             });
         }
         
@@ -2984,10 +2984,32 @@ class UI {
     /**
      * Return to town after party death
      */
-    returnToTownAfterDeath() {
+    async returnToTownAfterDeath() {
         console.log('Returning to town after death...');
         
         if (window.engine) {
+            // Save dungeon state and characters before exiting
+            if (window.engine.dungeon && window.engine.party && window.engine.party.id) {
+                try {
+                    await window.engine.dungeon.saveToDatabase(window.engine.party.id);
+                    console.log('Dungeon saved before exiting to town');
+                } catch (error) {
+                    console.error('Failed to save dungeon before town exit:', error);
+                }
+                
+                // Save all party members
+                if (window.engine.party.members) {
+                    for (const member of window.engine.party.members) {
+                        try {
+                            await Storage.saveCharacter(member);
+                        } catch (error) {
+                            console.error(`Failed to save character ${member.name}:`, error);
+                        }
+                    }
+                    console.log('Party members saved before exiting to town');
+                }
+            }
+            
             // First exit combat (combat → playing)
             const success1 = window.engine.gameState.setState('playing');
             console.log('Combat to playing transition:', success1);
@@ -3310,5 +3332,113 @@ class UI {
                 modal.parentNode.removeChild(modal);
             }
         });
+    }
+    
+    /**
+     * Show exit button when player is on exit tile
+     */
+    showExitButton(data) {
+        // Check if button already exists
+        const existingButton = document.getElementById('exit-dungeon-btn');
+        if (existingButton) {
+            return; // Button already shown
+        }
+        
+        // Find the control panel to add the exit button
+        const controlPanel = document.getElementById('control-panel');
+        const actionControls = document.getElementById('action-controls');
+        
+        if (actionControls) {
+            // Create exit button
+            const exitButton = document.createElement('button');
+            exitButton.id = 'exit-dungeon-btn';
+            exitButton.className = 'btn btn-warning exit-btn';
+            exitButton.innerHTML = '<span data-text-key="exit_dungeon">⚡ Exit to Town</span>';
+            exitButton.title = 'Save progress and return to town';
+            
+            // Apply TextManager if available
+            if (typeof TextManager !== 'undefined') {
+                TextManager.applyToElement(exitButton.querySelector('[data-text-key]'), 'exit_dungeon');
+            }
+            
+            // Add click handler
+            exitButton.addEventListener('click', async () => {
+                await this.handleDungeonExit();
+            });
+            
+            // Insert the button at the end of action controls
+            actionControls.appendChild(exitButton);
+            
+            // Add message about the exit
+            this.addMessage('You found the dungeon exit! Use the Exit button to return to town.', 'system');
+        }
+    }
+    
+    /**
+     * Hide exit button when player leaves exit tile
+     */
+    hideExitButton() {
+        const exitButton = document.getElementById('exit-dungeon-btn');
+        if (exitButton) {
+            exitButton.remove();
+        }
+    }
+    
+    /**
+     * Handle dungeon exit - save state and return to town
+     */
+    async handleDungeonExit() {
+        console.log('Handling dungeon exit...');
+        console.log('Engine exists:', !!window.engine);
+        console.log('Dungeon exists:', !!window.engine?.dungeon);
+        console.log('Party exists:', !!window.engine?.party);
+        console.log('Party ID:', window.engine?.party?.id);
+        
+        if (window.engine) {
+            // Save dungeon state and characters before exiting
+            if (window.engine.dungeon && window.engine.party && window.engine.party.id) {
+                try {
+                    await window.engine.dungeon.saveToDatabase(window.engine.party.id);
+                    console.log('Dungeon saved before exiting to town');
+                    this.addMessage('Dungeon progress saved.', 'system');
+                } catch (error) {
+                    console.error('Failed to save dungeon before town exit:', error);
+                    this.addMessage('Warning: Failed to save dungeon progress.', 'error');
+                }
+                
+                // Save all party members
+                if (window.engine.party.members) {
+                    for (const member of window.engine.party.members) {
+                        try {
+                            await Storage.saveCharacter(member);
+                        } catch (error) {
+                            console.error(`Failed to save character ${member.name}:`, error);
+                        }
+                    }
+                    console.log('Party members saved before exiting to town');
+                    this.addMessage('Party members saved.', 'system');
+                }
+            }
+            
+            // Hide the exit button
+            this.hideExitButton();
+            
+            // Transition to town
+            const success = window.engine.gameState.setState('town');
+            
+            if (success) {
+                // Play town music when exiting to town
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.fadeToTrack('town');
+                }
+                
+                // Show town interface
+                this.showTown(window.engine.party);
+                this.addMessage('You safely return to town with your party intact.', 'success');
+            } else {
+                console.error('Failed to transition to town state');
+                this.addMessage('Failed to return to town.', 'error');
+            }
+        }
     }
 }

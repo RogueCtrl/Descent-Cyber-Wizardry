@@ -186,8 +186,8 @@ class Engine {
         });
         
         // Dungeon exploration events
-        this.eventSystem.on('encounter-triggered', (data) => {
-            this.handleEncounterTriggered(data);
+        this.eventSystem.on('encounter-triggered', async (data) => {
+            await this.handleEncounterTriggered(data);
         });
         
         this.eventSystem.on('trap-triggered', (data) => {
@@ -212,8 +212,17 @@ class Engine {
         });
         
         // Listen for dungeon entry event
-        this.eventSystem.on('dungeon-entered', () => {
-            this.handleDungeonEntered();
+        this.eventSystem.on('dungeon-entered', async () => {
+            await this.handleDungeonEntered();
+        });
+        
+        // Listen for exit tile events
+        this.eventSystem.on('exit-tile-entered', (data) => {
+            this.ui.showExitButton(data);
+        });
+        
+        this.eventSystem.on('exit-tile-left', () => {
+            this.ui.hideExitButton();
         });
     }
     
@@ -1228,10 +1237,21 @@ class Engine {
     /**
      * Handle encounter triggered in dungeon
      */
-    handleEncounterTriggered(data) {
+    async handleEncounterTriggered(data) {
         console.log('Encounter triggered:', data);
         
         const { encounter, x, y, floor } = data;
+        
+        // Save dungeon state before entering combat
+        if (this.dungeon && this.party && this.party.id) {
+            try {
+                await this.dungeon.saveToDatabase(this.party.id);
+                console.log('Dungeon state saved before combat');
+            } catch (error) {
+                console.error('Failed to save dungeon state before combat:', error);
+                // Continue with combat even if save fails
+            }
+        }
         
         // Generate combat encounter based on dungeon encounter
         const encounterType = encounter.type === 'boss' ? 'boss' : 'normal';
@@ -1467,17 +1487,65 @@ class Engine {
     /**
      * Handle dungeon entry - generates new dungeon only if needed
      */
-    handleDungeonEntered() {
+    async handleDungeonEntered() {
         console.log('Handling dungeon entry...');
         console.log('Current dungeon exists:', !!this.dungeon);
         console.log('Current dungeon testMode:', this.dungeon?.testMode);
+        console.log('Party exists:', !!this.party);
+        console.log('Party ID:', this.party?.id);
+        console.log('Party members:', this.party?.members?.length);
         
-        // Only generate a new dungeon if we don't have one or it's explicitly a new game
-        if (!this.dungeon) {
-            console.log('No existing dungeon found - generating new dungeon...');
-            this.dungeon = new Dungeon();
+        // Always check for saved dungeons for the current party, even if we have a dungeon
+        if (this.party && this.party.id) {
+            console.log('Checking for saved dungeons for party:', this.party.id);
+            const savedDungeons = await Dungeon.getSavedDungeonsForParty(this.party.id);
+            
+            if (savedDungeons.length > 0) {
+                // Load the most recent dungeon
+                const mostRecent = savedDungeons.sort((a, b) => 
+                    new Date(b.lastModified) - new Date(a.lastModified)
+                )[0];
+                
+                console.log(`Found saved dungeon: ${mostRecent.dungeonId}, attempting to load...`);
+                const loadedDungeon = await Dungeon.createFromDatabase(mostRecent.dungeonId);
+                
+                if (loadedDungeon) {
+                    this.dungeon = loadedDungeon;
+                    this.ui.addMessage('Returning to your saved dungeon exploration...');
+                    console.log('Successfully loaded saved dungeon');
+                } else {
+                    console.log('Failed to load saved dungeon');
+                    // Keep existing dungeon or create new one if none exists
+                    if (!this.dungeon) {
+                        console.log('Creating new dungeon...');
+                        this.dungeon = new Dungeon();
+                        this.ui.addMessage('Creating new dungeon exploration...');
+                    } else {
+                        console.log('Using existing dungeon as fallback...');
+                        this.ui.addMessage('Using current dungeon exploration...');
+                    }
+                }
+            } else {
+                console.log('No saved dungeons found for this party');
+                // Create new dungeon if none exists
+                if (!this.dungeon) {
+                    console.log('Creating new dungeon...');
+                    this.dungeon = new Dungeon();
+                    this.ui.addMessage('Creating new dungeon exploration...');
+                } else {
+                    console.log('Using existing dungeon...');
+                    this.ui.addMessage('Continuing dungeon exploration...');
+                }
+            }
         } else {
-            console.log('Using existing dungeon...');
+            console.log('No party found');
+            // Create new dungeon if none exists
+            if (!this.dungeon) {
+                console.log('Creating new dungeon...');
+                this.dungeon = new Dungeon();
+            } else {
+                console.log('Using existing dungeon...');
+            }
         }
         
         // Note: initializeDungeonInterface() is called by the state change to 'playing'
