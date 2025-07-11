@@ -77,7 +77,7 @@ const TERMINOLOGY = {
         
         // Town Flavor Text
         training_grounds_flavor: "Create and manage your party of adventurers",
-        party_management_flavor: "Manage multiple parties and character roster",
+        party_management_flavor: "Manage and view multiple saved parties or lost Characters",
         data_exchange_flavor: "Trade upgrades and equipment with merchants",
         restoration_center_flavor: "Repair damage and restore fallen adventurers",
         grid_sector_flavor: "Enter the Mad Overlord's treacherous maze"
@@ -89,8 +89,8 @@ const TERMINOLOGY = {
         party: "Strike Team",
         character: "Agent",
         town: "Terminal Hub",
-        town_description: "The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.",
-        training_description: "Create and manage your strike team of agents",
+        town_description: "The central access node of the grid, where Agents prepare for their infiltration into the hostile data maze.",
+        training_description: "Create and manage your strike team of Agents",
         dungeon_description: "Enter the corrupted data maze",
         dungeon: "Corrupted Network",
         level: "Clearance Level",
@@ -154,11 +154,11 @@ const TERMINOLOGY = {
         restoration_center: "Restoration Center",
         
         // Town Flavor Text
-        training_grounds_flavor: "Create and manage your strike team of agents",
-        party_management_flavor: "Manage multiple strike teams",
+        training_grounds_flavor: "Create and manage your strike team of Agents",
+        party_management_flavor: "Manage and view multiple saved strike teams or lost Agents",
         data_exchange_flavor: "Trade upgrades and system enhancements",
-        restoration_center_flavor: "Repair system damage and restore corrupted agents",
-        grid_sector_flavor: "Enter the corrupted data network maze"
+        restoration_center_flavor: "Repair system damage and restore corrupted Agents",
+        grid_sector_flavor: "Enter the corrupted network's data grid maze"
     }
 };
 
