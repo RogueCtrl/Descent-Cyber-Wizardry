@@ -80,7 +80,21 @@ const TERMINOLOGY = {
         party_management_flavor: "Manage and view multiple saved parties or lost Characters",
         data_exchange_flavor: "Trade upgrades and equipment with merchants",
         restoration_center_flavor: "Repair damage and restore fallen adventurers",
-        grid_sector_flavor: "Enter the Mad Overlord's treacherous maze"
+        grid_sector_flavor: "Enter the Mad Overlord's treacherous maze",
+        
+        // Training Grounds Modal
+        create_new_character: "Create New Character",
+        roll_adventurer: "Roll a new adventurer",
+        view_roster: "View Roster",
+        browse_characters: "Browse all characters",
+        view_party_stats: "View Party Stats",
+        review_character_details: "Review character details",
+        delete_character: "Delete Character",
+        remove_from_party: "Remove from party",
+        current_party: "Current Party",
+        back_to_town: "Back to Town",
+        strike_team_ready: "Your party is ready for adventure!",
+        strike_team_required: "Create at least one character to enter the dungeon."
     },
     
     cyber: {
@@ -158,7 +172,21 @@ const TERMINOLOGY = {
         party_management_flavor: "Manage and view multiple saved strike teams or lost Agents",
         data_exchange_flavor: "Trade upgrades and system enhancements",
         restoration_center_flavor: "Repair system damage and restore corrupted Agents",
-        grid_sector_flavor: "Enter the corrupted network's data grid maze"
+        grid_sector_flavor: "Enter the corrupted network's data grid maze",
+        
+        // Training Grounds Modal
+        create_new_character: "Initialize New Agent",
+        roll_adventurer: "Generate new Agent",
+        view_roster: "Agent Database",
+        browse_characters: "Browse all Agents",
+        view_party_stats: "Strike Team Status",
+        review_character_details: "Review Agent profiles",
+        delete_character: "Decommission Agent",
+        remove_from_party: "Remove from strike team",
+        current_party: "Active Strike Team",
+        back_to_town: "Return to Terminal Hub",
+        strike_team_ready: "Your strike team is ready for engagement!",
+        strike_team_required: "Initialize at least one agent to access the grid."
     }
 };
 

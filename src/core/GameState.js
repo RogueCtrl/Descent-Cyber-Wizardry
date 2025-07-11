@@ -14,7 +14,7 @@ class GameState {
         this.validTransitions = {
             'loading': ['town', 'playing'],
             'town': ['training-grounds', 'dungeon', 'menu', 'playing'],
-            'training-grounds': ['town', 'character-creation'],
+            'training-grounds': ['town', 'character-creation', 'playing'],
             'character-creation': ['training-grounds'],
             'dungeon': ['playing', 'town'],
             'playing': ['combat', 'menu', 'paused', 'town'],

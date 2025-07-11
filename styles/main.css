@@ -2093,6 +2093,24 @@ h3 {
     margin: 0;
 }
 
+/* Compact button styling for party status section */
+.action-btn.compact {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    margin-top: 10px;
+    display: inline-block;
+    width: auto;
+    min-height: auto;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #00ffff;
+    color: #00ffff;
+}
+
+.action-btn.compact:hover:not(:disabled) {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
 .training-footer {
     margin-top: var(--space-6);
     padding-top: var(--space-6);

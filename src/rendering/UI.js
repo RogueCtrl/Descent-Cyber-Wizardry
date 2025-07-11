@@ -572,8 +572,8 @@ class UI {
         const trainingContent = `
             <div class="training-grounds-interface">
                 <div class="training-header">
-                    <h1 class="training-title">Training Grounds</h1>
-                    <p class="training-subtitle">Create and manage your party of adventurers</p>
+                    <h1 class="training-title" data-text-key="training_grounds">Training Grounds</h1>
+                    <p class="training-subtitle" data-text-key="training_grounds_flavor">Create and manage your party of adventurers</p>
                 </div>
                 
                 <div class="training-content">
@@ -581,49 +581,38 @@ class UI {
                         <button id="create-character-btn" class="action-btn primary large">
                             <div class="btn-icon">⚔️</div>
                             <div class="btn-text">
-                                <span class="btn-title">Create New Character</span>
-                                <span class="btn-desc">Roll a new adventurer</span>
+                                <span class="btn-title" data-text-key="create_new_character">Create New Character</span>
+                                <span class="btn-desc" data-text-key="roll_adventurer">Roll a new adventurer</span>
                             </div>
                         </button>
                         
                         <button id="view-roster-btn" class="action-btn secondary large">
                             <div class="btn-icon">📋</div>
                             <div class="btn-text">
-                                <span class="btn-title">View Roster</span>
-                                <span class="btn-desc">Browse all characters</span>
+                                <span class="btn-title" data-text-key="view_roster">View Roster</span>
+                                <span class="btn-desc" data-text-key="browse_characters">Browse all characters</span>
                             </div>
                         </button>
                         
-                        <button id="view-party-btn" class="action-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
-                            <div class="btn-icon">👥</div>
-                            <div class="btn-text">
-                                <span class="btn-title">View Party Stats</span>
-                                <span class="btn-desc">Review character details</span>
-                            </div>
-                        </button>
-                        
-                        <button id="delete-character-btn" class="action-btn danger ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
-                            <div class="btn-icon">🗑️</div>
-                            <div class="btn-text">
-                                <span class="btn-title">Delete Character</span>
-                                <span class="btn-desc">Remove from party</span>
-                            </div>
-                        </button>
                     </div>
                     
                     <div class="party-status-section">
-                        <h3>Current Party (${party ? party.size : 0}/6)</h3>
+                        <h3><span data-text-key="current_party">Current Party</span> (${party ? party.size : 0}/6)</h3>
                         <div class="party-status-info">
-                            ${hasActiveParty ? 
-                                '<p class="status-ready">✅ Your party is ready for adventure!</p>' : 
-                                '<p class="status-empty">⚠️ Create at least one character to enter the dungeon.</p>'}
+                            ${hasActiveParty ? `
+                                <p class="status-ready">✅ <span data-text-key="strike_team_ready">Your party is ready for adventure!</span></p>
+                                <button id="strike-team-status-btn" class="action-btn compact enabled">
+                                    <span data-text-key="view_party_stats">View Party Stats</span>
+                                </button>
+                            ` : 
+                                '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'}
                         </div>
                     </div>
                 </div>
                 
                 <div class="training-footer">
                     <button id="back-to-town-btn" class="action-btn secondary">
-                        <span>← Back to Town</span>
+                        <span>← <span data-text-key="back_to_town">Back to Town</span></span>
                     </button>
                 </div>
             </div>
@@ -645,6 +634,9 @@ class UI {
         this.trainingModal.create(trainingContent);
         this.trainingModal.show();
         
+        // Apply TextManager to training grounds modal elements
+        this.applyGlobalTextManager();
+        
         // Add event listeners
         this.setupTrainingGroundsEventListeners(this.trainingModal.getBody());
     }
@@ -656,8 +648,7 @@ class UI {
         const createBtn = container.querySelector('#create-character-btn');
         const backBtn = container.querySelector('#back-to-town-btn');
         const viewRosterBtn = container.querySelector('#view-roster-btn');
-        const viewPartyBtn = container.querySelector('#view-party-btn');
-        const deleteBtn = container.querySelector('#delete-character-btn');
+        const strikeTeamStatusBtn = container.querySelector('#strike-team-status-btn');
         
         if (createBtn) {
             createBtn.addEventListener('click', () => {
@@ -677,15 +668,11 @@ class UI {
             });
         }
         
-        if (viewPartyBtn && !viewPartyBtn.disabled) {
-            viewPartyBtn.addEventListener('click', () => {
-                this.eventSystem.emit('training-action', 'view-party');
-            });
-        }
-        
-        if (deleteBtn && !deleteBtn.disabled) {
-            deleteBtn.addEventListener('click', () => {
-                this.eventSystem.emit('training-action', 'delete-character');
+        if (strikeTeamStatusBtn && !strikeTeamStatusBtn.disabled) {
+            strikeTeamStatusBtn.addEventListener('click', () => {
+                // Hide AgentOps modal and show dungeon entrance directly
+                this.hideTrainingGrounds();
+                this.showDungeonEntranceConfirmation(true); // true indicates came from AgentOps
             });
         }
     }
@@ -2572,10 +2559,13 @@ class UI {
     /**
      * Show dungeon entrance confirmation modal
      */
-    showDungeonEntranceConfirmation() {
-        console.log('Showing dungeon entrance confirmation');
+    showDungeonEntranceConfirmation(fromAgentOps = false) {
+        console.log('Showing dungeon entrance confirmation', { fromAgentOps });
         
-        const validation = window.engine.validateDungeonEntry();
+        // Store where we came from for the cancel button
+        this.dungeonEntranceOrigin = fromAgentOps ? 'agentops' : 'town';
+        
+        const validation = window.engine.validateDungeonEntry(fromAgentOps);
         
         if (!validation.valid && validation.casualties) {
             // Show casualty modal instead
@@ -2596,10 +2586,11 @@ class UI {
         });
         
         // Create content
+        const returnText = this.dungeonEntranceOrigin === 'agentops' ? 'Return to AgentOps' : 'Return to Town';
         const content = this.createDungeonEntranceContent(validation) +
             '<div class="dungeon-entrance-actions">' +
             '<button id="confirm-enter-btn" class="btn btn-primary">Enter Dungeon</button>' +
-            '<button id="cancel-enter-btn" class="btn btn-secondary">Return to Town</button>' +
+            `<button id="cancel-enter-btn" class="btn btn-secondary">${returnText}</button>` +
             '</div>';
         
         // Create and show modal
@@ -2797,7 +2788,8 @@ class UI {
                 console.log('Confirmed dungeon entry');
                 if (validation.valid) {
                     this.dungeonEntranceModal.hide();
-                    window.engine.enterDungeon();
+                    const fromAgentOps = this.dungeonEntranceOrigin === 'agentops';
+                    window.engine.enterDungeon(fromAgentOps);
                 } else {
                     console.log('Cannot enter dungeon - validation failed');
                     this.addMessage('Cannot enter dungeon - party validation failed', 'error');
@@ -2816,6 +2808,12 @@ class UI {
                 e.preventDefault();
                 console.log('Cancelled dungeon entry');
                 this.dungeonEntranceModal.hide();
+                
+                // Return to the appropriate location
+                if (this.dungeonEntranceOrigin === 'agentops') {
+                    this.showTrainingGrounds();
+                }
+                // If origin is 'town', we don't need to do anything as the modal just closes
             });
         }
     }

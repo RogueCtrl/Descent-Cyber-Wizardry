@@ -1119,8 +1119,9 @@ class Engine {
     
     /**
      * Validate if party can enter the dungeon
+     * @param {boolean} fromAgentOps - Whether the request is coming from AgentOps modal
      */
-    validateDungeonEntry() {
+    validateDungeonEntry(fromAgentOps = false) {
         console.log('=== Dungeon Entry Validation ===');
         console.log('Current game state:', this.gameState.currentState);
         console.log('Party exists:', !!this.party);
@@ -1161,7 +1162,9 @@ class Engine {
         }
         
         // Check if we're in a valid state to enter dungeon
-        if (!this.gameState.isState('town')) {
+        // Allow entry from town state OR training-grounds state (AgentOps)
+        const validStates = ['town', 'training-grounds'];
+        if (!validStates.includes(this.gameState.currentState)) {
             console.log('Validation failed: Invalid state for dungeon entry:', this.gameState.currentState);
             return { valid: false, reason: 'You must be in town to enter the dungeon.' };
         }
@@ -1173,14 +1176,18 @@ class Engine {
     
     /**
      * Actually enter the dungeon (called after confirmation)
+     * @param {boolean} fromAgentOps - Whether the request is coming from AgentOps modal
      */
-    enterDungeon() {
-        console.log('Entering dungeon...');
-        const validation = this.validateDungeonEntry();
+    enterDungeon(fromAgentOps = false) {
+        console.log('Entering dungeon...', { fromAgentOps });
+        const validation = this.validateDungeonEntry(fromAgentOps);
         
         if (validation.valid) {
             console.log('Dungeon entry validation passed, entering dungeon...');
             this.ui.hideTown(); // Ensure town modal is closed
+            if (fromAgentOps) {
+                this.ui.hideTrainingGrounds(); // Ensure AgentOps modal is closed
+            }
             this.gameState.setState('playing');
             this.ui.addMessage('You enter the dungeon...');
             // Emit event to notify UI of dungeon entry
