@@ -2070,13 +2070,6 @@ class UI {
             canvas.style.display = 'block';
         }
         
-        // Force renderer reinitialization after viewport restoration
-        // This ensures the 3D view renders properly after being moved
-        if (window.engine?.renderer) {
-            setTimeout(() => {
-                window.engine.renderer.reinitialize();
-            }, 50);
-        }
     }
     
     /**

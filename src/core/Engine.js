@@ -336,7 +336,6 @@ class Engine {
      * Initialize dungeon exploration interface
      */
     initializeDungeonInterface() {
-        console.log('Initializing dungeon exploration interface...');
         
         // Ensure UI panels are visible
         this.ui.showDungeonInterface();
@@ -361,7 +360,6 @@ class Engine {
         // Enable movement controls
         this.enableMovementControls();
         
-        console.log('Dungeon interface initialized');
     }
     
     /**
@@ -369,17 +367,10 @@ class Engine {
      */
     resizeCanvasToViewport() {
         const viewport = document.getElementById('viewport');
-        if (viewport && this.canvas) {
+        if (viewport && this.canvas && this.renderer) {
             const rect = viewport.getBoundingClientRect();
-            this.canvas.width = rect.width;
-            this.canvas.height = rect.height;
-            
-            // Update renderer with new size
-            if (this.renderer) {
-                this.renderer.setSize(rect.width, rect.height);
-            }
-            
-            console.log('Canvas resized to viewport:', rect.width, 'x', rect.height);
+            // Use renderer's setSize method for consistent sizing
+            this.renderer.setSize(rect.width, rect.height);
         }
     }
     
@@ -424,7 +415,6 @@ class Engine {
             return;
         }
         
-        console.log('Setting up movement event listeners...');
         
         // Button event listeners
         const forwardBtn = document.getElementById('move-forward');
@@ -490,7 +480,6 @@ class Engine {
         
         // Mark listeners as initialized to prevent duplicates
         this.movementListenersInitialized = true;
-        console.log('Movement event listeners set up');
     }
     
     /**
@@ -1224,13 +1213,7 @@ class Engine {
             if (postCombatReturn) {
                 this.ui.addMessage('You continue exploring the corrupted network...');
                 // Note: initializeDungeonInterface() already called by state change to 'playing'
-                // Reinitialize renderer to clear combat rendering state
-                console.log('Post-combat return: reinitializing renderer...');
-                setTimeout(() => {
-                    console.log('Executing renderer reinitialization...');
-                    this.renderer.reinitialize();
-                    this.updateDungeonView();
-                }, 100);
+                this.updateDungeonView();
             } else {
                 this.ui.addMessage('You enter the dungeon...');
                 // Emit event to notify UI of dungeon entry (generates new dungeon)
