@@ -35,6 +35,23 @@ const TERMINOLOGY = {
         race_hobbit: "Hobbit",
         race_gnome: "Gnome",
         
+        // Character Creation Step 2 - Attribute Generation
+        your_attributes: "Your Attributes",
+        attributes_description: "These are your character's base attributes, modified by your race.",
+        
+        // Individual Attributes
+        attr_strength: "Strength",
+        attr_intelligence: "Intelligence",
+        attr_piety: "Piety",
+        attr_vitality: "Vitality",
+        attr_agility: "Agility",
+        attr_luck: "Luck",
+        
+        // Attribute Generation UI
+        reroll_attributes: "Reroll Attributes",
+        reroll_description: "You can reroll if you're not satisfied with these attributes.",
+        total_label: "Total",
+        
         // Combat Interface
         combat_fight: "⚔️ Fight",
         combat_defend: "🛡️ Defend", 
@@ -138,7 +155,24 @@ const TERMINOLOGY = {
         race_elf: "Quantum Thread",
         race_dwarf: "Iron Kernel", 
         race_hobbit: "Embedded System",
-        race_gnome: "Blockchain Node", 
+        race_gnome: "Blockchain Node",
+        
+        // Character Creation Step 2 - Core Parameter Generation
+        your_attributes: "Your Configuration",
+        attributes_description: "These are your agent's base configuration, modified by platform.",
+        
+        // Individual Parameters
+        attr_strength: "Protocols",
+        attr_intelligence: "Algorithms",
+        attr_piety: "Endpoints",
+        attr_vitality: "Persistence",
+        attr_agility: "Latency",
+        attr_luck: "Temperature",
+        
+        // Parameter Generation UI
+        reroll_attributes: "Reroll Parameters",
+        reroll_description: "You can reroll if you're not satisfied with these parameters.",
+        total_label: "System Total", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",

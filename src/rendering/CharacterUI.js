@@ -202,20 +202,20 @@ class CharacterUI {
         
         container.innerHTML = `
             <div class="step-content">
-                <h3>Your Attributes</h3>
-                <p>These are your character's base attributes, modified by your race.</p>
+                <h3 data-text-key="your_attributes">Your Attributes</h3>
+                <p data-text-key="attributes_description">These are your character's base attributes, modified by your race.</p>
                 
                 <div class="attribute-display">
                     ${this.renderAttributeGrid()}
                 </div>
                 
                 <div class="attribute-total">
-                    <strong>Total: ${this.getAttributeTotal()}</strong>
+                    <strong><span data-text-key="total_label">Total</span>: ${this.getAttributeTotal()}</strong>
                 </div>
                 
                 <div class="reroll-section">
-                    <button id="reroll-attributes" class="btn-secondary">Reroll Attributes</button>
-                    <p class="reroll-info">You can reroll if you're not satisfied with these attributes.</p>
+                    <button id="reroll-attributes" class="btn-secondary" data-text-key="reroll_attributes">Reroll Attributes</button>
+                    <p class="reroll-info" data-text-key="reroll_description">You can reroll if you're not satisfied with these attributes.</p>
                 </div>
             </div>
         `;
@@ -229,6 +229,9 @@ class CharacterUI {
         
         // Update button state after initial attributes are set
         this.updateNextButton();
+        
+        // Apply TextManager to the new content
+        this.applyTextManagerToModal(container);
     }
     
     /**
@@ -257,7 +260,7 @@ class CharacterUI {
             <div class="attributes-grid">
                 ${attributes.map(attr => `
                     <div class="attribute-item">
-                        <span class="attribute-name">${Helpers.capitalize(attr)}</span>
+                        <span class="attribute-name" data-text-key="attr_${attr}">${Helpers.capitalize(attr)}</span>
                         <span class="attribute-value">${this.characterData.attributes[attr]}</span>
                     </div>
                 `).join('')}

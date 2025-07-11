@@ -60,6 +60,19 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, reimagine
       <b>Create Character - Race</b>
     </td>
   </tr>
+  <tr>
+    <td colspan="2" style="height: 10px; background: #222;"></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/ao-step2.jpg" alt="Cyber Wizardry" width="350"/><br/>
+      <b>Initialize Agent - Configuration</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/tg-step2.jpg" alt="Fantasy Wizardry" width="350"/><br/>
+      <b>Create Character - Attributes</b>
+    </td>
+  </tr>
 </table>
 
 **Town Menu**
