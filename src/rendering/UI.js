@@ -31,6 +31,9 @@ class UI {
         // Treasure Modal
         this.treasureModal = null;
         
+        // Strike Team Management Modal
+        this.strikeTeamModal = null;
+        
         this.initialize();
     }
     
@@ -384,13 +387,13 @@ class UI {
                             </button>
                         </div>
                         
-                        <div class="location-card disabled">
-                            <button class="location-btn disabled" disabled>
+                        <div class="location-card enabled">
+                            <button id="strike-team-management-btn" class="location-btn enabled">
                                 <div class="location-icon">👥</div>
                                 <div class="location-info">
-                                    <h3 data-text-key="party_management">Party Management</h3>
+                                    <h3 data-text-key="party_management">Strike Team Management</h3>
                                     <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>
-                                    <span class="location-status">Coming Soon</span>
+                                    <span class="location-status">Manage Teams</span>
                                 </div>
                             </button>
                         </div>
@@ -446,6 +449,7 @@ class UI {
     setupTownCenterEventListeners(viewport) {
         const trainingBtn = viewport.querySelector('#training-grounds-btn');
         const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
+        const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
         const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
         
         if (trainingBtn) {
@@ -457,6 +461,12 @@ class UI {
         if (dungeonBtn && !dungeonBtn.disabled) {
             dungeonBtn.addEventListener('click', () => {
                 this.eventSystem.emit('town-location-selected', 'dungeon');
+            });
+        }
+        
+        if (strikeTeamBtn) {
+            strikeTeamBtn.addEventListener('click', () => {
+                this.showStrikeTeamManagement();
             });
         }
         
@@ -516,6 +526,234 @@ class UI {
         
         // Update button styling based on mode
         toggleBtn.className = `mode-toggle-btn ${currentMode}-mode`;
+    }
+    
+    /**
+     * Show Strike Team Management interface
+     */
+    async showStrikeTeamManagement() {
+        console.log('Opening Strike Team Management...');
+        
+        try {
+            // Get all parties from storage
+            const allParties = await Storage.loadAllParties();
+            const campingParties = await Storage.getCampingParties();
+            const activePartyId = Storage.getActivePartyId();
+            
+            console.log('Loaded parties:', { allParties, campingParties, activePartyId });
+            
+            // Create the management interface
+            const content = this.buildStrikeTeamManagementContent(allParties, campingParties, activePartyId);
+            
+            // Hide existing modal if present
+            if (this.strikeTeamModal) {
+                this.strikeTeamModal.hide();
+            }
+            
+            // Create modal
+            this.strikeTeamModal = new Modal({
+                title: 'Strike Team Management',
+                className: 'modal strike-team-management-modal',
+                width: '800px',
+                height: '600px'
+            });
+            
+            this.strikeTeamModal.setOnClose(() => {
+                console.log('Strike Team Management modal closed');
+                this.strikeTeamModal = null;
+            });
+            
+            this.strikeTeamModal.create(content);
+            this.strikeTeamModal.show();
+            
+            // Set up event listeners
+            this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
+            
+        } catch (error) {
+            console.error('Failed to show Strike Team Management:', error);
+            this.addMessage('Failed to load Strike Team Management', 'error');
+        }
+    }
+    
+    /**
+     * Build content for Strike Team Management
+     */
+    buildStrikeTeamManagementContent(allParties, campingParties, activePartyId) {
+        const activeParty = allParties.find(p => p.id === activePartyId);
+        const inactiveParties = allParties.filter(p => p.id !== activePartyId);
+        
+        return `
+            <div class="strike-team-management">
+                <div class="management-header">
+                    <h2>Strike Team Command Center</h2>
+                    <p>Manage your active and camping parties</p>
+                </div>
+                
+                <div class="teams-section">
+                    <div class="active-team-section">
+                        <h3>Active Strike Team</h3>
+                        ${activeParty ? this.buildPartyCard(activeParty, true) : '<p class="no-party">No active party</p>'}
+                    </div>
+                    
+                    <div class="camping-teams-section">
+                        <h3>Camping Teams (${campingParties.length})</h3>
+                        <div class="camping-teams-grid">
+                            ${campingParties.length > 0 ? 
+                                campingParties.map(party => this.buildPartyCard(party, false, true)).join('') : 
+                                '<p class="no-parties">No camping parties</p>'
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="inactive-teams-section">
+                        <h3>Other Teams (${inactiveParties.filter(p => !p.campId).length})</h3>
+                        <div class="inactive-teams-grid">
+                            ${inactiveParties.filter(p => !p.campId).length > 0 ? 
+                                inactiveParties.filter(p => !p.campId).map(party => this.buildPartyCard(party, false)).join('') : 
+                                '<p class="no-parties">No inactive parties</p>'
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="management-actions">
+                    <button id="create-new-team-btn" class="btn primary">Create New Team</button>
+                    <button id="close-management-btn" class="btn secondary">Close</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Build party card HTML
+     */
+    buildPartyCard(party, isActive = false, isCamping = false) {
+        const status = isActive ? 'Active' : (isCamping ? 'Camping' : 'Inactive');
+        const statusClass = isActive ? 'active' : (isCamping ? 'camping' : 'inactive');
+        
+        return `
+            <div class="party-card ${statusClass}" data-party-id="${party.id}">
+                <div class="party-header">
+                    <h4>${party.name || 'Unnamed Team'}</h4>
+                    <span class="party-status ${statusClass}">${status}</span>
+                </div>
+                <div class="party-info">
+                    <p><strong>Members:</strong> ${party.aliveCount}/${party.memberCount}</p>
+                    <p><strong>Gold:</strong> ${party.gold || 0}</p>
+                    <p><strong>Created:</strong> ${new Date(party.dateCreated).toLocaleDateString()}</p>
+                    ${isCamping ? `<p><strong>Location:</strong> Dungeon Camp</p>` : ''}
+                </div>
+                <div class="party-actions">
+                    ${!isActive ? `<button class="btn small resume-party-btn" data-party-id="${party.id}">Resume</button>` : ''}
+                    ${!isActive ? `<button class="btn small delete-party-btn" data-party-id="${party.id}">Delete</button>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Set up event listeners for Strike Team Management
+     */
+    setupStrikeTeamEventListeners(modalBody) {
+        const createNewBtn = modalBody.querySelector('#create-new-team-btn');
+        const closeBtn = modalBody.querySelector('#close-management-btn');
+        const resumeButtons = modalBody.querySelectorAll('.resume-party-btn');
+        const deleteButtons = modalBody.querySelectorAll('.delete-party-btn');
+        
+        if (createNewBtn) {
+            createNewBtn.addEventListener('click', () => {
+                this.createNewTeam();
+            });
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (this.strikeTeamModal) {
+                    this.strikeTeamModal.hide();
+                    this.strikeTeamModal = null;
+                }
+            });
+        }
+        
+        resumeButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const partyId = btn.dataset.partyId;
+                await this.resumeParty(partyId);
+            });
+        });
+        
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const partyId = btn.dataset.partyId;
+                await this.deleteParty(partyId);
+            });
+        });
+    }
+    
+    /**
+     * Create a new team
+     */
+    createNewTeam() {
+        console.log('Creating new team...');
+        Modal.hideAll();
+        this.hideTown();
+        this.eventSystem.emit('town-location-selected', 'training-grounds');
+    }
+    
+    /**
+     * Resume a party
+     */
+    async resumeParty(partyId) {
+        console.log('Resuming party:', partyId);
+        
+        try {
+            if (window.engine && window.engine.resumeCampedParty) {
+                console.log('Calling engine.resumeCampedParty...');
+                await window.engine.resumeCampedParty(partyId);
+                console.log('Party resumed, hiding modals...');
+                
+                // Hide Strike Team Management modal
+                if (this.strikeTeamModal) {
+                    this.strikeTeamModal.hide();
+                    this.strikeTeamModal = null;
+                }
+                
+                // Then hide town
+                this.hideTown();
+                
+                console.log('Modals hidden, showing success message...');
+                this.addMessage('Party resumed successfully!', 'success');
+            } else {
+                console.error('Engine or resumeCampedParty not available:', { 
+                    engine: !!window.engine, 
+                    resumeMethod: !!(window.engine && window.engine.resumeCampedParty) 
+                });
+                this.addMessage('Failed to resume party - engine not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to resume party:', error);
+            this.addMessage('Failed to resume party', 'error');
+        }
+    }
+    
+    /**
+     * Delete a party
+     */
+    async deleteParty(partyId) {
+        console.log('Deleting party:', partyId);
+        
+        if (confirm('Are you sure you want to delete this party? This action cannot be undone.')) {
+            try {
+                await Storage.deleteParty(partyId);
+                this.addMessage('Party deleted successfully', 'info');
+                
+                // Refresh the management interface
+                this.showStrikeTeamManagement();
+            } catch (error) {
+                console.error('Failed to delete party:', error);
+                this.addMessage('Failed to delete party', 'error');
+            }
+        }
     }
     
     /**

@@ -1044,7 +1044,7 @@ class Engine {
             }
             
             // Switch to town state
-            this.gameState.switchToTown();
+            this.gameState.setState('town');
             this.ui.addMessage('Party returned to town.');
             
         } catch (error) {
