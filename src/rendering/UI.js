@@ -992,17 +992,44 @@ class UI {
     formatCharacterEquipment(character) {
         const equipment = character.equipment || {};
         const slots = [
-            { key: 'weapon', name: 'Weapon', cyberName: 'Attack Algorithm' },
-            { key: 'armor', name: 'Armor', cyberName: 'Defense Protocol' },
-            { key: 'shield', name: 'Shield', cyberName: 'Firewall Module' },
-            { key: 'accessory', name: 'Accessory', cyberName: 'System Upgrade' }
+            { 
+                key: 'weapon', 
+                name: 'Weapon', 
+                cyberName: 'Attack Algorithm',
+                icon: '⚔️',
+                cyberIcon: '🔸'
+            },
+            { 
+                key: 'armor', 
+                name: 'Armor', 
+                cyberName: 'Defense Protocol',
+                icon: '🛡️',
+                cyberIcon: '🔷'
+            },
+            { 
+                key: 'shield', 
+                name: 'Shield', 
+                cyberName: 'Firewall Module',
+                icon: '🔰',
+                cyberIcon: '🔶'
+            },
+            { 
+                key: 'accessory', 
+                name: 'Accessory', 
+                cyberName: 'Enhancement Chip',
+                icon: '💍',
+                cyberIcon: '🔹'
+            }
         ];
         
         return slots.map(slot => {
             const item = equipment[slot.key];
+            const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
             
             // Get contextual item name using TerminologyUtils if available
             let itemName = 'None';
+            let digitalInfo = '';
+            
             if (item) {
                 if (typeof item === 'string') {
                     itemName = item;
@@ -1011,16 +1038,35 @@ class UI {
                 } else {
                     itemName = item.name || 'Unknown';
                 }
+                
+                // Add digital classification in cyber mode
+                if (isCyberMode && typeof item === 'object') {
+                    if (item.digitalClassification) {
+                        digitalInfo = `<span class="digital-classification">[${item.digitalClassification}]</span>`;
+                    } else if (item.programClass) {
+                        digitalInfo = `<span class="program-class">[${item.programClass}]</span>`;
+                    } else if (item.encryptionLevel) {
+                        digitalInfo = `<span class="encryption-level">[${item.encryptionLevel}]</span>`;
+                    }
+                }
+            } else {
+                itemName = isCyberMode ? '(Uninstalled)' : 'None';
             }
             
-            // Get contextual slot name
-            const slotName = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
-                ? slot.cyberName : slot.name;
+            // Get contextual slot name and icon
+            const slotName = isCyberMode ? slot.cyberName : slot.name;
+            const slotIcon = isCyberMode ? slot.cyberIcon : slot.icon;
             
             return `
-                <div class="equipment-item">
-                    <div class="equipment-slot">${slotName}:</div>
-                    <div class="equipment-name" data-cyber-enhanced="${typeof TextManager !== 'undefined' && TextManager.isCyberMode()}">${itemName}</div>
+                <div class="equipment-item cyber-enhanced">
+                    <div class="equipment-slot">
+                        <span class="equipment-icon">${slotIcon}</span>
+                        ${slotName}:
+                    </div>
+                    <div class="equipment-details">
+                        <div class="equipment-name" data-cyber-enhanced="${isCyberMode}">${itemName}</div>
+                        ${digitalInfo}
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1032,29 +1078,33 @@ class UI {
     formatCharacterSpells(character) {
         const memorizedSpells = character.memorizedSpells || {};
         const hasSpells = Object.keys(memorizedSpells).length > 0;
+        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
         
         // Get contextual "no spells" message
-        const noSpellsMessage = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
-            ? 'No programs loaded' : 'No spells memorized';
+        const noSpellsMessage = isCyberMode ? 'No subroutines loaded' : 'No spells memorized';
         
         if (!hasSpells) {
-            return `<div class="no-spells">${noSpellsMessage}</div>`;
+            return `<div class="no-spells cyber-enhanced">${noSpellsMessage}</div>`;
         }
         
         // Get contextual level label
-        const levelLabel = (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) 
-            ? 'Clearance' : 'Level';
+        const levelLabel = isCyberMode ? 'Tier' : 'Level';
         
         return Object.entries(memorizedSpells).map(([level, spells]) => {
             if (!spells || spells.length === 0) return '';
             
             return `
-                <div class="spell-level">
-                    <h4>${levelLabel} ${level}</h4>
-                    <div class="spell-list">
+                <div class="spell-level program-tier">
+                    <h4 class="tier-header">
+                        <span class="tier-icon">${isCyberMode ? '📊' : '🔮'}</span>
+                        ${levelLabel} ${level}
+                    </h4>
+                    <div class="spell-list program-suite">
                         ${spells.map(spell => {
                             // Get contextual spell name
                             let spellName = 'Unknown';
+                            let digitalInfo = '';
+                            
                             if (typeof spell === 'string') {
                                 spellName = spell;
                             } else if (typeof TerminologyUtils !== 'undefined') {
@@ -1063,7 +1113,23 @@ class UI {
                                 spellName = spell.name || 'Unknown Spell';
                             }
                             
-                            return `<div class="spell-item" data-cyber-enhanced="${typeof TextManager !== 'undefined' && TextManager.isCyberMode()}">${spellName}</div>`;
+                            // Add program type information in cyber mode
+                            if (isCyberMode && typeof spell === 'object') {
+                                if (spell.programType) {
+                                    digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
+                                } else if (spell.executionMethod) {
+                                    digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
+                                } else if (spell.algorithmClass) {
+                                    digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
+                                }
+                            }
+                            
+                            return `
+                                <div class="spell-item cyber-enhanced" data-cyber-enhanced="${isCyberMode}">
+                                    <div class="spell-name">${spellName}</div>
+                                    ${digitalInfo}
+                                </div>
+                            `;
                         }).join('')}
                     </div>
                 </div>
