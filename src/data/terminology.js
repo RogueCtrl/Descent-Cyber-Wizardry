@@ -82,6 +82,21 @@ const TERMINOLOGY = {
         class_spells: "Spells:",
         requirements_not_met: "Requirements not met",
         
+        // Character Creation Step 4 - Character Details
+        character_details: "Character Details",
+        character_details_description: "Enter your character's name and review their information.",
+        
+        // Character Name Input
+        character_name: "Character Name:",
+        character_name_placeholder: "Enter character name",
+        character_limit: "Maximum 15 characters",
+        
+        // Character Summary
+        character_summary: "Character Summary",
+        summary_race: "Race:",
+        summary_class: "Class:",
+        summary_attributes: "Attributes:",
+        
         // Combat Interface
         combat_fight: "⚔️ Fight",
         combat_defend: "🛡️ Defend", 
@@ -232,7 +247,22 @@ const TERMINOLOGY = {
         class_requirements: "Prerequisites:",
         class_hit_die: "Core Stability:",
         class_spells: "Programs:",
-        requirements_not_met: "Prerequisites not satisfied", 
+        requirements_not_met: "Prerequisites not satisfied",
+        
+        // Character Creation Step 4 - Agent Details
+        character_details: "Agent Details",
+        character_details_description: "Enter your agent's name and review their configuration.",
+        
+        // Agent Name Input
+        character_name: "Agent Name:",
+        character_name_placeholder: "Enter agent name",
+        character_limit: "Maximum 15 characters",
+        
+        // Agent Summary
+        character_summary: "Agent Summary",
+        summary_race: "Platform:",
+        summary_class: "Specialization:",
+        summary_attributes: "Configurations:", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",

@@ -373,24 +373,24 @@ class CharacterUI {
     renderCharacterDetails(container) {
         container.innerHTML = `
             <div class="step-content">
-                <h3>Character Details</h3>
-                <p>Enter your character's name and review their information.</p>
+                <h3 data-text-key="character_details">Character Details</h3>
+                <p data-text-key="character_details_description">Enter your character's name and review their information.</p>
                 
                 <div class="character-form">
                     <div class="form-group">
-                        <label for="character-name">Character Name:</label>
+                        <label for="character-name" data-text-key="character_name">Character Name:</label>
                         <input type="text" id="character-name" maxlength="15" 
                                value="${this.characterData.name || ''}" 
                                placeholder="Enter character name">
-                        <small>Maximum 15 characters</small>
+                        <small data-text-key="character_limit">Maximum 15 characters</small>
                     </div>
                     
                     <div class="character-summary">
-                        <h4>Character Summary</h4>
+                        <h4 data-text-key="character_summary">Character Summary</h4>
                         <div class="summary-grid">
-                            <div><strong>Race:</strong> ${this.characterData.selectedRace}</div>
-                            <div><strong>Class:</strong> ${this.characterData.selectedClass}</div>
-                            <div><strong>Attributes:</strong></div>
+                            <div><strong data-text-key="summary_race">Race:</strong> <span data-text-key="race_${this.characterData.selectedRace.toLowerCase()}">${this.characterData.selectedRace}</span></div>
+                            <div><strong data-text-key="summary_class">Class:</strong> <span data-text-key="class_${this.characterData.selectedClass.toLowerCase()}">${this.characterData.selectedClass}</span></div>
+                            <div><strong data-text-key="summary_attributes">Attributes:</strong></div>
                             <div class="attributes-summary">
                                 ${this.renderAttributeGrid()}
                             </div>
@@ -407,8 +407,15 @@ class CharacterUI {
             this.updateNextButton();
         });
         
+        // Set placeholder based on current mode
+        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
+        nameInput.placeholder = isCyberMode ? "Enter agent name" : "Enter character name";
+        
         // Focus the input
         nameInput.focus();
+        
+        // Apply TextManager to the new content
+        this.applyTextManagerToModal(container);
     }
     
     /**
