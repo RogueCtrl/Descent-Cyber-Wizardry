@@ -351,12 +351,25 @@ class UI {
         const partyInfo = this.getPartyStatusInfo(partyObj);
         const hasActiveParty = partyObj && partyObj.size > 0;
         
-        // Check if there are any camps (parties to manage)
+        // Check if there are any meaningful parties to manage
         let hasCamps = false;
         try {
             const allParties = await Storage.loadAllParties();
-            // Camps exist if there are any parties (active, in town, or camping)
-            hasCamps = allParties && allParties.length > 0;
+            // Camps exist if there are:
+            // 1. Multiple parties (more than just the current one), OR
+            // 2. Parties with members (not empty), OR  
+            // 3. Camping parties, OR
+            // 4. Lost parties
+            if (allParties && allParties.length > 0) {
+                const partiesWithMembers = allParties.filter(p => p.members && p.members.length > 0);
+                const campingParties = await Storage.getCampingParties();
+                const lostParties = allParties.filter(p => p.isLost);
+                
+                hasCamps = allParties.length > 1 || 
+                          partiesWithMembers.length > 0 || 
+                          campingParties.length > 0 || 
+                          lostParties.length > 0;
+            }
         } catch (error) {
             console.error('Error checking for camps:', error);
             hasCamps = false;
@@ -922,6 +935,9 @@ class UI {
             
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
+                    if (window.engine && window.engine.audioManager) {
+                        window.engine.audioManager.playSoundEffect('buttonClick');
+                    }
                     this.deleteConfirmModal.hide();
                     this.deleteConfirmModal = null;
                 });
@@ -929,6 +945,9 @@ class UI {
             
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
+                    if (window.engine && window.engine.audioManager) {
+                        window.engine.audioManager.playSoundEffect('partyWipe');
+                    }
                     await this.executePartyDeletion(partyId);
                     this.deleteConfirmModal.hide();
                     this.deleteConfirmModal = null;
