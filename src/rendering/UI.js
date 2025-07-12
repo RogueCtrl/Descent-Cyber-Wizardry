@@ -1422,8 +1422,26 @@ class UI {
                 this.hideCharacterRoster();
             });
             
-            this.rosterModal.create(rosterContent);
+            // Get dynamic title from TextManager
+            const modalTitle = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('character_roster') : 'Character Roster';
+            
+            this.rosterModal.create(rosterContent, modalTitle);
             this.rosterModal.show();
+            
+            // Apply TextManager to modal content
+            this.applyGlobalTextManager();
+            
+            // Register callback for dynamic roster updates when mode changes
+            this.rosterModeChangeCallback = () => {
+                if (this.rosterModal && this.rosterModal.isVisible) {
+                    this.refreshCharacterRosterContent(allCharacters);
+                }
+            };
+            
+            if (typeof TextManager !== 'undefined') {
+                TextManager.onModeChange(this.rosterModeChangeCallback);
+            }
             
             // Add event listeners after modal is created
             this.setupRosterEventListeners();
@@ -1441,6 +1459,49 @@ class UI {
         if (this.rosterModal) {
             this.rosterModal.hide();
             this.rosterModal = null;
+        }
+        
+        // Clean up TextManager callback
+        if (this.rosterModeChangeCallback && typeof TextManager !== 'undefined') {
+            TextManager.offModeChange(this.rosterModeChangeCallback);
+            this.rosterModeChangeCallback = null;
+        }
+    }
+    
+    /**
+     * Refresh character roster content for mode changes
+     */
+    async refreshCharacterRosterContent(characters) {
+        if (!this.rosterModal) return;
+        
+        try {
+            // Regenerate content with current mode
+            const rosterContent = await this.createCharacterRosterContent(characters);
+            
+            // Update modal title
+            const modalTitle = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('character_roster') : 'Character Roster';
+            
+            // Update modal content
+            const modalBody = this.rosterModal.getBody();
+            if (modalBody) {
+                modalBody.innerHTML = rosterContent;
+            }
+            
+            // Update modal title if header exists
+            const modalHeader = this.rosterModal.element?.querySelector('.modal-header h2');
+            if (modalHeader) {
+                modalHeader.textContent = modalTitle;
+            }
+            
+            // Reapply TextManager to new content
+            this.applyGlobalTextManager();
+            
+            // Reattach event listeners
+            this.setupRosterEventListeners();
+            
+        } catch (error) {
+            console.error('Failed to refresh character roster content:', error);
         }
     }
     
@@ -1469,6 +1530,17 @@ class UI {
                 this.showCharacterDetails(characterId);
             });
         });
+        
+        // Lost Agents button
+        const lostCharactersBtn = modalBody.querySelector('#view-lost-characters-btn');
+        if (lostCharactersBtn) {
+            lostCharactersBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
+                this.showLostAgentsModal();
+            });
+        }
     }
     
     /**
@@ -1490,7 +1562,7 @@ class UI {
             
             // Create and show character detail modal
             this.characterDetailModal = new Modal({
-                className: 'modal character-detail-modal',
+                className: 'modal character-sheet-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: true
             });
@@ -1808,11 +1880,18 @@ class UI {
         
         const hasCharacters = characters.length > 0;
         
+        // Filter lost characters for memorial button
+        const lostCharacters = characters.filter(character => 
+            character.status && character.status.toLowerCase() === 'lost'
+        );
+        const hasLostCharacters = lostCharacters.length > 0;
+        
         return `
             <div class="roster-interface">
                 <div class="roster-header">
-                    <h1 class="roster-title">Character Roster</h1>
-                    <p class="roster-subtitle">All Created Characters (${characters.length})</p>
+                    <h1 class="roster-title" data-text-key="character_roster">Character Roster</h1>
+                    <p class="roster-subtitle" data-text-key="character_roster_subtitle">All Created Characters</p>
+                    <span class="character-count">(${characters.length})</span>
                 </div>
                 
                 <div class="roster-content">
@@ -1823,15 +1902,27 @@ class UI {
                     ` : `
                         <div class="no-characters">
                             <div class="no-characters-icon">⚔️</div>
-                            <h3>No Characters Created</h3>
-                            <p>Visit the Training Grounds to create your first adventurer!</p>
+                            <h3 data-text-key="no_characters_created">No Characters Created</h3>
+                            <p data-text-key="visit_training_grounds">Visit the Training Grounds to create your first adventurer!</p>
                         </div>
                     `}
                 </div>
                 
+                ${hasLostCharacters ? `
+                    <div class="roster-memorial-section">
+                        <button id="view-lost-characters-btn" class="action-btn memorial">
+                            <div class="btn-icon">💀</div>
+                            <div class="btn-text">
+                                <span class="btn-title" data-text-key="lost_characters">Fallen Heroes</span>
+                                <span class="btn-count">(${lostCharacters.length})</span>
+                            </div>
+                        </button>
+                    </div>
+                ` : ''}
+                
                 <div class="roster-footer">
                     <button id="close-roster-btn" class="action-btn secondary">
-                        <span>← Back to Training Grounds</span>
+                        <span data-text-key="back_to_training_grounds">← Back to Training Grounds</span>
                     </button>
                 </div>
             </div>
@@ -1845,12 +1936,35 @@ class UI {
         // Determine character location
         const location = this.getCharacterLocation(character);
         
-        // Determine character status with proper styling
-        const status = character.status || 'Alive';
-        const statusClass = status.toLowerCase().replace(/\s+/g, '-');
+        // Determine character status with proper styling and terminology
+        const rawStatus = character.status || 'Alive';
+        let displayStatus = rawStatus;
+        
+        // Map status to contextual terminology
+        if (typeof TextManager !== 'undefined') {
+            switch (rawStatus.toLowerCase()) {
+                case 'lost':
+                    displayStatus = TextManager.getText('character_status_lost');
+                    break;
+                case 'ok':
+                case 'alive':
+                    displayStatus = TextManager.getText('character_status_ok');
+                    break;
+                default:
+                    displayStatus = rawStatus;
+            }
+        }
+        
+        const statusClass = rawStatus.toLowerCase().replace(/\s+/g, '-');
         
         // Get class icon (implement later if icons are available)
         const classIcon = this.getClassIcon(character.class);
+        
+        // Get contextual race and class names
+        const raceName = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
+        const className = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
         
         // Calculate HP percentage for health indicator
         const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
@@ -1865,14 +1979,14 @@ class UI {
                 </div>
                 
                 <div class="character-card-info">
-                    <div class="character-card-race-class">${character.race} ${character.class}</div>
+                    <div class="character-card-race-class">${raceName} ${className}</div>
                     <div class="character-card-location">
                         <span class="location-label">Location:</span>
                         <span class="location-value">${location}</span>
                     </div>
                     <div class="character-card-status">
                         <span class="status-label">Status:</span>
-                        <span class="status-value status-${statusClass}">${status}</span>
+                        <span class="status-value status-${statusClass}">${displayStatus}</span>
                     </div>
                 </div>
                 
@@ -1894,11 +2008,17 @@ class UI {
         if (character.location) {
             if (character.location.dungeon) {
                 const { floor, x, y } = character.location;
-                return `Dungeon (Lvl.${floor} ${x},${y})`;
+                const dungeonName = typeof TextManager !== 'undefined' ? 
+                    TextManager.getText('dungeon') : 'Dungeon';
+                const levelLabel = typeof TextManager !== 'undefined' ? 
+                    TextManager.getText('level') : 'Lvl';
+                return `${dungeonName} (${levelLabel}.${floor} ${x},${y})`;
             }
-            return character.location.area || 'Town';
+            return character.location.area || (typeof TextManager !== 'undefined' ? 
+                TextManager.getText('character_location_town') : 'Town');
         }
-        return 'Town';
+        return typeof TextManager !== 'undefined' ? 
+            TextManager.getText('character_location_town') : 'Town';
     }
     
     /**
@@ -1917,6 +2037,463 @@ class UI {
         };
         
         return classIcons[characterClass] || '⚔️';
+    }
+    
+    /**
+     * Show lost agents memorial modal
+     */
+    async showLostAgentsModal() {
+        try {
+            // Get all characters from storage and filter for lost ones
+            const allCharacters = await Storage.loadAllCharacters();
+            const lostCharacters = allCharacters.filter(character => 
+                character.status && character.status.toLowerCase() === 'lost'
+            );
+            
+            console.log(`Loading lost agents memorial: ${lostCharacters.length} lost characters found`);
+            
+            // Create modal content
+            const lostAgentsContent = await this.createLostAgentsContent(lostCharacters);
+            console.log('Lost agents content created successfully');
+            
+            // Create and show modal
+            this.lostAgentsModal = new Modal({
+                className: 'modal lost-agents-modal memorial-modal',
+                closeOnEscape: true,
+                closeOnBackdrop: true
+            });
+            
+            // Set up close callback
+            this.lostAgentsModal.setOnClose(() => {
+                this.hideLostAgentsModal();
+            });
+            
+            // Get dynamic title from TextManager
+            const modalTitle = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('lost_characters') : 'Fallen Heroes';
+            
+            this.lostAgentsModal.create(lostAgentsContent, modalTitle);
+            this.lostAgentsModal.show();
+            
+            // Apply TextManager to modal content
+            this.applyGlobalTextManager();
+            
+            // Register callback for dynamic updates when mode changes
+            this.lostAgentsModeChangeCallback = () => {
+                if (this.lostAgentsModal && this.lostAgentsModal.isVisible) {
+                    this.refreshLostAgentsContent(lostCharacters);
+                }
+            };
+            
+            if (typeof TextManager !== 'undefined') {
+                TextManager.onModeChange(this.lostAgentsModeChangeCallback);
+            }
+            
+            // Add event listeners after modal is created
+            this.setupLostAgentsEventListeners();
+            
+        } catch (error) {
+            console.error('Failed to show lost agents modal:', error);
+            this.addMessage('Failed to load lost agents memorial', 'error');
+        }
+    }
+    
+    /**
+     * Hide lost agents modal
+     */
+    hideLostAgentsModal() {
+        if (this.lostAgentsModal) {
+            this.lostAgentsModal.hide();
+            this.lostAgentsModal = null;
+        }
+        
+        // Clean up TextManager callback
+        if (this.lostAgentsModeChangeCallback && typeof TextManager !== 'undefined') {
+            TextManager.offModeChange(this.lostAgentsModeChangeCallback);
+            this.lostAgentsModeChangeCallback = null;
+        }
+    }
+    
+    /**
+     * Create lost agents modal content
+     */
+    async createLostAgentsContent(lostCharacters) {
+        console.log('Creating lost character cards for', lostCharacters.length, 'characters');
+        const lostCharacterCards = await Promise.all(
+            lostCharacters.map(character => this.createLostCharacterCard(character))
+        );
+        console.log('Lost character cards created successfully');
+        
+        const hasLostCharacters = lostCharacters.length > 0;
+        
+        return `
+            <div class="lost-agents-interface">
+                <div class="lost-agents-header">
+                    <h1 class="lost-agents-title" data-text-key="lost_characters">Fallen Heroes</h1>
+                    <p class="lost-agents-subtitle" data-text-key="lost_characters_subtitle">Heroes Lost in the Dungeon</p>
+                    <span class="lost-count">(${lostCharacters.length})</span>
+                </div>
+                
+                <div class="lost-agents-content">
+                    ${hasLostCharacters ? `
+                        <div class="lost-character-grid">
+                            ${lostCharacterCards.join('')}
+                        </div>
+                    ` : `
+                        <div class="no-lost-characters">
+                            <div class="no-lost-icon">🕊️</div>
+                            <h3 data-text-key="no_lost_characters">No Fallen Heroes</h3>
+                            <p data-text-key="no_lost_characters_message">No heroes have been lost to the dungeon.</p>
+                        </div>
+                    `}
+                </div>
+                
+                <div class="lost-agents-footer">
+                    <button id="close-lost-agents-btn" class="action-btn secondary">
+                        <span data-text-key="back_to_character_roster">← Back to Character Roster</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Create a lost character card for the memorial
+     */
+    async createLostCharacterCard(character) {
+        // Determine character location with memorial context
+        const lastSeenLocation = this.getLostCharacterLocation(character);
+        
+        // Get contextual race and class names
+        const raceName = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
+        const className = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
+        
+        // Get class icon
+        const classIcon = this.getClassIcon(character.class);
+        
+        return `
+            <div class="lost-character-card" data-character-id="${character.id}">
+                <div class="lost-card-header">
+                    <div class="class-icon">${classIcon}</div>
+                    <div class="lost-card-name">${character.name}</div>
+                    <div class="lost-card-level">Lvl ${character.level}</div>
+                </div>
+                
+                <div class="lost-card-info">
+                    <div class="lost-card-race-class">${raceName} ${className}</div>
+                    <div class="lost-card-location">
+                        <span class="location-label" data-text-key="character_last_seen">Last Seen:</span>
+                        <span class="location-value">${lastSeenLocation}</span>
+                    </div>
+                    <div class="lost-card-status">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value lost" data-text-key="lost_in_dungeon">Lost in Dungeon</span>
+                    </div>
+                </div>
+                
+                <div class="lost-card-actions">
+                    <span class="actions-label" data-text-key="memorial_actions">Memorial Actions:</span>
+                    <div class="action-buttons">
+                        <button class="action-btn small view-details-btn" data-character-id="${character.id}">
+                            <span data-text-key="view_details">View Details</span>
+                        </button>
+                        <button class="action-btn small danger forget-btn" data-character-id="${character.id}">
+                            <span data-text-key="remove_from_memorial">Forget</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Get lost character location with memorial context
+     */
+    getLostCharacterLocation(character) {
+        // For memorial display, show where they were lost
+        if (character.location) {
+            if (character.location.dungeon) {
+                const { floor, x, y } = character.location;
+                const dungeonName = typeof TextManager !== 'undefined' ? 
+                    TextManager.getText('lost_in_dungeon') : 'Lost in Dungeon';
+                const levelLabel = typeof TextManager !== 'undefined' ? 
+                    TextManager.getText('level') : 'Level';
+                return `${dungeonName} - ${levelLabel} ${floor}`;
+            }
+            return character.location.area || (typeof TextManager !== 'undefined' ? 
+                TextManager.getText('character_location_town') : 'Town');
+        }
+        return typeof TextManager !== 'undefined' ? 
+            TextManager.getText('lost_in_dungeon') : 'Lost in Dungeon';
+    }
+    
+    /**
+     * Set up event listeners for lost agents modal
+     */
+    setupLostAgentsEventListeners() {
+        const modalBody = this.lostAgentsModal.getBody();
+        
+        // Close button
+        const closeBtn = modalBody.querySelector('#close-lost-agents-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
+                this.hideLostAgentsModal();
+            });
+        }
+        
+        // View Details buttons
+        const viewDetailsButtons = modalBody.querySelectorAll('.view-details-btn');
+        viewDetailsButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const characterId = button.dataset.characterId;
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
+                this.showCharacterDetails(characterId);
+            });
+        });
+        
+        // Forget/Redact buttons
+        const forgetButtons = modalBody.querySelectorAll('.forget-btn');
+        forgetButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const characterId = button.dataset.characterId;
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
+                await this.forgetLostCharacter(characterId);
+            });
+        });
+    }
+    
+    /**
+     * Permanently delete a lost character from memory
+     */
+    async forgetLostCharacter(characterId) {
+        try {
+            // Load character to confirm they are lost
+            const character = await Storage.loadCharacter(characterId);
+            if (!character) {
+                this.addMessage('Character not found', 'error');
+                return;
+            }
+            
+            if (character.status?.toLowerCase() !== 'lost') {
+                this.addMessage('Can only forget lost characters', 'error');
+                return;
+            }
+            
+            // Show delete character confirmation modal
+            this.showDeleteCharacterConfirmation(characterId);
+            
+        } catch (error) {
+            console.error('Failed to forget lost character:', error);
+            this.addMessage('Failed to remove character from memorial', 'error');
+        }
+    }
+    
+    /**
+     * Refresh lost agents content for mode changes
+     */
+    async refreshLostAgentsContent(lostCharacters) {
+        if (!this.lostAgentsModal) return;
+        
+        try {
+            // Regenerate content with current mode
+            const lostAgentsContent = await this.createLostAgentsContent(lostCharacters);
+            
+            // Update modal title
+            const modalTitle = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('lost_characters') : 'Fallen Heroes';
+            
+            // Update modal content
+            const modalBody = this.lostAgentsModal.getBody();
+            if (modalBody) {
+                modalBody.innerHTML = lostAgentsContent;
+            }
+            
+            // Update modal title if header exists
+            const modalHeader = this.lostAgentsModal.element?.querySelector('.modal-header h2');
+            if (modalHeader) {
+                modalHeader.textContent = modalTitle;
+            }
+            
+            // Reapply TextManager to new content
+            this.applyGlobalTextManager();
+            
+            // Reattach event listeners
+            this.setupLostAgentsEventListeners();
+            
+        } catch (error) {
+            console.error('Failed to refresh lost agents content:', error);
+        }
+    }
+    
+    /**
+     * Show delete character confirmation modal
+     */
+    async showDeleteCharacterConfirmation(characterId) {
+        try {
+            // Load character data
+            const character = await Storage.loadCharacter(characterId);
+            if (!character) {
+                this.addMessage('Character not found', 'error');
+                return;
+            }
+            
+            // Get contextual race and class names
+            const raceName = typeof TextManager !== 'undefined' ? 
+                TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
+            const className = typeof TextManager !== 'undefined' ? 
+                TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
+            
+            // Get last known location
+            const lastLocation = this.getLostCharacterLocation(character);
+            
+            // Create template strings for dynamic content
+            const characterDetail = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('forget_character_detail')
+                    .replace('{name}', character.name)
+                    .replace('{race}', raceName)
+                    .replace('{class}', className) :
+                `Forgetting ${character.name} (${raceName} ${className}) will remove all records permanently.`;
+            
+            const locationDetail = typeof TextManager !== 'undefined' ? 
+                TextManager.getText('character_last_location')
+                    .replace('{location}', lastLocation) :
+                `Last seen in ${lastLocation}`;
+            
+            const deleteContent = `
+                <div class="delete-confirmation-content">
+                    <div class="warning-header">
+                        <div class="warning-icon">💀</div>
+                        <h3 data-text-key="delete_character_title">Forget Hero</h3>
+                    </div>
+                    
+                    <div class="warning-content">
+                        <p data-text-key="delete_character_confirm">Are you sure you want to forget this fallen hero?</p>
+                        <p class="character-name"><strong>${character.name}</strong></p>
+                        <p class="character-details">${characterDetail}</p>
+                        <p class="character-location">${locationDetail}</p>
+                        <div class="danger-warning">
+                            <div class="danger-icon">🚨</div>
+                            <p data-text-key="delete_character_warning">This hero's memory will be lost forever. This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-actions">
+                        <button id="cancel-delete-character-btn" class="action-btn secondary">Cancel</button>
+                        <button id="confirm-delete-character-btn" class="action-btn danger">
+                            <span data-text-key="delete_character_button">Forget Hero</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            this.deleteCharacterModal = new Modal({
+                className: 'modal delete-confirmation-modal character-delete-modal',
+                closeOnEscape: true,
+                closeOnBackdrop: false
+            });
+            
+            this.deleteCharacterModal.create(deleteContent);
+            this.deleteCharacterModal.show();
+            
+            // Play warning sound effect
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('deletePartyWarning');
+            }
+            
+            // Apply TextManager to modal content
+            if (typeof TextManager !== 'undefined') {
+                const modalBody = this.deleteCharacterModal.getBody();
+                const textElements = modalBody.querySelectorAll('[data-text-key]');
+                textElements.forEach(element => {
+                    const textKey = element.getAttribute('data-text-key');
+                    if (textKey) {
+                        TextManager.applyToElement(element, textKey);
+                    }
+                });
+            }
+            
+            // Event listeners
+            const modalBody = this.deleteCharacterModal.getBody();
+            const cancelBtn = modalBody.querySelector('#cancel-delete-character-btn');
+            const confirmBtn = modalBody.querySelector('#confirm-delete-character-btn');
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    if (window.engine && window.engine.audioManager) {
+                        window.engine.audioManager.playSoundEffect('buttonClick');
+                    }
+                    this.deleteCharacterModal.hide();
+                    this.deleteCharacterModal = null;
+                });
+            }
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    if (window.engine && window.engine.audioManager) {
+                        window.engine.audioManager.playSoundEffect('partyWipe');
+                    }
+                    await this.executeCharacterDeletion(characterId);
+                    this.deleteCharacterModal.hide();
+                    this.deleteCharacterModal = null;
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error showing delete character confirmation:', error);
+            this.addMessage('Failed to show delete confirmation', 'error');
+        }
+    }
+    
+    /**
+     * Execute character deletion with proper state management
+     */
+    async executeCharacterDeletion(characterId) {
+        try {
+            // Load character for final message
+            const character = await Storage.loadCharacter(characterId);
+            const characterName = character ? character.name : 'Unknown Character';
+            
+            // Permanently delete the character
+            await Storage.deleteCharacter(characterId);
+            
+            const memorialText = typeof TextManager !== 'undefined' && TextManager.isCyberMode() ? 
+                'Agent data redacted from memory banks' : 
+                'Hero forgotten from the memorial';
+            
+            this.addMessage(`${characterName}: ${memorialText}`, 'warning');
+            
+            // Refresh the lost agents modal
+            const allCharacters = await Storage.loadAllCharacters();
+            const lostCharacters = allCharacters.filter(char => 
+                char.status && char.status.toLowerCase() === 'lost'
+            );
+            
+            await this.refreshLostAgentsContent(lostCharacters);
+            
+            // If no lost characters remain, close the modal
+            if (lostCharacters.length === 0) {
+                this.hideLostAgentsModal();
+                // Also refresh the character roster if it's open
+                if (this.rosterModal && this.rosterModal.isVisible) {
+                    await this.refreshCharacterRosterContent(allCharacters);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to delete character:', error);
+            this.addMessage('Failed to delete character', 'error');
+        }
     }
     
     /**

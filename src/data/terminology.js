@@ -224,7 +224,37 @@ const TERMINOLOGY = {
         delete_party_title: "Delete Party",
         delete_party_confirm: "Are you sure you want to delete this party?",
         delete_party_warning: "Parties currently in the dungeon will be lost forever. This action cannot be undone.",
-        delete_party_button: "Delete Party"
+        delete_party_button: "Delete Party",
+        
+        // Character Roster Modal
+        character_roster: "Character Roster",
+        character_roster_subtitle: "All Created Characters",
+        no_characters_created: "No Characters Created",
+        visit_training_grounds: "Visit the Training Grounds to create your first adventurer!",
+        back_to_training_grounds: "Back to Training Grounds",
+        character_location_town: "Town",
+        character_status_ok: "OK",
+        character_status_lost: "Lost",
+        
+        // Lost Agents Modal
+        lost_characters: "Fallen Heroes",
+        lost_characters_subtitle: "Heroes Lost in the Dungeon",
+        no_lost_characters: "No Fallen Heroes",
+        no_lost_characters_message: "No heroes have been lost to the dungeon.",
+        lost_in_dungeon: "Lost in Dungeon",
+        view_details: "View Details",
+        remove_from_memorial: "Forget",
+        back_to_character_roster: "Back to Character Roster",
+        character_last_seen: "Last Seen:",
+        memorial_actions: "Memorial Actions:",
+        
+        // Delete Character Confirmation Modal
+        delete_character_title: "Forget Hero",
+        delete_character_confirm: "Are you sure you want to forget this fallen hero?",
+        delete_character_warning: "This hero's memory will be lost forever. This action cannot be undone.",
+        delete_character_button: "Forget Hero",
+        forget_character_detail: "Forgetting {name} ({race} {class}) will remove all records permanently.",
+        character_last_location: "Last seen in {location}"
     },
     
     cyber: {
@@ -446,7 +476,37 @@ const TERMINOLOGY = {
         delete_party_title: "Delete Strike Team",
         delete_party_confirm: "Are you sure you want to delete this strike team?",
         delete_party_warning: "Strike teams currently in the corrupted network will be lost forever. This action cannot be undone.",
-        delete_party_button: "Delete Strike Team"
+        delete_party_button: "Delete Strike Team",
+        
+        // Character Roster Modal
+        character_roster: "Agent Database",
+        character_roster_subtitle: "All Created Agents",
+        no_characters_created: "No Agents Created",
+        visit_training_grounds: "Visit AgentOps to initialize your first agent!",
+        back_to_training_grounds: "Return to AgentOps",
+        character_location_town: "Terminal Hub",
+        character_status_ok: "Online",
+        character_status_lost: "Disconnected",
+        
+        // Lost Agents Modal
+        lost_characters: "Lost Agents",
+        lost_characters_subtitle: "Agents Lost in the Corrupted Network",
+        no_lost_characters: "No Lost Agents",
+        no_lost_characters_message: "No agents have been lost in the network.",
+        lost_in_dungeon: "Lost in Corrupted Network",
+        view_details: "View Agent Profile",
+        remove_from_memorial: "Redact",
+        back_to_character_roster: "Back to Agent Database",
+        character_last_seen: "Last Connection:",
+        memorial_actions: "Data Actions:",
+        
+        // Delete Character Confirmation Modal
+        delete_character_title: "Redact Agent",
+        delete_character_confirm: "Are you sure you want to redact this agent?",
+        delete_character_warning: "This agent's data will be permanently deleted. This action cannot be undone.",
+        delete_character_button: "Redact Agent",
+        forget_character_detail: "Redacting {name} ({race} {class}) will purge all data permanently.",
+        character_last_location: "Last connection to {location}"
     }
 };
 

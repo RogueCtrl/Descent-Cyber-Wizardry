@@ -1447,6 +1447,17 @@ h3 {
     z-index: 2000;
 }
 
+/* Memorial Modal Styling */
+.memorial-modal {
+    z-index: 1500; /* Higher than roster modal (1000) but lower than character sheet (2000) */
+}
+
+/* Character Delete Confirmation Modal Styling */
+.modal.character-delete-modal,
+.delete-confirmation-modal.character-delete-modal {
+    z-index: 2500 !important; /* Highest priority - appears on top of all other modals */
+}
+
 .character-sheet-container {
     width: 90vw;
     max-width: 1200px;
