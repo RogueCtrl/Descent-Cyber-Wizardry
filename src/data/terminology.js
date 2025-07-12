@@ -121,7 +121,7 @@ const TERMINOLOGY = {
         mode_classic: "Fantasy",
         mode_cyber: "Cyber",
         party_name_label: "Party Name:",
-        party_name_help: "You can change this later in the Training Grounds",
+        party_name_help: "Name your party - or use a generated default name",
         begin_adventure: "Begin Adventure",
         
         // Combat Interface
@@ -335,7 +335,7 @@ const TERMINOLOGY = {
         mode_classic: "Fantasy",
         mode_cyber: "Cyber",
         party_name_label: "Strike Team Name:",
-        party_name_help: "You can change this later in the AgentOps",
+        party_name_help: "Name your strike team - or use a generated default name",
         begin_adventure: "Begin Mission", 
         
         // Combat Interface

@@ -67,7 +67,7 @@ class PartySetupModal {
                         <input type="text" 
                                id="party-name" 
                                maxlength="30" 
-                               placeholder="I don't know"
+                               placeholder="I can probably change this later..."
                                class="party-name-input">
                         <small class="input-help" data-text-key="party_name_help">You can change this later in the party management screen</small>
                     </div>
@@ -181,7 +181,7 @@ class PartySetupModal {
         const partyNameInput = this.modal.element.querySelector('#party-name');
         if (partyNameInput && typeof TextManager !== 'undefined') {
             const isCyberMode = TextManager.isCyberMode();
-            partyNameInput.placeholder = isCyberMode ? "I don't know" : "I don't know";
+            partyNameInput.placeholder = isCyberMode ? "Whatever..." : "What's a good name?";
         }
     }
     
@@ -193,7 +193,7 @@ class PartySetupModal {
         const partyName = partyNameInput ? partyNameInput.value.trim() : '';
         
         // Use default name if empty
-        const finalPartyName = partyName || "I don't know";
+        const finalPartyName = partyName || "I don't know...";
         
         // Close modal
         this.hide();
