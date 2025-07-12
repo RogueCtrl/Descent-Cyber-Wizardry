@@ -318,7 +318,8 @@ class Engine {
             
             // Create temporary party (not saved until they enter dungeon)
             const newParty = new Party();
-            // Don't give it a name - this will be "Unnamed Party" which is appropriate for wipes
+            newParty.name = "Temporary Party";
+            newParty._isTemporary = true; // Mark as temporary for UI detection
             this.party = newParty;
             
             // Update UI
@@ -2029,15 +2030,19 @@ class Engine {
                 }
             } else {
                 console.log('No saved dungeons found for this party');
-                // Create new dungeon if none exists
-                if (!this.dungeon) {
-                    console.log('Creating new dungeon...');
-                    this.dungeon = new Dungeon();
-                    this.ui.addMessage('Creating new dungeon exploration...');
-                } else {
-                    console.log('Using existing dungeon...');
-                    this.ui.addMessage('Continuing dungeon exploration...');
-                }
+                // Use existing shared dungeon, but reset this party's position to entrance
+                console.log('Resetting party to test room entrance...');
+                this.dungeon.playerX = 1;  // Test room entrance
+                this.dungeon.playerY = 2;
+                this.dungeon.playerDirection = 0; // North
+                this.dungeon.currentFloor = 1;
+                
+                // Clear party-specific progress (but keep shared world state)
+                this.dungeon.discoveredSecrets = new Set();
+                this.dungeon.disarmedTraps = new Set();
+                // Note: usedSpecials (treasures) are shared across all parties
+                
+                this.ui.addMessage('Beginning exploration of the corrupted network...');
             }
         } else {
             console.log('No party found');

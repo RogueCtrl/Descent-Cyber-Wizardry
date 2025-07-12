@@ -619,6 +619,14 @@ class UI {
         const inTownParties = inactiveParties.filter(p => !p.campId && !p.isLost);
         const lostParties = allParties.filter(p => p.isLost);
         
+        console.log('Party filtering:', {
+            total: allParties.length,
+            inactive: inactiveParties.length,
+            camping: campingParties.length,
+            inTown: inTownParties.length,
+            lost: lostParties.length
+        });
+        
         return `
             <div class="strike-team-management">
                 <div class="manifest-header">
@@ -706,7 +714,15 @@ class UI {
         } else if (!isCamping && !isLost) {
             locationDisplay = TextManager ? TextManager.getText('town', 'Terminal Hub') : 'Town';
         } else if (isLost) {
-            locationDisplay = 'Unknown';
+            // Display lost location info if available
+            if (party.lastKnownLocation) {
+                const dungeonName = party.lastKnownLocation.dungeon || 'Unknown Dungeon';
+                const levelLabel = TextManager ? TextManager.getText('level', 'Level') : 'Level';
+                const level = party.lastKnownLocation.level || '?';
+                locationDisplay = `Lost in ${dungeonName} - ${levelLabel} ${level}`;
+            } else {
+                locationDisplay = 'Lost in unknown location';
+            }
         }
         
         return `
@@ -1075,6 +1091,10 @@ class UI {
      */
     getPartyStatusInfo(party) {
         if (!party || party.size === 0) {
+            // Check if this is a temporary party
+            if (party && party._isTemporary) {
+                return 'Temporary Party';
+            }
             return 'No Active Party';
         }
         
@@ -2840,7 +2860,7 @@ class UI {
                 
                 // Save the updated character state
                 try {
-                    await member.saveToStorage();
+                    await Storage.saveCharacter(member);
                 } catch (error) {
                     console.error(`Failed to save character ${member.name}:`, error);
                 }
@@ -3600,25 +3620,85 @@ class UI {
             
             // Add small delay to ensure state change is processed
             setTimeout(async () => {
-                // Remove casualties from party before returning to town
+                // Handle party status before returning to town
                 if (window.engine.party) {
-                    const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                    // Check if entire party is wiped BEFORE removing casualties
+                    const aliveMembers = window.engine.party.aliveMembers || [];
+                    const totalMembers = window.engine.party.members.length;
+                    const isCompleteWipe = aliveMembers.length === 0 && totalMembers > 0;
                     
-                    // Show messages for each casualty
-                    casualties.forEach(casualty => {
-                        const status = casualty.status || 'dead';
-                        this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                    console.log('Party wipe check:', {
+                        aliveMembers: aliveMembers.length,
+                        totalMembers: totalMembers,
+                        isCompleteWipe: isCompleteWipe
                     });
                     
-                    // Mark party as returning to town
-                    window.engine.party.returnToTown();
-                    
-                    // Save party state
-                    try {
+                    if (isCompleteWipe) {
+                        // Mark party as LOST IN DUNGEON, not returned to town
+                        const wipedPartyId = window.engine.party.id;
+                        window.engine.party.isLost = true;
+                        window.engine.party.lostDate = new Date().toISOString();
+                        window.engine.party.lostReason = 'Total Party Kill';
+                        window.engine.party.lastKnownLocation = {
+                            dungeon: window.engine.dungeon?.name || 'Corrupted Network',
+                            level: window.engine.dungeon?.currentLevel || 1,
+                            position: window.engine.party.position
+                        };
+                        
+                        console.log('Party marked as lost in dungeon - complete wipe');
+                        
+                        // DO NOT remove casualties for wiped parties - they stay with the lost party
+                        // DO NOT call returnToTown() - no survivors exist
+                        
+                        // Show wipe message
+                        window.engine.party.members.forEach(member => {
+                            const status = member.status || 'dead';
+                            this.addMessage(`${member.name} was lost with the expedition...`, 'death');
+                        });
+                        
+                        // Save the lost party state
                         await window.engine.party.save();
-                        console.log('Party status updated to in town after death');
-                    } catch (error) {
-                        console.error('Failed to save party town status after death:', error);
+                        
+                        // Remove as active party - this party is now lost
+                        Storage.setActiveParty(null);
+                        console.log(`Wiped party ${wipedPartyId} removed as active party`);
+                        
+                        // Clear the current party from engine to force new party creation
+                        window.engine.party = null;
+                        
+                    } else {
+                        // Party has survivors but was forced to return after death
+                        // DO NOT remove casualties - they can be revived/resurrected if party continues
+                        // Only mark party as returned to town
+                        
+                        // Count casualties for messaging
+                        const casualties = window.engine.party.members.filter(m => m.status === 'dead' || m.status === 'unconscious');
+                        const survivors = window.engine.party.members.filter(m => m.status !== 'dead' && m.status !== 'unconscious');
+                        
+                        console.log(`Party forced to return with ${survivors.length} survivors and ${casualties.length} casualties`);
+                        
+                        // Show status messages
+                        casualties.forEach(casualty => {
+                            const status = casualty.status || 'dead';
+                            this.addMessage(`${casualty.name} (${status}) needs healing...`, 'warning');
+                        });
+                        
+                        if (survivors.length > 0) {
+                            this.addMessage(`The party retreats to town with their wounded...`, 'system');
+                        }
+                        
+                        window.engine.party.returnToTown();
+                        console.log('Party returned to town after defeat');
+                    }
+                    
+                    // Save party state only if party still exists (not wiped)
+                    if (window.engine.party) {
+                        try {
+                            await window.engine.party.save();
+                            console.log('Party status updated after death handling');
+                        } catch (error) {
+                            console.error('Failed to save party status after death:', error);
+                        }
                     }
                 }
                 
@@ -3627,11 +3707,12 @@ class UI {
                 console.log('Playing to town transition:', success2);
                 
                 if (success2) {
-                    // Show town interface
-                    this.showTown(window.engine.party);
+                    // Check if party was wiped (no active party)
+                    const activePartyId = Storage.getActivePartyId();
                     
-                    // Check if party is wiped and handle accordingly
-                    if (window.engine.party.members.length === 0) {
+                    if (!activePartyId || !window.engine.party) {
+                        // Party was wiped - show town with no party
+                        this.showTown(null);
                         this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
                         
                         // Handle party wipe - create new party
@@ -3640,16 +3721,31 @@ class UI {
                             this.updatePartyDisplay(window.engine.party);
                         }, 1000); // Brief delay for dramatic effect
                     } else {
-                        this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
-                        this.updatePartyDisplay(window.engine.party);
+                        // Show town interface with surviving party
+                        this.showTown(window.engine.party);
+                        
+                        if (window.engine.party.members.length === 0) {
+                            this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
+                            
+                            // Handle party wipe - create new party
+                            setTimeout(async () => {
+                                await window.engine.handlePartyWipe();
+                                this.updatePartyDisplay(window.engine.party);
+                            }, 1000); // Brief delay for dramatic effect
+                        } else {
+                            this.addMessage('The survivors return to town, bearing news of their fallen comrades...', 'system');
+                            this.updatePartyDisplay(window.engine.party);
+                        }
                     }
                     
-                    // Save all remaining character states
-                    window.engine.party.members.forEach(member => {
-                        if (member.saveToStorage) {
-                            member.saveToStorage();
-                        }
-                    });
+                    // Save all remaining character states (if party exists)
+                    if (window.engine.party && window.engine.party.members) {
+                        window.engine.party.members.forEach(member => {
+                            if (member.saveToStorage) {
+                                member.saveToStorage();
+                            }
+                        });
+                    }
                 } else {
                     console.error('Failed to transition to town state');
                 }
@@ -4292,7 +4388,7 @@ class UI {
                 // Show messages for each casualty
                 casualties.forEach(casualty => {
                     const status = casualty.status || 'dead';
-                    this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                    this.addMessage(`${casualty.name} (${status}) was brought to town for medical attention...`, 'warning');
                 });
                 
                 // Mark party as returning to town

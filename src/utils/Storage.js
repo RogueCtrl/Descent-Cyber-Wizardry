@@ -3599,8 +3599,12 @@ class Storage {
                 gold: party.gold || 0,
                 experience: party.experience || 0,
                 currentLeaderId: party.currentLeader ? party.currentLeader.id : null,
-                inTown: party.inTown || true,
+                inTown: party.isLost ? false : (party.inTown !== undefined ? party.inTown : true),
                 campId: party.campId || null,
+                isLost: party.isLost || false,
+                lostDate: party.lostDate || null,
+                lostReason: party.lostReason || null,
+                lastKnownLocation: party.lastKnownLocation || null,
                 dateCreated: party.dateCreated || now,
                 lastModified: now
             };
@@ -3901,20 +3905,15 @@ class Storage {
     }
     
     /**
-     * Get all non-active parties (lost parties)
+     * Get all lost parties (parties marked as isLost: true)
      * @returns {Promise<Array>} Array of lost parties
      */
     static async getLostParties() {
         try {
-            const activePartyId = this.getActivePartyId();
             const allParties = await this.loadAllParties();
             
-            // Filter out the active party and camping parties
-            return allParties.filter(party => 
-                party.id !== activePartyId && 
-                !party.campId && 
-                !party.inTown
-            );
+            // Filter for parties that are marked as lost
+            return allParties.filter(party => party.isLost === true);
         } catch (error) {
             console.error('Failed to get lost parties:', error);
             return [];
