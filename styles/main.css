@@ -1017,8 +1017,6 @@ h3 {
     color: #00ff00;
     background-color: rgba(0, 255, 0, 0.1);
 }
-    text-align: center;
-}
 
 .form-group {
     margin-bottom: 15px;
@@ -1450,6 +1448,160 @@ h3 {
 /* Memorial Modal Styling */
 .memorial-modal {
     z-index: 1500; /* Higher than roster modal (1000) but lower than character sheet (2000) */
+}
+
+/* Memorial Interface Layout - Match Agent Database Design */
+.memorial-interface {
+    /* Inherit from roster-interface for consistency */
+}
+
+.memorial-header {
+    /* Inherit from roster-header for consistency */
+}
+
+.memorial-subtitle {
+    /* Inherit from roster-subtitle for consistency */
+}
+
+.memorial-count {
+    /* Inherit from character-count for consistency */
+}
+
+.memorial-content {
+    /* Inherit from roster-content for consistency */
+}
+
+.memorial-character-grid {
+    /* Inherit from character-grid for consistency */
+}
+
+.memorial-footer {
+    /* Inherit from roster-footer for consistency */
+}
+
+/* Memorial Character Cards - Match Agent Database Cards */
+.memorial-character-card {
+    position: relative; /* For absolute positioned redact button */
+    cursor: pointer; /* Indicate clickability */
+    transition: all var(--transition-fast);
+    
+    /* Prevent color bleeding from child elements */
+    isolation: isolate;
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+    border: 1px solid var(--border-accent) !important;
+    color: var(--text-primary) !important;
+    
+    /* Ensure no red color inheritance from danger button */
+    border-color: var(--border-accent) !important;
+}
+
+.memorial-character-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: var(--accent-secondary) !important;
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+}
+
+.memorial-character-card.clickable-card:hover {
+    border-color: var(--accent-secondary) !important;
+    background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary)) !important;
+}
+
+
+
+/* Memorial Card Status Section - Label above button */
+.memorial-card-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2) var(--space-3);
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.1), 
+        rgba(239, 68, 68, 0.05)
+    );
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-12);
+    position: relative;
+    z-index: 5;
+}
+
+.memorial-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.memorial-icon {
+    font-size: var(--font-size-lg);
+    opacity: 0.8;
+}
+
+.memorial-text {
+    font-size: var(--font-size-sm);
+    color: var(--danger);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Integrated Redact Button - Positioned below status label */
+.memorial-redact-btn {
+    position: absolute;
+    bottom: var(--space-2);
+    left: var(--space-2);
+    right: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+    z-index: 10;
+    opacity: 0.8;
+    transition: opacity var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+    
+    /* Enhanced containment to prevent bleeding */
+    border-radius: var(--radius-md);
+    background-clip: padding-box;
+    isolation: isolate;
+    overflow: hidden;
+    
+    /* Ensure proper danger button styling is contained */
+    background: var(--danger) !important;
+    border: 1px solid var(--danger) !important;
+    color: white !important;
+    
+    /* Prevent any inheritance or bleeding */
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    background-image: none !important;
+    background-origin: padding-box !important;
+    background-attachment: scroll !important;
+}
+
+.memorial-redact-btn:hover {
+    opacity: 1;
+    background: #dc2626 !important; /* Darker red on hover */
+    background-image: none !important;
+    border-color: #dc2626 !important;
+    
+    /* Prevent any color bleeding to parent */
+    isolation: isolate;
+    z-index: 20;
+    
+    /* Override any inherited colors */
+    color: white !important;
+    border: 1px solid #dc2626 !important;
+}
+
+/* Ensure redact button doesn't interfere with card clicks */
+.memorial-character-card .memorial-redact-btn {
+    pointer-events: all;
+}
+
+/* Status styling for lost characters */
+.status-lost {
+    color: var(--danger) !important;
+    font-weight: 600;
 }
 
 /* Character Delete Confirmation Modal Styling */
@@ -1957,6 +2109,7 @@ h3 {
     background: linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
     color: var(--danger);
     border-color: var(--danger);
+    max-width: 93%;
 }
 
 .action-btn.danger:hover:not(:disabled) {

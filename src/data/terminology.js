@@ -257,7 +257,84 @@ const TERMINOLOGY = {
         delete_character_warning: "This hero's memory will be lost forever. This action cannot be undone.",
         delete_character_button: "Forget Hero",
         forget_character_detail: "Forgetting {name} ({race} {class}) will remove all records permanently.",
-        character_last_location: "Last seen in {location}"
+        character_last_location: "Last seen in {location}",
+        
+        // Character Details Modal
+        character_details: "Character Details",
+        attributes: "Attributes",
+        health_experience: "Health & Experience",
+        equipment: "Equipment",
+        
+        // Attribute Names
+        strength: "Strength",
+        intelligence: "Intelligence",
+        piety: "Piety",
+        vitality: "Vitality",
+        agility: "Agility",
+        luck: "Luck",
+        
+        // Attribute Abbreviations
+        attr_str: "STR",
+        attr_int: "INT",
+        attr_pie: "PIE",
+        attr_vit: "VIT",
+        attr_agi: "AGI",
+        attr_luc: "LUC",
+        
+        // Equipment Slots
+        weapon_slot: "Weapon",
+        armor_slot: "Armor",
+        shield_slot: "Shield",
+        accessory_slot: "Accessory",
+        
+        // Equipment Status
+        equipped: "Equipped",
+        unequipped: "Unequipped",
+        
+        // Combat Statistics
+        armor_class: "Armor Class",
+        attack_bonus: "Attack Bonus",
+        damage: "Damage",
+        hit_points: "Hit Points",
+        
+        // Health Status
+        healthy: "Healthy",
+        wounded: "Wounded",
+        critical: "Critical",
+        
+        // Character Sheet Section Headers
+        vital_statistics: "Vital Statistics",
+        combat_statistics: "Combat Statistics",
+        character_information: "Character Information",
+        recent_activity: "Recent Activity",
+        
+        // Character Information Labels
+        created_date: "Created",
+        adventure_count: "Adventures",
+        threat_level: "Challenge Rating",
+        
+        // Experience and Currency
+        experience: "Experience",
+        gold: "Gold",
+        age: "Age",
+        
+        // Additional Character Sheet Text Keys
+        derived_statistics: "Derived Statistics",
+        carrying_capacity: "Carrying Capacity",
+        spell_points: "Spell Points",
+        initiative: "Initiative",
+        saving_throws: "Saving Throws",
+        equipment_statistics: "Equipment Statistics",
+        total_ac_bonus: "Total AC Bonus",
+        total_attack_bonus: "Attack Bonus",
+        total_weight: "Total Weight",
+        equipment_condition: "Equipment Condition",
+        empty_slot: "(Empty)",
+        skills: "Skills",
+        skills_not_implemented: "Skills system not yet implemented",
+        no_spells: "No spells memorized",
+        no_history: "No history recorded",
+        no_recent_activity: "No recent activity"
     },
     
     cyber: {
@@ -512,7 +589,84 @@ const TERMINOLOGY = {
         delete_character_warning: "This agent's data will be permanently deleted. This action cannot be undone.",
         delete_character_button: "Redact Agent",
         forget_character_detail: "Redacting {name} ({race} {class}) will purge all data permanently.",
-        character_last_location: "Last connection to {location}"
+        character_last_location: "Last connection to {location}",
+        
+        // Character Details Modal
+        character_details: "Agent Profile",
+        attributes: "Parameters",
+        health_experience: "Integrity & Experience",
+        equipment: "System Modules",
+        
+        // Attribute Names
+        strength: "Protocol Strength",
+        intelligence: "Algorithm Power",
+        piety: "Endpoint Stability",
+        vitality: "Persistence Level",
+        agility: "Latency Response",
+        luck: "Temperature Variance",
+        
+        // Attribute Abbreviations
+        attr_str: "PRT",
+        attr_int: "ALG",
+        attr_pie: "EPT",
+        attr_vit: "PER",
+        attr_agi: "LAT",
+        attr_luc: "TMP",
+        
+        // Equipment Slots
+        weapon_slot: "Attack Algorithm",
+        armor_slot: "Defense Protocol",
+        shield_slot: "Firewall Module",
+        accessory_slot: "Enhancement Chip",
+        
+        // Equipment Status
+        equipped: "Loaded",
+        unequipped: "Uninstalled",
+        
+        // Combat Statistics
+        armor_class: "Defense Rating",
+        attack_bonus: "Attack Algorithm",
+        damage: "Output Damage",
+        hit_points: "System Integrity",
+        
+        // Health Status
+        healthy: "Optimal",
+        wounded: "Degraded",
+        critical: "System Failure",
+        
+        // Character Sheet Section Headers
+        vital_statistics: "System Metrics",
+        combat_statistics: "Combat Protocols",
+        character_information: "Agent Profile",
+        recent_activity: "Recent System Activity",
+        
+        // Character Information Labels
+        created_date: "Activation Date",
+        adventure_count: "Mission Count",
+        threat_level: "Threat Level",
+        
+        // Experience and Currency
+        experience: "Data Points",
+        gold: "Credits",
+        age: "Age",
+        
+        // Additional Character Sheet Text Keys
+        derived_statistics: "Calculated Metrics",
+        carrying_capacity: "Carry Capacity",
+        spell_points: "Program Slots",
+        initiative: "Initiative Modifier",
+        saving_throws: "Fortitude Save",
+        equipment_statistics: "System Performance",
+        total_ac_bonus: "Total Defense Rating",
+        total_attack_bonus: "Attack Enhancement",
+        total_weight: "System Load",
+        equipment_condition: "Module Efficiency",
+        empty_slot: "(Module Slot Empty)",
+        skills: "Agent Capabilities",
+        skills_not_implemented: "Capability matrix not yet implemented",
+        no_spells: "No subroutines loaded",
+        no_history: "No activity logs available",
+        no_recent_activity: "No recent system activity"
     }
 };
 

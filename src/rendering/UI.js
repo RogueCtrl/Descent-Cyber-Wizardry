@@ -2074,9 +2074,9 @@ class UI {
             const lostAgentsContent = await this.createLostAgentsContent(lostCharacters);
             console.log('Lost agents content created successfully');
             
-            // Create and show modal
+            // Create and show modal with consistent sizing
             this.lostAgentsModal = new Modal({
-                className: 'modal lost-agents-modal memorial-modal',
+                className: 'modal lost-agents-modal memorial-modal character-roster-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: true
             });
@@ -2145,28 +2145,29 @@ class UI {
         const hasLostCharacters = lostCharacters.length > 0;
         
         return `
-            <div class="lost-agents-interface">
-                <div class="lost-agents-header">
-                    <h1 class="lost-agents-title" data-text-key="lost_characters">Fallen Heroes</h1>
-                    <p class="lost-agents-subtitle" data-text-key="lost_characters_subtitle">Heroes Lost in the Dungeon</p>
-                    <span class="lost-count">(${lostCharacters.length})</span>
+            <div class="roster-interface memorial-interface">
+                <div class="roster-header memorial-header">
+                    <p class="roster-subtitle memorial-subtitle">
+                        <span data-text-key="lost_characters_subtitle">Agents Lost in the Corrupted Network</span>
+                        <span class="character-count memorial-count">(${lostCharacters.length})</span>
+                    </p>
                 </div>
                 
-                <div class="lost-agents-content">
+                <div class="roster-content memorial-content">
                     ${hasLostCharacters ? `
-                        <div class="lost-character-grid">
+                        <div class="character-grid memorial-character-grid">
                             ${lostCharacterCards.join('')}
                         </div>
                     ` : `
-                        <div class="no-lost-characters">
-                            <div class="no-lost-icon">🕊️</div>
+                        <div class="no-characters no-lost-characters">
+                            <div class="no-characters-icon">🕊️</div>
                             <h3 data-text-key="no_lost_characters">No Fallen Heroes</h3>
                             <p data-text-key="no_lost_characters_message">No heroes have been lost to the dungeon.</p>
                         </div>
                     `}
                 </div>
                 
-                <div class="lost-agents-footer">
+                <div class="roster-footer memorial-footer">
                     <button id="close-lost-agents-btn" class="action-btn secondary">
                         <span data-text-key="back_to_character_roster">← Back to Character Roster</span>
                     </button>
@@ -2192,36 +2193,35 @@ class UI {
         const classIcon = this.getClassIcon(character.class);
         
         return `
-            <div class="lost-character-card" data-character-id="${character.id}">
-                <div class="lost-card-header">
+            <div class="character-roster-card memorial-character-card clickable-card" data-character-id="${character.id}">
+                <div class="character-card-header">
                     <div class="class-icon">${classIcon}</div>
-                    <div class="lost-card-name">${character.name}</div>
-                    <div class="lost-card-level">Lvl ${character.level}</div>
+                    <div class="character-card-name">${character.name}</div>
+                    <div class="character-card-level">Lvl ${character.level}</div>
                 </div>
                 
-                <div class="lost-card-info">
-                    <div class="lost-card-race-class">${raceName} ${className}</div>
-                    <div class="lost-card-location">
+                <div class="character-card-info">
+                    <div class="character-card-race-class">${raceName} ${className}</div>
+                    <div class="character-card-location">
                         <span class="location-label" data-text-key="character_last_seen">Last Seen:</span>
                         <span class="location-value">${lastSeenLocation}</span>
                     </div>
-                    <div class="lost-card-status">
+                    <div class="character-card-status">
                         <span class="status-label">Status:</span>
-                        <span class="status-value lost" data-text-key="lost_in_dungeon">Lost in Dungeon</span>
+                        <span class="status-value status-lost" data-text-key="character_status_lost">Lost</span>
                     </div>
                 </div>
                 
-                <div class="lost-card-actions">
-                    <span class="actions-label" data-text-key="memorial_actions">Memorial Actions:</span>
-                    <div class="action-buttons">
-                        <button class="action-btn small view-details-btn" data-character-id="${character.id}">
-                            <span data-text-key="view_details">View Details</span>
-                        </button>
-                        <button class="action-btn small danger forget-btn" data-character-id="${character.id}">
-                            <span data-text-key="remove_from_memorial">Forget</span>
-                        </button>
+                <div class="character-card-health memorial-card-status">
+                    <div class="memorial-status-indicator">
+                        <div class="memorial-icon">💀</div>
+                        <div class="memorial-text" data-text-key="lost_in_dungeon">Lost in Dungeon</div>
                     </div>
                 </div>
+                
+                <button class="memorial-redact-btn action-btn danger small" data-character-id="${character.id}" title="Remove from Memorial">
+                    <span data-text-key="remove_from_memorial">Redact</span>
+                </button>
             </div>
         `;
     }
@@ -2264,12 +2264,16 @@ class UI {
             });
         }
         
-        // View Details buttons
-        const viewDetailsButtons = modalBody.querySelectorAll('.view-details-btn');
-        viewDetailsButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const characterId = button.dataset.characterId;
+        // Card click handlers for viewing character details
+        const characterCards = modalBody.querySelectorAll('.memorial-character-card.clickable-card');
+        characterCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Check if the click target is the redact button or its child elements
+                if (e.target.closest('.memorial-redact-btn')) {
+                    return; // Don't open details if clicking redact button
+                }
+                
+                const characterId = card.dataset.characterId;
                 if (window.engine && window.engine.audioManager) {
                     window.engine.audioManager.playSoundEffect('buttonClick');
                 }
@@ -2277,11 +2281,11 @@ class UI {
             });
         });
         
-        // Forget/Redact buttons
-        const forgetButtons = modalBody.querySelectorAll('.forget-btn');
-        forgetButtons.forEach(button => {
+        // Integrated Redact buttons
+        const redactButtons = modalBody.querySelectorAll('.memorial-redact-btn');
+        redactButtons.forEach(button => {
             button.addEventListener('click', async (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent card click event
                 const characterId = button.dataset.characterId;
                 if (window.engine && window.engine.audioManager) {
                     window.engine.audioManager.playSoundEffect('buttonClick');

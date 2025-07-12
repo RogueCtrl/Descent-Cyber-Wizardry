@@ -57,9 +57,12 @@ class AdvancedCharacterSheet {
                         </div>
                         <div class="character-basic-info">
                             <h2 class="character-name">${this.currentCharacter.name || 'Unknown Agent'}</h2>
-                            <div class="character-class-level">
+                            <div class="character-race-class">
+                                <span class="character-race">${this.getContextualRaceName()}</span>
                                 <span class="character-class">${this.getContextualClassName()}</span>
-                                <span class="character-level" data-text-key="level">Level ${this.currentCharacter.level || 1}</span>
+                            </div>
+                            <div class="character-level">
+                                <span data-text-key="level">Level</span> ${this.currentCharacter.level || 1}
                             </div>
                             <div class="character-status-indicators">
                                 ${this.renderStatusIndicators()}
@@ -166,21 +169,24 @@ class AdvancedCharacterSheet {
     getContextualClassName() {
         const className = this.currentCharacter.class || 'Unknown';
         
-        if (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) {
-            const classMap = {
-                'Fighter': 'Combat Specialist',
-                'Mage': 'Code Architect',
-                'Priest': 'System Maintainer',
-                'Thief': 'Data Infiltrator',
-                'Bishop': 'Security Analyst',
-                'Samurai': 'Honor Protocol',
-                'Lord': 'Command Authority',
-                'Ninja': 'Stealth Algorithm'
-            };
-            return classMap[className] || className;
+        if (typeof TextManager !== 'undefined') {
+            return TextManager.getText(`class_${className.toLowerCase()}`) || className;
         }
         
         return className;
+    }
+    
+    /**
+     * Get contextual race name based on current mode
+     */
+    getContextualRaceName() {
+        const raceName = this.currentCharacter.race || 'Unknown';
+        
+        if (typeof TextManager !== 'undefined') {
+            return TextManager.getText(`race_${raceName.toLowerCase()}`) || raceName;
+        }
+        
+        return raceName;
     }
     
     /**
@@ -217,49 +223,51 @@ class AdvancedCharacterSheet {
      */
     renderStatusIndicators() {
         const character = this.currentCharacter;
-        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
-        
-        const healthLabel = isCyberMode ? 'System Integrity' : 'Health';
-        const statusLabel = isCyberMode ? 'System Status' : 'Status';
         
         const healthPercentage = character.maxHP ? (character.currentHP / character.maxHP) * 100 : 100;
         const healthClass = healthPercentage > 75 ? 'good' : healthPercentage > 25 ? 'warning' : 'critical';
         
         return `
             <div class="status-indicator">
-                <div class="status-label">${healthLabel}:</div>
+                <div class="status-label" data-text-key="hit_points">Hit Points:</div>
                 <div class="health-bar">
                     <div class="health-fill ${healthClass}" style="width: ${healthPercentage}%"></div>
                 </div>
                 <div class="health-text">${character.currentHP || 0}/${character.maxHP || 0}</div>
             </div>
             <div class="status-indicator">
-                <div class="status-label">${statusLabel}:</div>
-                <div class="status-value ${character.status || 'alive'}">${this.getContextualStatus()}</div>
+                <div class="status-label">Status:</div>
+                <div class="status-value ${character.status || 'ok'}">${this.getContextualStatus()}</div>
             </div>
         `;
     }
     
     /**
-     * Get contextual status text
+     * Get contextual status text using TextManager
      */
     getContextualStatus() {
-        const status = this.currentCharacter.status || 'alive';
-        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
+        const rawStatus = this.currentCharacter.status || 'ok';
         
-        if (isCyberMode) {
-            const statusMap = {
-                'alive': 'Online',
-                'dead': 'Disconnected',
-                'unconscious': 'Standby Mode',
-                'paralyzed': 'System Locked',
-                'poisoned': 'Corrupted Data',
-                'cursed': 'Malware Detected'
-            };
-            return statusMap[status] || status;
+        if (typeof TextManager !== 'undefined') {
+            // Map different status values to our death system terminology
+            switch (rawStatus.toLowerCase()) {
+                case 'ok':
+                case 'alive':
+                    return TextManager.getText('character_status_ok');
+                case 'unconscious':
+                    return TextManager.getText('character_status_unconscious');
+                case 'dead':
+                    return TextManager.getText('character_status_dead');
+                case 'ashes':
+                    return TextManager.getText('character_status_ashes');
+                case 'lost':
+                    return TextManager.getText('character_status_lost');
+                default:
+                    return rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+            }
         }
         
-        return status.charAt(0).toUpperCase() + status.slice(1);
+        return rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
     }
     
     /**
@@ -285,4 +293,575 @@ class AdvancedCharacterSheet {
      * Render footer stats
      */
     renderFooterStats() {
-        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const experienceLabel = isCyberMode ? 'Data Points' : 'Experience';\n        const goldLabel = isCyberMode ? 'Credits' : 'Gold';\n        \n        return `\n            <div class=\"footer-stat\">\n                <span class=\"stat-label\">${experienceLabel}:</span>\n                <span class=\"stat-value\">${character.experience || 0}</span>\n            </div>\n            <div class=\"footer-stat\">\n                <span class=\"stat-label\">${goldLabel}:</span>\n                <span class=\"stat-value\">${character.gold || 0}</span>\n            </div>\n            <div class=\"footer-stat\">\n                <span class=\"stat-label\">Age:</span>\n                <span class=\"stat-value\">${character.age || 'Unknown'}</span>\n            </div>\n        `;\n    }\n    \n    /**\n     * Switch to a different tab\n     */\n    switchTab(tabId) {\n        if (this.activeTab === tabId) return;\n        \n        this.activeTab = tabId;\n        \n        // Update tab navigation\n        const tabs = this.characterSheetModal.querySelectorAll('.nav-tab');\n        tabs.forEach(tab => {\n            tab.classList.toggle('active', tab.getAttribute('data-tab') === tabId);\n        });\n        \n        // Render tab content\n        this.renderTabContent(tabId);\n    }\n    \n    /**\n     * Render content for the active tab\n     */\n    renderTabContent(tabId) {\n        const contentContainer = this.characterSheetModal.querySelector('#character-sheet-tab-content');\n        if (!contentContainer) return;\n        \n        switch (tabId) {\n            case 'overview':\n                contentContainer.innerHTML = this.renderOverviewTab();\n                break;\n            case 'attributes':\n                contentContainer.innerHTML = this.renderAttributesTab();\n                break;\n            case 'equipment':\n                contentContainer.innerHTML = this.renderEquipmentTab();\n                break;\n            case 'skills':\n                contentContainer.innerHTML = this.renderSkillsTab();\n                break;\n            case 'spells':\n                contentContainer.innerHTML = this.renderSpellsTab();\n                break;\n            case 'history':\n                contentContainer.innerHTML = this.renderHistoryTab();\n                break;\n            default:\n                contentContainer.innerHTML = '<div class=\"tab-placeholder\">Tab content not available</div>';\n        }\n    }\n    \n    /**\n     * Render overview tab content\n     */\n    renderOverviewTab() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        return `\n            <div class=\"overview-content\">\n                <div class=\"overview-grid\">\n                    <div class=\"overview-section vital-stats\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'System Metrics' : 'Vital Statistics'}</h3>\n                        <div class=\"stats-grid\">\n                            ${this.renderVitalStats()}\n                        </div>\n                    </div>\n                    \n                    <div class=\"overview-section combat-stats\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Combat Protocols' : 'Combat Statistics'}</h3>\n                        <div class=\"stats-grid\">\n                            ${this.renderCombatStats()}\n                        </div>\n                    </div>\n                    \n                    <div class=\"overview-section character-info\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Agent Profile' : 'Character Information'}</h3>\n                        <div class=\"info-grid\">\n                            ${this.renderCharacterInfo()}\n                        </div>\n                    </div>\n                    \n                    <div class=\"overview-section recent-activity\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Recent System Activity' : 'Recent Activity'}</h3>\n                        <div class=\"activity-log\">\n                            ${this.renderRecentActivity()}\n                        </div>\n                    </div>\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render vital statistics\n     */\n    renderVitalStats() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const levelLabel = isCyberMode ? 'Clearance Level' : 'Level';\n        const healthLabel = isCyberMode ? 'System Integrity' : 'Hit Points';\n        const expLabel = isCyberMode ? 'Data Points' : 'Experience';\n        \n        return `\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${levelLabel}</div>\n                <div class=\"stat-value\">${character.level || 1}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${healthLabel}</div>\n                <div class=\"stat-value\">${character.currentHP || 0}/${character.maxHP || 0}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${expLabel}</div>\n                <div class=\"stat-value\">${character.experience || 0}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">Age</div>\n                <div class=\"stat-value\">${character.age || 'Unknown'}</div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render combat statistics\n     */\n    renderCombatStats() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const acLabel = isCyberMode ? 'Defense Rating' : 'Armor Class';\n        const attackLabel = isCyberMode ? 'Attack Algorithm' : 'Attack Bonus';\n        \n        return `\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${acLabel}</div>\n                <div class=\"stat-value\">${character.armorClass || 10}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${attackLabel}</div>\n                <div class=\"stat-value\">+${character.attackBonus || 0}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${isCyberMode ? 'Damage Output' : 'Damage'}</div>\n                <div class=\"stat-value\">${this.calculateDamageRange()}</div>\n            </div>\n            <div class=\"stat-item\">\n                <div class=\"stat-label\">${isCyberMode ? 'Threat Level' : 'Challenge Rating'}</div>\n                <div class=\"stat-value\">${this.calculateThreatLevel()}</div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render character information\n     */\n    renderCharacterInfo() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const raceLabel = isCyberMode ? 'Platform Type' : 'Race';\n        const classLabel = isCyberMode ? 'Specialization' : 'Class';\n        \n        return `\n            <div class=\"info-item\">\n                <div class=\"info-label\">${raceLabel}</div>\n                <div class=\"info-value\">${character.race || 'Unknown'}</div>\n            </div>\n            <div class=\"info-item\">\n                <div class=\"info-label\">${classLabel}</div>\n                <div class=\"info-value\">${this.getContextualClassName()}</div>\n            </div>\n            <div class=\"info-item\">\n                <div class=\"info-label\">${isCyberMode ? 'Activation Date' : 'Created'}</div>\n                <div class=\"info-value\">${character.createdDate || 'Unknown'}</div>\n            </div>\n            <div class=\"info-item\">\n                <div class=\"info-label\">${isCyberMode ? 'Mission Count' : 'Adventures'}</div>\n                <div class=\"info-value\">${character.adventureCount || 0}</div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render recent activity\n     */\n    renderRecentActivity() {\n        const activities = this.currentCharacter.recentActivity || [];\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        if (activities.length === 0) {\n            const noActivityText = isCyberMode ? 'No recent system activity' : 'No recent activity';\n            return `<div class=\"no-activity\">${noActivityText}</div>`;\n        }\n        \n        return activities.slice(0, 5).map(activity => {\n            const timestamp = new Date(activity.timestamp || Date.now()).toLocaleString();\n            return `\n                <div class=\"activity-item\">\n                    <div class=\"activity-time\">${timestamp}</div>\n                    <div class=\"activity-description\">${activity.description || 'Unknown activity'}</div>\n                </div>\n            `;\n        }).join('');\n    }\n    \n    /**\n     * Render attributes tab\n     */\n    renderAttributesTab() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const attributes = character.attributes || {};\n        \n        const attributeMap = {\n            'strength': { name: 'Strength', cyberName: 'Processing Power' },\n            'intelligence': { name: 'Intelligence', cyberName: 'Logic Circuits' },\n            'piety': { name: 'Piety', cyberName: 'System Integrity' },\n            'vitality': { name: 'Vitality', cyberName: 'Core Stability' },\n            'agility': { name: 'Agility', cyberName: 'Response Time' },\n            'luck': { name: 'Luck', cyberName: 'Random Seed' }\n        };\n        \n        return `\n            <div class=\"attributes-content\">\n                <div class=\"attributes-grid\">\n                    <div class=\"attributes-section\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Core Parameters' : 'Primary Attributes'}</h3>\n                        <div class=\"attribute-list\">\n                            ${Object.entries(attributeMap).map(([key, attr]) => {\n                                const value = attributes[key] || 10;\n                                const modifier = Math.floor((value - 10) / 2);\n                                const displayName = isCyberMode ? attr.cyberName : attr.name;\n                                \n                                return `\n                                    <div class=\"attribute-item\">\n                                        <div class=\"attribute-name\">${displayName}</div>\n                                        <div class=\"attribute-value\">${value}</div>\n                                        <div class=\"attribute-modifier\">(${modifier >= 0 ? '+' : ''}${modifier})</div>\n                                        <div class=\"attribute-bar\">\n                                            <div class=\"attribute-fill\" style=\"width: ${Math.min(100, (value / 18) * 100)}%\"></div>\n                                        </div>\n                                    </div>\n                                `;\n                            }).join('')}\n                        </div>\n                    </div>\n                    \n                    <div class=\"derived-stats-section\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Calculated Metrics' : 'Derived Statistics'}</h3>\n                        <div class=\"derived-stats\">\n                            ${this.renderDerivedStats()}\n                        </div>\n                    </div>\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render derived statistics\n     */\n    renderDerivedStats() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const stats = [\n            {\n                name: isCyberMode ? 'Carry Capacity' : 'Carrying Capacity',\n                value: `${((character.attributes?.strength || 10) * 10)} lbs`\n            },\n            {\n                name: isCyberMode ? 'Spell Slots' : 'Spell Points',\n                value: this.calculateSpellSlots()\n            },\n            {\n                name: isCyberMode ? 'Initiative Modifier' : 'Initiative',\n                value: `+${Math.floor(((character.attributes?.agility || 10) - 10) / 2)}`\n            },\n            {\n                name: isCyberMode ? 'Fortitude Save' : 'Saving Throws',\n                value: `+${this.calculateSavingThrows()}`\n            }\n        ];\n        \n        return stats.map(stat => `\n            <div class=\"derived-stat-item\">\n                <div class=\"stat-name\">${stat.name}</div>\n                <div class=\"stat-value\">${stat.value}</div>\n            </div>\n        `).join('');\n    }\n    \n    /**\n     * Render equipment tab\n     */\n    renderEquipmentTab() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        return `\n            <div class=\"equipment-content\">\n                <div class=\"equipment-sections\">\n                    <div class=\"equipped-section\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'Active System Modules' : 'Equipped Items'}</h3>\n                        <div class=\"equipped-display\">\n                            ${this.renderDetailedEquipment()}\n                        </div>\n                    </div>\n                    \n                    <div class=\"equipment-stats-section\">\n                        <h3 class=\"section-title\">${isCyberMode ? 'System Performance' : 'Equipment Statistics'}</h3>\n                        <div class=\"equipment-stats\">\n                            ${this.renderEquipmentStats()}\n                        </div>\n                    </div>\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render detailed equipment information\n     */\n    renderDetailedEquipment() {\n        const equipment = this.currentCharacter.equipment || {};\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const slots = [\n            { key: 'weapon', name: 'Weapon', cyberName: 'Attack Algorithm', icon: '⚔️' },\n            { key: 'armor', name: 'Armor', cyberName: 'Defense Protocol', icon: '🛡️' },\n            { key: 'shield', name: 'Shield', cyberName: 'Firewall Module', icon: '🔰' },\n            { key: 'accessory', name: 'Accessory', cyberName: 'Enhancement Chip', icon: '💍' }\n        ];\n        \n        return slots.map(slot => {\n            const item = equipment[slot.key];\n            const slotName = isCyberMode ? slot.cyberName : slot.name;\n            \n            if (item) {\n                let itemName = typeof item === 'string' ? item : item.name;\n                if (typeof item === 'object' && item.cyberName && isCyberMode) {\n                    itemName = item.cyberName;\n                }\n                \n                return `\n                    <div class=\"equipment-slot-detail filled\">\n                        <div class=\"slot-header\">\n                            <span class=\"slot-icon\">${slot.icon}</span>\n                            <span class=\"slot-name\">${slotName}</span>\n                        </div>\n                        <div class=\"item-details\">\n                            <div class=\"item-name\">${itemName}</div>\n                            ${this.renderItemStats(item)}\n                        </div>\n                    </div>\n                `;\n            } else {\n                const emptyText = isCyberMode ? '(Module Slot Empty)' : '(Empty)';\n                return `\n                    <div class=\"equipment-slot-detail empty\">\n                        <div class=\"slot-header\">\n                            <span class=\"slot-icon\">${slot.icon}</span>\n                            <span class=\"slot-name\">${slotName}</span>\n                        </div>\n                        <div class=\"empty-slot\">${emptyText}</div>\n                    </div>\n                `;\n            }\n        }).join('');\n    }\n    \n    /**\n     * Render item statistics\n     */\n    renderItemStats(item) {\n        if (typeof item === 'string') return '';\n        \n        const stats = [];\n        if (item.damage) {\n            stats.push(`Damage: ${item.damage.dice}d${item.damage.sides}${item.damage.bonus ? `+${item.damage.bonus}` : ''}`);\n        }\n        if (item.acBonus) stats.push(`AC: +${item.acBonus}`);\n        if (item.attackBonus) stats.push(`Attack: +${item.attackBonus}`);\n        if (item.durability !== undefined) {\n            const condition = Math.floor((item.durability / item.maxDurability) * 100);\n            stats.push(`Condition: ${condition}%`);\n        }\n        \n        return stats.length > 0 ? `<div class=\"item-stats\">${stats.join(' • ')}</div>` : '';\n    }\n    \n    /**\n     * Render equipment statistics\n     */\n    renderEquipmentStats() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        // Calculate equipment bonuses (placeholder - implement actual calculation)\n        const stats = [\n            {\n                name: isCyberMode ? 'Total Defense Rating' : 'Total AC Bonus',\n                value: '+0' // Implement actual calculation\n            },\n            {\n                name: isCyberMode ? 'Attack Enhancement' : 'Attack Bonus',\n                value: '+0' // Implement actual calculation\n            },\n            {\n                name: isCyberMode ? 'System Load' : 'Total Weight',\n                value: '0 lbs' // Implement actual calculation\n            },\n            {\n                name: isCyberMode ? 'Module Efficiency' : 'Equipment Condition',\n                value: '100%' // Implement actual calculation\n            }\n        ];\n        \n        return stats.map(stat => `\n            <div class=\"equipment-stat-item\">\n                <div class=\"stat-name\">${stat.name}</div>\n                <div class=\"stat-value\">${stat.value}</div>\n            </div>\n        `).join('');\n    }\n    \n    /**\n     * Render skills tab\n     */\n    renderSkillsTab() {\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        return `\n            <div class=\"skills-content\">\n                <div class=\"skills-placeholder\">\n                    <h3>${isCyberMode ? 'Agent Capabilities' : 'Character Skills'}</h3>\n                    <p>${isCyberMode ? 'Capability matrix not yet implemented' : 'Skills system not yet implemented'}</p>\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render spells tab\n     */\n    renderSpellsTab() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const spells = character.memorizedSpells || {};\n        const hasSpells = Object.keys(spells).length > 0;\n        \n        if (!hasSpells) {\n            const noSpellsText = isCyberMode ? 'No subroutines loaded' : 'No spells memorized';\n            return `<div class=\"spells-placeholder\">${noSpellsText}</div>`;\n        }\n        \n        return `\n            <div class=\"spells-content\">\n                <div class=\"spells-sections\">\n                    ${Object.entries(spells).map(([level, levelSpells]) => {\n                        const levelLabel = isCyberMode ? 'Tier' : 'Level';\n                        return `\n                            <div class=\"spell-level-section\">\n                                <h3 class=\"section-title\">${levelLabel} ${level}</h3>\n                                <div class=\"spell-grid\">\n                                    ${levelSpells.map(spell => this.renderSpellDetail(spell)).join('')}\n                                </div>\n                            </div>\n                        `;\n                    }).join('')}\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render spell detail\n     */\n    renderSpellDetail(spell) {\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        let spellName = typeof spell === 'string' ? spell : spell.name;\n        \n        if (typeof spell === 'object' && spell.cyberName && isCyberMode) {\n            spellName = spell.cyberName;\n        }\n        \n        return `\n            <div class=\"spell-detail-item\">\n                <div class=\"spell-name\">${spellName}</div>\n                ${typeof spell === 'object' && spell.description ? `<div class=\"spell-description\">${spell.description}</div>` : ''}\n            </div>\n        `;\n    }\n    \n    /**\n     * Render history tab\n     */\n    renderHistoryTab() {\n        const character = this.currentCharacter;\n        const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();\n        \n        const history = character.history || [];\n        \n        if (history.length === 0) {\n            const noHistoryText = isCyberMode ? 'No activity logs available' : 'No history recorded';\n            return `<div class=\"history-placeholder\">${noHistoryText}</div>`;\n        }\n        \n        return `\n            <div class=\"history-content\">\n                <div class=\"history-timeline\">\n                    ${history.map(event => this.renderHistoryEvent(event)).join('')}\n                </div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render history event\n     */\n    renderHistoryEvent(event) {\n        const timestamp = new Date(event.timestamp || Date.now()).toLocaleString();\n        \n        return `\n            <div class=\"history-event\">\n                <div class=\"event-time\">${timestamp}</div>\n                <div class=\"event-description\">${event.description || 'Unknown event'}</div>\n                <div class=\"event-type\">${event.type || 'general'}</div>\n            </div>\n        `;\n    }\n    \n    /**\n     * Render character sheet content\n     */\n    renderCharacterSheetContent() {\n        this.renderTabContent(this.activeTab);\n    }\n    \n    /**\n     * Helper method to calculate damage range\n     */\n    calculateDamageRange() {\n        // Placeholder - implement actual damage calculation\n        return '1-6';\n    }\n    \n    /**\n     * Helper method to calculate threat level\n     */\n    calculateThreatLevel() {\n        const level = this.currentCharacter.level || 1;\n        if (level <= 3) return 'Low';\n        if (level <= 6) return 'Medium';\n        if (level <= 9) return 'High';\n        return 'Critical';\n    }\n    \n    /**\n     * Helper method to calculate spell slots\n     */\n    calculateSpellSlots() {\n        // Placeholder - implement actual spell slot calculation\n        return '3/5';\n    }\n    \n    /**\n     * Helper method to calculate saving throws\n     */\n    calculateSavingThrows() {\n        const level = this.currentCharacter.level || 1;\n        return Math.floor(level / 2);\n    }\n    \n    /**\n     * Hide character sheet modal\n     */\n    hideCharacterSheet() {\n        if (this.characterSheetModal) {\n            this.characterSheetModal.remove();\n            this.characterSheetModal = null;\n        }\n        this.currentCharacter = null;\n        this.activeTab = 'overview';\n    }\n}"
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="footer-stat">
+                <span class="stat-label" data-text-key="experience">Experience:</span>
+                <span class="stat-value">${character.experience || 0}</span>
+            </div>
+            <div class="footer-stat">
+                <span class="stat-label" data-text-key="gold">Gold:</span>
+                <span class="stat-value">${character.gold || 0}</span>
+            </div>
+            <div class="footer-stat">
+                <span class="stat-label" data-text-key="age">Age:</span>
+                <span class="stat-value">${character.age || 'Unknown'}</span>
+            </div>
+        `;
+    }
+    
+    /**
+     * Switch to a different tab
+     */
+    switchTab(tabId) {
+        if (this.activeTab === tabId) return;
+        
+        this.activeTab = tabId;
+        
+        // Update tab navigation
+        const tabs = this.characterSheetModal.querySelectorAll('.nav-tab');
+        tabs.forEach(tab => {
+            tab.classList.toggle('active', tab.getAttribute('data-tab') === tabId);
+        });
+        
+        // Render tab content
+        this.renderTabContent(tabId);
+        
+        // Reapply TextManager after content update
+        this.applyTextManagerToCharacterSheet();
+    }
+    
+    /**
+     * Render content for the active tab
+     */
+    renderTabContent(tabId) {
+        const contentContainer = this.characterSheetModal.querySelector('#character-sheet-tab-content');
+        if (!contentContainer) return;
+        
+        switch (tabId) {
+            case 'overview':
+                contentContainer.innerHTML = this.renderOverviewTab();
+                break;
+            case 'attributes':
+                contentContainer.innerHTML = this.renderAttributesTab();
+                break;
+            case 'equipment':
+                contentContainer.innerHTML = this.renderEquipmentTab();
+                break;
+            case 'skills':
+                contentContainer.innerHTML = this.renderSkillsTab();
+                break;
+            case 'spells':
+                contentContainer.innerHTML = this.renderSpellsTab();
+                break;
+            case 'history':
+                contentContainer.innerHTML = this.renderHistoryTab();
+                break;
+            default:
+                contentContainer.innerHTML = '<div class="tab-placeholder">Tab content not available</div>';
+        }
+    }
+    
+    /**
+     * Render overview tab content
+     */
+    renderOverviewTab() {
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="overview-content">
+                <div class="overview-grid">
+                    <div class="overview-section vital-stats">
+                        <h3 class="section-title" data-text-key="vital_statistics">Vital Statistics</h3>
+                        <div class="stats-grid">
+                            ${this.renderVitalStats()}
+                        </div>
+                    </div>
+                    
+                    <div class="overview-section combat-stats">
+                        <h3 class="section-title" data-text-key="combat_statistics">Combat Statistics</h3>
+                        <div class="stats-grid">
+                            ${this.renderCombatStats()}
+                        </div>
+                    </div>
+                    
+                    <div class="overview-section character-info">
+                        <h3 class="section-title" data-text-key="character_information">Character Information</h3>
+                        <div class="info-grid">
+                            ${this.renderCharacterInfo()}
+                        </div>
+                    </div>
+                    
+                    <div class="overview-section recent-activity">
+                        <h3 class="section-title" data-text-key="recent_activity">Recent Activity</h3>
+                        <div class="activity-log">
+                            ${this.renderRecentActivity()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render vital statistics
+     */
+    renderVitalStats() {
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="level">Level</div>
+                <div class="stat-value">${character.level || 1}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="hit_points">Hit Points</div>
+                <div class="stat-value">${character.currentHP || 0}/${character.maxHP || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="experience">Experience</div>
+                <div class="stat-value">${character.experience || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="age">Age</div>
+                <div class="stat-value">${character.age || 'Unknown'}</div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render combat statistics
+     */
+    renderCombatStats() {
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="armor_class">Armor Class</div>
+                <div class="stat-value">${character.armorClass || 10}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="attack_bonus">Attack Bonus</div>
+                <div class="stat-value">+${character.attackBonus || 0}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="damage">Damage</div>
+                <div class="stat-value">${this.calculateDamageRange()}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label" data-text-key="threat_level">Challenge Rating</div>
+                <div class="stat-value">${this.calculateThreatLevel()}</div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render character information
+     */
+    renderCharacterInfo() {
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="info-item">
+                <div class="info-label" data-text-key="race">Race</div>
+                <div class="info-value">${this.getContextualRaceName()}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label" data-text-key="class">Class</div>
+                <div class="info-value">${this.getContextualClassName()}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label" data-text-key="created_date">Created</div>
+                <div class="info-value">${character.createdDate || 'Unknown'}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label" data-text-key="adventure_count">Adventures</div>
+                <div class="info-value">${character.adventureCount || 0}</div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render recent activity
+     */
+    renderRecentActivity() {
+        const activities = this.currentCharacter.recentActivity || [];
+        
+        if (activities.length === 0) {
+            return `<div class="no-activity" data-text-key="no_recent_activity">No recent activity</div>`;
+        }
+        
+        return activities.slice(0, 5).map(activity => {
+            const timestamp = new Date(activity.timestamp || Date.now()).toLocaleString();
+            return `
+                <div class="activity-item">
+                    <div class="activity-time">${timestamp}</div>
+                    <div class="activity-description">${activity.description || 'Unknown activity'}</div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    /**
+     * Render attributes tab
+     */
+    renderAttributesTab() {
+        const character = this.currentCharacter;
+        const attributes = character.attributes || {};
+        
+        return `
+            <div class="attributes-content">
+                <div class="attributes-grid">
+                    <div class="attributes-section">
+                        <h3 class="section-title" data-text-key="attributes">Attributes</h3>
+                        <div class="attribute-list">
+                            ${this.renderAttributeList(attributes)}
+                        </div>
+                    </div>
+                    
+                    <div class="derived-stats-section">
+                        <h3 class="section-title" data-text-key="derived_statistics">Derived Statistics</h3>
+                        <div class="derived-stats">
+                            ${this.renderDerivedStats()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render attribute list with proper TextManager integration
+     */
+    renderAttributeList(attributes) {
+        const attributeKeys = ['strength', 'intelligence', 'piety', 'vitality', 'agility', 'luck'];
+        const abbreviationKeys = ['attr_str', 'attr_int', 'attr_pie', 'attr_vit', 'attr_agi', 'attr_luc'];
+        
+        return attributeKeys.map((key, index) => {
+            const value = attributes[key] || 10;
+            const modifier = Math.floor((value - 10) / 2);
+            const abbreviationKey = abbreviationKeys[index];
+            
+            return `
+                <div class="attribute-item">
+                    <div class="attribute-header">
+                        <div class="attribute-name" data-text-key="${key}">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
+                        <div class="attribute-abbreviation" data-text-key="${abbreviationKey}">STR</div>
+                    </div>
+                    <div class="attribute-value">${value}</div>
+                    <div class="attribute-modifier">(${modifier >= 0 ? '+' : ''}${modifier})</div>
+                    <div class="attribute-bar">
+                        <div class="attribute-fill" style="width: ${Math.min(100, (value / 18) * 100)}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    /**
+     * Render derived statistics
+     */
+    renderDerivedStats() {
+        const character = this.currentCharacter;
+        
+        const stats = [
+            {
+                key: 'carrying_capacity',
+                value: `${((character.attributes?.strength || 10) * 10)} lbs`
+            },
+            {
+                key: 'spell_points',
+                value: this.calculateSpellSlots()
+            },
+            {
+                key: 'initiative',
+                value: `+${Math.floor(((character.attributes?.agility || 10) - 10) / 2)}`
+            },
+            {
+                key: 'saving_throws',
+                value: `+${this.calculateSavingThrows()}`
+            }
+        ];
+        
+        return stats.map(stat => `
+            <div class="derived-stat-item">
+                <div class="stat-name" data-text-key="${stat.key}">Stat</div>
+                <div class="stat-value">${stat.value}</div>
+            </div>
+        `).join('');
+    }
+    
+    /**
+     * Render equipment tab
+     */
+    renderEquipmentTab() {
+        const character = this.currentCharacter;
+        
+        return `
+            <div class="equipment-content">
+                <div class="equipment-sections">
+                    <div class="equipped-section">
+                        <h3 class="section-title" data-text-key="equipment">Equipment</h3>
+                        <div class="equipped-display">
+                            ${this.renderDetailedEquipment()}
+                        </div>
+                    </div>
+                    
+                    <div class="equipment-stats-section">
+                        <h3 class="section-title" data-text-key="equipment_statistics">Equipment Statistics</h3>
+                        <div class="equipment-stats">
+                            ${this.renderEquipmentStats()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render detailed equipment information
+     */
+    renderDetailedEquipment() {
+        const equipment = this.currentCharacter.equipment || {};
+        
+        const slots = [
+            { key: 'weapon', nameKey: 'weapon_slot', icon: '⚔️' },
+            { key: 'armor', nameKey: 'armor_slot', icon: '🛡️' },
+            { key: 'shield', nameKey: 'shield_slot', icon: '🔰' },
+            { key: 'accessory', nameKey: 'accessory_slot', icon: '💍' }
+        ];
+        
+        return slots.map(slot => {
+            const item = equipment[slot.key];
+            
+            if (item) {
+                let itemName = typeof item === 'string' ? item : item.name;
+                
+                return `
+                    <div class="equipment-slot-detail filled">
+                        <div class="slot-header">
+                            <span class="slot-icon">${slot.icon}</span>
+                            <span class="slot-name" data-text-key="${slot.nameKey}">Slot</span>
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">${itemName}</div>
+                            ${this.renderItemStats(item)}
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="equipment-slot-detail empty">
+                        <div class="slot-header">
+                            <span class="slot-icon">${slot.icon}</span>
+                            <span class="slot-name" data-text-key="${slot.nameKey}">Slot</span>
+                        </div>
+                        <div class="empty-slot" data-text-key="empty_slot">(Empty)</div>
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+    
+    /**
+     * Render item statistics
+     */
+    renderItemStats(item) {
+        if (typeof item === 'string') return '';
+        
+        const stats = [];
+        if (item.damage) {
+            stats.push(`Damage: ${item.damage.dice}d${item.damage.sides}${item.damage.bonus ? `+${item.damage.bonus}` : ''}`);
+        }
+        if (item.acBonus) stats.push(`AC: +${item.acBonus}`);
+        if (item.attackBonus) stats.push(`Attack: +${item.attackBonus}`);
+        if (item.durability !== undefined) {
+            const condition = Math.floor((item.durability / item.maxDurability) * 100);
+            stats.push(`Condition: ${condition}%`);
+        }
+        
+        return stats.length > 0 ? `<div class="item-stats">${stats.join(' • ')}</div>` : '';
+    }
+    
+    /**
+     * Render equipment statistics
+     */
+    renderEquipmentStats() {
+        const character = this.currentCharacter;
+        
+        // Calculate equipment bonuses (placeholder - implement actual calculation)
+        const stats = [
+            {
+                key: 'total_ac_bonus',
+                value: '+0' // Implement actual calculation
+            },
+            {
+                key: 'total_attack_bonus',
+                value: '+0' // Implement actual calculation
+            },
+            {
+                key: 'total_weight',
+                value: '0 lbs' // Implement actual calculation
+            },
+            {
+                key: 'equipment_condition',
+                value: '100%' // Implement actual calculation
+            }
+        ];
+        
+        return stats.map(stat => `
+            <div class="equipment-stat-item">
+                <div class="stat-name" data-text-key="${stat.key}">Stat</div>
+                <div class="stat-value">${stat.value}</div>
+            </div>
+        `).join('');
+    }
+    
+    /**
+     * Render skills tab
+     */
+    renderSkillsTab() {
+        return `
+            <div class="skills-content">
+                <div class="skills-placeholder">
+                    <h3 data-text-key="skills">Skills</h3>
+                    <p data-text-key="skills_not_implemented">Skills system not yet implemented</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render spells tab
+     */
+    renderSpellsTab() {
+        const character = this.currentCharacter;
+        const spells = character.memorizedSpells || {};
+        const hasSpells = Object.keys(spells).length > 0;
+        
+        if (!hasSpells) {
+            return `<div class="spells-placeholder" data-text-key="no_spells">No spells memorized</div>`;
+        }
+        
+        return `
+            <div class="spells-content">
+                <div class="spells-sections">
+                    ${Object.entries(spells).map(([level, levelSpells]) => {
+                        return `
+                            <div class="spell-level-section">
+                                <h3 class="section-title"><span data-text-key="level">Level</span> ${level}</h3>
+                                <div class="spell-grid">
+                                    ${levelSpells.map(spell => this.renderSpellDetail(spell)).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render spell detail
+     */
+    renderSpellDetail(spell) {
+        let spellName = typeof spell === 'string' ? spell : spell.name;
+        
+        return `
+            <div class="spell-detail-item">
+                <div class="spell-name">${spellName}</div>
+                ${typeof spell === 'object' && spell.description ? `<div class="spell-description">${spell.description}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    /**
+     * Render history tab
+     */
+    renderHistoryTab() {
+        const character = this.currentCharacter;
+        const history = character.history || [];
+        
+        if (history.length === 0) {
+            return `<div class="history-placeholder" data-text-key="no_history">No history recorded</div>`;
+        }
+        
+        return `
+            <div class="history-content">
+                <div class="history-timeline">
+                    ${history.map(event => this.renderHistoryEvent(event)).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render history event
+     */
+    renderHistoryEvent(event) {
+        const timestamp = new Date(event.timestamp || Date.now()).toLocaleString();
+        
+        return `
+            <div class="history-event">
+                <div class="event-time">${timestamp}</div>
+                <div class="event-description">${event.description || 'Unknown event'}</div>
+                <div class="event-type">${event.type || 'general'}</div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Render character sheet content
+     */
+    renderCharacterSheetContent() {
+        this.renderTabContent(this.activeTab);
+    }
+    
+    /**
+     * Helper method to calculate damage range
+     */
+    calculateDamageRange() {
+        // Placeholder - implement actual damage calculation
+        return '1-6';
+    }
+    
+    /**
+     * Helper method to calculate threat level
+     */
+    calculateThreatLevel() {
+        const level = this.currentCharacter.level || 1;
+        if (level <= 3) return 'Low';
+        if (level <= 6) return 'Medium';
+        if (level <= 9) return 'High';
+        return 'Critical';
+    }
+    
+    /**
+     * Helper method to calculate spell slots
+     */
+    calculateSpellSlots() {
+        // Placeholder - implement actual spell slot calculation
+        return '3/5';
+    }
+    
+    /**
+     * Helper method to calculate saving throws
+     */
+    calculateSavingThrows() {
+        const level = this.currentCharacter.level || 1;
+        return Math.floor(level / 2);
+    }
+    
+    /**
+     * Hide character sheet modal
+     */
+    hideCharacterSheet() {
+        if (this.characterSheetModal) {
+            this.characterSheetModal.remove();
+            this.characterSheetModal = null;
+        }
+        this.currentCharacter = null;
+        this.activeTab = 'overview';
+    }
+}
