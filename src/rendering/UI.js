@@ -1874,28 +1874,35 @@ class UI {
      * Create character roster modal content
      */
     async createCharacterRosterContent(characters) {
-        const characterCards = await Promise.all(
-            characters.map(character => this.createCharacterCard(character))
+        // Filter active characters (exclude Uninstalled/Lost agents from main database)
+        const activeCharacters = characters.filter(character => 
+            !this.isCharacterPermanentlyLost(character)
         );
         
-        const hasCharacters = characters.length > 0;
-        
-        // Filter lost characters for memorial button
+        // Filter lost characters for memorial section
         const lostCharacters = characters.filter(character => 
             this.isCharacterPermanentlyLost(character)
         );
+        
+        // Create character cards for active characters only
+        const characterCards = await Promise.all(
+            activeCharacters.map(character => this.createCharacterCard(character))
+        );
+        
+        const hasActiveCharacters = activeCharacters.length > 0;
         const hasLostCharacters = lostCharacters.length > 0;
         
         return `
             <div class="roster-interface">
                 <div class="roster-header">
-                    <h1 class="roster-title" data-text-key="character_roster">Character Roster</h1>
-                    <p class="roster-subtitle" data-text-key="character_roster_subtitle">All Created Characters</p>
-                    <span class="character-count">(${characters.length})</span>
+                    <p class="roster-subtitle">
+                        <span data-text-key="character_roster_subtitle">All Created Characters</span>
+                        <span class="character-count">(${activeCharacters.length})</span>
+                    </p>
                 </div>
                 
                 <div class="roster-content">
-                    ${hasCharacters ? `
+                    ${hasActiveCharacters ? `
                         <div class="character-grid">
                             ${characterCards.join('')}
                         </div>
@@ -1913,8 +1920,10 @@ class UI {
                         <button id="view-lost-characters-btn" class="action-btn memorial">
                             <div class="btn-icon">💀</div>
                             <div class="btn-text">
-                                <span class="btn-title" data-text-key="lost_characters">Fallen Heroes</span>
-                                <span class="btn-count">(${lostCharacters.length})</span>
+                                <span class="btn-title">
+                                    <span data-text-key="lost_characters">Fallen Heroes</span>
+                                    <span class="btn-count">(${lostCharacters.length})</span>
+                                </span>
                             </div>
                         </button>
                     </div>

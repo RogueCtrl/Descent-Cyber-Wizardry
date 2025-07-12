@@ -1458,6 +1458,32 @@ h3 {
     z-index: 2500 !important; /* Highest priority - appears on top of all other modals */
 }
 
+/* Agent Database Refinement Styling */
+.roster-subtitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    font-size: var(--font-size-lg, 1.125rem);
+    color: var(--text-secondary, #cbd5e1);
+    margin-bottom: var(--space-4, 1rem);
+}
+
+.character-count {
+    color: var(--text-muted, #64748b);
+    font-weight: normal;
+}
+
+.btn-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+}
+
+.btn-count {
+    color: var(--text-muted, #64748b);
+    font-weight: normal;
+}
+
 .character-sheet-container {
     width: 90vw;
     max-width: 1200px;
