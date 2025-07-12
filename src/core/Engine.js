@@ -139,6 +139,11 @@ class Engine {
             // Mark as played before
             localStorage.setItem('descent_has_played', 'true');
             
+            // Now transition to town
+            this.gameState.setState('town');
+            this.ui.addMessage('You arrive at the town near the Mad Overlord\'s castle.');
+            this.ui.addMessage('Visit the Training Grounds to create your party of adventurers.');
+            
             // Emit event for any listeners
             this.eventSystem.emit('party-setup-complete', { partyName });
             
@@ -636,11 +641,19 @@ class Engine {
             this.gameState.setState('playing');
             this.ui.addMessage('Game loaded successfully.');
         } else {
-            // Start new game - begin in town
-            this.gameState.setState('town');
-            this.ui.addMessage('Welcome to Descent: Cyber Wizardry!');
-            this.ui.addMessage('You arrive at the town near the Mad Overlord\'s castle.');
-            this.ui.addMessage('Visit the Training Grounds to create your party of adventurers.');
+            // Check if this is first time play before setting state
+            const hasPlayedBefore = localStorage.getItem('descent_has_played');
+            
+            if (!hasPlayedBefore) {
+                // Don't set state to town yet - let checkFirstTimePlay handle it
+                this.ui.addMessage('Welcome to Descent: Cyber Wizardry!');
+            } else {
+                // Start new game - begin in town
+                this.gameState.setState('town');
+                this.ui.addMessage('Welcome to Descent: Cyber Wizardry!');
+                this.ui.addMessage('You arrive at the town near the Mad Overlord\'s castle.');
+                this.ui.addMessage('Visit the Training Grounds to create your party of adventurers.');
+            }
         }
     }
     

@@ -356,6 +356,33 @@ h3 {
     background: linear-gradient(145deg, var(--bg-secondary), var(--bg-primary));
 }
 
+/* Custom scrollbar styling for all modals */
+.modal ::-webkit-scrollbar {
+    width: 8px;
+    background: var(--panel-bg, #1A1A2E);
+}
+
+.modal ::-webkit-scrollbar-track {
+    background: var(--panel-bg, #1A1A2E);
+    border-radius: 4px;
+}
+
+.modal ::-webkit-scrollbar-thumb {
+    background: var(--border-color, #16213E);
+    border-radius: 4px;
+    border: 1px solid var(--panel-bg, #1A1A2E);
+}
+
+.modal ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue, #4A9EFF);
+}
+
+/* Modern CSS scrollbar styling (fallback for Firefox) */
+.modal {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color, #16213E) var(--panel-bg, #1A1A2E);
+}
+
 .modal-footer {
     padding: var(--space-6);
     border-top: 1px solid var(--border-accent);
@@ -3845,7 +3872,7 @@ h3 {
     font-size: 24em;
     line-height: 1;
     word-wrap: break-word;
-    animation: matrixRain 8s linear infinite;
+    animation: matrixRain 5s linear infinite;
     z-index: -1;
     pointer-events: none;
     overflow: hidden;

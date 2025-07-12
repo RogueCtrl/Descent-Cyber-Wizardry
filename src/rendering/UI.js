@@ -340,7 +340,7 @@ class UI {
     /**
      * Show town center as modal overlay
      */
-    showTown(party = null) {
+    async showTown(party = null) {
         console.log('UI.showTown() called with party:', party);
         
         // Hide any existing town modal
@@ -350,6 +350,17 @@ class UI {
         const partyObj = party || (window.engine ? window.engine.party : null);
         const partyInfo = this.getPartyStatusInfo(partyObj);
         const hasActiveParty = partyObj && partyObj.size > 0;
+        
+        // Check if there are any camps (parties to manage)
+        let hasCamps = false;
+        try {
+            const allParties = await Storage.loadAllParties();
+            // Camps exist if there are any parties (active, in town, or camping)
+            hasCamps = allParties && allParties.length > 0;
+        } catch (error) {
+            console.error('Error checking for camps:', error);
+            hasCamps = false;
+        }
         
         console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
         
@@ -410,13 +421,13 @@ class UI {
                             </button>
                         </div>
                         
-                        <div class="location-card enabled">
-                            <button id="strike-team-management-btn" class="location-btn enabled">
+                        <div class="location-card ${hasCamps ? 'enabled' : 'disabled'}">
+                            <button id="strike-team-management-btn" class="location-btn ${hasCamps ? 'enabled' : 'disabled'}" ${hasCamps ? '' : 'disabled'}>
                                 <div class="location-icon">👥</div>
                                 <div class="location-info">
                                     <h3 data-text-key="party_management">Strike Team Management</h3>
                                     <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>
-                                    <span class="location-status party-name-display"><span data-text-key="party">Strike Team</span>: ${party ? party.name || 'Unnamed Party' : 'No Active Party'}</span>
+                                    <span class="location-status party-name-display">${hasCamps ? `<span data-text-key="party">Strike Team</span>: ${partyObj ? partyObj.name || 'Unnamed Party' : 'No Active Party'}` : 'No Strike Teams Available'}</span>
                                 </div>
                             </button>
                         </div>
@@ -477,18 +488,27 @@ class UI {
         
         if (trainingBtn) {
             trainingBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('trainingGroundsClick');
+                }
                 this.eventSystem.emit('town-location-selected', 'training-grounds');
             });
         }
         
         if (dungeonBtn && !dungeonBtn.disabled) {
             dungeonBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('dungeonClick');
+                }
                 this.eventSystem.emit('town-location-selected', 'dungeon');
             });
         }
         
-        if (strikeTeamBtn) {
+        if (strikeTeamBtn && !strikeTeamBtn.disabled) {
             strikeTeamBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('strikeTeamClick');
+                }
                 this.showStrikeTeamManagement();
             });
         }
@@ -761,6 +781,9 @@ class UI {
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 if (this.strikeTeamModal) {
                     this.strikeTeamModal.hide();
                     this.strikeTeamModal = null;
@@ -770,6 +793,9 @@ class UI {
         
         resumeButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 const partyId = btn.dataset.partyId;
                 await this.resumeParty(partyId);
             });
@@ -777,6 +803,9 @@ class UI {
         
         deleteButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 const partyId = btn.dataset.partyId;
                 await this.deleteParty(partyId);
             });
@@ -868,6 +897,11 @@ class UI {
             
             this.deleteConfirmModal.create(deleteContent);
             this.deleteConfirmModal.show();
+            
+            // Play warning sound effect
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('deletePartyWarning');
+            }
             
             // Apply TextManager to modal content
             if (typeof TextManager !== 'undefined') {
@@ -1239,6 +1273,9 @@ class UI {
         
         if (viewRosterBtn) {
             viewRosterBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('characterRosterClick');
+                }
                 this.showCharacterRoster();
             });
         }

@@ -192,6 +192,64 @@ class AudioManager {
                 wave: 'square',
                 volume: 0.5,
                 sweep: { start: 880, end: 440 }
+            },
+            
+            // Town/Hub Menu Button Sounds
+            trainingGroundsClick: {
+                freq: 523,
+                duration: 0.15,
+                wave: 'square',
+                volume: 0.3,
+                sweep: { start: 523, end: 659 }  // C5 to E5
+            },
+            templeClick: {
+                freq: 440,
+                duration: 0.2,
+                wave: 'sine',
+                volume: 0.3,
+                sweep: { start: 440, end: 554 }  // A4 to C#5
+            },
+            shopClick: {
+                freq: 698,
+                duration: 0.12,
+                wave: 'triangle',
+                volume: 0.3,
+                sweep: { start: 698, end: 784 }  // F5 to G5
+            },
+            tavernClick: {
+                freq: 392,
+                duration: 0.18,
+                wave: 'square',
+                volume: 0.3,
+                sweep: { start: 392, end: 494 }  // G4 to B4
+            },
+            strikeTeamClick: {
+                freq: 587,
+                duration: 0.15,
+                wave: 'sawtooth',
+                volume: 0.3,
+                sweep: { start: 587, end: 698 }  // D5 to F5
+            },
+            characterRosterClick: {
+                freq: 494,
+                duration: 0.16,
+                wave: 'square',
+                volume: 0.3,
+                sweep: { start: 494, end: 622 }  // B4 to D#5
+            },
+            dungeonClick: {
+                freq: 349,
+                duration: 0.2,
+                wave: 'sawtooth',
+                volume: 0.3,
+                sweep: { start: 349, end: 294 }  // F4 to D4
+            },
+            deletePartyWarning: {
+                freq: 220,
+                duration: 2.0,
+                wave: 'sawtooth',
+                volume: 0.4,
+                sweep: { start: 220, end: 110 }  // A3 to A2, ominous
             }
         };
     }
