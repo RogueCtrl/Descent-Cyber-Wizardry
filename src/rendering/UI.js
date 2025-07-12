@@ -276,6 +276,29 @@ class UI {
             `;
             this.partyDisplay.appendChild(actionsElement);
         }
+        
+        // Update party name display in the status bar
+        this.updatePartyNameDisplay(party);
+    }
+    
+    /**
+     * Update party name display in the Strike Team Manifest
+     */
+    updatePartyNameDisplay(party) {
+        const partyNameDisplay = document.querySelector('.party-name-display');
+        if (partyNameDisplay) {
+            const partyName = party ? (party.name || 'Unnamed Party') : 'No Active Party';
+            // Update the content with data-text-key for TextManager to handle
+            partyNameDisplay.innerHTML = `<span data-text-key="party">Strike Team</span>: ${partyName}`;
+            
+            // Apply TextManager to update the terminology
+            if (typeof TextManager !== 'undefined') {
+                const textElement = partyNameDisplay.querySelector('[data-text-key="party"]');
+                if (textElement) {
+                    TextManager.applyToElement(textElement, 'party');
+                }
+            }
+        }
     }
     
     /**
@@ -393,7 +416,7 @@ class UI {
                                 <div class="location-info">
                                     <h3 data-text-key="party_management">Strike Team Management</h3>
                                     <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>
-                                    <span class="location-status">Manage Teams</span>
+                                    <span class="location-status party-name-display"><span data-text-key="party">Strike Team</span>: ${party ? party.name || 'Unnamed Party' : 'No Active Party'}</span>
                                 </div>
                             </button>
                         </div>
