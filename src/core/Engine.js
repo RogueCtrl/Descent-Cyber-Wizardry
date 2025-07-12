@@ -64,6 +64,9 @@ class Engine {
             currentFloor: 1
         };
         
+        // Track current encounter for victory/defeat handling
+        this.currentEncounterLocation = null;
+        
         // Set up event listeners
         this.setupEventListeners();
             
@@ -1745,6 +1748,9 @@ class Engine {
         
         const { encounter, x, y, floor } = data;
         
+        // Store encounter location for marking as defeated if player wins
+        this.currentEncounterLocation = { x, y, floor };
+        
         // Save dungeon state before entering combat
         if (this.dungeon && this.party && this.party.id) {
             try {
@@ -1927,6 +1933,15 @@ class Engine {
         if (victory) {
             this.ui.addMessage('Victory! The monsters are defeated.');
             
+            // Mark encounter as defeated so it doesn't respawn for future parties
+            if (this.currentEncounterLocation && this.dungeon) {
+                const { x, y, floor } = this.currentEncounterLocation;
+                const success = this.dungeon.markEncounterDefeated(x, y, floor);
+                if (success) {
+                    console.log(`Encounter at (${x}, ${y}) permanently defeated`);
+                }
+            }
+            
             if (data.experience) {
                 this.ui.addMessage(`Your party gains ${data.experience} experience!`);
                 // TODO: Distribute experience to party members
@@ -1938,10 +1953,14 @@ class Engine {
             }
         } else if (fled) {
             this.ui.addMessage('You successfully fled from combat.');
+            // Don't mark encounter as defeated if player fled
         } else {
             this.ui.addMessage('Your party has been defeated...');
-            // TODO: Handle party defeat (return to town, lost members, etc.)
+            // Don't mark encounter as defeated if player lost - monster should remain
         }
+        
+        // Clear the stored encounter location
+        this.currentEncounterLocation = null;
         
         if (casualties && casualties.length > 0) {
             casualties.forEach(casualty => {

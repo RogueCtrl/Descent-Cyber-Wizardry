@@ -771,7 +771,7 @@ class Dungeon {
         );
         
         if (fixedEncounter) {
-            fixedEncounter.triggered = true;
+            // Don't mark as triggered yet - only when encounter is defeated
             console.log(`Fixed encounter triggered at ${this.playerX}, ${this.playerY}:`, fixedEncounter);
             
             // Emit encounter event
@@ -797,7 +797,7 @@ class Dungeon {
             );
             
             if (encounter) {
-                encounter.triggered = true;
+                // Don't mark as triggered yet - only when encounter is defeated
                 console.log(`Random encounter triggered at ${this.playerX}, ${this.playerY}`);
                 
                 // Emit encounter event
@@ -810,6 +810,36 @@ class Dungeon {
                     });
                 }
             }
+        }
+    }
+    
+    /**
+     * Mark encounter as defeated (called when player wins combat)
+     * @param {number} x - X coordinate of encounter
+     * @param {number} y - Y coordinate of encounter
+     * @param {number} floor - Floor number (optional, defaults to current)
+     */
+    markEncounterDefeated(x, y, floor = null) {
+        const targetFloor = floor || this.currentFloor;
+        const floorData = this.floors.get(targetFloor);
+        
+        if (!floorData) {
+            console.warn(`Cannot mark encounter defeated - floor ${targetFloor} not found`);
+            return false;
+        }
+        
+        // Find and mark the encounter as triggered/defeated
+        const encounter = floorData.encounters.find(enc => 
+            enc.x === x && enc.y === y && !enc.triggered
+        );
+        
+        if (encounter) {
+            encounter.triggered = true;
+            console.log(`Encounter at (${x}, ${y}) marked as defeated`);
+            return true;
+        } else {
+            console.warn(`No active encounter found at (${x}, ${y}) on floor ${targetFloor}`);
+            return false;
         }
     }
     
