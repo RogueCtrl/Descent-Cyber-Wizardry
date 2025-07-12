@@ -15,20 +15,21 @@ A modern browser-based homage to the classic dungeon crawler Wizardry, featuring
 
 ## Current Development Status
 
-🎯 **Persistent Dungeon World** - Core RPG systems are implemented with a complete dual-terminology system supporting both classic fantasy and cyberpunk themes. Recent focus on treasure mechanics and shared dungeon architecture.
+🎯 **Party Lifecycle Management Complete** - Advanced party management system with naming, temporary party handling, and multi-party support. Features complete dual-terminology system supporting both classic fantasy and cyberpunk themes with persistent dungeon world and treasure mechanics.
 
 ### ✅ Implemented Features
+- **Party Lifecycle Management**: Complete party creation, naming, temporary party handling, and multi-party support
 - **Dual-Mode System**: Complete terminology switching between classic fantasy and cyberpunk modes
 - **Character Creation**: Full character creation with dual terminology ("Create Character" ↔ "Initialize Agent")
 - **3D Monster Portraits**: Five wireframe monster models with cyberpunk visual effects
 - **Combat System**: Turn-based party combat with Grid Engagement interface
 - **Persistent Dungeons**: Shared dungeon world with treasure chests and loot generation
 - **Audio System**: Dynamic chiptune music with contextual sound effects
-- **Storage System**: Complete character and party persistence with IndexedDB
+- **Storage System**: Complete character and party persistence with IndexedDB (v6 schema)
 - **Advanced RPG Mechanics**: Death system, rest system, spell memorization, equipment management
 
 ### 🔄 In Development
-- **Magic System Enhancement**: Improved spell casting interface with digital algorithm terminology
+- **Wizardry-Tron Fusion Completion**: Finalize remaining deep integration elements (75% complete)
 - **Advanced Treasure Mechanics**: Chest types, trap systems, rare loot generation
 - **Rescue Party System**: Multi-party interaction in shared dungeon environments
 
@@ -120,12 +121,19 @@ T = treasure chest at (6,2)
 
 ### What You Can Do
 - **Create Characters**: Full character creation with 5 races and 8 classes
-- **Form Parties**: Create and manage party compositions
+- **Manage Parties**: Create, name, and switch between multiple parties seamlessly
 - **Explore Dungeons**: Navigate the training grounds with 3D wireframe rendering
 - **Combat Encounters**: Face monsters in turn-based combat with 3D wireframe portraits
 - **Collect Treasures**: Discover treasure chests with randomized loot
 - **Audio Experience**: Dynamic chiptune music and sound effects
 - **Mode Switching**: Toggle between fantasy and cyberpunk terminology
+
+### Party Management System
+- **Party Creation**: Automatic party creation with naming workflow
+- **Temporary Parties**: Seamless handling of temporary parties that become permanent
+- **Party Switching**: Easy switching between multiple saved parties
+- **Party Naming**: Dynamic party names displayed in Strike Team Manifest
+- **Multi-Party Support**: Multiple parties can exist in the same dungeon world
 
 ### Combat System
 - **Turn-Based Combat**: Classic Wizardry-style party vs monster encounters
@@ -135,7 +143,7 @@ T = treasure chest at (6,2)
 - **Formation System**: Front and back row positioning affects combat
 
 ### Technical Features
-- **Persistent Storage**: Characters and progress saved using IndexedDB
+- **Persistent Storage**: Characters and parties saved using IndexedDB (v6 schema)
 - **Shared Dungeon World**: Multiple parties can explore the same dungeon instance
 - **Dynamic Terminology**: Real-time switching between classic and cyber terms
 - **Audio Integration**: Web Audio API with generated chiptune music
@@ -162,27 +170,44 @@ While the game has solid foundations, it's still in active development:
 The project uses vanilla JavaScript with a modular architecture:
 
 ### Core Systems
-- **Engine.js**: Main game loop and event handling
+- **Engine.js**: Main game loop and event handling with party lifecycle management
 - **Combat.js**: Turn-based combat mechanics
-- **Dungeon.js**: Maze generation and exploration
-- **Storage.js**: Data persistence and party management
+- **Dungeon.js**: Maze generation and exploration with shared architecture
+- **Storage.js**: Data persistence and party management (v6 schema)
 - **TextManager.js**: Dynamic terminology switching
 - **AudioManager.js**: Music and sound effect synthesis
+- **Party.js**: Party lifecycle management with naming and temporary party handling
 
 ### Key Features
-- **46 JavaScript files** totaling over 28,000 lines of code
+- **50 JavaScript files** totaling over 30,667 lines of code
 - **Entity-based data system** with migration support
 - **Dual-terminology system** with 80+ mapped terms
 - **3D wireframe rendering** for authentic retro aesthetics
 - **Complete audio system** with dynamic music generation
+- **Advanced party management** with lifecycle support
 
 ## Technical Highlights
 
 - **No External Dependencies**: Pure vanilla JavaScript implementation
 - **Modern Web APIs**: Uses Canvas, IndexedDB, and Web Audio API
-- **Modular Design**: Clean separation of concerns across 46 files
+- **Modular Design**: Clean separation of concerns across 50 files
 - **Event-Driven Architecture**: Robust event system for UI updates
 - **Performance Optimized**: Efficient rendering and storage systems
+- **Advanced Storage**: IndexedDB v6 schema with entity-based architecture
+
+## Project Statistics
+
+- **50 JavaScript files** with 30,667 lines of code (1.2MB)
+- **4,531 lines of CSS** with comprehensive styling
+- **21 history files** documenting complete project evolution (external)
+- **23 screenshot files** showcasing dual-mode interfaces
+- **11 migration files** for entity-based data system
+- **5 audio tracks** with extended compositions
+- **12+ sound effects** covering all gameplay interactions
+- **50+ spells** across 7 levels with dual terminology
+- **75+ equipment items** with advanced mechanics
+- **12+ monster types** with AI behaviors and 3D portraits
+- **80+ terminology mappings** for classic/cyber dual-display
 
 ## Contributing
 
@@ -200,4 +225,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-*A passion project exploring the intersection of classic RPG mechanics and modern web technologies, with a unique dual-mode system that transforms the entire game experience.*
+*A passion project exploring the intersection of classic RPG mechanics and modern web technologies, with a unique dual-mode system that transforms the entire game experience and advanced party management capabilities.*
