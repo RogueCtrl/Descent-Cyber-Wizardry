@@ -585,11 +585,11 @@ const TERMINOLOGY = {
         
         // Delete Character Confirmation Modal
         delete_character_title: "Redact Agent",
-        delete_character_confirm: "Are you sure you want to redact this agent?",
+        delete_character_confirm: "This agent will be redacted",
         delete_character_warning: "This agent's data will be permanently deleted. This action cannot be undone.",
         delete_character_button: "Redact Agent",
         forget_character_detail: "Redacting {name} ({race} {class}) will purge all data permanently.",
-        character_last_location: "Last connection to {location}",
+        character_last_location: "{location}",
         
         // Character Details Modal
         character_details: "Agent Profile",
