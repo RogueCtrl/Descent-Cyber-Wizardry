@@ -392,7 +392,7 @@ class UI {
                     <div class="town-locations-grid">
                         <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
                             <button id="training-grounds-btn" class="location-btn primary">
-                                <div class="location-icon">⚔️</div>
+                                <div class="location-icon">👥</div>
                                 <div class="location-info">
                                     <h3 data-text-key="training_grounds">Training Grounds</h3>
                                     <p data-text-key="training_grounds_flavor">Create and manage your party of adventurers</p>
@@ -403,7 +403,7 @@ class UI {
                         
                         <div class="location-card ${hasActiveParty ? 'enabled' : 'disabled'}">
                             <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
-                                <div class="location-icon">🏰</div>
+                                <div class="location-icon" data-text-key="dungeon_icon">${TextManager.getText('dungeon_icon')}</div>
                                 <div class="location-info">
                                     <h3 data-text-key="dungeon">Dungeon</h3>
                                     <p data-text-key="grid_sector_flavor">Enter the Mad Overlord's treacherous maze</p>
@@ -436,7 +436,7 @@ class UI {
                         
                         <div class="location-card ${hasCamps ? 'enabled' : 'disabled'}">
                             <button id="strike-team-management-btn" class="location-btn ${hasCamps ? 'enabled' : 'disabled'}" ${hasCamps ? '' : 'disabled'}>
-                                <div class="location-icon">👥</div>
+                                <div class="location-icon">📋</div>
                                 <div class="location-info">
                                     <h3 data-text-key="party_management">Strike Team Management</h3>
                                     <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>

@@ -171,6 +171,7 @@ const TERMINOLOGY = {
         party_composition: "Party Composition",
         dungeon_warning: "⚠️ The dungeon is dangerous. Proceed with caution!",
         enter_dungeon: "🛡️ Enter Dungeon",
+        dungeon_icon: "🛡️",
         
         // Combat States
         no_enemies: "No Enemies",
@@ -388,10 +389,11 @@ const TERMINOLOGY = {
         
         // Dungeon Entrance Modal
         dungeon_entrance: "🌐 Corrupted Network Entrance",
-        dungeon_entrance_flavor: "Your strike team is ready to infiltrate the Mad Overlord's diabolical data maze.",
+        dungeon_entrance_flavor: "Your strike team is ready to infiltrate the diabolical data maze.",
         party_composition: "Strike Team Composition",
         dungeon_warning: "The corrupted network is dangerous. Failure is possible!",
         enter_dungeon: "⚡ Jack In",
+        dungeon_icon: "🌐",
         
         // Combat States
         no_enemies: "Grid Clear",
