@@ -116,6 +116,14 @@ const TERMINOLOGY = {
         // Final Button
         initialize_agent: "Create Character",
         
+        // Party Setup Modal
+        mode_toggle_label: "Game Mode:",
+        mode_classic: "Fantasy",
+        mode_cyber: "Cyber",
+        party_name_label: "Party Name:",
+        party_name_help: "You can change this later in the Training Grounds",
+        begin_adventure: "Begin Adventure",
+        
         // Combat Interface
         combat_fight: "⚔️ Fight",
         combat_defend: "🛡️ Defend", 
@@ -300,7 +308,15 @@ const TERMINOLOGY = {
         system_integrity: "System Integrity:",
         
         // Final Button
-        initialize_agent: "Initialize Agent", 
+        initialize_agent: "Initialize Agent",
+        
+        // Party Setup Modal
+        mode_toggle_label: "Game Mode:",
+        mode_classic: "Fantasy",
+        mode_cyber: "Cyber",
+        party_name_label: "Strike Team Name:",
+        party_name_help: "You can change this later in the AgentOps",
+        begin_adventure: "Begin Mission", 
         
         // Combat Interface
         combat_fight: "⚔️ Execute",

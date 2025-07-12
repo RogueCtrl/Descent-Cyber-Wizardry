@@ -73,6 +73,9 @@ class Engine {
             // Initialize party display
             this.ui.updatePartyDisplay(this.party);
             
+            // Check for first-time play and show party setup modal
+            await this.checkFirstTimePlay();
+            
             // Start game loop
             this.start();
             
@@ -84,6 +87,99 @@ class Engine {
         } catch (error) {
             console.error('Failed to initialize game:', error);
             this.showErrorMessage('Failed to initialize game: ' + error.message);
+        }
+    }
+    
+    /**
+     * Check for first-time play and show party setup modal
+     */
+    async checkFirstTimePlay() {
+        try {
+            // Check if this is the first time playing
+            const hasPlayedBefore = localStorage.getItem('descent_has_played');
+            
+            if (!hasPlayedBefore) {
+                console.log('First time play detected, showing party setup modal...');
+                
+                // Show party setup modal
+                return new Promise((resolve) => {
+                    const partySetupModal = new PartySetupModal(this.eventSystem);
+                    partySetupModal.show((partyName) => {
+                        console.log(`Party setup completed with name: "${partyName}"`);
+                        this.handlePartySetupComplete(partyName);
+                        resolve();
+                    });
+                });
+            } else {
+                console.log('Returning player detected, skipping party setup...');
+            }
+        } catch (error) {
+            console.error('Error checking first-time play:', error);
+        }
+    }
+    
+    /**
+     * Handle completion of party setup modal
+     */
+    async handlePartySetupComplete(partyName) {
+        try {
+            // Set the party name
+            if (this.party) {
+                this.party.name = partyName;
+                await this.party.save();
+                console.log(`Party name set to: "${partyName}"`);
+                
+                // Update party display
+                this.ui.updatePartyDisplay(this.party);
+            }
+            
+            // Mark as played before
+            localStorage.setItem('descent_has_played', 'true');
+            
+            // Emit event for any listeners
+            this.eventSystem.emit('party-setup-complete', { partyName });
+            
+        } catch (error) {
+            console.error('Error handling party setup completion:', error);
+        }
+    }
+    
+    /**
+     * Show party setup modal for temporary party entering dungeon
+     */
+    async showPartySetupForTemporaryParty() {
+        return new Promise((resolve) => {
+            const partySetupModal = new PartySetupModal(this.eventSystem);
+            partySetupModal.show((partyName) => {
+                console.log(`Temporary party setup completed with name: "${partyName}"`);
+                this.handleTemporaryPartySetupComplete(partyName);
+                resolve();
+            });
+        });
+    }
+    
+    /**
+     * Handle completion of temporary party setup before dungeon entry
+     */
+    async handleTemporaryPartySetupComplete(partyName) {
+        try {
+            if (this.party && this.party._isTemporary) {
+                // Set the party name and clear temporary flag
+                this.party.name = partyName;
+                this.party._isTemporary = false; // No longer temporary
+                
+                // Save as a permanent party
+                await this.party.save(true); // true = set as active party
+                console.log(`Temporary party converted to permanent party: ${this.party.id} (name: "${partyName}")`);
+                
+                // Update party display
+                this.ui.updatePartyDisplay(this.party);
+                
+                // Continue with dungeon entry
+                await this.enterDungeon();
+            }
+        } catch (error) {
+            console.error('Error handling temporary party setup completion:', error);
         }
     }
     
@@ -174,7 +270,7 @@ class Engine {
     }
     
     /**
-     * Handle party camping - make current party inactive and create new one
+     * Handle party camping - make current party inactive and create temporary placeholder
      */
     async handlePartyCamp() {
         try {
@@ -187,8 +283,10 @@ class Engine {
                 Storage.setActiveParty(null);
             }
             
-            // Create new active party
-            const newParty = await this.createNewParty();
+            // Create temporary party (not saved until they enter dungeon)
+            const newParty = new Party();
+            newParty.name = 'Temporary Party';
+            newParty._isTemporary = true; // Mark as temporary
             this.party = newParty;
             
             // Update UI
@@ -206,7 +304,7 @@ class Engine {
     }
     
     /**
-     * Handle party wipe - remove current party and create new one
+     * Handle party wipe - remove current party and create temporary placeholder
      */
     async handlePartyWipe() {
         try {
@@ -218,8 +316,9 @@ class Engine {
                 console.log(`Party ${this.party.id} removed as active (wiped)`);
             }
             
-            // Create new party
-            const newParty = await this.createNewParty();
+            // Create temporary party (not saved until they enter dungeon)
+            const newParty = new Party();
+            // Don't give it a name - this will be "Unnamed Party" which is appropriate for wipes
             this.party = newParty;
             
             // Update UI
@@ -273,10 +372,40 @@ class Engine {
             party.leaveTown(); // They're going back into the dungeon
             await party.save();
             
-            // Save the current active party (if it has members) before switching
-            if (this.party && this.party.members.length > 0) {
-                await this.party.save(false); // Save without setting as active
-                console.log(`Saved previous active party: ${this.party.id}`);
+            // Handle the current active party before switching
+            if (this.party) {
+                // Check if current party is temporary (marked with _isTemporary flag)
+                const isTemporaryParty = this.party._isTemporary;
+                
+                if (isTemporaryParty) {
+                    // Actively delete the temporary party from database if it was saved
+                    if (this.party.id) {
+                        try {
+                            await Storage.deleteParty(this.party.id);
+                            console.log(`Deleted temporary party: ${this.party.id} (name: "${this.party.name}", members: ${this.party.members.length})`);
+                        } catch (error) {
+                            console.warn(`Failed to delete temporary party: ${error.message}`);
+                        }
+                    }
+                } else {
+                    // Check if this is a legacy orphaned party from old system
+                    const isLegacyOrphan = this.party.members.length === 0 && 
+                                         (this.party.name === 'Unnamed Party' || !this.party.name || this.party.name.trim() === '');
+                    
+                    if (isLegacyOrphan) {
+                        // Delete legacy orphaned parties
+                        try {
+                            await Storage.deleteParty(this.party.id);
+                            console.log(`Deleted legacy orphaned party: ${this.party.id} (name: "${this.party.name}")`);
+                        } catch (error) {
+                            console.warn(`Failed to delete legacy orphaned party: ${error.message}`);
+                        }
+                    } else {
+                        // Save legitimate parties that were previously saved
+                        await this.party.save(false); // Save without setting as active
+                        console.log(`Saved previous active party: ${this.party.id} (name: "${this.party.name}", members: ${this.party.members.length})`);
+                    }
+                }
             }
             
             // Set the resumed party as the new active party
@@ -1540,12 +1669,22 @@ class Engine {
         if (validation.valid) {
             console.log('Dungeon entry validation passed, entering dungeon...');
             
-            // Mark party as leaving town
+            // Mark party as leaving town and save to database
             if (this.party) {
                 this.party.leaveTown();
+                
                 try {
-                    await this.party.save();
-                    console.log('Party status saved: left town');
+                    // Check if this is a temporary party that needs to be named first
+                    if (this.party._isTemporary) {
+                        // Show party setup modal to let player name the party before entering dungeon
+                        console.log('Temporary party detected, showing party setup modal...');
+                        await this.showPartySetupForTemporaryParty();
+                        return; // Exit early - the modal will call enterDungeon again after completion
+                    } else {
+                        // Regular save for existing party
+                        await this.party.save();
+                        console.log('Party status saved: left town');
+                    }
                 } catch (error) {
                     console.error('Failed to save party dungeon status:', error);
                 }
