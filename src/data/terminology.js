@@ -165,6 +165,13 @@ const TERMINOLOGY = {
         exit_dungeon: "⚡ Exit to Town",
         open_treasure: "💎 Open Chest",
         
+        // Dungeon Entrance Modal
+        dungeon_entrance: "🏰 Dungeon Entrance",
+        dungeon_entrance_flavor: "Your party is ready to brave the Mad Overlord's treacherous maze.",
+        party_composition: "Party Composition",
+        dungeon_warning: "⚠️ The dungeon is dangerous. Proceed with caution!",
+        enter_dungeon: "🛡️ Enter Dungeon",
+        
         // Combat States
         no_enemies: "No Enemies",
         combat_active: "Combat Active",
@@ -378,6 +385,13 @@ const TERMINOLOGY = {
         rest: "System Repair",
         exit_dungeon: "⚡ Jack Out",
         open_treasure: "🔶 Access Cache",
+        
+        // Dungeon Entrance Modal
+        dungeon_entrance: "🌐 Corrupted Network Entrance",
+        dungeon_entrance_flavor: "Your strike team is ready to infiltrate the Mad Overlord's diabolical data maze.",
+        party_composition: "Strike Team Composition",
+        dungeon_warning: "The corrupted network is dangerous. Failure is possible!",
+        enter_dungeon: "⚡ Jack In",
         
         // Combat States
         no_enemies: "Grid Clear",

@@ -3252,7 +3252,7 @@ class UI {
             enterText = 'Return to Grid';
             returnText = 'Exit to Town';
         } else {
-            enterText = 'Enter Dungeon';
+            enterText = TextManager.getText('enter_dungeon');
             returnText = this.dungeonEntranceOrigin === 'agentops' ? 'Return to AgentOps' : 'Return to Town';
         }
         
@@ -3263,7 +3263,7 @@ class UI {
             '</div>';
         
         // Create and show modal
-        this.dungeonEntranceModal.create(content, '🏰 Dungeon Entrance');
+        this.dungeonEntranceModal.create(content, `${TextManager.getText('dungeon_entrance')}`);
         this.dungeonEntranceModal.show();
         
         // Add event listeners
@@ -3310,12 +3310,11 @@ class UI {
         let content = '<div class="dungeon-entrance-confirmation">';
         
         if (validation.valid) {
-            content += '<h2>🏰 Enter the Dungeon</h2>';
-            content += '<div class="entrance-message">Your party is ready to brave the Mad Overlord\'s treacherous maze.</div>';
+            content += `<div class="entrance-message" data-text-key="dungeon_entrance_flavor">${TextManager.getText('dungeon_entrance_flavor')}</div>`;
             
             // Show party composition
             content += '<div class="party-composition">';
-            content += '<h3>Party Composition</h3>';
+            content += `<h3 data-text-key="party_composition">${TextManager.getText('party_composition')}</h3>`;
             content += '<div class="party-cards-grid">';
             
             validation.party.forEach(member => {
@@ -3325,7 +3324,7 @@ class UI {
             content += '</div>';
             content += '</div>';
             
-            content += '<div class="entrance-warning">⚠️ The dungeon is dangerous. Proceed with caution!</div>';
+            content += `<div class="entrance-warning" data-text-key="dungeon_warning">${TextManager.getText('dungeon_warning')}</div>`;
         } else {
             content += '<h2>❌ Cannot Enter Dungeon</h2>';
             content += `<div class="entrance-error">${validation.reason}</div>`;
@@ -3359,7 +3358,7 @@ class UI {
                 </div>
                 
                 <div class="character-card-info">
-                    <div class="character-card-race-class">${character.race} ${character.class}</div>
+                    <div class="character-card-race-class">${TextManager.getText(`race_${character.race.toLowerCase()}`)} ${TextManager.getText(`class_${character.class.toLowerCase()}`)}</div>
                     <div class="character-card-location">
                         <span class="location-label">Location:</span>
                         <span class="location-value">Town</span>
