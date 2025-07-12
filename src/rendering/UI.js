@@ -1012,19 +1012,29 @@ class UI {
                 await Storage.deleteCamp(party.campId);
             }
             
-            // 2. Transition all party members to "Lost" state
+            // 2. Handle party members based on party location
             if (actualMembers.length > 0) {
+                // Check if party is in town (not in dungeon)
+                const isInTown = !party.campId && !party.dungeonName && !party.isInDungeon;
+                
                 for (const member of actualMembers) {
-                    console.log(`Transitioning character to Lost state: ${member.name} (${member.id})`);
-                    
-                    // Update character status with multiple indicators
-                    member.status = 'Lost';
-                    member.isLost = true;
-                    member.isAlive = false;  // Ensure alive flags are updated
-                    member.partyId = null; // Remove party association
-                    member.lostDate = new Date().toISOString();
-                    member.lostReason = 'Strike Team Deleted';
-                    member.lastKnownLocation = party.dungeonName || 'Terminal Hub';
+                    if (isInTown) {
+                        // Party is in town - preserve character state, just remove party association
+                        console.log(`Removing party association for character in town: ${member.name} (${member.id})`);
+                        member.partyId = null; // Remove party association only
+                    } else {
+                        // Party is in dungeon - transition to "Lost" state
+                        console.log(`Transitioning character to Lost state: ${member.name} (${member.id})`);
+                        
+                        // Update character status with multiple indicators
+                        member.status = 'Lost';
+                        member.isLost = true;
+                        member.isAlive = false;  // Ensure alive flags are updated
+                        member.partyId = null; // Remove party association
+                        member.lostDate = new Date().toISOString();
+                        member.lostReason = 'Strike Team Deleted';
+                        member.lastKnownLocation = party.dungeonName || 'Corrupted Network';
+                    }
                     
                     // Save updated character state
                     try {
@@ -1032,8 +1042,14 @@ class UI {
                         
                         // Verify it was saved by immediately reloading
                         const reloadedChar = await Storage.loadCharacter(member.id);
-                        if (!reloadedChar || reloadedChar.status !== 'Lost') {
-                            console.error(`Failed to save character state for ${member.name}!`);
+                        if (isInTown) {
+                            if (reloadedChar && reloadedChar.partyId !== null) {
+                                console.error(`Failed to remove party association for ${member.name}!`);
+                            }
+                        } else {
+                            if (!reloadedChar || reloadedChar.status !== 'Lost') {
+                                console.error(`Failed to save character state for ${member.name}!`);
+                            }
                         }
                     } catch (error) {
                         console.error(`Error saving character ${member.name}:`, error);
@@ -1044,17 +1060,18 @@ class UI {
             // 3. Delete the party itself
             await Storage.deleteParty(partyId);
             
-            // 4. Update game state if this was the active party
+            // 4. Update game state and active party
             const activePartyId = Storage.getActivePartyId();
             if (activePartyId === partyId) {
                 Storage.setActivePartyId(null);
-                
-                // Update game state if in town/playing
-                if (window.engine && window.engine.gameState) {
-                    const currentState = window.engine.gameState.getState();
-                    if (currentState === 'playing' || currentState === 'town') {
-                        window.engine.gameState.setState('town');
-                    }
+            }
+            
+            // Always ensure we're in a proper state after party deletion
+            if (window.engine && window.engine.gameState) {
+                const currentState = window.engine.gameState.getState();
+                if (currentState === 'playing' || currentState === 'town') {
+                    window.engine.gameState.setState('town');
+                    console.log('Game state set to town after party deletion');
                 }
             }
             
