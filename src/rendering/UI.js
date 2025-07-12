@@ -1882,7 +1882,7 @@ class UI {
         
         // Filter lost characters for memorial button
         const lostCharacters = characters.filter(character => 
-            character.status && character.status.toLowerCase() === 'lost'
+            this.isCharacterPermanentlyLost(character)
         );
         const hasLostCharacters = lostCharacters.length > 0;
         
@@ -1943,12 +1943,21 @@ class UI {
         // Map status to contextual terminology
         if (typeof TextManager !== 'undefined') {
             switch (rawStatus.toLowerCase()) {
-                case 'lost':
-                    displayStatus = TextManager.getText('character_status_lost');
-                    break;
                 case 'ok':
                 case 'alive':
                     displayStatus = TextManager.getText('character_status_ok');
+                    break;
+                case 'unconscious':
+                    displayStatus = TextManager.getText('character_status_unconscious');
+                    break;
+                case 'dead':
+                    displayStatus = TextManager.getText('character_status_dead');
+                    break;
+                case 'ashes':
+                    displayStatus = TextManager.getText('character_status_ashes');
+                    break;
+                case 'lost':
+                    displayStatus = TextManager.getText('character_status_lost');
                     break;
                 default:
                     displayStatus = rawStatus;
@@ -2047,7 +2056,7 @@ class UI {
             // Get all characters from storage and filter for lost ones
             const allCharacters = await Storage.loadAllCharacters();
             const lostCharacters = allCharacters.filter(character => 
-                character.status && character.status.toLowerCase() === 'lost'
+                this.isCharacterPermanentlyLost(character)
             );
             
             console.log(`Loading lost agents memorial: ${lostCharacters.length} lost characters found`);
@@ -2285,8 +2294,8 @@ class UI {
                 return;
             }
             
-            if (character.status?.toLowerCase() !== 'lost') {
-                this.addMessage('Can only forget lost characters', 'error');
+            if (!this.isCharacterPermanentlyLost(character)) {
+                this.addMessage('Can only forget permanently lost characters', 'error');
                 return;
             }
             
@@ -2476,7 +2485,7 @@ class UI {
             // Refresh the lost agents modal
             const allCharacters = await Storage.loadAllCharacters();
             const lostCharacters = allCharacters.filter(char => 
-                char.status && char.status.toLowerCase() === 'lost'
+                this.isCharacterPermanentlyLost(char)
             );
             
             await this.refreshLostAgentsContent(lostCharacters);
@@ -2494,6 +2503,29 @@ class UI {
             console.error('Failed to delete character:', error);
             this.addMessage('Failed to delete character', 'error');
         }
+    }
+    
+    /**
+     * Check if character is permanently lost (memorial eligible)
+     */
+    isCharacterPermanentlyLost(character) {
+        return character.status && character.status.toLowerCase() === 'lost';
+    }
+    
+    /**
+     * Check if character is dead (any death state)
+     */
+    isCharacterDead(character) {
+        const status = character.status ? character.status.toLowerCase() : 'ok';
+        return ['unconscious', 'dead', 'ashes', 'lost'].includes(status);
+    }
+    
+    /**
+     * Check if character is alive and functional
+     */
+    isCharacterAlive(character) {
+        const status = character.status ? character.status.toLowerCase() : 'ok';
+        return ['ok', 'alive'].includes(status);
     }
     
     /**

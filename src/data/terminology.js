@@ -234,6 +234,9 @@ const TERMINOLOGY = {
         back_to_training_grounds: "Back to Training Grounds",
         character_location_town: "Town",
         character_status_ok: "OK",
+        character_status_unconscious: "Unconscious",
+        character_status_dead: "Dead",
+        character_status_ashes: "Ashes",
         character_status_lost: "Lost",
         
         // Lost Agents Modal
@@ -486,7 +489,10 @@ const TERMINOLOGY = {
         back_to_training_grounds: "Return to AgentOps",
         character_location_town: "Terminal Hub",
         character_status_ok: "Online",
-        character_status_lost: "Disconnected",
+        character_status_unconscious: "Crashed",
+        character_status_dead: "Offline",
+        character_status_ashes: "Fragmented",
+        character_status_lost: "Uninstalled",
         
         // Lost Agents Modal
         lost_characters: "Lost Agents",
