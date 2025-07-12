@@ -99,6 +99,12 @@ Complete character creation with dual terminology support:
       <b>Choose Your Specialization</b>
     </td>
   </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="assets/readme/network-entrance.jpg" alt="Network Entrance" width="560"/><br/>
+      <b>Network Entrance - Begin Your Descent</b>
+    </td>
+  </tr>
 </table>
 
 </div>

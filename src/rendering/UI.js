@@ -3410,7 +3410,7 @@ class UI {
         // Create the modal content with buttons
         const content = this.createPostCombatContent(rewards) + 
             '<div class="post-combat-actions">' +
-            '<button id="continue-btn" class="btn btn-primary">Continue</button>' +
+            '<button id="continue-btn" class="btn btn-primary">Return to Grid</button>' +
             '</div>';
         
         // Create and show modal
@@ -3480,20 +3480,20 @@ class UI {
         const continueBtn = viewport.querySelector('#continue-btn');
         
         if (continueBtn) {
-            continueBtn.addEventListener('click', () => {
+            continueBtn.addEventListener('click', async () => {
                 this.postCombatModal.hide();
                 this.postCombatModal = null;
                 
                 // Apply rewards to party
                 this.applyRewardsToParty(rewards);
                 
-                // Stop victory music before showing dungeon entry modal
+                // Stop victory music and play dungeon music
                 if (window.engine?.audioManager) {
-                    window.engine.audioManager.stopCurrentTrack();
+                    window.engine.audioManager.fadeToTrack('dungeon');
                 }
                 
-                // Show dungeon entry modal for post-combat return (with casualties allowed)
-                this.showDungeonEntranceConfirmation(false, true); // fromAgentOps=false, postCombatReturn=true
+                // Return directly to dungeon - no confirmation modal needed
+                await window.engine.enterDungeon(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
     }
@@ -3675,7 +3675,7 @@ class UI {
         // Create the modal content with casualties and rewards
         const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards) + 
             '<div class="post-combat-actions">' +
-            '<button id="continue-btn" class="btn btn-primary">Continue to Dungeon</button>' +
+            '<button id="continue-btn" class="btn btn-primary">Return to Grid</button>' +
             '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
             '</div>';
         
@@ -3828,20 +3828,20 @@ class UI {
         const viewStatusBtn = viewport.querySelector('#view-status-btn');
         
         if (continueBtn) {
-            continueBtn.addEventListener('click', () => {
+            continueBtn.addEventListener('click', async () => {
                 console.log('Continue to dungeon clicked');
                 this.postCombatModal.hide();
                 
                 // Clear modal reference
                 this.postCombatModal = null;
                 
-                // Stop victory music before showing dungeon entry modal
+                // Stop victory music and play dungeon music
                 if (window.engine?.audioManager) {
-                    window.engine.audioManager.stopCurrentTrack();
+                    window.engine.audioManager.fadeToTrack('dungeon');
                 }
                 
-                // Show dungeon entry modal for post-combat return (with casualties allowed)
-                this.showDungeonEntranceConfirmation(false, true); // fromAgentOps=false, postCombatReturn=true
+                // Return directly to dungeon - no confirmation modal needed
+                await window.engine.enterDungeon(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
         
