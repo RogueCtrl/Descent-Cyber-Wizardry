@@ -196,7 +196,27 @@ const TERMINOLOGY = {
         current_party: "Current Party",
         back_to_town: "Back to Town",
         strike_team_ready: "Your party is ready for adventure!",
-        strike_team_required: "Create at least one character to enter the dungeon."
+        strike_team_required: "Create at least one character to enter the dungeon.",
+        
+        // Party Management Modal
+        manifest_title: "Party Management",
+        manifest_subtitle: "Manage your saved parties and lost characters",
+        camping_teams: "Camping Parties",
+        camping_icon: "🏕️",
+        in_town_teams: "In Town",
+        lost_teams: "Lost Parties",
+        camping_location: "Dungeon Camp",
+        disconnected_teams: "Disconnected Strike Teams",
+        disconnected_icon: "🔌",
+        in_hub_teams: "In Hub", 
+        lost_strike_teams: "Lost Strike Teams",
+        members: "Members",
+        
+        // Delete Party Confirmation
+        delete_party_title: "Delete Party",
+        delete_party_confirm: "Are you sure you want to delete this party?",
+        delete_party_warning: "Parties currently in the dungeon will be lost forever. This action cannot be undone.",
+        delete_party_button: "Delete Party"
     },
     
     cyber: {
@@ -390,7 +410,27 @@ const TERMINOLOGY = {
         current_party: "Active Strike Team",
         back_to_town: "Return to Terminal Hub",
         strike_team_ready: "Your strike team is ready for engagement!",
-        strike_team_required: "Initialize at least one agent to access the grid."
+        strike_team_required: "Initialize at least one agent to access the grid.",
+        
+        // Strike Team Manifest Modal
+        manifest_title: "Strike Team Manifest",
+        manifest_subtitle: "Manage your disconnected Strike Teams and lost Agents",
+        camping_teams: "Disconnected Teams",
+        camping_icon: "🔌",
+        in_town_teams: "In Hub",
+        lost_teams: "Lost Strike Teams",
+        camping_location: "Grid Sector",
+        disconnected_teams: "Disconnected Strike Teams",
+        disconnected_icon: "🔌",
+        in_hub_teams: "In Hub", 
+        lost_strike_teams: "Lost Strike Teams",
+        members: "Members",
+        
+        // Delete Strike Team Confirmation
+        delete_party_title: "Delete Strike Team",
+        delete_party_confirm: "Are you sure you want to delete this strike team?",
+        delete_party_warning: "Strike teams currently in the corrupted network will be lost forever. This action cannot be undone.",
+        delete_party_button: "Delete Strike Team"
     }
 };
 

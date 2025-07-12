@@ -3757,6 +3757,367 @@ h3 {
     }
 }
 
+/* Strike Team Management Modal */
+.strike-team-management-modal {
+    /* Match roster modal width */
+    width: 90vw;
+    max-width: 1200px;
+    height: 80vh;
+    max-height: 800px;
+    /* Center positioning */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.strike-team-management-modal .modal-content {
+    /* Enhanced AgentOps styling */
+    background: var(--panel-bg, #1A1A2E);
+    border: 2px solid var(--border-color, #16213E);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    padding: 1.5rem;
+}
+
+/* Custom scrollbar styling for Strike Team Manifest */
+.strike-team-management-modal ::-webkit-scrollbar {
+    width: 8px;
+    background: var(--panel-bg, #1A1A2E);
+}
+
+.strike-team-management-modal ::-webkit-scrollbar-track {
+    background: var(--panel-bg, #1A1A2E);
+    border-radius: 4px;
+}
+
+.strike-team-management-modal ::-webkit-scrollbar-thumb {
+    background: var(--border-color, #16213E);
+    border-radius: 4px;
+    border: 1px solid var(--panel-bg, #1A1A2E);
+}
+
+.strike-team-management-modal ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-blue, #4A9EFF);
+}
+
+/* Modern CSS scrollbar styling (fallback for Firefox) */
+.strike-team-management-modal {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color, #16213E) var(--panel-bg, #1A1A2E);
+}
+
+/* Delete Confirmation Modal */
+.delete-confirmation-modal {
+    max-width: 500px;
+    margin: 0 auto;
+    /* Center positioning */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+}
+
+.delete-confirmation-modal .modal-content {
+    background: var(--panel-bg, #1A1A2E);
+    border: 2px solid var(--danger, #FF4444);
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+}
+
+.delete-confirmation-content {
+    text-align: center;
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    justify-content: center;
+}
+
+.warning-icon {
+    font-size: 2rem;
+    color: var(--warning, #FFB800);
+}
+
+.warning-header h3 {
+    color: var(--danger, #FF4444);
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.warning-content {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.warning-content p {
+    color: var(--text-primary, #FFFFFF);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.party-name {
+    font-size: 1.2rem;
+    color: var(--primary-blue, #4A9EFF);
+    margin-bottom: 1.5rem !important;
+    font-weight: 600;
+}
+
+.danger-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid var(--danger, #FF4444);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.danger-icon {
+    font-size: 1.5rem;
+    color: var(--danger, #FF4444);
+    flex-shrink: 0;
+}
+
+.danger-warning p {
+    color: var(--text-secondary, #B0B0B0);
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: left;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.action-btn.danger {
+    background: var(--danger, #FF4444);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.action-btn.danger:hover {
+    background: var(--danger-hover, #FF6666);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+}
+
+.action-btn.secondary {
+    background: var(--bg-secondary, #16213E);
+    color: var(--text-primary, #FFFFFF);
+    border: 1px solid var(--border-color, #16213E);
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.action-btn.secondary:hover {
+    background: var(--border-color, #16213E);
+    border-color: var(--primary-blue, #4A9EFF);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+}
+
+/* Manifest Header */
+.manifest-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color, #16213E);
+    background: linear-gradient(135deg, rgba(74, 158, 255, 0.1), rgba(74, 158, 255, 0.05));
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.manifest-title {
+    color: var(--primary-blue, #4A9EFF);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.manifest-subtitle {
+    color: var(--text-secondary, #B0B0B0);
+    font-size: 1rem;
+}
+
+/* Teams Section Styling */
+.teams-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-blue, #4A9EFF);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+}
+
+.camping-teams-section,
+.in-town-teams-section,
+.lost-teams-section {
+    margin-bottom: 2rem;
+}
+
+.camping-teams-grid,
+.in-town-teams-grid,
+.lost-teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+/* Enhanced Party Card Styling */
+.party-card {
+    /* Enhanced character card styling */
+    background: var(--panel-bg, #1A1A2E);
+    border: 1px solid var(--border-color, #16213E);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.party-card:hover {
+    border-color: var(--accent-primary, #4A9EFF);
+    box-shadow: 0 4px 16px rgba(74, 158, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.party-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.party-status-icon {
+    font-size: 1.5rem;
+}
+
+.party-header h4 {
+    flex-grow: 1;
+    margin: 0;
+    color: var(--text-primary, #FFFFFF);
+}
+
+.party-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.party-status.camping {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.party-status.inactive {
+    background: var(--info-bg);
+    color: var(--info-text);
+}
+
+.party-status.lost {
+    background: var(--error-bg);
+    color: var(--error-text);
+}
+
+.party-location {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.location-label {
+    color: var(--text-secondary);
+    font-weight: bold;
+}
+
+.location-value {
+    color: var(--text-primary);
+}
+
+.party-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.manifest-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* No parties message */
+.no-parties {
+    text-align: center;
+    color: var(--text-secondary, #B0B0B0);
+    font-style: italic;
+    padding: 2rem;
+    background: var(--bg-secondary, #0F0F23);
+    border-radius: 8px;
+    border: 2px dashed var(--border-color, #16213E);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile responsiveness for strike team management */
+@media (max-width: 768px) {
+    .strike-team-management-modal {
+        width: 98vw;
+        height: 95vh;
+    }
+    
+    .camping-teams-grid,
+    .in-town-teams-grid,
+    .lost-teams-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .party-actions {
+        flex-direction: column;
+    }
+    
+    .manifest-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+    }
+    
+    .manifest-title {
+        font-size: 1.5rem;
+    }
+}
+
 /* Mobile Responsiveness for New Layout */
 @media (max-width: 768px) {
     .combat-main-area {

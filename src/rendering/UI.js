@@ -573,12 +573,12 @@ class UI {
                 this.strikeTeamModal.hide();
             }
             
-            // Create modal
+            // Create modal with roster styling
             this.strikeTeamModal = new Modal({
-                title: 'Strike Team Management',
-                className: 'modal strike-team-management-modal',
-                width: '800px',
-                height: '600px'
+                title: TextManager ? TextManager.getText('manifest_title', 'Strike Team Manifest') : 'Strike Team Manifest',
+                className: 'modal strike-team-management-modal roster-modal',
+                width: '90vw',
+                height: '80vh'
             });
             
             this.strikeTeamModal.setOnClose(() => {
@@ -588,6 +588,18 @@ class UI {
             
             this.strikeTeamModal.create(content);
             this.strikeTeamModal.show();
+            
+            // Apply TextManager to modal content
+            if (typeof TextManager !== 'undefined') {
+                const modalBody = this.strikeTeamModal.getBody();
+                const textElements = modalBody.querySelectorAll('[data-text-key]');
+                textElements.forEach(element => {
+                    const textKey = element.getAttribute('data-text-key');
+                    if (textKey) {
+                        TextManager.applyToElement(element, textKey);
+                    }
+                });
+            }
             
             // Set up event listeners
             this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
@@ -602,24 +614,25 @@ class UI {
      * Build content for Strike Team Management
      */
     buildStrikeTeamManagementContent(allParties, campingParties, activePartyId) {
-        const activeParty = allParties.find(p => p.id === activePartyId);
+        // Filter parties into sections (excluding active party)
         const inactiveParties = allParties.filter(p => p.id !== activePartyId);
+        const inTownParties = inactiveParties.filter(p => !p.campId && !p.isLost);
+        const lostParties = allParties.filter(p => p.isLost);
         
         return `
             <div class="strike-team-management">
-                <div class="management-header">
-                    <h2>Strike Team Command Center</h2>
-                    <p>Manage your active and camping parties</p>
+                <div class="manifest-header">
+                    <h1 class="manifest-title" data-text-key="manifest_title">Strike Team Manifest</h1>
+                    <p class="manifest-subtitle" data-text-key="manifest_subtitle">Manage your disconnected Strike Teams and lost Agents</p>
                 </div>
                 
                 <div class="teams-section">
-                    <div class="active-team-section">
-                        <h3>Active Strike Team</h3>
-                        ${activeParty ? this.buildPartyCard(activeParty, true) : '<p class="no-party">No active party</p>'}
-                    </div>
-                    
                     <div class="camping-teams-section">
-                        <h3>Camping Teams (${campingParties.length})</h3>
+                        <h3>
+                            <span class="section-icon" data-text-key="camping_icon">🔌</span>
+                            <span data-text-key="camping_teams">Disconnected Teams</span> 
+                            (${campingParties.length})
+                        </h3>
                         <div class="camping-teams-grid">
                             ${campingParties.length > 0 ? 
                                 campingParties.map(party => this.buildPartyCard(party, false, true)).join('') : 
@@ -628,20 +641,37 @@ class UI {
                         </div>
                     </div>
                     
-                    <div class="inactive-teams-section">
-                        <h3>Other Teams (${inactiveParties.filter(p => !p.campId).length})</h3>
-                        <div class="inactive-teams-grid">
-                            ${inactiveParties.filter(p => !p.campId).length > 0 ? 
-                                inactiveParties.filter(p => !p.campId).map(party => this.buildPartyCard(party, false)).join('') : 
+                    <div class="in-town-teams-section">
+                        <h3>
+                            <span class="section-icon">🏛️</span>
+                            <span data-text-key="in_town_teams">In Hub</span> 
+                            (${inTownParties.length})
+                        </h3>
+                        <div class="in-town-teams-grid">
+                            ${inTownParties.length > 0 ? 
+                                inTownParties.map(party => this.buildPartyCard(party, false)).join('') : 
                                 '<p class="no-parties">No inactive parties</p>'
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="lost-teams-section">
+                        <h3>
+                            <span class="section-icon">💀</span>
+                            <span data-text-key="lost_teams">Lost Strike Teams</span> 
+                            (${lostParties.length})
+                        </h3>
+                        <div class="lost-teams-grid">
+                            ${lostParties.length > 0 ? 
+                                lostParties.map(party => this.buildPartyCard(party, false, false, true)).join('') : 
+                                '<p class="no-parties">No lost parties</p>'
                             }
                         </div>
                     </div>
                 </div>
                 
-                <div class="management-actions">
-                    <button id="create-new-team-btn" class="btn primary">Create New Team</button>
-                    <button id="close-management-btn" class="btn secondary">Close</button>
+                <div class="manifest-actions">
+                    <button id="close-management-btn" class="action-btn secondary">Close</button>
                 </div>
             </div>
         `;
@@ -650,25 +680,56 @@ class UI {
     /**
      * Build party card HTML
      */
-    buildPartyCard(party, isActive = false, isCamping = false) {
-        const status = isActive ? 'Active' : (isCamping ? 'Camping' : 'Inactive');
-        const statusClass = isActive ? 'active' : (isCamping ? 'camping' : 'inactive');
+    buildPartyCard(party, isActive = false, isCamping = false, isLost = false) {
+        let status, statusClass, statusIcon;
+        
+        if (isLost) {
+            status = 'Lost';
+            statusClass = 'lost';
+            statusIcon = '💀';
+        } else if (isCamping) {
+            status = TextManager ? TextManager.getText('camping_teams', 'Camping') : 'Camping';
+            statusClass = 'camping';
+            statusIcon = TextManager ? TextManager.getText('camping_icon', '🔌') : '🔌';
+        } else {
+            status = TextManager ? TextManager.getText('in_town_teams', 'In Town') : 'In Town';
+            statusClass = 'inactive';
+            statusIcon = '🏛️';
+        }
+        
+        // Dynamic location display
+        let locationDisplay = '';
+        if (isCamping && party.campId) {
+            const dungeonName = party.dungeonName || (TextManager ? TextManager.getText('dungeon', 'Corrupted Network') : 'Dungeon');
+            const levelLabel = TextManager ? TextManager.getText('level', 'Level') : 'Level';
+            locationDisplay = `${dungeonName} - ${levelLabel} ${party.dungeonLevel || 1}`;
+        } else if (!isCamping && !isLost) {
+            locationDisplay = TextManager ? TextManager.getText('town', 'Terminal Hub') : 'Town';
+        } else if (isLost) {
+            locationDisplay = 'Unknown';
+        }
         
         return `
             <div class="party-card ${statusClass}" data-party-id="${party.id}">
                 <div class="party-header">
+                    <div class="party-status-icon">${statusIcon}</div>
                     <h4>${party.name || 'Unnamed Team'}</h4>
                     <span class="party-status ${statusClass}">${status}</span>
                 </div>
                 <div class="party-info">
-                    <p><strong>Members:</strong> ${party.aliveCount}/${party.memberCount}</p>
+                    <p><strong data-text-key="members">Members:</strong> ${party.aliveCount}/${party.memberCount}</p>
                     <p><strong>Gold:</strong> ${party.gold || 0}</p>
                     <p><strong>Created:</strong> ${new Date(party.dateCreated).toLocaleDateString()}</p>
-                    ${isCamping ? `<p><strong>Location:</strong> Dungeon Camp</p>` : ''}
+                    ${locationDisplay ? `
+                        <div class="party-location">
+                            <span class="location-label">Location:</span>
+                            <span class="location-value">${locationDisplay}</span>
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="party-actions">
-                    ${!isActive ? `<button class="btn small resume-party-btn" data-party-id="${party.id}">Resume</button>` : ''}
-                    ${!isActive ? `<button class="btn small delete-party-btn" data-party-id="${party.id}">Delete</button>` : ''}
+                    ${!isActive && !isLost ? `<button class="action-btn small resume-party-btn" data-party-id="${party.id}">Resume</button>` : ''}
+                    ${!isActive ? `<button class="action-btn small delete-party-btn" data-party-id="${party.id}">Delete</button>` : ''}
                 </div>
             </div>
         `;
@@ -678,16 +739,9 @@ class UI {
      * Set up event listeners for Strike Team Management
      */
     setupStrikeTeamEventListeners(modalBody) {
-        const createNewBtn = modalBody.querySelector('#create-new-team-btn');
         const closeBtn = modalBody.querySelector('#close-management-btn');
         const resumeButtons = modalBody.querySelectorAll('.resume-party-btn');
         const deleteButtons = modalBody.querySelectorAll('.delete-party-btn');
-        
-        if (createNewBtn) {
-            createNewBtn.addEventListener('click', () => {
-                this.createNewTeam();
-            });
-        }
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
@@ -713,15 +767,6 @@ class UI {
         });
     }
     
-    /**
-     * Create a new team
-     */
-    createNewTeam() {
-        console.log('Creating new team...');
-        Modal.hideAll();
-        this.hideTown();
-        this.eventSystem.emit('town-location-selected', 'training-grounds');
-    }
     
     /**
      * Resume a party
@@ -765,21 +810,208 @@ class UI {
     }
     
     /**
-     * Delete a party
+     * Show delete party confirmation modal
+     */
+    async showDeletePartyConfirmation(partyId) {
+        try {
+            // Load party data to get name
+            const allParties = await Storage.loadAllParties();
+            const party = allParties.find(p => p.id === partyId);
+            const partyName = party ? party.name || 'Unnamed Team' : 'Unknown Party';
+            
+            const deleteContent = `
+                <div class="delete-confirmation-content">
+                    <div class="warning-header">
+                        <div class="warning-icon">⚠️</div>
+                        <h3 data-text-key="delete_party_title">Delete Strike Team</h3>
+                    </div>
+                    
+                    <div class="warning-content">
+                        <p data-text-key="delete_party_confirm">Are you sure you want to delete this strike team?</p>
+                        <p class="party-name"><strong>${partyName}</strong></p>
+                        <div class="danger-warning">
+                            <div class="danger-icon">🚨</div>
+                            <p data-text-key="delete_party_warning">Strike teams currently in the corrupted network will be lost forever. This action cannot be undone.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-actions">
+                        <button id="cancel-delete-btn" class="action-btn secondary">Cancel</button>
+                        <button id="confirm-delete-btn" class="action-btn danger">
+                            <span data-text-key="delete_party_button">Delete Strike Team</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            this.deleteConfirmModal = new Modal({
+                className: 'modal delete-confirmation-modal',
+                closeOnEscape: true,
+                closeOnBackdrop: false
+            });
+            
+            this.deleteConfirmModal.create(deleteContent);
+            this.deleteConfirmModal.show();
+            
+            // Apply TextManager to modal content
+            if (typeof TextManager !== 'undefined') {
+                const modalBody = this.deleteConfirmModal.getBody();
+                const textElements = modalBody.querySelectorAll('[data-text-key]');
+                textElements.forEach(element => {
+                    const textKey = element.getAttribute('data-text-key');
+                    if (textKey) {
+                        TextManager.applyToElement(element, textKey);
+                    }
+                });
+            }
+            
+            // Event listeners
+            const modalBody = this.deleteConfirmModal.getBody();
+            const cancelBtn = modalBody.querySelector('#cancel-delete-btn');
+            const confirmBtn = modalBody.querySelector('#confirm-delete-btn');
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.deleteConfirmModal.hide();
+                    this.deleteConfirmModal = null;
+                });
+            }
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    await this.executePartyDeletion(partyId);
+                    this.deleteConfirmModal.hide();
+                    this.deleteConfirmModal = null;
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error showing delete confirmation:', error);
+            this.addMessage('Failed to show delete confirmation', 'error');
+        }
+    }
+
+    /**
+     * Execute party deletion with proper state management
+     */
+    async executePartyDeletion(partyId) {
+        try {
+            // Load party data before deletion
+            const allParties = await Storage.loadAllParties();
+            const party = allParties.find(p => p.id === partyId);
+            if (!party) {
+                console.error('Party not found for deletion:', partyId);
+                return;
+            }
+            
+            console.log(`Deleting party: ${party.name} (${partyId})`);
+            
+            // 1. Delete associated camp if it exists
+            if (party.campId) {
+                console.log(`Deleting camp: ${party.campId}`);
+                await Storage.deleteCamp(party.campId);
+            }
+            
+            // 2. Transition all party members to "Lost" state
+            if (party.members && party.members.length > 0) {
+                for (const member of party.members) {
+                    console.log(`Transitioning character to Lost state: ${member.name} (${member.id})`);
+                    
+                    // Update character status to "Lost" 
+                    member.status = 'Lost';
+                    member.isLost = true;
+                    member.partyId = null; // Remove party association
+                    member.lostDate = new Date().toISOString();
+                    member.lostReason = 'Party Deleted';
+                    
+                    // Save updated character state
+                    await Storage.saveCharacter(member);
+                }
+            }
+            
+            // 3. Delete the party itself
+            await Storage.deleteParty(partyId);
+            
+            // 4. Update game state if this was the active party
+            const activePartyId = Storage.getActivePartyId();
+            if (activePartyId === partyId) {
+                Storage.setActivePartyId(null);
+                
+                // Update game state if in town/playing
+                if (window.engine && window.engine.gameState) {
+                    const currentState = window.engine.gameState.getState();
+                    if (currentState === 'playing' || currentState === 'town') {
+                        window.engine.gameState.setState('town');
+                    }
+                }
+            }
+            
+            // 5. Emit events for UI updates
+            if (this.eventSystem) {
+                this.eventSystem.emit('party-deleted', { partyId, partyName: party.name });
+                this.eventSystem.emit('party-roster-changed');
+            }
+            
+            // 6. Refresh the Strike Team Management interface
+            await this.refreshStrikeTeamManagement();
+            
+            console.log(`Successfully deleted party: ${party.name}`);
+            this.addMessage('Party deleted successfully', 'info');
+            
+        } catch (error) {
+            console.error('Error deleting party:', error);
+            this.addMessage('Failed to delete party', 'error');
+        }
+    }
+
+    /**
+     * Delete a party (legacy method - now calls confirmation modal)
      */
     async deleteParty(partyId) {
-        console.log('Deleting party:', partyId);
-        
-        if (confirm('Are you sure you want to delete this party? This action cannot be undone.')) {
+        await this.showDeletePartyConfirmation(partyId);
+    }
+
+    /**
+     * Refresh the Strike Team Management modal after changes
+     */
+    async refreshStrikeTeamManagement() {
+        if (this.strikeTeamModal && this.strikeTeamModal.isOpen && this.strikeTeamModal.isOpen()) {
             try {
-                await Storage.deleteParty(partyId);
-                this.addMessage('Party deleted successfully', 'info');
+                // Reload data and rebuild content
+                const allParties = await Storage.loadAllParties();
+                const campingParties = await Storage.getCampingParties();
+                const activePartyId = Storage.getActivePartyId();
                 
-                // Refresh the management interface
-                this.showStrikeTeamManagement();
+                const content = this.buildStrikeTeamManagementContent(allParties, campingParties, activePartyId);
+                
+                // Update content if modal has updateContent method, otherwise recreate
+                if (this.strikeTeamModal.updateContent) {
+                    this.strikeTeamModal.updateContent(content);
+                } else {
+                    // Fallback: recreate modal content
+                    const modalBody = this.strikeTeamModal.getBody();
+                    if (modalBody) {
+                        modalBody.innerHTML = content;
+                    }
+                }
+                
+                // Reapply event listeners
+                this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
+                
+                // Apply TextManager
+                if (typeof TextManager !== 'undefined') {
+                    const modalBody = this.strikeTeamModal.getBody();
+                    const textElements = modalBody.querySelectorAll('[data-text-key]');
+                    textElements.forEach(element => {
+                        const textKey = element.getAttribute('data-text-key');
+                        if (textKey) {
+                            TextManager.applyToElement(element, textKey);
+                        }
+                    });
+                }
+                
             } catch (error) {
-                console.error('Failed to delete party:', error);
-                this.addMessage('Failed to delete party', 'error');
+                console.error('Error refreshing Strike Team Management:', error);
             }
         }
     }
