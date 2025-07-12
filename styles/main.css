@@ -3820,12 +3820,77 @@ h3 {
     z-index: 1001;
 }
 
+/* Matrix screensaver backdrop */
+.delete-confirmation-modal::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #000011 0%, #001122 50%, #000011 100%);
+    z-index: -1;
+    animation: matrixGlow 3s ease-in-out infinite alternate;
+}
+
+.delete-confirmation-modal::after {
+    content: '011001';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: rgba(0, 255, 0, 0.8);
+    font-family: 'Courier New', monospace;
+    font-size: 24em;
+    line-height: 1;
+    word-wrap: break-word;
+    animation: matrixRain 8s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+@keyframes matrixGlow {
+    0% { 
+        background: linear-gradient(45deg, #000011 0%, #001122 50%, #000011 100%);
+        opacity: 0.8;
+    }
+    100% { 
+        background: linear-gradient(45deg, #001122 0%, #002244 50%, #001122 100%);
+        opacity: 1;
+    }
+}
+
+@keyframes matrixRain {
+    0% { 
+        transform: translateY(-100vh);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.3;
+    }
+    100% { 
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+/* Enhanced modal positioning over matrix effect */
 .delete-confirmation-modal .modal-content {
     background: var(--panel-bg, #1A1A2E);
     border: 2px solid var(--danger, #FF4444);
     border-radius: 8px;
     padding: 2rem;
-    box-shadow: 0 4px 20px rgba(255, 68, 68, 0.3);
+    position: relative;
+    z-index: 10;
+    box-shadow: 
+        0 0 20px rgba(255, 68, 68, 0.5),
+        0 0 40px rgba(255, 68, 68, 0.3),
+        0 0 80px rgba(255, 68, 68, 0.1);
 }
 
 .delete-confirmation-content {

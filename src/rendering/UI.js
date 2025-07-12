@@ -898,13 +898,44 @@ class UI {
         try {
             // Load party data before deletion
             const allParties = await Storage.loadAllParties();
-            const party = allParties.find(p => p.id === partyId);
-            if (!party) {
+            const basicPartyInfo = allParties.find(p => p.id === partyId);
+            if (!basicPartyInfo) {
                 console.error('Party not found for deletion:', partyId);
                 return;
             }
             
+            // Load the full party with character objects (not just references)
+            let party;
+            try {
+                party = await Storage.loadParty(partyId);
+            } catch (error) {
+                console.error('Failed to load full party, using basic info:', error);
+                party = basicPartyInfo;
+            }
+            
             console.log(`Deleting party: ${party.name} (${partyId})`);
+            
+            // Use memberIds if members is undefined
+            const memberList = party.members || party.memberIds || [];
+            
+            // Load the actual character objects
+            let actualMembers = [];
+            if (memberList && memberList.length > 0) {
+                for (const member of memberList) {
+                    // Check if this is just an ID string or a full character object
+                    if (typeof member === 'string') {
+                        const fullCharacter = await Storage.loadCharacter(member);
+                        if (fullCharacter) {
+                            actualMembers.push(fullCharacter);
+                        } else {
+                            console.error(`Failed to load character: ${member}`);
+                        }
+                    } else if (member && member.id) {
+                        // Already a full character object
+                        actualMembers.push(member);
+                    }
+                }
+            }
             
             // 1. Delete associated camp if it exists
             if (party.campId) {
@@ -913,19 +944,31 @@ class UI {
             }
             
             // 2. Transition all party members to "Lost" state
-            if (party.members && party.members.length > 0) {
-                for (const member of party.members) {
+            if (actualMembers.length > 0) {
+                for (const member of actualMembers) {
                     console.log(`Transitioning character to Lost state: ${member.name} (${member.id})`);
                     
-                    // Update character status to "Lost" 
+                    // Update character status with multiple indicators
                     member.status = 'Lost';
                     member.isLost = true;
+                    member.isAlive = false;  // Ensure alive flags are updated
                     member.partyId = null; // Remove party association
                     member.lostDate = new Date().toISOString();
-                    member.lostReason = 'Party Deleted';
+                    member.lostReason = 'Strike Team Deleted';
+                    member.lastKnownLocation = party.dungeonName || 'Terminal Hub';
                     
                     // Save updated character state
-                    await Storage.saveCharacter(member);
+                    try {
+                        await Storage.saveCharacter(member);
+                        
+                        // Verify it was saved by immediately reloading
+                        const reloadedChar = await Storage.loadCharacter(member.id);
+                        if (!reloadedChar || reloadedChar.status !== 'Lost') {
+                            console.error(`Failed to save character state for ${member.name}!`);
+                        }
+                    } catch (error) {
+                        console.error(`Error saving character ${member.name}:`, error);
+                    }
                 }
             }
             
@@ -946,13 +989,24 @@ class UI {
                 }
             }
             
-            // 5. Emit events for UI updates
+            // 5. Force refresh of all character displays
+            if (window.engine && window.engine.party) {
+                try {
+                    await window.engine.party.refreshFromStorage();
+                    console.log('Engine party refreshed from storage');
+                } catch (error) {
+                    console.log('Engine party refresh not available:', error.message);
+                }
+            }
+            
+            // 6. Emit events for UI updates
             if (this.eventSystem) {
                 this.eventSystem.emit('party-deleted', { partyId, partyName: party.name });
                 this.eventSystem.emit('party-roster-changed');
+                this.eventSystem.emit('character-state-changed'); // Additional event for character updates
             }
             
-            // 6. Refresh the Strike Team Management interface
+            // 7. Refresh the Strike Team Management interface
             await this.refreshStrikeTeamManagement();
             
             console.log(`Successfully deleted party: ${party.name}`);
