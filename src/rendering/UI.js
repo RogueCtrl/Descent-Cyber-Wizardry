@@ -1261,12 +1261,18 @@ class UI {
         
         if (createBtn) {
             createBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 this.eventSystem.emit('training-action', 'create-character');
             });
         }
         
         if (backBtn) {
             backBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 this.eventSystem.emit('training-action', 'back-to-town');
             });
         }
@@ -1282,6 +1288,9 @@ class UI {
         
         if (strikeTeamStatusBtn && !strikeTeamStatusBtn.disabled) {
             strikeTeamStatusBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('dungeonClick');
+                }
                 // Hide AgentOps modal and show dungeon entrance directly
                 this.hideTrainingGrounds();
                 this.showDungeonEntranceConfirmation(true); // true indicates came from AgentOps
@@ -1409,6 +1418,9 @@ class UI {
         const closeBtn = modalBody.querySelector('#close-roster-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
+                if (window.engine && window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('buttonClick');
+                }
                 this.hideCharacterRoster();
             });
         }

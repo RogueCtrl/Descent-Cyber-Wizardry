@@ -59,9 +59,24 @@ class CharacterUI {
         `;
         
         // Add event listeners
-        modal.querySelector('#prev-step').addEventListener('click', () => this.previousStep());
-        modal.querySelector('#next-step').addEventListener('click', () => this.nextStep());
-        modal.querySelector('#cancel-creation').addEventListener('click', () => this.cancelCreation());
+        modal.querySelector('#prev-step').addEventListener('click', () => {
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('buttonClick');
+            }
+            this.previousStep();
+        });
+        modal.querySelector('#next-step').addEventListener('click', () => {
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('buttonClick');
+            }
+            this.nextStep();
+        });
+        modal.querySelector('#cancel-creation').addEventListener('click', () => {
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('buttonClick');
+            }
+            this.cancelCreation();
+        });
         
         // Apply TextManager to modal elements
         this.applyTextManagerToModal(modal);
@@ -223,6 +238,9 @@ class CharacterUI {
         
         // Add reroll handler
         container.querySelector('#reroll-attributes').addEventListener('click', () => {
+            if (window.engine && window.engine.audioManager) {
+                window.engine.audioManager.playSoundEffect('buttonClick');
+            }
             this.characterData.attributes = AttributeRoller.rollAllAttributes();
             this.applyRacialModifiers();
             this.renderCurrentStep(); // Re-render to show new attributes
