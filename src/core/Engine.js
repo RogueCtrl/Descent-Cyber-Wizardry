@@ -352,24 +352,39 @@ class Engine {
                 return false;
             }
             
-            // Verify the party has a camp
-            if (!party.campId) {
-                console.error('Party does not have a camp to resume from');
-                this.ui.addMessage('This party is not camping and cannot be resumed.', 'error');
-                return false;
+            // Check if this party has a camp (dungeon camping) or is just in town
+            let isInTownCamp = true;
+            let resumeResult = null;
+            
+            if (party.campId) {
+                // Party has an actual camp - load the camp data
+                resumeResult = await Storage.resumeCampWithEntityReferences(party.campId);
+                if (!resumeResult.success) {
+                    console.error('Failed to load camp data:', resumeResult.error);
+                    this.ui.addMessage('Failed to load camp data. The save may be corrupted.', 'error');
+                    return false;
+                }
+                
+                // Check if this party was camping in town or in the dungeon
+                isInTownCamp = !resumeResult.location || resumeResult.location.currentFloor === undefined;
+            } else {
+                // Party has no camp - it's just a town-based party
+                isInTownCamp = true;
             }
             
-            // Load the camp data to get the saved position
-            const resumeResult = await Storage.resumeCampWithEntityReferences(party.campId);
-            if (!resumeResult.success) {
-                console.error('Failed to load camp data:', resumeResult.error);
-                this.ui.addMessage('Failed to load camp data. The save may be corrupted.', 'error');
-                return false;
+            // Clear the camp reference from the party (only if it had a camp)
+            if (party.campId) {
+                party.clearCamp();
             }
             
-            // Clear the camp reference from the party
-            party.clearCamp();
-            party.leaveTown(); // They're going back into the dungeon
+            if (isInTownCamp) {
+                // Party was camping in town or is a town-based party - keep them in town
+                party.returnToTown();
+            } else {
+                // Party was camping in dungeon - they're going back into the dungeon
+                party.leaveTown();
+            }
+            
             await party.save();
             
             // Handle the current active party before switching
@@ -401,9 +416,10 @@ class Engine {
                             console.warn(`Failed to delete legacy orphaned party: ${error.message}`);
                         }
                     } else {
-                        // Save legitimate parties that were previously saved
+                        // Set non-temporary active party as camped (in town) so it can be resumed later
+                        this.party.returnToTown();
                         await this.party.save(false); // Save without setting as active
-                        console.log(`Saved previous active party: ${this.party.id} (name: "${this.party.name}", members: ${this.party.members.length})`);
+                        console.log(`Set previous active party as camped in town: ${this.party.id} (name: "${this.party.name}", members: ${this.party.members.length})`);
                     }
                 }
             }
@@ -412,28 +428,36 @@ class Engine {
             Storage.setActiveParty(party.id);
             this.party = party;
             
-            // Load the dungeon state from the party position
-            const positionData = await Storage.loadPartyPosition(party.id);
-            if (positionData) {
-                // Restore dungeon state
-                this.dungeon.currentFloor = positionData.currentFloor;
-                this.dungeon.playerX = positionData.playerX;
-                this.dungeon.playerY = positionData.playerY;
-                this.dungeon.playerDirection = positionData.playerDirection;
-                this.dungeon.testMode = positionData.testMode;
-                this.dungeon.discoveredSecrets = new Set(positionData.discoveredSecrets || []);
-                this.dungeon.disarmedTraps = new Set(positionData.disarmedTraps || []);
-                this.dungeon.usedSpecials = new Set(positionData.usedSpecials || []);
+            if (isInTownCamp) {
+                // Party was camping in town - keep them in town
+                // Only set state if not already in town to avoid transition error
+                if (this.gameState.currentState !== 'town') {
+                    this.gameState.setState('town');
+                }
+                this.ui.updatePartyDisplay(this.party);
+                this.ui.addMessage(`${party.name || 'Your party'} is now active and ready in town.`, 'success');
+            } else {
+                // Party was camping in dungeon - restore dungeon state and enter dungeon
+                const positionData = await Storage.loadPartyPosition(party.id);
+                if (positionData) {
+                    // Restore dungeon state
+                    this.dungeon.currentFloor = positionData.currentFloor;
+                    this.dungeon.playerX = positionData.playerX;
+                    this.dungeon.playerY = positionData.playerY;
+                    this.dungeon.playerDirection = positionData.playerDirection;
+                    this.dungeon.testMode = positionData.testMode;
+                    this.dungeon.discoveredSecrets = new Set(positionData.discoveredSecrets || []);
+                    this.dungeon.disarmedTraps = new Set(positionData.disarmedTraps || []);
+                    this.dungeon.usedSpecials = new Set(positionData.usedSpecials || []);
+                    
+                    console.log(`Restored party to floor ${positionData.currentFloor} at (${positionData.playerX}, ${positionData.playerY})`);
+                }
                 
-                console.log(`Restored party to floor ${positionData.currentFloor} at (${positionData.playerX}, ${positionData.playerY})`);
+                // Switch to dungeon state
+                this.gameState.setState('playing');
+                this.ui.updatePartyDisplay(this.party);
+                this.ui.addMessage(`${party.name || 'Your party'} resumes exploration from their camp...`, 'success');
             }
-            
-            // Switch to dungeon state
-            this.gameState.setState('playing');
-            
-            // Update UI
-            this.ui.updatePartyDisplay(this.party);
-            this.ui.addMessage(`${party.name || 'Your party'} resumes exploration from their camp...`, 'success');
             
             return true;
             

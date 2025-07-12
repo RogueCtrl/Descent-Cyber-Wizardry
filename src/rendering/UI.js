@@ -718,8 +718,13 @@ class UI {
                     this.strikeTeamModal = null;
                 }
                 
-                // Then hide town
-                this.hideTown();
+                // Only hide town if the game state is not 'town' (i.e., party went to dungeon)
+                if (window.engine.gameState.currentState !== 'town') {
+                    this.hideTown();
+                    console.log('Party went to dungeon, hiding town...');
+                } else {
+                    console.log('Party staying in town, keeping town visible...');
+                }
                 
                 console.log('Modals hidden, showing success message...');
                 this.addMessage('Party resumed successfully!', 'success');
