@@ -6,6 +6,7 @@
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
 **Built with:** Cursor + Claude Code | **Models:** Claude 4.0 Opus & Sonnet
+*Spend: $100/month + $20/month"*
 
 A modern browser-based homage to the classic dungeon crawler Wizardry, featuring a unique dual-mode system that switches between classic fantasy and cyberpunk aesthetics. Experience authentic turn-based RPG combat with striking 3D wireframe monster portraits in a persistent dungeon world.
 
