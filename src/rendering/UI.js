@@ -1546,8 +1546,8 @@ class UI {
             });
         }
         
-        // Character card click handlers
-        const characterCards = modalBody.querySelectorAll('.character-roster-card');
+        // Character card click handlers (both old and new styles)
+        const characterCards = modalBody.querySelectorAll('.character-roster-card, .summary-character-card');
         characterCards.forEach(card => {
             card.addEventListener('click', () => {
                 const characterId = card.dataset.characterId;
@@ -1908,13 +1908,49 @@ class UI {
             this.isCharacterPermanentlyLost(character)
         );
         
-        // Create character cards for active characters only
-        const characterCards = await Promise.all(
-            activeCharacters.map(character => this.createCharacterCard(character))
-        );
+        // Load all parties to get strike team information
+        const allParties = await Storage.loadAllParties();
+        
+        // Group characters by party
+        const charactersWithoutParty = [];
+        const charactersByParty = new Map();
+        
+        // Initialize party groups
+        for (const party of allParties) {
+            if (!party.isLost) {
+                charactersByParty.set(party.id, {
+                    party: party,
+                    characters: []
+                });
+            }
+        }
+        
+        // Group active characters by their party
+        for (const character of activeCharacters) {
+            if (character.partyId && charactersByParty.has(character.partyId)) {
+                charactersByParty.get(character.partyId).characters.push(character);
+            } else {
+                charactersWithoutParty.push(character);
+            }
+        }
         
         const hasActiveCharacters = activeCharacters.length > 0;
         const hasLostCharacters = lostCharacters.length > 0;
+        
+        // Build content for each strike team
+        let strikeTeamContent = '';
+        
+        // First show characters without a party
+        if (charactersWithoutParty.length > 0) {
+            strikeTeamContent += await this.createStrikeTeamSection(null, charactersWithoutParty);
+        }
+        
+        // Then show each strike team
+        for (const [partyId, groupData] of charactersByParty) {
+            if (groupData.characters.length > 0) {
+                strikeTeamContent += await this.createStrikeTeamSection(groupData.party, groupData.characters);
+            }
+        }
         
         return `
             <div class="roster-interface">
@@ -1927,8 +1963,8 @@ class UI {
                 
                 <div class="roster-content">
                     ${hasActiveCharacters ? `
-                        <div class="character-grid">
-                            ${characterCards.join('')}
+                        <div class="strike-teams-container">
+                            ${strikeTeamContent}
                         </div>
                     ` : `
                         <div class="no-characters">
@@ -1957,6 +1993,125 @@ class UI {
                     <button id="close-roster-btn" class="action-btn secondary">
                         <span data-text-key="back_to_training_grounds">← Back to Training Grounds</span>
                     </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Create a strike team section with header and character cards
+     */
+    async createStrikeTeamSection(party, characters) {
+        // Determine the team name and status
+        let teamName = 'Uninstalled';
+        let teamIcon = '📋'; // Manifest icon for all teams
+        let teamStatusClass = 'disconnected'; // Keep CSS class as disconnected but display as Uninstalled
+        
+        if (party) {
+            teamName = party.name || 'Unnamed Strike Team';
+            teamIcon = '📋'; // Manifest icon for all teams
+            teamStatusClass = party.isLost ? 'lost' : (party.campId ? 'camping' : 'active');
+        }
+        
+        // Create character cards using the new summary card style
+        const characterCards = await Promise.all(
+            characters.map(character => this.createSummaryCharacterCard(character))
+        );
+        
+        return `
+            <div class="strike-team-section ${teamStatusClass}">
+                <div class="strike-team-header">
+                    <div class="team-icon">${teamIcon}</div>
+                    <div class="team-name">${teamName}</div>
+                    <div class="team-member-count">(${characters.length})</div>
+                </div>
+                <div class="strike-team-members">
+                    ${characterCards.join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    /**
+     * Create a summary character card using the style guide pattern
+     */
+    async createSummaryCharacterCard(character) {
+        // Get class icon
+        const classIcon = this.getClassIcon(character.class);
+        
+        // Get contextual race and class names
+        const raceName = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
+        const className = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
+        
+        // Determine character status with proper styling and terminology
+        const rawStatus = character.status || 'Alive';
+        let displayStatus = rawStatus;
+        let statusClass = 'survivor'; // Default to survivor styling
+        
+        // Map status to contextual terminology and styling
+        if (typeof TextManager !== 'undefined') {
+            switch (rawStatus.toLowerCase()) {
+                case 'ok':
+                case 'alive':
+                    displayStatus = TextManager.getText('character_status_ok');
+                    statusClass = 'survivor';
+                    break;
+                case 'unconscious':
+                    displayStatus = TextManager.getText('character_status_unconscious');
+                    statusClass = 'casualty';
+                    break;
+                case 'dead':
+                    displayStatus = TextManager.getText('character_status_dead');
+                    statusClass = 'casualty';
+                    break;
+                case 'ashes':
+                    displayStatus = TextManager.getText('character_status_ashes');
+                    statusClass = 'casualty';
+                    break;
+                case 'lost':
+                    displayStatus = TextManager.getText('character_status_lost');
+                    statusClass = 'casualty';
+                    break;
+                default:
+                    displayStatus = rawStatus;
+                    statusClass = 'survivor';
+            }
+        }
+        
+        // Calculate HP percentage for health indicator
+        const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
+        let healthClass = 'healthy';
+        if (hpPercentage <= 0) {
+            healthClass = 'dead';
+        } else if (hpPercentage <= 25) {
+            healthClass = 'critical';
+        } else if (hpPercentage <= 50) {
+            healthClass = 'wounded';
+        }
+        
+        return `
+            <div class="summary-character-card ${statusClass}" data-character-id="${character.id}">
+                <div class="summary-card-icon">${classIcon}</div>
+                <div class="summary-card-content">
+                    <div class="summary-card-header">
+                        <div class="summary-card-name">${character.name}</div>
+                        <div class="summary-card-level">Lvl ${character.level}</div>
+                    </div>
+                    <div class="summary-card-details">
+                        <span class="summary-card-platform">${raceName}</span>
+                        <span class="summary-card-specialization">${className}</span>
+                    </div>
+                    <div class="summary-card-health">
+                        <div class="summary-health-bar">
+                            <div class="summary-health-fill ${healthClass}" style="width: ${hpPercentage}%"></div>
+                        </div>
+                        <div class="summary-health-text">${character.currentHP}/${character.maxHP}</div>
+                    </div>
+                    <div class="summary-card-status">
+                        <div class="summary-status-badge ${statusClass.toLowerCase()}">${displayStatus}</div>
+                    </div>
                 </div>
             </div>
         `;

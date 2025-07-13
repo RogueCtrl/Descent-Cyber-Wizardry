@@ -1540,17 +1540,28 @@ class Engine {
     async handleCharacterCreated(character) {
         console.log('Character created:', character);
         
-        // Save character to persistent storage
-        try {
-            await Storage.saveCharacter(character);
-            console.log(`Character ${character.name} saved to persistent storage`);
-        } catch (error) {
-            console.error('Failed to save character to persistent storage:', error);
-            // Still continue with party addition even if persistence fails
-        }
-        
         // Add character to party
         if (this.party.addMember(character)) {
+            // Set the character's partyId to link them to this party
+            character.partyId = this.party.id;
+            
+            // Save character to persistent storage with party association
+            try {
+                await Storage.saveCharacter(character);
+                console.log(`Character ${character.name} saved to persistent storage with partyId: ${character.partyId}`);
+            } catch (error) {
+                console.error('Failed to save character to persistent storage:', error);
+                // Still continue with party addition even if persistence fails
+            }
+            
+            // Also save the party to update its member list
+            try {
+                await this.party.save();
+                console.log(`Party ${this.party.id} saved with updated member list`);
+            } catch (error) {
+                console.error('Failed to save party:', error);
+            }
+            
             this.ui.addMessage(`${character.name} the ${character.race} ${character.class} has joined your party!`);
             this.eventSystem.emit('party-update');
             

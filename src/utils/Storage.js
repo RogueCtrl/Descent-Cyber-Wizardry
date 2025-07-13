@@ -468,6 +468,7 @@ class Storage {
                 conditions: character.conditions ? [...character.conditions] : [],
                 temporaryEffects: character.temporaryEffects ? [...character.temporaryEffects] : [],
                 classHistory: character.classHistory ? [...character.classHistory] : [],
+                partyId: character.partyId || null,
                 dateCreated: character.dateCreated || Date.now(),
                 lastModified: Date.now()
             };
