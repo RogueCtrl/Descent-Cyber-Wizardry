@@ -1606,6 +1606,10 @@ class UI {
         characterCards.forEach(card => {
             card.addEventListener('click', () => {
                 const characterId = card.dataset.characterId;
+                if (!characterId) {
+                    this.addMessage('Invalid character selection', 'error');
+                    return;
+                }
                 this.showCharacterDetails(characterId);
             });
         });
@@ -1627,6 +1631,11 @@ class UI {
      */
     async showCharacterDetails(characterId) {
         try {
+            if (!characterId) {
+                this.addMessage('No character ID provided', 'error');
+                return;
+            }
+            
             // Load character data
             const character = await Storage.loadCharacter(characterId);
             if (!character) {
@@ -1989,21 +1998,12 @@ class UI {
             .sort((a, b) => b.aliveCount - a.aliveCount)
             .map(item => item.party);
         
-        console.log(`Loading ${sortedParties.length} total Strike Teams (sorted by size):`, sortedParties.map(p => {
-            const partyWithCount = partiesWithCounts.find(pc => pc.party.id === p.id);
-            let status = 'active';
-            if (p.isLost) status = 'lost';
-            else if (p.campId) status = 'camped in dungeon';
-            else if (p.inTown !== false) status = 'camped in town';
-            return `${p.name} (${partyWithCount.aliveCount} members, ${status})`;
-        }));
         
         // Build strike team data by loading each team's members
         const strikeTeamData = [];
         let totalActiveCharacters = 0;
         
         for (const party of sortedParties) {
-            console.log(`Processing Strike Team: ${party.name} (${party.id})`);
             
             // Load all characters for this party
             const partyMembers = [];
@@ -2014,7 +2014,6 @@ class UI {
                         const character = await Storage.loadCharacter(memberId);
                         if (character && !this.isCharacterPermanentlyLost(character)) {
                             partyMembers.push(character);
-                            console.log(`  - Loaded member: ${character.name}`);
                         }
                     } catch (error) {
                         console.warn(`Failed to load character ${memberId}:`, error);
@@ -2029,15 +2028,6 @@ class UI {
             });
             totalActiveCharacters += partyMembers.length;
             
-            if (partyMembers.length > 0) {
-                console.log(`Strike Team "${party.name}" has ${partyMembers.length} active members`);
-            } else {
-                console.log(`Strike Team "${party.name}" has no active members but will still be displayed`);
-                console.log(`  - Party memberIds:`, party.memberIds);
-                console.log(`  - Party inTown:`, party.inTown);
-                console.log(`  - Party campId:`, party.campId);
-                console.log(`  - Party isLost:`, party.isLost);
-            }
         }
         
         const hasActiveCharacters = totalActiveCharacters > 0;
@@ -2115,9 +2105,7 @@ class UI {
         let memberContent;
         
         if (characters.length > 0) {
-            const characterCards = await Promise.all(
-                characters.map(character => this.createSummaryCharacterCard(character))
-            );
+            const characterCards = characters.map(character => this.createSummaryCharacterCard(character));
             memberContent = characterCards.join('');
         } else {
             memberContent = `
@@ -2137,91 +2125,6 @@ class UI {
                 </div>
                 <div class="strike-team-members">
                     ${memberContent}
-                </div>
-            </div>
-        `;
-    }
-    
-    /**
-     * Create a summary character card using the style guide pattern
-     */
-    async createSummaryCharacterCard(character) {
-        // Get class icon
-        const classIcon = this.getClassIcon(character.class);
-        
-        // Get contextual race and class names
-        const raceName = typeof TextManager !== 'undefined' ? 
-            TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
-        const className = typeof TextManager !== 'undefined' ? 
-            TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
-        
-        // Determine character status with proper styling and terminology
-        const rawStatus = character.status || 'Alive';
-        let displayStatus = rawStatus;
-        let statusClass = 'survivor'; // Default to survivor styling
-        
-        // Map status to contextual terminology and styling
-        if (typeof TextManager !== 'undefined') {
-            switch (rawStatus.toLowerCase()) {
-                case 'ok':
-                case 'alive':
-                    displayStatus = TextManager.getText('character_status_ok');
-                    statusClass = 'survivor';
-                    break;
-                case 'unconscious':
-                    displayStatus = TextManager.getText('character_status_unconscious');
-                    statusClass = 'casualty';
-                    break;
-                case 'dead':
-                    displayStatus = TextManager.getText('character_status_dead');
-                    statusClass = 'casualty';
-                    break;
-                case 'ashes':
-                    displayStatus = TextManager.getText('character_status_ashes');
-                    statusClass = 'casualty';
-                    break;
-                case 'lost':
-                    displayStatus = TextManager.getText('character_status_lost');
-                    statusClass = 'casualty';
-                    break;
-                default:
-                    displayStatus = rawStatus;
-                    statusClass = 'survivor';
-            }
-        }
-        
-        // Calculate HP percentage for health indicator
-        const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
-        let healthClass = 'healthy';
-        if (hpPercentage <= 0) {
-            healthClass = 'dead';
-        } else if (hpPercentage <= 25) {
-            healthClass = 'critical';
-        } else if (hpPercentage <= 50) {
-            healthClass = 'wounded';
-        }
-        
-        return `
-            <div class="summary-character-card ${statusClass}" data-character-id="${character.id}">
-                <div class="summary-card-icon">${classIcon}</div>
-                <div class="summary-card-content">
-                    <div class="summary-card-header">
-                        <div class="summary-card-name">${character.name}</div>
-                        <div class="summary-card-level">Lvl ${character.level}</div>
-                    </div>
-                    <div class="summary-card-details">
-                        <span class="summary-card-platform">${raceName}</span>
-                        <span class="summary-card-specialization">${className}</span>
-                    </div>
-                    <div class="summary-card-health">
-                        <div class="summary-health-bar">
-                            <div class="summary-health-fill ${healthClass}" style="width: ${hpPercentage}%"></div>
-                        </div>
-                        <div class="summary-health-text">${character.currentHP}/${character.maxHP}</div>
-                    </div>
-                    <div class="summary-card-status">
-                        <div class="summary-status-badge ${statusClass.toLowerCase()}">${displayStatus}</div>
-                    </div>
                 </div>
             </div>
         `;
@@ -3878,8 +3781,8 @@ class UI {
                 member.currentHP += hpIncrease;
             }
             
-            // Save character
-            await member.saveToStorage();
+            // Save character using Storage method (compatible with both Character instances and plain objects)
+            await Storage.saveCharacter(member);
         });
         
         // Wait for all saves to complete
@@ -4084,7 +3987,7 @@ class UI {
         }
         
         return `
-            <div class="summary-character-card ${cardType}">
+            <div class="summary-character-card ${cardType}" data-character-id="${character.id}">
                 <div class="summary-card-icon">${classIcon}</div>
                 <div class="summary-card-content">
                     <div class="summary-card-header">
@@ -4175,6 +4078,13 @@ class UI {
         // Hide combat interface first
         this.hideCombatInterface();
         
+        // Cleanup any existing modal first
+        if (this.postCombatModal) {
+            console.log('Cleaning up existing post-combat modal');
+            this.postCombatModal.destroy();
+            this.postCombatModal = null;
+        }
+        
         // Create victory modal following post-combat pattern
         this.postCombatModal = new Modal({
             className: 'modal post-combat-modal victory-with-casualties',
@@ -4203,9 +4113,18 @@ class UI {
         
         const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters) + actionButtons;
         
-        // Create and show modal
-        this.postCombatModal.create(content, '⚔️ Victory with Casualties');
-        this.postCombatModal.show();
+        // Create and show modal with additional error handling
+        try {
+            this.postCombatModal.create(content, '⚔️ Victory with Casualties');
+            this.postCombatModal.show();
+            console.log('Victory with casualties modal created and shown successfully');
+        } catch (error) {
+            console.error('Error creating/showing victory modal:', error);
+            // Fallback: show a simple alert if modal creation fails
+            alert('Victory! The battle is won, but some companions were lost. Click OK to continue.');
+            this.handleDungeonExit();
+            return;
+        }
         
         // Add event listeners using getBody() method
         this.setupVictoryWithCasualtiesEventListeners(this.postCombatModal.getBody(), rewards);

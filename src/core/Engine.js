@@ -593,7 +593,7 @@ class Engine {
             this.handleCombatStart(data);
         });
         
-        this.eventSystem.on('combat-end', (data) => {
+        this.eventSystem.on('combat-ended', (data) => {
             this.handleCombatEnd(data);
         });
         
@@ -2011,17 +2011,33 @@ class Engine {
                 const success = this.dungeon.markEncounterDefeated(x, y, floor);
                 if (success) {
                     console.log(`Encounter at (${x}, ${y}) permanently defeated`);
+                    
+                    // Save dungeon state to persist the defeated encounter
+                    if (this.party && this.party.id) {
+                        this.dungeon.saveToDatabase(this.party.id).catch(error => {
+                            console.error('Failed to save dungeon state after encounter defeat:', error);
+                        });
+                    }
                 }
             }
             
-            if (data.experience) {
-                this.ui.addMessage(`Your party gains ${data.experience} experience!`);
-                // TODO: Distribute experience to party members
-            }
-            
-            if (data.treasure) {
-                this.ui.addMessage(`You found treasure: ${data.treasure.join(', ')}`);
-                // TODO: Add treasure to party inventory
+            // Handle rewards from combat
+            if (data.rewards) {
+                if (data.rewards.experience) {
+                    this.ui.addMessage(`Your party gains ${data.rewards.experience} experience!`);
+                    // TODO: Distribute experience to party members
+                }
+                
+                if (data.rewards.gold && data.rewards.gold > 0) {
+                    this.ui.addMessage(`You found ${data.rewards.gold} gold coins!`);
+                    // TODO: Add gold to party treasury
+                }
+                
+                if (data.rewards.loot && data.rewards.loot.length > 0) {
+                    const lootNames = data.rewards.loot.map(item => item.name || 'Unknown Item');
+                    this.ui.addMessage(`You found treasure: ${lootNames.join(', ')}`);
+                    // TODO: Add loot to party inventory
+                }
             }
         } else if (fled) {
             this.ui.addMessage('You successfully fled from combat.');
