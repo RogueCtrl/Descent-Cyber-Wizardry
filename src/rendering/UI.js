@@ -143,13 +143,27 @@ class UI {
         
         // Combat ended event
         this.eventSystem.on('combat-ended', (data) => {
-            this.showPostCombatResults(data.rewards);
+            this.showPostCombatResults(data.rewards, data.disconnectedCharacters || []);
         });
         
         // Party defeated event
         this.eventSystem.on('party-defeated', async (data) => {
-            await this.showPartyDeathScreen(data.casualties);
+            const hasDisconnectedCharacters = (data.disconnectedCharacters || []).length > 0;
+            const hasCasualties = (data.casualties || []).length > 0;
+            
+            if (data.totalDefeat || (!hasDisconnectedCharacters && hasCasualties)) {
+                // Total party kill - no one escaped
+                await this.showTotalPartyKillScreen(data.casualties);
+            } else if (hasDisconnectedCharacters) {
+                // Some characters escaped - show defeat with disconnect info
+                await this.showDefeatWithDisconnectScreen(data.casualties, data.disconnectedCharacters);
+            } else {
+                // Fallback to general death screen
+                await this.showPartyDeathScreen(data.casualties, data.disconnectedCharacters || []);
+            }
         });
+        
+
         
         // Character updated event (for real-time HP updates)
         this.eventSystem.on('character-updated', (data) => {
@@ -3053,7 +3067,10 @@ class UI {
                 break;
                 
             case 'run':
-                actionData.type = 'flee';
+            case 'flee':
+                // Unified escape system - both use disconnect logic
+                actionData.type = 'disconnect';
+                actionData.character = currentActor.combatant;
                 break;
                 
             default:
@@ -3241,12 +3258,23 @@ class UI {
             window.engine.combatInterface.combat.endCombat();
             
         } else {
-            // Enemy victory - check if any party members survived
+            // Enemy victory - check if any party members survived or escaped
             const aliveMembers = window.engine.party.aliveMembers || [];
             const casualties = window.engine.party.members.filter(member => !member.isAlive);
+            const disconnectedCharacters = window.engine.combatInterface?.combat?.disconnectedCharacters || [];
             
-            if (aliveMembers.length === 0) {
-                // Total party kill - play death music and show death screen
+            console.log('Combat defeat analysis:', {
+                aliveMembers: aliveMembers.length,
+                casualties: casualties.length,
+                disconnectedCharacters: disconnectedCharacters.length
+            });
+            
+            // Check if there are any survivors (alive members OR successfully disconnected characters)
+            const totalSurvivors = aliveMembers.length + disconnectedCharacters.length;
+            
+            if (totalSurvivors === 0) {
+                // True total party kill - play death music and show death screen
+                console.log('True total party kill - no survivors or escapees');
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('death');
                 }
@@ -3257,11 +3285,14 @@ class UI {
                 // Show total party kill screen
                 await this.showPartyDeathScreen(casualties);
             } else {
-                // Some survived - treat as casualty retreat, should show victory screen with casualties
-                console.log('Party has casualties but survivors - treating as victory with casualties');
+                // Some survived or escaped - handle as defeat with disconnects
+                console.log('Some characters survived/escaped - showing defeat with disconnect screen');
                 
-                // Let combat system handle as victory with casualties
-                window.engine.combatInterface.combat.endCombat();
+                // Force end combat without rewards
+                window.engine.combatInterface.combat.isActive = false;
+                
+                // Show defeat screen with escaped characters
+                await this.showDefeatWithDisconnectScreen(casualties, disconnectedCharacters);
             }
         }
     }
@@ -3357,7 +3388,7 @@ class UI {
     /**
      * Show post-combat results screen
      */
-    showPostCombatResults(rewards) {
+    showPostCombatResults(rewards, disconnectedCharacters = []) {
         console.log('Showing post-combat results:', rewards);
         
         // Hide combat interface first
@@ -3388,9 +3419,9 @@ class UI {
             }))
         });
         
-        // If there are casualties, show victory with casualties screen instead
-        if (casualties.length > 0) {
-            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards);
+        // If there are casualties or disconnected characters, show victory with casualties screen instead
+        if (casualties.length > 0 || disconnectedCharacters.length > 0) {
+            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards, disconnectedCharacters);
             return;
         }
         
@@ -3580,7 +3611,7 @@ class UI {
     /**
      * Show party death screen
      */
-    async showPartyDeathScreen(casualties) {
+    async showPartyDeathScreen(casualties, disconnectedCharacters = []) {
         console.log('Showing party death screen:', casualties);
         
         // Check if entire party is defeated (no alive members)
@@ -3609,7 +3640,7 @@ class UI {
                 gold: 0
             };
             
-            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards);
+            this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards, disconnectedCharacters);
         }
     }
     
@@ -3632,11 +3663,13 @@ class UI {
             this.deathModal = null;
         });
         
+        // Get proper terminology for return button
+        const returnButtonText = TextManager.getText('town', 'Town');
+        
         // Create the modal content with buttons
         const content = this.createTotalPartyKillContent(casualties) + 
             '<div class="death-actions">' +
-            '<button id="return-to-town-btn" class="btn btn-primary">Return to Town</button>' +
-            '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
+            `<button id="return-to-town-btn" class="btn btn-primary">Return to ${returnButtonText}</button>` +
             '</div>';
         
         // Create and show modal
@@ -3648,12 +3681,171 @@ class UI {
     }
     
     /**
+     * Show defeat screen when some characters disconnected but others fell
+     */
+    async showDefeatWithDisconnectScreen(casualties, disconnectedCharacters) {
+        console.log('Showing defeat with disconnect screen:', { casualties, disconnectedCharacters });
+        
+        // Hide combat interface first
+        this.hideCombatInterface();
+        
+        // Create defeat modal following post-combat pattern (like town modals)
+        this.deathModal = new Modal({
+            className: 'modal party-defeat-modal',
+            closeOnEscape: false,
+            closeOnBackdrop: false
+        });
+        
+        // Set up close callback
+        this.deathModal.setOnClose(() => {
+            this.deathModal = null;
+        });
+        
+        // Get proper terminology
+        const returnButtonText = TextManager.getText('town', 'Town');
+        const defeatTitle = TextManager.getText('defeat_some_escaped', 'Defeat - Some 🏃 Fled');
+        
+        // Create the modal content with buttons
+        const content = this.createDefeatWithDisconnectContent(casualties, disconnectedCharacters) + 
+            '<div class="defeat-actions">' +
+            `<button id="return-to-town-btn" class="btn btn-primary">Return to ${returnButtonText}</button>` +
+            '</div>';
+        
+        // Create and show modal
+        this.deathModal.create(content, `💔 ${defeatTitle}`);
+        this.deathModal.show();
+        
+        // Add event listeners using getBody() method
+        this.setupDeathScreenEventListeners(this.deathModal.getBody());
+    }
+    
+    /**
+     * Create a summary character card for post-combat modals
+     */
+    createSummaryCharacterCard(character, cardType = 'survivor') {
+        const race = character.race || 'Unknown';
+        const characterClass = character.class || 'Unknown';
+        const currentHP = character.currentHP || 0;
+        const maxHP = character.maxHP || 1;
+        const isAlive = character.isAlive || false;
+        
+        // Get contextual race and class names using terminology system
+        const raceName = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`race_${race.toLowerCase()}`, race) : race;
+        const className = typeof TextManager !== 'undefined' ? 
+            TextManager.getText(`class_${characterClass.toLowerCase()}`, characterClass) : characterClass;
+        
+        // Calculate health percentage and determine health class
+        const healthPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
+        let healthClass = 'dead';
+        if (isAlive) {
+            if (healthPercent > 75) healthClass = 'healthy';
+            else if (healthPercent > 25) healthClass = 'wounded';
+            else healthClass = 'critical';
+        }
+        
+        // Get appropriate icon for class
+        const classIcon = this.getClassIcon(characterClass);
+        
+        // Determine status badge text based on card type
+        let statusBadgeText = '';
+        if (cardType === 'escaped') {
+            // Show condition status: "Scrambled" for cyber mode, "Confused" for fantasy mode
+            statusBadgeText = TextManager.isCyberMode() ? 'Scrambled' : 'Confused';
+        } else if (cardType === 'casualty') {
+            statusBadgeText = character.status === 'dead' ? 
+                TextManager.getText('character_status_dead', 'Dead') : 
+                TextManager.getText('character_status_unconscious', 'Unconscious');
+        } else if (cardType === 'survivor') {
+            statusBadgeText = TextManager.getText('character_status_alive', 'Alive');
+        }
+        
+        return `
+            <div class="summary-character-card ${cardType}">
+                <div class="summary-card-icon">${classIcon}</div>
+                <div class="summary-card-content">
+                    <div class="summary-card-header">
+                        <div class="summary-card-name">${character.name}</div>
+                    </div>
+                    <div class="summary-card-details">
+                        ${raceName} ${className}
+                    </div>
+                    <div class="summary-card-health">
+                        <div class="summary-health-bar">
+                            <div class="summary-health-fill ${healthClass}" style="width: ${healthPercent}%"></div>
+                        </div>
+                        <span class="summary-health-text">${currentHP}/${maxHP}</span>
+                    </div>
+                    <div class="summary-card-status">
+                        <span class="summary-status-badge ${cardType}">${statusBadgeText}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Create content for defeat with disconnect screen
+     */
+    createDefeatWithDisconnectContent(casualties, disconnectedCharacters) {
+        let content = '<div class="defeat-with-disconnect">';
+        
+        // Defeat message
+        content += '<h2>💔 Defeat</h2>';
+        content += '<div class="defeat-message">The battle is lost, but not all is lost...</div>';
+        
+        // Two-column layout for casualties and escaped
+        content += '<div class="defeat-grid">';
+        
+        // Escaped characters section (left side - positive news first)
+        if (disconnectedCharacters && disconnectedCharacters.length > 0) {
+            // Use "Fled" for classic mode, "Disconnected" for cyber mode
+            const disconnectTerm = TextManager.isCyberMode() ? 'Disconnected' : 'Fled';
+            
+            content += '<div class="escaped-section">';
+            content += `<h3>🏃 ${disconnectTerm}</h3>`;
+            content += '<div class="escaped-list">';
+            
+            disconnectedCharacters.forEach(disconnected => {
+                const character = disconnected.character;
+                content += this.createSummaryCharacterCard(character, 'escaped');
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Casualties section (right side)
+        if (casualties && casualties.length > 0) {
+            content += '<div class="casualties-section">';
+            content += '<h3>💀 Fallen in Battle</h3>';
+            content += '<div class="casualty-list">';
+            
+            casualties.forEach(casualty => {
+                content += this.createSummaryCharacterCard(casualty, 'casualty');
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        content += '</div>'; // End defeat-grid
+        
+        content += '</div>'; // End defeat-with-disconnect
+        
+        return content;
+    }
+    
+
+    
+    /**
      * Show victory with casualties screen
      */
-    showVictoryWithCasualtiesScreen(casualties, survivors, rewards) {
+    showVictoryWithCasualtiesScreen(casualties, survivors, rewards, disconnectedCharacters = []) {
         console.log('Showing victory with casualties:', { 
             casualties: casualties.map(c => ({ name: c.name, status: c.status, isAlive: c.isAlive, hp: c.currentHP })), 
             survivors: survivors.map(s => ({ name: s.name, status: s.status, isAlive: s.isAlive, hp: s.currentHP })), 
+            disconnectedCharacters: disconnectedCharacters.map(d => ({ name: d.character.name, status: d.character.status })),
             rewards 
         });
         
@@ -3672,12 +3864,21 @@ class UI {
             this.postCombatModal = null;
         });
         
-        // Create the modal content with casualties and rewards
-        const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards) + 
-            '<div class="post-combat-actions">' +
-            '<button id="continue-btn" class="btn btn-primary">Return to Grid</button>' +
-            '<button id="view-status-btn" class="btn btn-secondary">View Character Status</button>' +
-            '</div>';
+        // Create the modal content with casualties, survivors, disconnected characters, and rewards
+        let actionButtons = '<div class="post-combat-actions">';
+        
+        // Determine available actions based on survivors
+        if (survivors && survivors.length > 0) {
+            // Have survivors - can return to grid with casualties in tow
+            actionButtons += '<button id="continue-btn" class="btn btn-primary">Return to Grid</button>';
+        } else {
+            // No survivors - only option is to return to town
+            actionButtons += '<button id="return-town-btn" class="btn btn-primary">Return to Town</button>';
+        }
+        
+        actionButtons += '</div>';
+        
+        const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters) + actionButtons;
         
         // Create and show modal
         this.postCombatModal.create(content, '⚔️ Victory with Casualties');
@@ -3690,7 +3891,7 @@ class UI {
     /**
      * Create victory with casualties content
      */
-    createVictoryWithCasualtiesContent(casualties, survivors, rewards) {
+    createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters = []) {
         let content = '<div class="victory-with-casualties">';
         
         // Victory message
@@ -3708,10 +3909,7 @@ class UI {
             content += '<div class="survivor-list">';
             
             survivors.forEach(survivor => {
-                content += '<div class="survivor-item">';
-                content += `<span class="survivor-name">${survivor.name}</span>`;
-                content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
-                content += '</div>';
+                content += this.createSummaryCharacterCard(survivor, 'survivor');
             });
             
             content += '</div>';
@@ -3725,11 +3923,22 @@ class UI {
             content += '<div class="casualty-list">';
             
             casualties.forEach(casualty => {
-                const status = casualty.isDead ? 'Killed' : (casualty.isUnconscious ? 'Unconscious' : 'Injured');
-                content += '<div class="casualty-item">';
-                content += `<span class="casualty-name">${casualty.name}</span>`;
-                content += `<span class="casualty-status">${status}</span>`;
-                content += '</div>';
+                content += this.createSummaryCharacterCard(casualty, 'casualty');
+            });
+            
+            content += '</div>';
+            content += '</div>';
+        }
+        
+        // Disconnected characters section (center)
+        if (disconnectedCharacters && disconnectedCharacters.length > 0) {
+            content += '<div class="disconnected-section">';
+            content += `<h3>🏃 ${TextManager.getText('combat_disconnect', 'Fled')}</h3>`;
+            content += '<div class="disconnected-list">';
+            
+            disconnectedCharacters.forEach(disconnected => {
+                const character = disconnected.character;
+                content += this.createSummaryCharacterCard(character, 'escaped');
             });
             
             content += '</div>';
@@ -3825,7 +4034,7 @@ class UI {
      */
     setupVictoryWithCasualtiesEventListeners(viewport, rewards) {
         const continueBtn = viewport.querySelector('#continue-btn');
-        const viewStatusBtn = viewport.querySelector('#view-status-btn');
+        const returnTownBtn = viewport.querySelector('#return-town-btn');
         
         if (continueBtn) {
             continueBtn.addEventListener('click', async () => {
@@ -3845,12 +4054,21 @@ class UI {
             });
         }
         
-        if (viewStatusBtn) {
-            viewStatusBtn.addEventListener('click', () => {
-                console.log('View character status clicked');
-                // Close post-combat modal and show character roster
+        if (returnTownBtn) {
+            returnTownBtn.addEventListener('click', async () => {
+                console.log('Return to town clicked');
                 this.postCombatModal.hide();
-                this.characterUI.showCharacterRoster();
+                
+                // Clear modal reference
+                this.postCombatModal = null;
+                
+                // Stop combat music and play town music
+                if (window.engine?.audioManager) {
+                    window.engine.audioManager.fadeToTrack('town');
+                }
+                
+                // Return to town
+                await window.engine.returnToTown();
             });
         }
     }

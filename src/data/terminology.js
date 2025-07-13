@@ -129,7 +129,17 @@ const TERMINOLOGY = {
         combat_defend: "🛡️ Defend", 
         combat_spell: "🔮 Cast Spell",
         combat_item: "💊 Use Item",
-        combat_run: "🏃 Run",
+        combat_run: "🏃 Flee",
+        combat_disconnect: "🏃 Flee",
+        disconnect_attempt: "Flee Attempt",
+        disconnect_success: "Successfully fled",
+        disconnect_failure: "Failed to flee",
+        disconnect_description: "Attempt to escape combat and return to town",
+        
+        // Post-combat status text
+        defeat_some_escaped: "Defeat - Some 🏃 Fled",
+        escaped_status_location: "Confused (In Town)",
+        escaped_safe_return: "These heroes have returned to Town safely, though they are confused from their hasty retreat.",
         
         // Character Stats
         hp: "HP",
@@ -238,6 +248,7 @@ const TERMINOLOGY = {
         character_status_dead: "Dead",
         character_status_ashes: "Ashes",
         character_status_lost: "Lost",
+        character_status_confused: "Confused",
         
         // Lost Agents Modal
         lost_characters: "Fallen Heroes",
@@ -462,6 +473,16 @@ const TERMINOLOGY = {
         combat_spell: "🔮 Run Program",
         combat_item: "💊 Use Data",
         combat_run: "🏃 Disconnect",
+        combat_disconnect: "🏃 Disconnect",
+        disconnect_attempt: "Disconnect Attempt",
+        disconnect_success: "Successfully disconnected",
+        disconnect_failure: "Failed to disconnect",
+        disconnect_description: "Attempt to disconnect from combat and return to terminal hub",
+        
+        // Post-combat status text
+        defeat_some_escaped: "Defeat - Some 🏃 Disconnected",
+        escaped_status_location: "Scrambled (In Terminal Hub)",
+        escaped_safe_return: "These agents have returned to Terminal Hub safely, though they are scrambled from their hasty disconnection.",
         
         // Character Stats
         hp: "System Integrity",
@@ -570,6 +591,7 @@ const TERMINOLOGY = {
         character_status_dead: "Offline",
         character_status_ashes: "Fragmented",
         character_status_lost: "Uninstalled",
+        character_status_confused: "Scrambled",
         
         // Lost Agents Modal
         lost_characters: "Lost Agents",

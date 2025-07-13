@@ -22,6 +22,7 @@ class CombatInterface {
         this.eventSystem.on('combat-action-selected', this.handleActionSelected.bind(this));
         this.eventSystem.on('combat-formation-change', this.handleFormationChange.bind(this));
         this.eventSystem.on('combat-flee-attempt', this.handleFleeAttempt.bind(this));
+        this.eventSystem.on('character-disconnect-attempt', this.handleDisconnectAttempt.bind(this));
         this.eventSystem.on('combat-end-requested', this.handleCombatEnd.bind(this));
     }
     
@@ -322,6 +323,20 @@ class CombatInterface {
     }
     
     /**
+     * Handle individual character disconnect attempt
+     */
+    handleDisconnectAttempt(data) {
+        const { character } = data;
+        
+        const disconnectAction = {
+            type: 'disconnect',
+            character: character
+        };
+        
+        return this.processAction(disconnectAction);
+    }
+    
+    /**
      * Handle combat end
      */
     handleCombatEnd(data) {
@@ -507,12 +522,13 @@ class CombatInterface {
             });
         }
         
-        // Flee action
+        // Unified escape action (works for both individual and maintains terminology)
         actions.push({
-            type: 'flee',
-            name: 'Flee',
-            description: 'Attempt to escape from combat',
-            available: true
+            type: 'disconnect',
+            name: TextManager.getText('combat_disconnect', 'Run'),
+            description: TextManager.getText('disconnect_description', 'Attempt to escape combat and return to town'),
+            available: true,
+            icon: '🏃'
         });
         
         return actions;
@@ -621,7 +637,7 @@ class CombatInterface {
                 spell: 'Cast a memorized spell. Success depends on caster level vs spell difficulty.',
                 defend: 'Gain +2 AC bonus until your next turn.',
                 item: 'Use a consumable item from your inventory.',
-                flee: 'Attempt to escape combat. Success depends on agility and class.'
+                            disconnect: 'Character attempts to escape combat. Fixed 50% chance, bypasses normal turn order. Success returns character to town with confused/scrambled status. Failure results in random monster attack.'
             },
             formation: {
                 front: 'Front row characters take more damage but attack more effectively.',

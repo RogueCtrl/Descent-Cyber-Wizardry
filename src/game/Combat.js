@@ -21,6 +21,9 @@ class Combat {
         this.currentEnemyPartyIndex = 0;
         this.currentEnemyParty = null;
         
+        // Track disconnected characters for post-combat display
+        this.disconnectedCharacters = [];
+        
         // Initialize spell system
         this.spellSystem = new Spells();
         this.spellSystemInitialized = false;
@@ -107,6 +110,7 @@ class Combat {
         this.combatants = [];
         this.actionQueue = [];
         this.combatLog = [];
+        this.disconnectedCharacters = []; // Clear disconnected characters for new wave
         
         // Add player party members
         this.combatants.push(...this.playerParty.aliveMembers);
@@ -198,17 +202,29 @@ class Combat {
         const combatEnd = Random.choice(combatEnds);
         
         this.logMessage(`🏁 ${combatEnd}`, 'combat', '🏁');
-        this.logMessage(`The party can rest and recover...`, 'system', '😌');
         
         // Calculate combat rewards before clearing combat state
         const combatRewards = this.calculateCombatRewards();
         
-        // Check if party was defeated BEFORE clearing combatants
+        // Check remaining alive party members in combat
         const alivePartyMembers = this.combatants.filter(c => 
             c.hasOwnProperty('class') && c.isAlive
         ).length;
         
-        const victory = alivePartyMembers > 0;
+        // Check if any enemies are still alive
+        const aliveEnemies = this.combatants.filter(c => 
+            !c.hasOwnProperty('class') && c.isAlive
+        ).length;
+        
+        // Determine combat outcome
+        const victory = aliveEnemies === 0; // Victory = all enemies defeated
+        const hasDisconnectedCharacters = this.disconnectedCharacters.length > 0;
+        const hasAliveCombatants = alivePartyMembers > 0;
+        
+        // Get casualties (characters who died/fell unconscious in combat)
+        const casualties = this.combatants.filter(c => 
+            c.hasOwnProperty('class') && !c.isAlive
+        );
         
         this.isActive = false;
         this.combatants = [];
@@ -217,31 +233,61 @@ class Combat {
         // Store rewards for post-combat display
         this.lastCombatRewards = combatRewards;
         
+        console.log('Combat ended!', {
+            victory,
+            alivePartyMembers,
+            aliveEnemies,
+            hasDisconnectedCharacters,
+            casualtiesCount: casualties.length,
+            disconnectedCount: this.disconnectedCharacters.length
+        });
+        
         // Clear combat state
         this.playerParty = null;
         this.enemyParties = [];
         this.currentEnemyParty = null;
         this.currentEnemyPartyIndex = 0;
         
-        console.log('Combat ended!');
-        
-        // Emit combat ended event with rewards or defeat
+        // Emit appropriate combat ended event
         if (window.engine && window.engine.eventSystem) {
             if (victory) {
+                this.logMessage(`The party stands victorious!`, 'victory', '🏆');
                 window.engine.eventSystem.emit('combat-ended', {
                     victory: true,
-                    rewards: combatRewards
+                    rewards: combatRewards,
+                    casualties: casualties,
+                    disconnectedCharacters: this.disconnectedCharacters
                 });
             } else {
-                // Party was defeated - show death screen
-                const casualties = this.combatants.filter(c => 
-                    c.hasOwnProperty('class') && !c.isAlive
-                );
-                
-                window.engine.eventSystem.emit('party-defeated', {
-                    victory: false,
-                    casualties: casualties
-                });
+                // Defeat scenario - check if anyone escaped
+                if (hasDisconnectedCharacters && !hasAliveCombatants) {
+                    // Some characters escaped, others fell - partial defeat
+                    this.logMessage(`The battle is lost, but some escaped...`, 'defeat', '💔');
+                    window.engine.eventSystem.emit('party-defeated', {
+                        victory: false,
+                        casualties: casualties,
+                        disconnectedCharacters: this.disconnectedCharacters,
+                        totalDefeat: false
+                    });
+                } else if (!hasAliveCombatants && !hasDisconnectedCharacters) {
+                    // Total party kill - no one escaped
+                    this.logMessage(`The party has been utterly defeated!`, 'defeat', '💀');
+                    window.engine.eventSystem.emit('party-defeated', {
+                        victory: false,
+                        casualties: casualties,
+                        disconnectedCharacters: this.disconnectedCharacters,
+                        totalDefeat: true
+                    });
+                } else {
+                    // Combat ended but party still has living members (shouldn't happen in normal flow)
+                    this.logMessage(`Combat ends in an unusual state...`, 'system', '❓');
+                    window.engine.eventSystem.emit('party-defeated', {
+                        victory: false,
+                        casualties: casualties,
+                        disconnectedCharacters: this.disconnectedCharacters,
+                        totalDefeat: false
+                    });
+                }
             }
         }
     }
@@ -314,6 +360,13 @@ class Combat {
      */
     getLastCombatRewards() {
         return this.lastCombatRewards || null;
+    }
+    
+    /**
+     * Get disconnected characters from this combat
+     */
+    getDisconnectedCharacters() {
+        return this.disconnectedCharacters || [];
     }
     
     /**
@@ -431,8 +484,11 @@ class Combat {
         const result = this.resolveAction(action);
         this.logMessage(result.message);
         
-        // Advance to next actor
-        this.currentTurnIndex++;
+        // Disconnect actions don't consume turns - they bypass normal combat flow
+        if (action.type !== 'disconnect') {
+            // Advance to next actor for normal actions
+            this.currentTurnIndex++;
+        }
         
         // Check for combat end
         if (this.checkCombatEnd()) {
@@ -457,6 +513,8 @@ class Combat {
                 return this.resolveItem(action);
             case 'flee':
                 return this.resolveFlee(action);
+            case 'disconnect':
+                return this.resolveDisconnect(action);
             default:
                 return { success: false, message: 'Invalid action type' };
         }
@@ -729,51 +787,201 @@ class Combat {
     }
     
     /**
-     * Resolve flee action
+     * Resolve flee action (unified with disconnect - same logic, different terminology)
      */
     resolveFlee(action) {
-        const { fleer } = action;
-        const fleeChance = this.calculateFleeChance(fleer);
+        // Unified flee system - redirect to disconnect logic
+        const character = action.fleer || action.attacker || action.character;
+        if (!character) {
+            return { success: false, message: 'No character to flee with!' };
+        }
         
-        // Dramatic flee attempt
-        const fleeAttempts = [
-            `${fleer.name} tries to escape!`,
-            `${fleer.name} looks for an opening to flee!`,
-            `${fleer.name} attempts to break away from combat!`,
-            `${fleer.name} desperately seeks an escape route!`
-        ];
-        const fleeAttempt = Random.choice(fleeAttempts);
+        // Use the unified disconnect system
+        return this.resolveDisconnect({
+            type: 'disconnect',
+            character: character
+        });
+    }
+    
+    /**
+     * Resolve individual character disconnect action
+     */
+    resolveDisconnect(action) {
+        const character = action.character || action.attacker;
+        if (!character) {
+            return { success: false, message: 'No character to disconnect!' };
+        }
+        const disconnectChance = this.calculateDisconnectChance(character);
         
-        this.logMessage(`🏃 ${fleeAttempt}`, 'combat', '🏃');
-        this.logMessage(`Flee chance: ${fleeChance}%`, 'system', '🎲');
+        // Use appropriate terminology
+        const actionTerm = TextManager.getText('combat_disconnect', 'Run');
+        const disconnectTerm = TextManager.getText('character_status_lost', 'Lost');
         
-        if (Random.percent(fleeChance)) {
-            this.logMessage(`✅ ${fleer.name} successfully escapes from combat!`, 'flee', '✅');
-            this.logMessage(`The party retreats to safety...`, 'system', '🏃‍♂️');
-            this.endCombat();
-            return {
-                success: true,
-                fled: true,
-                message: `${fleer.name || 'Character'} successfully flees from combat!`
-            };
+        this.logMessage(`🏃 ${character.name} attempts to ${actionTerm.toLowerCase()}!`, 'combat', '🏃');
+        this.logMessage(`${actionTerm} chance: ${disconnectChance}%`, 'system', '🎲');
+        
+        if (Random.percent(disconnectChance)) {
+            // Success - character escapes
+            return this.handleSuccessfulDisconnect(character);
         } else {
-            const failureMessages = [
-                `${fleer.name} is blocked by enemies!`,
-                `${fleer.name} stumbles and can't escape!`,
-                `The enemies surround ${fleer.name}!`,
-                `${fleer.name} can't find an opening!`
-            ];
-            const failureMessage = Random.choice(failureMessages);
+            // Failure - character is knocked unconscious by enemies
+            return this.handleFailedDisconnect(character);
+        }
+    }
+    
+    /**
+     * Calculate disconnect chance (50% base - no modifiers)
+     */
+    calculateDisconnectChance(character) {
+        return 50; // Fixed 50% - no formation or other calculations
+    }
+    
+    /**
+     * Handle successful disconnect - return character to town
+     */
+    handleSuccessfulDisconnect(character) {
+        const successTerm = TextManager.getText('combat_disconnect', 'Run');
+        const townTerm = TextManager.getText('town', 'Town');
+        
+        this.logMessage(`✅ ${character.name} successfully ${successTerm.toLowerCase()}s from combat!`, 'disconnect', '✅');
+        this.logMessage(`${character.name} returns to ${townTerm}...`, 'system', '🏃‍♂️');
+        
+        const confusedTerm = TextManager.getText('character_status_confused', 'Confused');
+        this.logMessage(`😵‍💫 ${character.name} is ${confusedTerm.toLowerCase()} from the hasty retreat!`, 'status', '😵‍💫');
+        
+        // Remove character from combat
+        this.removeCharacterFromCombat(character);
+        
+        // Return character to town (update availability but keep in party for post-combat display)
+        character.availability = 'available';
+        // Don't remove partyId yet - will be handled in post-combat processing
+        character.status = TextManager.getText('character_status_confused', 'Confused');
+        
+        // Add confused condition to character conditions array
+        if (!character.conditions) {
+            character.conditions = [];
+        }
+        character.conditions.push({
+            type: 'confused',
+            name: TextManager.getText('character_status_confused', 'Confused'),
+            duration: -1, // Permanent until healed
+            source: 'disconnect'
+        });
+        
+        console.log(`DEBUG: Setting ${character.name} status to '${character.status}' and adding confused condition`);
+        
+        // Save character state
+        if (character.saveToStorage) {
+            character.saveToStorage();
+        }
+        
+        // Emit character disconnected event
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('character-disconnected', {
+                character: character,
+                reason: 'successful_disconnect'
+            });
+        }
+        
+        return {
+            success: true,
+            disconnected: true,
+            message: `${character.name} successfully escapes from combat!`
+        };
+    }
+    
+    /**
+     * Handle failed disconnect - character knocked unconscious by random monster attack
+     */
+    handleFailedDisconnect(character) {
+        const failTerm = TextManager.getText('combat_disconnect', 'Run');
+        
+        this.logMessage(`❌ ${character.name} fails to ${failTerm.toLowerCase()}!`, 'disconnect', '❌');
+        this.logMessage(`Enemies surround ${character.name}!`, 'system', '⚔️');
+        
+        // Get alive enemies
+        const aliveEnemies = this.combatants.filter(c => !c.hasOwnProperty('class') && c.isAlive);
+        
+        if (aliveEnemies.length > 0) {
+            // Pick a random monster to attack
+            const attackingMonster = Random.choice(aliveEnemies);
+            this.logMessage(`${attackingMonster.name} strikes ${character.name} down!`, 'combat', '⚔️');
             
-            this.logMessage(`❌ ${failureMessage}`, 'flee', '❌');
-            this.logMessage(`${fleer.name} must continue fighting!`, 'system', '⚔️');
+            // Monster does basic attack damage to knock character unconscious
+            const attackAction = {
+                type: 'attack',
+                attacker: attackingMonster,
+                target: character
+            };
+            
+            // Execute the monster's attack
+            const attackResult = this.resolveAttack(attackAction);
             
             return {
                 success: false,
-                message: `${fleer.name || 'Character'} fails to flee!`
+                disconnected: false,
+                unconscious: !character.isAlive,
+                message: `${character.name} is struck down while trying to escape!`,
+                attackResult: attackResult
+            };
+        } else {
+            // No enemies to attack - just knock unconscious directly
+            character.currentHP = 0;
+            character.isAlive = false;
+            character.status = TextManager.getText('character_status_unconscious', 'Unconscious');
+            
+            const unconsciousTerm = TextManager.getText('character_status_unconscious', 'Unconscious');
+            this.logMessage(`😵 ${character.name} is knocked ${unconsciousTerm.toLowerCase()}!`, 'unconscious', '😵');
+            
+            // Save character state
+            if (character.saveToStorage) {
+                character.saveToStorage();
+            }
+            
+            // Emit character update event
+            if (window.engine && window.engine.eventSystem) {
+                window.engine.eventSystem.emit('character-updated', { character: character });
+            }
+            
+            return {
+                success: false,
+                disconnected: false,
+                unconscious: true,
+                message: `${character.name} is knocked unconscious trying to escape!`
             };
         }
     }
+    
+    /**
+     * Remove character from combat arrays (for disconnects)
+     */
+    removeCharacterFromCombat(character) {
+        // Add to disconnected characters list for post-combat display
+        this.disconnectedCharacters.push({
+            character: character,
+            reason: 'successful_disconnect',
+            timestamp: Date.now()
+        });
+        
+        // Remove from combatants array
+        this.combatants = this.combatants.filter(c => c.id !== character.id);
+        
+        // Remove from turn order
+        this.turnOrder = this.turnOrder.filter(entry => entry.combatant.id !== character.id);
+        
+        // Do NOT remove from player party - keep them in party but mark as disconnected
+        // The party will handle their status when they return to town
+        if (character.partyId) {
+            character.partyStatus = 'disconnected'; // Mark as disconnected but still in party
+        }
+        
+        // Adjust current turn index if needed
+        if (this.currentTurnIndex >= this.turnOrder.length) {
+            this.currentTurnIndex = 0;
+        }
+    }
+    
+
     
     /**
      * Get attack bonus for combatant
@@ -951,22 +1159,7 @@ class Combat {
         return alivePartyMembers > 0 ? 'party' : 'enemies';
     }
     
-    /**
-     * Calculate flee chance
-     */
-    calculateFleeChance(fleer) {
-        let baseChance = 50;
-        
-        if (fleer.attributes) {
-            baseChance += (fleer.attributes.agility - 10) * 2;
-        }
-        
-        if (fleer.class === 'Thief' || fleer.class === 'Ninja') {
-            baseChance += 10;
-        }
-        
-        return Math.min(90, Math.max(10, baseChance));
-    }
+
     
     /**
      * Check if combatant can cast spell
