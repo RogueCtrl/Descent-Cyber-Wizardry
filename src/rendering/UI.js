@@ -168,6 +168,10 @@ class UI {
         // Character updated event (for real-time HP updates)
         this.eventSystem.on('character-updated', (data) => {
             this.refreshCombatDisplay();
+            // Also update the left-side party display
+            if (window.engine && window.engine.party) {
+                this.updatePartyDisplay(window.engine.party);
+            }
         });
     }
     
@@ -3083,7 +3087,7 @@ class UI {
         }
         
         // Process the action
-        const result = combat.processAction(actionData);
+        const result = await combat.processAction(actionData);
         
         // Always log the result message (hit or miss)
         if (result.message) {
@@ -3121,21 +3125,27 @@ class UI {
         
         // Process AI turn after a short delay
         setTimeout(async () => {
-            // Use the combat interface's AI processing
-            const aiResult = window.engine.combatInterface.processAITurn(monster);
-            
-            if (aiResult && typeof aiResult === 'object') {
-                // Check if combat ended from AI action
-                if (aiResult.combatEnded) {
-                    await this.handleCombatEnd(aiResult.winner);
-                    return;
+            try {
+                // Use the combat interface's AI processing (now async)
+                const aiResult = await window.engine.combatInterface.processAITurn(monster);
+                
+                if (aiResult && typeof aiResult === 'object') {
+                    // Check if combat ended from AI action
+                    if (aiResult.combatEnded) {
+                        await this.handleCombatEnd(aiResult.winner);
+                        return;
+                    }
+                    
+                    // Show the result of the enemy action and enable continue
+                    this.showEnemyActionResult(monster, aiResult);
+                    
+                } else {
+                    console.error('AI processing returned invalid result:', aiResult);
+                    this.addMessage('Monster AI failed to act!', 'error');
+                    this.showEnemyActionResult(monster, { action: 'failed', result: 'Monster AI failed to act!' });
                 }
-                
-                // Show the result of the enemy action and enable continue
-                this.showEnemyActionResult(monster, aiResult);
-                
-            } else {
-                console.error('AI processing returned invalid result:', aiResult);
+            } catch (error) {
+                console.error('Error processing monster turn:', error);
                 this.addMessage('Monster AI failed to act!', 'error');
                 this.showEnemyActionResult(monster, { action: 'failed', result: 'Monster AI failed to act!' });
             }
@@ -3560,7 +3570,7 @@ class UI {
                 this.postCombatModal = null;
                 
                 // Apply rewards to party
-                this.applyRewardsToParty(rewards);
+                await this.applyRewardsToParty(rewards);
                 
                 // Stop victory music and play dungeon music
                 if (window.engine?.audioManager) {
@@ -3576,7 +3586,7 @@ class UI {
     /**
      * Apply rewards to party members
      */
-    applyRewardsToParty(rewards) {
+    async applyRewardsToParty(rewards) {
         if (!window.engine || !window.engine.party) return;
         
         const party = window.engine.party;
@@ -3587,7 +3597,8 @@ class UI {
         // Distribute experience among alive party members
         const expPerMember = Math.floor(rewards.experience / aliveMembers.length);
         
-        aliveMembers.forEach(member => {
+        // Process all members and collect save promises
+        const savePromises = aliveMembers.map(async member => {
             member.experience = (member.experience || 0) + expPerMember;
             
             // Check for level up
@@ -3603,8 +3614,11 @@ class UI {
             }
             
             // Save character
-            member.saveToStorage();
+            await member.saveToStorage();
         });
+        
+        // Wait for all saves to complete
+        await Promise.all(savePromises);
         
         // Add gold to party
         party.gold = (party.gold || 0) + rewards.gold;
@@ -4708,11 +4722,13 @@ class UI {
                     
                     // Save all remaining character states (if party exists)
                     if (window.engine.party && window.engine.party.members) {
-                        window.engine.party.members.forEach(member => {
+                        const savePromises = window.engine.party.members.map(member => {
                             if (member.saveToStorage) {
-                                member.saveToStorage();
+                                return member.saveToStorage();
                             }
+                            return Promise.resolve();
                         });
+                        await Promise.all(savePromises);
                     }
                 } else {
                     console.error('Failed to transition to town state');

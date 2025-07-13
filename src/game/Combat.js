@@ -480,8 +480,8 @@ class Combat {
     /**
      * Process a combat action
      */
-    processAction(action) {
-        const result = this.resolveAction(action);
+    async processAction(action) {
+        const result = await this.resolveAction(action);
         this.logMessage(result.message);
         
         // Disconnect actions don't consume turns - they bypass normal combat flow
@@ -501,10 +501,10 @@ class Combat {
     /**
      * Resolve a combat action
      */
-    resolveAction(action) {
+    async resolveAction(action) {
         switch (action.type) {
             case 'attack':
-                return this.resolveAttack(action);
+                return await this.resolveAttack(action);
             case 'spell':
                 return this.resolveSpell(action);
             case 'defend':
@@ -512,9 +512,9 @@ class Combat {
             case 'item':
                 return this.resolveItem(action);
             case 'flee':
-                return this.resolveFlee(action);
+                return await this.resolveFlee(action);
             case 'disconnect':
-                return this.resolveDisconnect(action);
+                return await this.resolveDisconnect(action);
             default:
                 return { success: false, message: 'Invalid action type' };
         }
@@ -523,7 +523,7 @@ class Combat {
     /**
      * Resolve attack action
      */
-    resolveAttack(action) {
+    async resolveAttack(action) {
         const { attacker, target } = action;
         
         if (!target || !target.isAlive) {
@@ -574,7 +574,7 @@ class Combat {
                 
                 // Save character state to persistent storage
                 if (target.saveToStorage) {
-                    target.saveToStorage();
+                    await target.saveToStorage();
                 }
                 
                 // Emit character update event for UI refresh
@@ -648,7 +648,7 @@ class Combat {
             
             // Save character state to persistent storage
             if (target.saveToStorage) {
-                target.saveToStorage();
+                await target.saveToStorage();
             }
             
             // Emit character update event for UI refresh
@@ -789,7 +789,7 @@ class Combat {
     /**
      * Resolve flee action (unified with disconnect - same logic, different terminology)
      */
-    resolveFlee(action) {
+    async resolveFlee(action) {
         // Unified flee system - redirect to disconnect logic
         const character = action.fleer || action.attacker || action.character;
         if (!character) {
@@ -797,7 +797,7 @@ class Combat {
         }
         
         // Use the unified disconnect system
-        return this.resolveDisconnect({
+        return await this.resolveDisconnect({
             type: 'disconnect',
             character: character
         });
@@ -806,7 +806,7 @@ class Combat {
     /**
      * Resolve individual character disconnect action
      */
-    resolveDisconnect(action) {
+    async resolveDisconnect(action) {
         const character = action.character || action.attacker;
         if (!character) {
             return { success: false, message: 'No character to disconnect!' };
@@ -838,10 +838,10 @@ class Combat {
         
         if (Random.percent(disconnectChance)) {
             // Success - character escapes
-            return this.handleSuccessfulDisconnect(character);
+            return await this.handleSuccessfulDisconnect(character);
         } else {
             // Failure - character is knocked unconscious by enemies
-            return this.handleFailedDisconnect(character);
+            return await this.handleFailedDisconnect(character);
         }
     }
     
@@ -855,7 +855,7 @@ class Combat {
     /**
      * Handle successful disconnect - return character to town
      */
-    handleSuccessfulDisconnect(character) {
+    async handleSuccessfulDisconnect(character) {
         const successTerm = TextManager.getText('combat_disconnect', 'Run');
         const townTerm = TextManager.getText('town', 'Town');
         
@@ -888,7 +888,7 @@ class Combat {
         
         // Save character state
         if (character.saveToStorage) {
-            character.saveToStorage();
+            await character.saveToStorage();
         }
         
         // Emit character disconnected event
@@ -909,7 +909,7 @@ class Combat {
     /**
      * Handle failed disconnect - character knocked unconscious by random monster attack
      */
-    handleFailedDisconnect(character) {
+    async handleFailedDisconnect(character) {
         const failTerm = TextManager.getText('combat_disconnect', 'Run');
         
         this.logMessage(`❌ ${character.name} fails to ${failTerm.toLowerCase()}!`, 'disconnect', '❌');
@@ -931,7 +931,7 @@ class Combat {
             };
             
             // Execute the monster's attack
-            const attackResult = this.resolveAttack(attackAction);
+            const attackResult = await this.resolveAttack(attackAction);
             
             return {
                 success: false,
@@ -951,7 +951,7 @@ class Combat {
             
             // Save character state
             if (character.saveToStorage) {
-                character.saveToStorage();
+                await character.saveToStorage();
             }
             
             // Emit character update event

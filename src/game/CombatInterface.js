@@ -563,7 +563,7 @@ class CombatInterface {
     /**
      * Process AI turn for monsters
      */
-    processAITurn(monster) {
+    async processAITurn(monster) {
         const playerTargets = this.combat.combatants.filter(c => 
             c.hasOwnProperty('class') && c.isAlive
         );
@@ -582,7 +582,7 @@ class CombatInterface {
                 target: aiDecision.target
             };
             
-            const attackResult = this.combat.processAction(attackAction);
+            const attackResult = await this.combat.processAction(attackAction);
             
             // Emit AI action event
             this.eventSystem.emit('ai-action-taken', {
