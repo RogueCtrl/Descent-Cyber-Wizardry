@@ -873,8 +873,8 @@ class Spells {
             }
             
             // Cure diseases and poison
-            if (target.status && target.status !== 'OK') {
-                target.status = 'OK';
+            if (target.status && target.status !== 'ok') {
+                target.status = 'ok';
             }
             
             const actualHealing = target.currentHP - oldHP;
@@ -1108,7 +1108,7 @@ class Spells {
         if (Random.percent(successChance)) {
             // Successful resurrection
             target.isAlive = true;
-            target.status = 'OK';
+            target.status = 'ok';
             target.currentHP = 1;
             
             // Aging effect (unless perfect resurrection)

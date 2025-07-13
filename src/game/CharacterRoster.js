@@ -288,7 +288,7 @@ class CharacterRoster {
             
             // Character might be injured or weakened
             if (targetCharacter.status === 'missing') {
-                targetCharacter.status = 'OK';
+                targetCharacter.status = 'ok';
                 targetCharacter.isAlive = true;
             }
             

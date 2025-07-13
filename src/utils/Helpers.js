@@ -383,13 +383,9 @@ class Helpers {
         const casualties = [];
         const survivors = [];
         
-        // Separate casualties from survivors
+        // Separate casualties from survivors using death system helpers
         party.members.forEach(member => {
-            if (member.status === 'unconscious' || 
-                member.status === 'dead' || 
-                member.status === 'ashes' || 
-                member.status === 'lost' ||
-                !member.isAlive) {
+            if (this.isDead(member)) {
                 casualties.push(member);
             } else {
                 survivors.push(member);
@@ -408,5 +404,303 @@ class Helpers {
         }
         
         return { casualties, survivors };
+    }
+
+    /**
+     * Death System Helper Functions
+     * Provides canonical death states and utility functions for character/monster status management
+     */
+    
+    /**
+     * Canonical death states as defined in the death system guide
+     */
+    static DEATH_STATES = {
+        OK: 'ok',                    // OK/Online - fully functional
+        UNCONSCIOUS: 'unconscious',  // Unconscious/Crashed - knocked out but recoverable
+        DEAD: 'dead',               // Dead/Offline - recently deceased, resurrection possible
+        ASHES: 'ashes',             // Ashes/Fragmented - reduced to ashes/fragmented data
+        LOST: 'lost'                // Lost/Uninstalled - permanently lost
+    };
+
+    /**
+     * Death state severity levels (0 = best, 4 = worst)
+     */
+    static DEATH_SEVERITY = {
+        [this.DEATH_STATES.OK]: 0,
+        [this.DEATH_STATES.UNCONSCIOUS]: 1,
+        [this.DEATH_STATES.DEAD]: 2,
+        [this.DEATH_STATES.ASHES]: 3,
+        [this.DEATH_STATES.LOST]: 4
+    };
+
+    /**
+     * Normalize a death state to canonical form
+     * @param {string} status - The status to normalize
+     * @returns {string} Canonical death state or original if invalid
+     */
+    static normalizeDeathState(status) {
+        if (!status || typeof status !== 'string') {
+            return this.DEATH_STATES.OK;
+        }
+
+        const normalized = status.toLowerCase();
+        
+        // Handle common variations and legacy values
+        switch (normalized) {
+            case 'ok':
+            case 'online':
+            case 'alive':
+            case 'active':
+                return this.DEATH_STATES.OK;
+            
+            case 'unconscious':
+            case 'crashed':
+            case 'knocked out':
+            case 'ko':
+                return this.DEATH_STATES.UNCONSCIOUS;
+            
+            case 'dead':
+            case 'offline':
+            case 'deceased':
+            case 'killed':
+                return this.DEATH_STATES.DEAD;
+            
+            case 'ashes':
+            case 'fragmented':
+            case 'destroyed':
+                return this.DEATH_STATES.ASHES;
+            
+            case 'lost':
+            case 'uninstalled':
+            case 'gone':
+            case 'missing':
+                return this.DEATH_STATES.LOST;
+            
+            default:
+                // If it's already a valid canonical state, return it
+                if (Object.values(this.DEATH_STATES).includes(normalized)) {
+                    return normalized;
+                }
+                
+                // Log warning for unknown status
+                console.warn(`Unknown death state: ${status}, defaulting to 'ok'`);
+                return this.DEATH_STATES.OK;
+        }
+    }
+
+    /**
+     * Check if a character/monster is alive
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if alive
+     */
+    static isAlive(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        return status === this.DEATH_STATES.OK;
+    }
+
+    /**
+     * Check if a character/monster is dead (any death state)
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if dead
+     */
+    static isDead(entity) {
+        if (!entity) return true;
+        
+        const status = this.normalizeDeathState(entity.status);
+        return status !== this.DEATH_STATES.OK;
+    }
+
+    /**
+     * Check if a character/monster is unconscious
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if unconscious
+     */
+    static isUnconscious(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        return status === this.DEATH_STATES.UNCONSCIOUS;
+    }
+
+    /**
+     * Check if a character/monster is permanently lost
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if permanently lost
+     */
+    static isPermanentlyLost(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        return status === this.DEATH_STATES.LOST;
+    }
+
+    /**
+     * Check if a character/monster can be resurrected
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if resurrection is possible
+     */
+    static canBeResurrected(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        return status === this.DEATH_STATES.UNCONSCIOUS || 
+               status === this.DEATH_STATES.DEAD || 
+               status === this.DEATH_STATES.ASHES;
+    }
+
+    /**
+     * Get the next worse death state for failed resurrection
+     * @param {string} currentStatus - Current death state
+     * @returns {string} Next worse death state
+     */
+    static getNextWorseDeathState(currentStatus) {
+        const status = this.normalizeDeathState(currentStatus);
+        
+        switch (status) {
+            case this.DEATH_STATES.OK:
+                return this.DEATH_STATES.UNCONSCIOUS;
+            case this.DEATH_STATES.UNCONSCIOUS:
+                return this.DEATH_STATES.DEAD;
+            case this.DEATH_STATES.DEAD:
+                return this.DEATH_STATES.ASHES;
+            case this.DEATH_STATES.ASHES:
+                return this.DEATH_STATES.LOST;
+            case this.DEATH_STATES.LOST:
+                return this.DEATH_STATES.LOST; // Can't get worse
+            default:
+                return this.DEATH_STATES.DEAD;
+        }
+    }
+
+    /**
+     * Get death state severity level
+     * @param {string} status - Death state to check
+     * @returns {number} Severity level (0-4)
+     */
+    static getDeathSeverity(status) {
+        const normalized = this.normalizeDeathState(status);
+        return this.DEATH_SEVERITY[normalized] || 0;
+    }
+
+    /**
+     * Compare two death states by severity
+     * @param {string} status1 - First death state
+     * @param {string} status2 - Second death state
+     * @returns {number} -1 if status1 is better, 1 if status2 is better, 0 if equal
+     */
+    static compareDeathStates(status1, status2) {
+        const severity1 = this.getDeathSeverity(status1);
+        const severity2 = this.getDeathSeverity(status2);
+        
+        if (severity1 < severity2) return -1;
+        if (severity1 > severity2) return 1;
+        return 0;
+    }
+
+    /**
+     * Update entity's death state safely
+     * @param {Object} entity - Character or monster object
+     * @param {string} newStatus - New death state
+     * @returns {boolean} True if update was successful
+     */
+    static setDeathState(entity, newStatus) {
+        if (!entity) return false;
+        
+        const normalizedStatus = this.normalizeDeathState(newStatus);
+        
+        // Update status and related properties
+        entity.status = normalizedStatus;
+        entity.isAlive = (normalizedStatus === this.DEATH_STATES.OK);
+        
+        // Set legacy flag for lost characters
+        if (normalizedStatus === this.DEATH_STATES.LOST) {
+            entity.isLost = true;
+        } else {
+            entity.isLost = false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get all living members from a party/group
+     * @param {Array} members - Array of character/monster objects
+     * @returns {Array} Array of living members
+     */
+    static getLivingMembers(members) {
+        if (!Array.isArray(members)) return [];
+        
+        return members.filter(member => this.isAlive(member));
+    }
+
+    /**
+     * Get all dead members from a party/group
+     * @param {Array} members - Array of character/monster objects
+     * @returns {Array} Array of dead members
+     */
+    static getDeadMembers(members) {
+        if (!Array.isArray(members)) return [];
+        
+        return members.filter(member => this.isDead(member));
+    }
+
+    /**
+     * Get all members that can be resurrected
+     * @param {Array} members - Array of character/monster objects
+     * @returns {Array} Array of resurrectable members
+     */
+    static getResurrectableMembers(members) {
+        if (!Array.isArray(members)) return [];
+        
+        return members.filter(member => this.canBeResurrected(member));
+    }
+
+    /**
+     * Validate death state consistency
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if status and isAlive are consistent
+     */
+    static validateDeathState(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        const shouldBeAlive = (status === this.DEATH_STATES.OK);
+        
+        return entity.isAlive === shouldBeAlive;
+    }
+
+    /**
+     * Fix inconsistent death state
+     * @param {Object} entity - Character or monster object
+     * @returns {boolean} True if fixes were applied
+     */
+    static fixDeathState(entity) {
+        if (!entity) return false;
+        
+        const status = this.normalizeDeathState(entity.status);
+        const shouldBeAlive = (status === this.DEATH_STATES.OK);
+        
+        let fixed = false;
+        
+        if (entity.isAlive !== shouldBeAlive) {
+            entity.isAlive = shouldBeAlive;
+            fixed = true;
+        }
+        
+        if (entity.status !== status) {
+            entity.status = status;
+            fixed = true;
+        }
+        
+        // Set lost flag consistency
+        const shouldBeLost = (status === this.DEATH_STATES.LOST);
+        if (entity.isLost !== shouldBeLost) {
+            entity.isLost = shouldBeLost;
+            fixed = true;
+        }
+        
+        return fixed;
     }
 }

@@ -25,7 +25,7 @@ class Character {
         this.currentHP = 10;
         
         // Status
-        this.status = 'OK';
+        this.status = 'ok';
         this.isAlive = true;
         
         // Experience

@@ -1037,13 +1037,11 @@ class UI {
                         console.log(`Removing party association for character in town: ${member.name} (${member.id})`);
                         member.partyId = null; // Remove party association only
                     } else {
-                        // Party is in dungeon - transition to "Lost" state
-                        console.log(`Transitioning character to Lost state: ${member.name} (${member.id})`);
+                        // Party is in dungeon - transition to "lost" state (using death system helper)
+                        console.log(`Transitioning character to lost state: ${member.name} (${member.id})`);
                         
-                        // Update character status with multiple indicators
-                        member.status = 'Lost';
-                        member.isLost = true;
-                        member.isAlive = false;  // Ensure alive flags are updated
+                        // Update character status using death system helper for consistency
+                        Helpers.setDeathState(member, Helpers.DEATH_STATES.LOST);
                         member.partyId = null; // Remove party association
                         member.lostDate = new Date().toISOString();
                         member.lostReason = 'Strike Team Deleted';
@@ -1061,7 +1059,7 @@ class UI {
                                 console.error(`Failed to remove party association for ${member.name}!`);
                             }
                         } else {
-                            if (!reloadedChar || reloadedChar.status !== 'Lost') {
+                            if (!reloadedChar || !Helpers.isPermanentlyLost(reloadedChar)) {
                                 console.error(`Failed to save character state for ${member.name}!`);
                             }
                         }
@@ -2536,23 +2534,21 @@ class UI {
      * Check if character is permanently lost (memorial eligible)
      */
     isCharacterPermanentlyLost(character) {
-        return character.status && character.status.toLowerCase() === 'lost';
+        return Helpers.isPermanentlyLost(character);
     }
     
     /**
      * Check if character is dead (any death state)
      */
     isCharacterDead(character) {
-        const status = character.status ? character.status.toLowerCase() : 'ok';
-        return ['unconscious', 'dead', 'ashes', 'lost'].includes(status);
+        return Helpers.isDead(character);
     }
     
     /**
      * Check if character is alive and functional
      */
     isCharacterAlive(character) {
-        const status = character.status ? character.status.toLowerCase() : 'ok';
-        return ['ok', 'alive'].includes(status);
+        return Helpers.isAlive(character);
     }
     
     /**

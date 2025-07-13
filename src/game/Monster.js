@@ -16,7 +16,7 @@ class Monster {
         this.maxHP = 6;
         this.currentHP = 6;
         this.isAlive = true;
-        this.status = 'OK';
+        this.status = 'ok';
         
         // Attributes (simplified for monsters)
         this.attributes = {

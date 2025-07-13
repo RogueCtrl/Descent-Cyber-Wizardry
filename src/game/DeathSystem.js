@@ -138,7 +138,7 @@ export class DeathSystem {
 
         if (success) {
             // Successful resurrection
-            character.status = 'OK';
+            character.status = 'ok';
             character.isAlive = true;
             character.currentHP = 1; // Start with 1 HP
             
@@ -329,7 +329,7 @@ export class DeathSystem {
         const success = Random.percent(recoveryChance);
 
         if (success) {
-            character.status = 'OK';
+            character.status = 'ok';
             character.isAlive = true;
             character.currentHP = 1;
             delete character.deathTimestamp;
