@@ -4114,6 +4114,10 @@ h3 {
     text-align: center;
 }
 
+.delete-prevention-content {
+    text-align: center;
+}
+
 .warning-header {
     display: flex;
     align-items: center;
@@ -4172,6 +4176,30 @@ h3 {
 }
 
 .danger-warning p {
+    color: var(--text-secondary, #B0B0B0);
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: left;
+}
+
+.info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.info-icon {
+    font-size: 1.5rem;
+    color: var(--primary-blue, #4A9EFF);
+    flex-shrink: 0;
+}
+
+.info-box p {
     color: var(--text-secondary, #B0B0B0);
     font-size: 0.9rem;
     margin: 0;
@@ -4747,6 +4775,122 @@ h3 {
     font-size: 1.1rem;
 }
 
+/* Strike Team Container Styles */
+.strike-teams-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+    max-width: 100%;
+}
+
+/* Force 3 columns when there's enough space */
+@media (min-width: 900px) {
+    .strike-teams-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.strike-team-section {
+    background: linear-gradient(145deg, var(--bg-primary), var(--bg-secondary));
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    transition: all var(--transition-fast);
+}
+
+.strike-team-section.disconnected {
+    border-left: 4px solid var(--warning);
+    background: linear-gradient(145deg, 
+        rgba(245, 158, 11, 0.05), 
+        rgba(245, 158, 11, 0.02));
+}
+
+.strike-team-section.active {
+    border-left: 4px solid var(--success);
+    background: linear-gradient(145deg, 
+        rgba(16, 185, 129, 0.05), 
+        rgba(16, 185, 129, 0.02));
+}
+
+.strike-team-section.camping {
+    border-left: 4px solid var(--accent-primary);
+    background: linear-gradient(145deg, 
+        rgba(59, 130, 246, 0.05), 
+        rgba(59, 130, 246, 0.02));
+}
+
+.strike-team-section.lost {
+    border-left: 4px solid var(--danger);
+    background: linear-gradient(145deg, 
+        rgba(239, 68, 68, 0.05), 
+        rgba(239, 68, 68, 0.02));
+}
+
+.strike-team-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.team-icon {
+    font-size: var(--font-size-xl);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.team-name {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--accent-secondary);
+    text-shadow: 0 0 5px var(--glow-primary);
+    flex: 1;
+}
+
+.team-member-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    background: var(--bg-tertiary);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-primary);
+}
+
+.strike-team-members {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.empty-team-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-4);
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.empty-team-icon {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-2);
+    opacity: 0.5;
+}
+
+.empty-team-text {
+    font-size: var(--font-size-sm);
+}
+
 /* Summary Modal Character Cards */
 .summary-character-card {
     display: flex;
@@ -4758,6 +4902,7 @@ h3 {
     border-radius: var(--radius-md);
     margin-bottom: var(--space-2);
     transition: all var(--transition-fast);
+    cursor: pointer;
 }
 
 .summary-character-card:hover {
@@ -4946,6 +5091,27 @@ h3 {
     max-width: 800px;
     margin: 0 auto;
     text-align: center;
+}
+
+/* Fix for victory-with-casualties modal positioning */
+.modal.victory-with-casualties {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.modal.victory-with-casualties .modal-content {
+    max-width: 900px;
+    width: 90%;
+    margin: 0;
+    position: relative;
 }
 
 .victory-with-casualties h2 {

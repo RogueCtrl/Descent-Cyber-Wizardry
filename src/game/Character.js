@@ -54,7 +54,18 @@ class Character {
         
         // Availability status for multi-party system
         this.availability = 'available'; // available, in_party, dead, missing
-        this.partyId = null;
+        this.partyId = null; // Must be set for all active characters (except memorial)
+        
+        // NEW: Phased out system for team membership management
+        this.isPhasedOut = false;        // Hidden from UI/combat but still in team
+        this.phaseOutReason = null;      // 'combat_disconnect', 'confused', etc.
+        this.phaseOutDate = null;        // When they were phased out
+        this.canPhaseBackIn = true;      // Whether they can rejoin active roster
+        
+        // NEW: Team assignment tracking
+        this.originalTeamAssignment = null;  // First team they joined
+        this.teamAssignmentDate = null;      // When they joined current team
+        this.teamLoyalty = 100;              // Thematic stat for team cohesion
     }
     
     /**
@@ -296,7 +307,18 @@ class Character {
             equipment: { ...this.equipment },
             temporaryEffects: [...this.temporaryEffects],
             availability: this.availability,
-            partyId: this.partyId
+            partyId: this.partyId,
+            
+            // NEW: Save phased out system properties
+            isPhasedOut: this.isPhasedOut,
+            phaseOutReason: this.phaseOutReason,
+            phaseOutDate: this.phaseOutDate,
+            canPhaseBackIn: this.canPhaseBackIn,
+            
+            // NEW: Save team assignment tracking
+            originalTeamAssignment: this.originalTeamAssignment,
+            teamAssignmentDate: this.teamAssignmentDate,
+            teamLoyalty: this.teamLoyalty
         };
     }
     
@@ -327,6 +349,17 @@ class Character {
         this.temporaryEffects = saveData.temporaryEffects || [];
         this.availability = saveData.availability || 'available';
         this.partyId = saveData.partyId || null;
+        
+        // NEW: Load phased out system properties
+        this.isPhasedOut = saveData.isPhasedOut || false;
+        this.phaseOutReason = saveData.phaseOutReason || null;
+        this.phaseOutDate = saveData.phaseOutDate || null;
+        this.canPhaseBackIn = saveData.canPhaseBackIn !== undefined ? saveData.canPhaseBackIn : true;
+        
+        // NEW: Load team assignment tracking
+        this.originalTeamAssignment = saveData.originalTeamAssignment || null;
+        this.teamAssignmentDate = saveData.teamAssignmentDate || null;
+        this.teamLoyalty = saveData.teamLoyalty !== undefined ? saveData.teamLoyalty : 100;
     }
     
     /**
@@ -343,5 +376,66 @@ class Character {
         } catch (error) {
             console.error(`Failed to save character ${this.name} to storage:`, error);
         }
+    }
+    
+    /**
+     * NEW: Validate that character has proper team membership
+     * Ensures all active characters belong to a Strike Team
+     */
+    validateTeamMembership() {
+        // Check if character is in memorial state (permanently lost)
+        const isMemorial = this.isCharacterPermanentlyLost ? this.isCharacterPermanentlyLost() : false;
+        
+        // Active characters must have a party assignment
+        if (!isMemorial && !this.partyId) {
+            throw new Error(`Active character ${this.name} must have partyId - all agents must be part of a Strike Team`);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * NEW: Check if character can participate in active gameplay
+     * Returns true if character is active team member (not phased out or lost)
+     */
+    isActiveTeamMember() {
+        return this.partyId && !this.isPhasedOut && !this.isCharacterPermanentlyLost();
+    }
+    
+    /**
+     * NEW: Phase out character while maintaining team membership
+     * Removes from active UI/combat but keeps in Strike Team
+     */
+    phaseOut(reason = 'disconnected') {
+        console.log(`Phasing out agent ${this.name}: ${reason}`);
+        this.isPhasedOut = true;
+        this.phaseOutReason = reason;
+        this.phaseOutDate = new Date().toISOString();
+        // Keep partyId - they're still team members!
+    }
+    
+    /**
+     * NEW: Bring character back to active status
+     * Allows agent to rejoin active roster
+     */
+    phaseIn() {
+        if (this.canPhaseBackIn) {
+            console.log(`Phasing in agent ${this.name}`);
+            this.isPhasedOut = false;
+            this.phaseOutReason = null;
+            this.phaseOutDate = null;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * NEW: Check if character is permanently lost (memorial state)
+     * Helper method for team membership validation
+     */
+    isCharacterPermanentlyLost() {
+        // Use existing logic or implement based on death system
+        return this.status === 'lost' || this.status === 'uninstalled' || 
+               (this.isLost === true) || (this.status === 'ashes' && this.isLost);
     }
 }

@@ -85,7 +85,9 @@ class Modal {
         
         // Trigger animation
         requestAnimationFrame(() => {
-            this.element.style.opacity = '1';
+            if (this.element) {
+                this.element.style.opacity = '1';
+            }
         });
         
         this.isVisible = true;
@@ -106,7 +108,9 @@ class Modal {
         document.removeEventListener('keydown', this.handleKeyDown);
         
         // Trigger animation then remove
-        this.element.style.opacity = '0';
+        if (this.element) {
+            this.element.style.opacity = '0';
+        }
         
         setTimeout(() => {
             this.destroy();

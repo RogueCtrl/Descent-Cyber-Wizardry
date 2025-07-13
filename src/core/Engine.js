@@ -593,7 +593,7 @@ class Engine {
             this.handleCombatStart(data);
         });
         
-        this.eventSystem.on('combat-end', (data) => {
+        this.eventSystem.on('combat-ended', (data) => {
             this.handleCombatEnd(data);
         });
         
@@ -1209,6 +1209,39 @@ class Engine {
     async returnToTown() {
         try {
             if (this.party) {
+                // NEW: Phase in all disconnected team members automatically
+                const phasedOutMembers = this.party.members.filter(member => member.isPhasedOut);
+                
+                for (const member of phasedOutMembers) {
+                    if (member.canPhaseBackIn) {
+                        console.log(`Phasing in agent ${member.name} upon return to town`);
+                        if (member.phaseIn) {
+                            member.phaseIn();
+                        } else {
+                            // Fallback for characters without phaseIn method
+                            member.isPhasedOut = false;
+                            member.phaseOutReason = null;
+                            member.phaseOutDate = null;
+                        }
+                        
+                        // Keep confused/scrambled status - they remain disoriented
+                        // member.status and member.conditions stay as they are
+                        
+                        // Save updated character
+                        if (member.saveToStorage) {
+                            await member.saveToStorage();
+                        }
+                    }
+                }
+                
+                // Emit event for UI updates
+                if (this.eventSystem && phasedOutMembers.length > 0) {
+                    this.eventSystem.emit('party-returned-to-town', { 
+                        partyId: this.party.id,
+                        phasedInMembers: phasedOutMembers.map(m => m.id)
+                    });
+                }
+                
                 this.party.returnToTown();
                 await this.party.save();
             }
@@ -1540,26 +1573,52 @@ class Engine {
     async handleCharacterCreated(character) {
         console.log('Character created:', character);
         
-        // Save character to persistent storage
         try {
-            await Storage.saveCharacter(character);
-            console.log(`Character ${character.name} saved to persistent storage`);
+            // NEW: Use TeamAssignmentService for automatic team assignment (Agents Always Part of Teams)
+            console.log('Assigning new character to Strike Team...');
+            const assignedTeam = await TeamAssignmentService.assignCharacterToTeam(character);
+            
+            // Add character to current active party for immediate gameplay
+            if (this.party.addMember(character)) {
+                // Ensure character is linked to the assigned team
+                character.partyId = assignedTeam.id;
+                
+                // Update party member list to match the assigned team
+                if (this.party.id !== assignedTeam.id) {
+                    console.log(`Switching active party from ${this.party.id} to ${assignedTeam.id}`);
+                    // Load the assigned team as the new active party
+                    const partyData = await Storage.loadParty(assignedTeam.id);
+                    if (partyData) {
+                        // Create a proper Party instance from the loaded data
+                        this.party = new Party();
+                        this.party.loadFromSave(partyData);
+                        if (!this.party.addMember(character)) {
+                            console.warn('Character was already in the assigned team');
+                        }
+                    }
+                }
+                
+                // Save the updated party
+                try {
+                    await this.party.save();
+                    console.log(`Party ${this.party.id} saved with updated member list`);
+                } catch (error) {
+                    console.error('Failed to save party:', error);
+                }
+                
+                this.ui.addMessage(`${character.name} the ${character.race} ${character.class} has been assigned to Strike Team: ${assignedTeam.name}!`);
+                this.eventSystem.emit('party-update');
+                
+                // Return to training grounds
+                this.gameState.setState('training-grounds');
+            } else {
+                this.ui.addMessage('Party is full! Cannot add more characters.');
+                this.gameState.setState('training-grounds');
+            }
+            
         } catch (error) {
-            console.error('Failed to save character to persistent storage:', error);
-            // Still continue with party addition even if persistence fails
-        }
-        
-        // Add character to party
-        if (this.party.addMember(character)) {
-            this.ui.addMessage(`${character.name} the ${character.race} ${character.class} has joined your party!`);
-            this.eventSystem.emit('party-update');
-            
-            // Return to training grounds
-            this.gameState.setState('training-grounds');
-            
-            // Return to training grounds - player can choose to create another character from the menu
-        } else {
-            this.ui.addMessage('Party is full! Cannot add more characters.');
+            console.error('Failed to assign character to Strike Team:', error);
+            this.ui.addMessage('Failed to assign character to Strike Team. Please try again.');
             this.gameState.setState('training-grounds');
         }
     }
@@ -1952,17 +2011,33 @@ class Engine {
                 const success = this.dungeon.markEncounterDefeated(x, y, floor);
                 if (success) {
                     console.log(`Encounter at (${x}, ${y}) permanently defeated`);
+                    
+                    // Save dungeon state to persist the defeated encounter
+                    if (this.party && this.party.id) {
+                        this.dungeon.saveToDatabase(this.party.id).catch(error => {
+                            console.error('Failed to save dungeon state after encounter defeat:', error);
+                        });
+                    }
                 }
             }
             
-            if (data.experience) {
-                this.ui.addMessage(`Your party gains ${data.experience} experience!`);
-                // TODO: Distribute experience to party members
-            }
-            
-            if (data.treasure) {
-                this.ui.addMessage(`You found treasure: ${data.treasure.join(', ')}`);
-                // TODO: Add treasure to party inventory
+            // Handle rewards from combat
+            if (data.rewards) {
+                if (data.rewards.experience) {
+                    this.ui.addMessage(`Your party gains ${data.rewards.experience} experience!`);
+                    // TODO: Distribute experience to party members
+                }
+                
+                if (data.rewards.gold && data.rewards.gold > 0) {
+                    this.ui.addMessage(`You found ${data.rewards.gold} gold coins!`);
+                    // TODO: Add gold to party treasury
+                }
+                
+                if (data.rewards.loot && data.rewards.loot.length > 0) {
+                    const lootNames = data.rewards.loot.map(item => item.name || 'Unknown Item');
+                    this.ui.addMessage(`You found treasure: ${lootNames.join(', ')}`);
+                    // TODO: Add loot to party inventory
+                }
             }
         } else if (fled) {
             this.ui.addMessage('You successfully fled from combat.');

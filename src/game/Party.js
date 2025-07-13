@@ -28,6 +28,9 @@ class Party {
         
         this.members.push(character);
         
+        // Set the character's partyId to link them to this party
+        character.partyId = this.id;
+        
         if (this.members.length === 1) {
             this.currentLeader = character;
         }
@@ -45,6 +48,9 @@ class Party {
         }
         
         this.members.splice(index, 1);
+        
+        // Clear the character's partyId since they're no longer in this party
+        character.partyId = null;
         
         if (this.currentLeader === character && this.members.length > 0) {
             this.currentLeader = this.members[0];
