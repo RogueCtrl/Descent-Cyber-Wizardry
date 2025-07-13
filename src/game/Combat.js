@@ -811,6 +811,22 @@ class Combat {
         if (!character) {
             return { success: false, message: 'No character to disconnect!' };
         }
+        
+        // Check if character has confused/scrambled condition - prevent escape if so
+        if (character.conditions && character.conditions.some(condition => condition.type === 'confused')) {
+            const confusedTerm = TextManager.getText('character_status_confused', 'Confused');
+            const actionTerm = TextManager.getText('combat_disconnect', 'Run');
+            
+            this.logMessage(`❌ ${character.name} cannot ${actionTerm.toLowerCase()} - they are too ${confusedTerm.toLowerCase()}!`, 'blocked', '❌');
+            this.logMessage(`${confusedTerm} agents cannot execute escape protocols until they receive treatment.`, 'system', '⚠️');
+            
+            return { 
+                success: false, 
+                blocked: true,
+                message: `${character.name} is too ${confusedTerm.toLowerCase()} to escape!` 
+            };
+        }
+        
         const disconnectChance = this.calculateDisconnectChance(character);
         
         // Use appropriate terminology

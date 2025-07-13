@@ -3236,6 +3236,46 @@ class UI {
             button.style.opacity = '1';
             button.style.cursor = 'pointer';
         });
+        
+        // Restore run button text to normal state first
+        const runButton = document.getElementById('combat-run');
+        if (runButton) {
+            const actionText = runButton.querySelector('.action-text');
+            if (actionText && actionText.dataset.originalTextKey) {
+                // Restore original text using TextManager
+                if (window.TextManager) {
+                    window.TextManager.updateElement(actionText);
+                }
+                delete actionText.dataset.originalTextKey;
+            }
+        }
+        
+        // Check if current character is confused/scrambled and disable run button
+        const combat = window.engine.combatInterface?.combat;
+        if (combat && combat.isActive) {
+            const currentActor = combat.getCurrentActor();
+            if (currentActor && currentActor.isPlayer) {
+                const character = currentActor.combatant;
+                
+                // Check if character has confused condition
+                if (character.conditions && character.conditions.some(condition => condition.type === 'confused')) {
+                    if (runButton) {
+                        runButton.disabled = true;
+                        runButton.style.opacity = '0.4';
+                        runButton.style.cursor = 'not-allowed';
+                        
+                        // Update button text to show it's blocked
+                        const actionText = runButton.querySelector('.action-text');
+                        if (actionText) {
+                            const confusedTerm = window.TextManager.getText('character_status_confused', 'Confused');
+                            const originalText = actionText.dataset.textKey;
+                            actionText.textContent = `❌ ${confusedTerm}`;
+                            actionText.dataset.originalTextKey = originalText;
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /**
