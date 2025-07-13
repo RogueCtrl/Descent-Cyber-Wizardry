@@ -1028,8 +1028,9 @@ class UI {
             
             // 2. Handle party members based on party location
             if (actualMembers.length > 0) {
-                // Check if party is in town (not in dungeon)
-                const isInTown = !party.campId && !party.dungeonName && !party.isInDungeon;
+                // Check if party is in town (not in dungeon or lost)
+                // Lost parties should ALWAYS be treated as "in dungeon" for deletion
+                const isInTown = !party.campId && !party.dungeonName && !party.isInDungeon && !party.isLost;
                 
                 for (const member of actualMembers) {
                     if (isInTown) {
@@ -1052,15 +1053,22 @@ class UI {
                     try {
                         await Storage.saveCharacter(member);
                         
+                        // Add small delay before verification to ensure save is complete
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
                         // Verify it was saved by immediately reloading
                         const reloadedChar = await Storage.loadCharacter(member.id);
                         if (isInTown) {
                             if (reloadedChar && reloadedChar.partyId !== null) {
-                                console.error(`Failed to remove party association for ${member.name}!`);
+                                console.error(`Failed to remove party association for ${member.name}! PartyId: ${reloadedChar.partyId}`);
+                            } else {
+                                console.log(`Successfully removed party association for ${member.name}`);
                             }
                         } else {
                             if (!reloadedChar || !Helpers.isPermanentlyLost(reloadedChar)) {
-                                console.error(`Failed to save character state for ${member.name}!`);
+                                console.error(`Failed to save character state for ${member.name}! Status: ${reloadedChar?.status}, isLost: ${reloadedChar?.isLost}`);
+                            } else {
+                                console.log(`Successfully set ${member.name} to lost state (${reloadedChar.status})`);
                             }
                         }
                     } catch (error) {
