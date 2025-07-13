@@ -371,6 +371,7 @@ class Helpers {
     }
     
     /**
+     * @deprecated Use character.phaseOut() instead for Agents Always Part of Teams mechanic
      * Remove casualties from party and return info about removed members
      * @param {Party} party - The party object to process
      * @returns {Object} Object containing casualties array and survivors array
@@ -457,6 +458,8 @@ class Helpers {
             case 'crashed':
             case 'knocked out':
             case 'ko':
+            case 'scrambled':
+            case 'confused':
                 return this.DEATH_STATES.UNCONSCIOUS;
             
             case 'dead':

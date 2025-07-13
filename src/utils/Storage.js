@@ -439,6 +439,16 @@ class Storage {
      */
     static async saveCharacter(character) {
         try {
+            // NEW: Validate team membership before saving
+            if (character.validateTeamMembership) {
+                try {
+                    character.validateTeamMembership();
+                } catch (validationError) {
+                    console.warn(`Team membership validation warning for ${character.name}:`, validationError.message);
+                    // Don't throw - just warn for now to avoid breaking existing saves
+                }
+            }
+            
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
@@ -469,6 +479,18 @@ class Storage {
                 temporaryEffects: character.temporaryEffects ? [...character.temporaryEffects] : [],
                 classHistory: character.classHistory ? [...character.classHistory] : [],
                 partyId: character.partyId || null,
+                
+                // NEW: Phased out system properties
+                isPhasedOut: character.isPhasedOut || false,
+                phaseOutReason: character.phaseOutReason || null,
+                phaseOutDate: character.phaseOutDate || null,
+                canPhaseBackIn: character.canPhaseBackIn !== undefined ? character.canPhaseBackIn : true,
+                
+                // NEW: Team assignment tracking
+                originalTeamAssignment: character.originalTeamAssignment || null,
+                teamAssignmentDate: character.teamAssignmentDate || null,
+                teamLoyalty: character.teamLoyalty !== undefined ? character.teamLoyalty : 100,
+                
                 dateCreated: character.dateCreated || Date.now(),
                 lastModified: Date.now()
             };
@@ -715,6 +737,57 @@ class Storage {
             console.error('Failed to get character statistics:', error);
             return null;
         }
+    }
+    
+    /**
+     * NEW: Get all active team members for a specific party
+     * @param {string} partyId - Party ID to find members for
+     * @returns {Promise<Array>} Array of active team members
+     */
+    static async getActiveTeamMembers(partyId) {
+        try {
+            const allCharacters = await this.loadAllCharacters();
+            return allCharacters.filter(char => 
+                char.partyId === partyId && 
+                !char.isPhasedOut && 
+                !this.isCharacterPermanentlyLost(char)
+            );
+        } catch (error) {
+            console.error('Failed to get active team members:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * NEW: Get all phased out team members for a specific party
+     * @param {string} partyId - Party ID to find phased out members for
+     * @returns {Promise<Array>} Array of phased out team members
+     */
+    static async getPhasedOutTeamMembers(partyId) {
+        try {
+            const allCharacters = await this.loadAllCharacters();
+            return allCharacters.filter(char => 
+                char.partyId === partyId && 
+                char.isPhasedOut
+            );
+        } catch (error) {
+            console.error('Failed to get phased out team members:', error);
+            return [];
+        }
+    }
+    
+    /**
+     * NEW: Check if character is permanently lost (memorial state)
+     * Helper method for team membership validation
+     * @param {Object} character - Character to check
+     * @returns {boolean} True if character is permanently lost
+     */
+    static isCharacterPermanentlyLost(character) {
+        if (!character) return false;
+        return character.status === 'lost' || 
+               character.status === 'uninstalled' || 
+               (character.isLost === true) || 
+               (character.status === 'ashes' && character.isLost);
     }
     
     /**
@@ -3593,9 +3666,9 @@ class Storage {
             const partyData = {
                 id: party.id,
                 name: party.name || 'Unnamed Party',
-                memberIds: party.members.map(member => member.id),
-                memberCount: party.members.length,
-                aliveCount: party.members.filter(m => m.isAlive).length,
+                memberIds: party.memberIds || (party.members ? party.members.map(member => member.id) : []),
+                memberCount: party.memberCount || (party.members ? party.members.length : (party.memberIds ? party.memberIds.length : 0)),
+                aliveCount: party.aliveCount || (party.members ? party.members.filter(m => m.isAlive).length : (party.memberIds ? party.memberIds.length : 0)),
                 formation: party.formation || 'default',
                 gold: party.gold || 0,
                 experience: party.experience || 0,

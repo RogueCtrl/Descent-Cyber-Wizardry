@@ -242,7 +242,8 @@ class UI {
         }
         
         // Create character list
-        party.members.forEach((character, index) => {
+        if (party.members && Array.isArray(party.members)) {
+            party.members.forEach((character, index) => {
             const characterElement = document.createElement('div');
             characterElement.className = `character-summary ${party.currentLeader === character ? 'leader' : ''}`;
             characterElement.dataset.characterId = character.id;
@@ -281,6 +282,7 @@ class UI {
             
             this.partyDisplay.appendChild(characterElement);
         });
+        }
         
         // Add party actions only if not in dungeon mode  
         // Reuse gameState and currentState from above
@@ -894,6 +896,59 @@ class UI {
             const allParties = await Storage.loadAllParties();
             const party = allParties.find(p => p.id === partyId);
             const partyName = party ? party.name || 'Unnamed Team' : 'Unknown Party';
+            
+            // NEW: Check if party is in town and prevent deletion (Agents Always Part of Teams)
+            const isInTown = party && !party.campId && !party.dungeonName && !party.isInDungeon && !party.isLost;
+            
+            if (isInTown) {
+                // Show prevention message instead of allowing deletion
+                const preventionContent = `
+                    <div class="delete-prevention-content">
+                        <div class="warning-header">
+                            <div class="warning-icon">🛡️</div>
+                            <h3>Strike Team Protected</h3>
+                        </div>
+                        
+                        <div class="warning-content">
+                            <p>Strike Teams currently in town cannot be deleted.</p>
+                            <p class="party-name"><strong>${partyName}</strong></p>
+                            <div class="info-box">
+                                <div class="info-icon">ℹ️</div>
+                                <p>All agents must always be part of a Strike Team. Teams in town are protected to prevent orphaning active agents.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="confirmation-actions">
+                            <button id="acknowledge-btn" class="action-btn primary">Understood</button>
+                        </div>
+                    </div>
+                `;
+                
+                this.deleteConfirmModal = new Modal({
+                    className: 'modal delete-prevention-modal',
+                    closeOnEscape: true,
+                    closeOnBackdrop: true
+                });
+                
+                this.deleteConfirmModal.create(preventionContent);
+                this.deleteConfirmModal.show();
+                
+                // Event listener for acknowledge button
+                const modalBody = this.deleteConfirmModal.getBody();
+                const acknowledgeBtn = modalBody.querySelector('#acknowledge-btn');
+                
+                if (acknowledgeBtn) {
+                    acknowledgeBtn.addEventListener('click', () => {
+                        if (window.engine && window.engine.audioManager) {
+                            window.engine.audioManager.playSoundEffect('buttonClick');
+                        }
+                        this.deleteConfirmModal.hide();
+                        this.deleteConfirmModal = null;
+                    });
+                }
+                
+                return; // Exit early - no deletion allowed
+            }
             
             const deleteContent = `
                 <div class="delete-confirmation-content">
@@ -1898,58 +1953,101 @@ class UI {
      * Create character roster modal content
      */
     async createCharacterRosterContent(characters) {
-        // Filter active characters (exclude Uninstalled/Lost agents from main database)
-        const activeCharacters = characters.filter(character => 
-            !this.isCharacterPermanentlyLost(character)
-        );
-        
         // Filter lost characters for memorial section
         const lostCharacters = characters.filter(character => 
             this.isCharacterPermanentlyLost(character)
         );
         
-        // Load all parties to get strike team information
+        // Load all parties/strike teams first (including lost/camped ones)
         const allParties = await Storage.loadAllParties();
         
-        // Group characters by party
-        const charactersWithoutParty = [];
-        const charactersByParty = new Map();
-        
-        // Initialize party groups
-        for (const party of allParties) {
-            if (!party.isLost) {
-                charactersByParty.set(party.id, {
-                    party: party,
-                    characters: []
-                });
+        // First pass: load member counts for sorting
+        const partiesWithCounts = await Promise.all(allParties.map(async (party) => {
+            let aliveCount = 0;
+            
+            if (party.memberIds && party.memberIds.length > 0) {
+                for (const memberId of party.memberIds) {
+                    try {
+                        const character = await Storage.loadCharacter(memberId);
+                        if (character && !this.isCharacterPermanentlyLost(character)) {
+                            aliveCount++;
+                        }
+                    } catch (error) {
+                        // Ignore loading errors for counting
+                    }
+                }
             }
-        }
+            
+            return {
+                party: party,
+                aliveCount: aliveCount
+            };
+        }));
         
-        // Group active characters by their party
-        for (const character of activeCharacters) {
-            if (character.partyId && charactersByParty.has(character.partyId)) {
-                charactersByParty.get(character.partyId).characters.push(character);
+        // Sort parties by alive member count (largest first)
+        const sortedParties = partiesWithCounts
+            .sort((a, b) => b.aliveCount - a.aliveCount)
+            .map(item => item.party);
+        
+        console.log(`Loading ${sortedParties.length} total Strike Teams (sorted by size):`, sortedParties.map(p => {
+            const partyWithCount = partiesWithCounts.find(pc => pc.party.id === p.id);
+            let status = 'active';
+            if (p.isLost) status = 'lost';
+            else if (p.campId) status = 'camped in dungeon';
+            else if (p.inTown !== false) status = 'camped in town';
+            return `${p.name} (${partyWithCount.aliveCount} members, ${status})`;
+        }));
+        
+        // Build strike team data by loading each team's members
+        const strikeTeamData = [];
+        let totalActiveCharacters = 0;
+        
+        for (const party of sortedParties) {
+            console.log(`Processing Strike Team: ${party.name} (${party.id})`);
+            
+            // Load all characters for this party
+            const partyMembers = [];
+            
+            if (party.memberIds && party.memberIds.length > 0) {
+                for (const memberId of party.memberIds) {
+                    try {
+                        const character = await Storage.loadCharacter(memberId);
+                        if (character && !this.isCharacterPermanentlyLost(character)) {
+                            partyMembers.push(character);
+                            console.log(`  - Loaded member: ${character.name}`);
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to load character ${memberId}:`, error);
+                    }
+                }
+            }
+            
+            // Include ALL teams, even if they have no active members (shows empty teams)
+            strikeTeamData.push({
+                party: party,
+                members: partyMembers
+            });
+            totalActiveCharacters += partyMembers.length;
+            
+            if (partyMembers.length > 0) {
+                console.log(`Strike Team "${party.name}" has ${partyMembers.length} active members`);
             } else {
-                charactersWithoutParty.push(character);
+                console.log(`Strike Team "${party.name}" has no active members but will still be displayed`);
+                console.log(`  - Party memberIds:`, party.memberIds);
+                console.log(`  - Party inTown:`, party.inTown);
+                console.log(`  - Party campId:`, party.campId);
+                console.log(`  - Party isLost:`, party.isLost);
             }
         }
         
-        const hasActiveCharacters = activeCharacters.length > 0;
+        const hasActiveCharacters = totalActiveCharacters > 0;
         const hasLostCharacters = lostCharacters.length > 0;
         
         // Build content for each strike team
         let strikeTeamContent = '';
         
-        // First show characters without a party
-        if (charactersWithoutParty.length > 0) {
-            strikeTeamContent += await this.createStrikeTeamSection(null, charactersWithoutParty);
-        }
-        
-        // Then show each strike team
-        for (const [partyId, groupData] of charactersByParty) {
-            if (groupData.characters.length > 0) {
-                strikeTeamContent += await this.createStrikeTeamSection(groupData.party, groupData.characters);
-            }
+        for (const teamData of strikeTeamData) {
+            strikeTeamContent += await this.createStrikeTeamSection(teamData.party, teamData.members);
         }
         
         return `
@@ -1957,7 +2055,7 @@ class UI {
                 <div class="roster-header">
                     <p class="roster-subtitle">
                         <span data-text-key="character_roster_subtitle">All Created Characters</span>
-                        <span class="character-count">(${activeCharacters.length})</span>
+                        <span class="character-count">(${totalActiveCharacters})</span>
                     </p>
                 </div>
                 
@@ -2014,9 +2112,21 @@ class UI {
         }
         
         // Create character cards using the new summary card style
-        const characterCards = await Promise.all(
-            characters.map(character => this.createSummaryCharacterCard(character))
-        );
+        let memberContent;
+        
+        if (characters.length > 0) {
+            const characterCards = await Promise.all(
+                characters.map(character => this.createSummaryCharacterCard(character))
+            );
+            memberContent = characterCards.join('');
+        } else {
+            memberContent = `
+                <div class="empty-team-message">
+                    <div class="empty-team-icon">👻</div>
+                    <div class="empty-team-text">No active members</div>
+                </div>
+            `;
+        }
         
         return `
             <div class="strike-team-section ${teamStatusClass}">
@@ -2026,7 +2136,7 @@ class UI {
                     <div class="team-member-count">(${characters.length})</div>
                 </div>
                 <div class="strike-team-members">
-                    ${characterCards.join('')}
+                    ${memberContent}
                 </div>
             </div>
         `;
@@ -4558,14 +4668,17 @@ class UI {
                 if (this.dungeonEntranceOrigin === 'agentops') {
                     this.showTrainingGrounds();
                 } else if (this.dungeonEntranceOrigin === 'post-combat') {
-                    // Remove casualties from party before returning to town
+                    // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
                     if (window.engine.party) {
-                        const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                        const casualties = window.engine.party.members.filter(member => Helpers.isDead(member));
                         
-                        // Show messages for each casualty
+                        // Phase out casualties instead of removing them
                         casualties.forEach(casualty => {
+                            if (casualty.phaseOut) {
+                                casualty.phaseOut('combat_casualty');
+                            }
                             const status = casualty.status || 'dead';
-                            this.addMessage(`${casualty.name} (${status}) has been left behind...`, 'warning');
+                            this.addMessage(`${casualty.name} (${status}) is phased out but remains part of the Strike Team...`, 'warning');
                         });
                     }
                     
@@ -5520,14 +5633,17 @@ class UI {
             // Hide the exit button
             this.hideExitButton();
             
-            // Remove casualties from party before returning to town
+            // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
             if (window.engine.party) {
-                const { casualties, survivors } = Helpers.removeCasualtiesFromParty(window.engine.party);
+                const casualties = window.engine.party.members.filter(member => Helpers.isDead(member));
                 
-                // Show messages for each casualty
+                // Phase out casualties instead of removing them
                 casualties.forEach(casualty => {
+                    if (casualty.phaseOut) {
+                        casualty.phaseOut('combat_casualty');
+                    }
                     const status = casualty.status || 'dead';
-                    this.addMessage(`${casualty.name} (${status}) was brought to town for medical attention...`, 'warning');
+                    this.addMessage(`${casualty.name} (${status}) is phased out but remains part of the Strike Team...`, 'warning');
                 });
                 
                 // Mark party as returning to town

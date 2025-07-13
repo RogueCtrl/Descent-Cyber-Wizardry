@@ -1209,6 +1209,39 @@ class Engine {
     async returnToTown() {
         try {
             if (this.party) {
+                // NEW: Phase in all disconnected team members automatically
+                const phasedOutMembers = this.party.members.filter(member => member.isPhasedOut);
+                
+                for (const member of phasedOutMembers) {
+                    if (member.canPhaseBackIn) {
+                        console.log(`Phasing in agent ${member.name} upon return to town`);
+                        if (member.phaseIn) {
+                            member.phaseIn();
+                        } else {
+                            // Fallback for characters without phaseIn method
+                            member.isPhasedOut = false;
+                            member.phaseOutReason = null;
+                            member.phaseOutDate = null;
+                        }
+                        
+                        // Keep confused/scrambled status - they remain disoriented
+                        // member.status and member.conditions stay as they are
+                        
+                        // Save updated character
+                        if (member.saveToStorage) {
+                            await member.saveToStorage();
+                        }
+                    }
+                }
+                
+                // Emit event for UI updates
+                if (this.eventSystem && phasedOutMembers.length > 0) {
+                    this.eventSystem.emit('party-returned-to-town', { 
+                        partyId: this.party.id,
+                        phasedInMembers: phasedOutMembers.map(m => m.id)
+                    });
+                }
+                
                 this.party.returnToTown();
                 await this.party.save();
             }
@@ -1540,37 +1573,52 @@ class Engine {
     async handleCharacterCreated(character) {
         console.log('Character created:', character);
         
-        // Add character to party
-        if (this.party.addMember(character)) {
-            // Set the character's partyId to link them to this party
-            character.partyId = this.party.id;
+        try {
+            // NEW: Use TeamAssignmentService for automatic team assignment (Agents Always Part of Teams)
+            console.log('Assigning new character to Strike Team...');
+            const assignedTeam = await TeamAssignmentService.assignCharacterToTeam(character);
             
-            // Save character to persistent storage with party association
-            try {
-                await Storage.saveCharacter(character);
-                console.log(`Character ${character.name} saved to persistent storage with partyId: ${character.partyId}`);
-            } catch (error) {
-                console.error('Failed to save character to persistent storage:', error);
-                // Still continue with party addition even if persistence fails
+            // Add character to current active party for immediate gameplay
+            if (this.party.addMember(character)) {
+                // Ensure character is linked to the assigned team
+                character.partyId = assignedTeam.id;
+                
+                // Update party member list to match the assigned team
+                if (this.party.id !== assignedTeam.id) {
+                    console.log(`Switching active party from ${this.party.id} to ${assignedTeam.id}`);
+                    // Load the assigned team as the new active party
+                    const partyData = await Storage.loadParty(assignedTeam.id);
+                    if (partyData) {
+                        // Create a proper Party instance from the loaded data
+                        this.party = new Party();
+                        this.party.loadFromSave(partyData);
+                        if (!this.party.addMember(character)) {
+                            console.warn('Character was already in the assigned team');
+                        }
+                    }
+                }
+                
+                // Save the updated party
+                try {
+                    await this.party.save();
+                    console.log(`Party ${this.party.id} saved with updated member list`);
+                } catch (error) {
+                    console.error('Failed to save party:', error);
+                }
+                
+                this.ui.addMessage(`${character.name} the ${character.race} ${character.class} has been assigned to Strike Team: ${assignedTeam.name}!`);
+                this.eventSystem.emit('party-update');
+                
+                // Return to training grounds
+                this.gameState.setState('training-grounds');
+            } else {
+                this.ui.addMessage('Party is full! Cannot add more characters.');
+                this.gameState.setState('training-grounds');
             }
             
-            // Also save the party to update its member list
-            try {
-                await this.party.save();
-                console.log(`Party ${this.party.id} saved with updated member list`);
-            } catch (error) {
-                console.error('Failed to save party:', error);
-            }
-            
-            this.ui.addMessage(`${character.name} the ${character.race} ${character.class} has joined your party!`);
-            this.eventSystem.emit('party-update');
-            
-            // Return to training grounds
-            this.gameState.setState('training-grounds');
-            
-            // Return to training grounds - player can choose to create another character from the menu
-        } else {
-            this.ui.addMessage('Party is full! Cannot add more characters.');
+        } catch (error) {
+            console.error('Failed to assign character to Strike Team:', error);
+            this.ui.addMessage('Failed to assign character to Strike Team. Please try again.');
             this.gameState.setState('training-grounds');
         }
     }

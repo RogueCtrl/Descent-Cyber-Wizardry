@@ -868,9 +868,19 @@ class Combat {
         // Remove character from combat
         this.removeCharacterFromCombat(character);
         
-        // Return character to town (update availability but keep in party for post-combat display)
+        // NEW: Phase out instead of removing from party
+        if (character.phaseOut) {
+            character.phaseOut('combat_disconnect');
+        } else {
+            // Fallback for characters without phaseOut method
+            character.isPhasedOut = true;
+            character.phaseOutReason = 'combat_disconnect';
+            character.phaseOutDate = new Date().toISOString();
+        }
+        
+        // Return character to town but keep in party (phased out)
         character.availability = 'available';
-        // Don't remove partyId yet - will be handled in post-combat processing
+        // Keep partyId - they're still team members, just phased out!
         character.status = TextManager.getText('character_status_confused', 'Confused');
         
         // Add confused condition to character conditions array
@@ -985,11 +995,9 @@ class Combat {
         // Remove from turn order
         this.turnOrder = this.turnOrder.filter(entry => entry.combatant.id !== character.id);
         
-        // Do NOT remove from player party - keep them in party but mark as disconnected
-        // The party will handle their status when they return to town
-        if (character.partyId) {
-            character.partyStatus = 'disconnected'; // Mark as disconnected but still in party
-        }
+        // Do NOT remove from player party - keep them in party and use phased out system
+        // Character will be phased out by handleSuccessfulDisconnect
+        // partyId remains unchanged - they're still team members!
         
         // Adjust current turn index if needed
         if (this.currentTurnIndex >= this.turnOrder.length) {

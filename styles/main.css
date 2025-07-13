@@ -4114,6 +4114,10 @@ h3 {
     text-align: center;
 }
 
+.delete-prevention-content {
+    text-align: center;
+}
+
 .warning-header {
     display: flex;
     align-items: center;
@@ -4172,6 +4176,30 @@ h3 {
 }
 
 .danger-warning p {
+    color: var(--text-secondary, #B0B0B0);
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: left;
+}
+
+.info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(74, 158, 255, 0.1);
+    border: 1px solid rgba(74, 158, 255, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.info-icon {
+    font-size: 1.5rem;
+    color: var(--primary-blue, #4A9EFF);
+    flex-shrink: 0;
+}
+
+.info-box p {
     color: var(--text-secondary, #B0B0B0);
     font-size: 0.9rem;
     margin: 0;
@@ -4749,9 +4777,18 @@ h3 {
 
 /* Strike Team Container Styles */
 .strike-teams-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+    max-width: 100%;
+}
+
+/* Force 3 columns when there's enough space */
+@media (min-width: 900px) {
+    .strike-teams-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .strike-team-section {
@@ -4781,6 +4818,13 @@ h3 {
     background: linear-gradient(145deg, 
         rgba(59, 130, 246, 0.05), 
         rgba(59, 130, 246, 0.02));
+}
+
+.strike-team-section.lost {
+    border-left: 4px solid var(--danger);
+    background: linear-gradient(145deg, 
+        rgba(239, 68, 68, 0.05), 
+        rgba(239, 68, 68, 0.02));
 }
 
 .strike-team-header {
@@ -4826,6 +4870,25 @@ h3 {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+}
+
+.empty-team-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-4);
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.empty-team-icon {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-2);
+    opacity: 0.5;
+}
+
+.empty-team-text {
+    font-size: var(--font-size-sm);
 }
 
 /* Summary Modal Character Cards */
