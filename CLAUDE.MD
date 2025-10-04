@@ -295,12 +295,12 @@ const displayText = TextManager.getText(termKey);
 ### Version Compatibility
 > ⚠️ **Current Version Not Compatible with Previous Versions**
 >
-> If upgrading from an earlier version, delete the `DescentCyberWizardy` IndexedDB instance before running.
+> If upgrading from an earlier version, delete the `DescentCyberWizardry` IndexedDB instance before running.
 
 **To reset storage:**
 1. Open Browser DevTools (F12)
 2. Go to Application/Storage tab
-3. Find IndexedDB → `DescentCyberWizardy`
+3. Find IndexedDB → `DescentCyberWizardry`
 4. Right-click and delete
 5. Refresh page
 
