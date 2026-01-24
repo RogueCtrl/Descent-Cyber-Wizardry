@@ -76,17 +76,18 @@ class MiniMapRenderer {
 
         for (let y = startY; y <= endY; y++) {
             for (let x = startX; x <= endX; x++) {
-                // Calculate wrapped coordinates for data lookup
-                const wrappedX = ((x % floor.width) + floor.width) % floor.width;
-                const wrappedY = ((y % floor.height) + floor.height) % floor.height;
+                // Strict bounds check - no wrapping
+                if (x < 0 || x >= floor.width || y < 0 || y >= floor.height) {
+                    continue;
+                }
 
-                // Check if tile is explored (using wrapped coordinates)
-                const explorationKey = `${floorNum}:${wrappedX}:${wrappedY}`;
+                // Check if tile is explored
+                const explorationKey = `${floorNum}:${x}:${y}`;
                 const isExplored = dungeon.exploredTiles && dungeon.exploredTiles.has(explorationKey);
 
                 if (!isExplored) continue; // Skip unexplored tiles (Fog of War)
 
-                const tileType = floor.tiles[wrappedY][wrappedX];
+                const tileType = floor.tiles[y][x];
 
                 // Calculate position on screen
                 // (x - playerX) gives relative position
