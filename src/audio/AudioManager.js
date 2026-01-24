@@ -324,15 +324,24 @@ class AudioManager {
             state.measureCount++;
 
             // Randomly switch modes occasionally
-            if (state.measureCount % 4 === 0 && Math.random() < 0.3) {
+            // Check less frequently in stealth mode to keep it longer
+            const switchCheckInterval = state.mode === 'stealth' ? 4 : 4;
+
+            if (state.measureCount % switchCheckInterval === 0) {
                 if (state.mode === 'stealth') {
-                    state.mode = 'active';
-                    state.intensity = 0.8;
-                    console.log('🎵 Audio: Switching to ACTIVE mode');
+                    // Harder to enter active mode (15% chance)
+                    if (Math.random() < 0.15) {
+                        state.mode = 'active';
+                        state.intensity = 0.8;
+                        console.log('🎵 Audio: Switching to ACTIVE mode');
+                    }
                 } else {
-                    state.mode = 'stealth';
-                    state.intensity = 0.3;
-                    console.log('🎵 Audio: Switching to STEALTH mode');
+                    // Easier to return to stealth mode (40% chance)
+                    if (Math.random() < 0.4) {
+                        state.mode = 'stealth';
+                        state.intensity = 0.3;
+                        console.log('🎵 Audio: Switching to STEALTH mode');
+                    }
                 }
             }
 

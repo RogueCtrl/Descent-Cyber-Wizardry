@@ -116,7 +116,7 @@ Complete character creation with dual terminology support:
   0 1 2 3 4 5 6 7 8  (x coordinates)
 0 █ █ █ █ █ █ █ █ █  
 1 . . . █ █ . . . █  (Room A)    (Room B)
-2 . p . . O . T . █  (Room A)(corridor)(Room B)
+2 . p . + O . T . █  (Room A)(corridor)(Room B)
 3 . . . █ █ . . . █  (Room A)    (Room B)
 4 █ █ █ █ █ █ █ █ █  
 

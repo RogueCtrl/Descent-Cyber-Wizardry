@@ -5470,4 +5470,24 @@ h3 {
     50% {
         box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
     }
+}/* Flash Blue Animation for interactive buttons */
+@keyframes flashBlue {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--accent-secondary);
+        border-color: var(--accent-secondary);
+        background-color: rgba(59, 130, 246, 0.2);
+    }
+}
+
+.animate-flash-blue {
+    animation: flashBlue 1.5s infinite;
+    color: var(--accent-secondary) !important;
+    font-weight: bold;
 }

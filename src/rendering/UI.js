@@ -55,7 +55,8 @@ class UI {
                 castSpell: document.getElementById('cast-spell'),
                 useItem: document.getElementById('use-item'),
                 rest: document.getElementById('rest'),
-                camp: document.getElementById('camp')
+                camp: document.getElementById('camp'),
+                openDoor: document.getElementById('open-door')
             };
 
             // Apply TextManager to existing UI elements
@@ -120,6 +121,12 @@ class UI {
         if (this.controlButtons.camp) {
             this.controlButtons.camp.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'camp');
+            });
+        }
+
+        if (this.controlButtons.openDoor) {
+            this.controlButtons.openDoor.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', 'open-door');
             });
         }
 
@@ -602,6 +609,27 @@ class UI {
 
         // Update button styling based on mode
         toggleBtn.className = `mode-toggle-btn ${currentMode}-mode`;
+    }
+
+
+    /**
+     * Show/Hide contextual actions based on game state
+     */
+    updateContextualActions(dungeon) {
+        if (!dungeon || !this.controlButtons.openDoor) return;
+
+        // Check for door interaction
+        const tileInFront = dungeon.getTileInFront();
+
+        if (tileInFront === 'door') {
+            // Show Open Door button with flash animation
+            this.controlButtons.openDoor.style.display = 'block';
+            this.controlButtons.openDoor.classList.add('animate-flash-blue');
+        } else {
+            // Hide button
+            this.controlButtons.openDoor.style.display = 'none';
+            this.controlButtons.openDoor.classList.remove('animate-flash-blue');
+        }
     }
 
     /**

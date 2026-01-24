@@ -103,7 +103,7 @@ class Dungeon {
         }
 
         // Corridor (Connection) - 2x1 at (3,2) and (4,2)
-        tiles[2][3] = 'floor';
+        tiles[2][3] = 'door'; // Door exiting Room A
         tiles[2][4] = 'floor';
 
         // Room B (East Chamber) - 3x3 starting at (5,1)
@@ -1156,6 +1156,10 @@ class Dungeon {
                         walls.push({ distance, x: offX, y: offY, offset }); // Appears as wall
                         if (offset === 0) centerBlocked = true;
                     }
+                } else if (tile === 'door') {
+                    // Normal door
+                    doors.push({ distance, x: offX, y: offY, offset, type: 'normal' });
+                    // Doors don't block view in this simple engine (you can see through the frame)
                 }
 
                 // Check for visible monsters
@@ -1428,6 +1432,57 @@ class Dungeon {
             console.error('Failed to load dungeon from database:', error);
             return false;
         }
+    }
+
+    /**
+     * Get the tile directly in front of the player
+     */
+    getTileInFront() {
+        let checkX = this.playerX;
+        let checkY = this.playerY;
+
+        switch (this.playerDirection) {
+            case 0: checkY -= 1; break; // North
+            case 1: checkX += 1; break; // East
+            case 2: checkY += 1; break; // South
+            case 3: checkX -= 1; break; // West
+        }
+
+        return this.getTile(checkX, checkY);
+    }
+
+    /**
+     * Open a door at the specified coordinates (or in front if not specified)
+     */
+    openDoor(startX = null, startY = null) {
+        let targetX = startX;
+        let targetY = startY;
+
+        // If no coordinates provided, open door in front
+        if (targetX === null || targetY === null) {
+            targetX = this.playerX;
+            targetY = this.playerY;
+
+            switch (this.playerDirection) {
+                case 0: targetY -= 1; break; // North
+                case 1: targetX += 1; break; // East
+                case 2: targetY += 1; break; // South
+                case 3: targetX -= 1; break; // West
+            }
+        }
+
+        const tile = this.getTile(targetX, targetY);
+
+        if (tile === 'door') {
+            // "Open" the door by converting it to floor
+            if (this.currentFloorData && this.currentFloorData.tiles) {
+                if (this.currentFloorData.tiles[targetY] && typeof (this.currentFloorData.tiles[targetY][targetX]) !== 'undefined') {
+                    this.currentFloorData.tiles[targetY][targetX] = 'floor';
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
