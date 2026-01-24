@@ -720,18 +720,57 @@ class Dungeon {
 
         for (let y = centerY - radius; y <= centerY + radius; y++) {
             for (let x = centerX - radius; x <= centerX + radius; x++) {
-                // Calculate wrapped coordinates
-                const wrappedX = ((x % width) + width) % width;
-                const wrappedY = ((y % height) + height) % height;
+                // Strict bounds check - no wrapping
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    const dx = x - centerX;
+                    const dy = y - centerY;
 
-                // Check distance using original linear coordinates (simplest for radius)
-                const dx = x - centerX;
-                const dy = y - centerY;
-
-                if (dx * dx + dy * dy <= radius * radius) {
-                    const key = `${floorNum}:${wrappedX}:${wrappedY}`;
-                    this.exploredTiles.add(key);
+                    if (dx * dx + dy * dy <= radius * radius) {
+                        // Check line of sight to prevent seeing through walls/doors
+                        if (this.hasLineOfSight(centerX, centerY, x, y)) {
+                            const key = `${floorNum}:${x}:${y}`;
+                            this.exploredTiles.add(key);
+                        }
+                    }
                 }
+            }
+        }
+    }
+
+    /**
+     * Check if there is a clear line of sight between two points
+     * Uses Bresenham's line algorithm
+     */
+    hasLineOfSight(x0, y0, x1, y1) {
+        if (x0 === x1 && y0 === y1) return true;
+
+        let dx = Math.abs(x1 - x0);
+        let dy = Math.abs(y1 - y0);
+        let sx = (x0 < x1) ? 1 : -1;
+        let sy = (y0 < y1) ? 1 : -1;
+        let err = dx - dy;
+
+        let cx = x0;
+        let cy = y0;
+
+        while (true) {
+            if (cx === x1 && cy === y1) return true;
+
+            if (cx !== x0 || cy !== y0) {
+                const tile = this.getTile(cx, cy);
+                if (tile === 'wall' || tile === 'door' || tile === 'hidden_door') {
+                    return false;
+                }
+            }
+
+            let e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                cx += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                cy += sy;
             }
         }
     }
@@ -1223,7 +1262,8 @@ class Dungeon {
                 } else if (tile === 'door') {
                     // Normal door
                     doors.push({ distance, x: offX, y: offY, offset, type: 'normal' });
-                    // Doors don't block view in this simple engine (you can see through the frame)
+                    // Closed doors block the view
+                    if (offset === 0) centerBlocked = true;
                 }
 
                 // Check for visible monsters

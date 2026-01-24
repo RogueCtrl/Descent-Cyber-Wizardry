@@ -98,10 +98,13 @@ class MiniMapRenderer {
             }
         }
 
-        // 4. Render Player
+        // 4. Render Monsters
+        this.renderMonsters(ctx, dungeon, startX, endX, startY, endY, centerX, centerY);
+
+        // 5. Render Player
         this.renderPlayerArrow(ctx, centerX, centerY, dungeon.playerDirection);
 
-        // 5. Restore context
+        // 6. Restore context
         ctx.restore();
 
         // 6. Draw "2D MAP" Label
@@ -156,12 +159,68 @@ class MiniMapRenderer {
         } else if (type.startsWith('stairs')) {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(x + 3, y + 3, this.tileSize - 6, this.tileSize - 6);
+        } else if (type === 'exit') {
+            ctx.fillStyle = '#f59e0b'; // Amber/Orange for Jack Out
+            // Draw an exit arrow or icon
+            ctx.beginPath();
+            const cx = x + this.tileSize / 2;
+            const cy = y + this.tileSize / 2;
+            const size = this.tileSize / 2;
+
+            // Draw simple doorway with arrow
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(cx - size / 2, cy - size / 2, size, size);
+
+            // Arrow pointing out
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + size, cy);
+            ctx.stroke();
         }
 
         // Grid lines (optional, distinct look)
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(x, y, this.tileSize, this.tileSize);
+    }
+
+    /**
+     * Render visible monsters on the mini-map
+     */
+    renderMonsters(ctx, dungeon, startX, endX, startY, endY, centerX, centerY) {
+        if (!dungeon.currentFloorData || !dungeon.currentFloorData.encounters) return;
+
+        const encounters = dungeon.currentFloorData.encounters;
+        const playerX = dungeon.playerX;
+        const playerY = dungeon.playerY;
+
+        encounters.forEach(encounter => {
+            // Only render if not triggered/defeated
+            if (!encounter.triggered) {
+                // Check if tile is explored
+                const explorationKey = `${dungeon.currentFloor}:${encounter.x}:${encounter.y}`;
+                if (dungeon.exploredTiles.has(explorationKey)) {
+
+                    // Convert world coordinates to screen coordinates
+                    // Relative to player
+                    const drawX = centerX + (encounter.x - playerX) * this.tileSize;
+                    const drawY = centerY + (encounter.y - playerY) * this.tileSize;
+
+                    // Render monster icon (red skull/dot)
+                    ctx.fillStyle = '#ef4444'; // Red
+                    ctx.beginPath();
+                    ctx.arc(drawX, drawY, this.tileSize * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Optional: distinct icon for Boss
+                    if (encounter.type === 'boss') {
+                        ctx.strokeStyle = '#fbbf24'; // Gold outline
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                }
+            }
+        });
     }
 
     /**
