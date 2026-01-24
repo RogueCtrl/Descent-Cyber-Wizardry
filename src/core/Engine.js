@@ -129,8 +129,17 @@ class Engine {
             // Set the party name
             if (this.party) {
                 this.party.name = partyName;
+
+                // If this was a temporary party, convert it to permanent
+                if (this.party._isTemporary) {
+                    this.party._isTemporary = false;
+                    console.log(`Converting temporary party to permanent: ${this.party.id} (name: "${partyName}")`);
+                }
+
+                // Save the party to IndexedDB and set as active
                 await this.party.save();
-                console.log(`Party name set to: "${partyName}"`);
+                Storage.setActiveParty(this.party.id);
+                console.log(`Party saved and set as active: "${partyName}"`);
 
                 // Update party display
                 this.ui.updatePartyDisplay(this.party);
@@ -253,22 +262,25 @@ class Engine {
     }
 
     /**
-     * Create a new party and set it as active
+     * Create a new party (in-memory only, not saved until named)
      */
     async createNewParty(name = null) {
         try {
             const party = new Party();
+
             if (name) {
+                // If a name is provided, this is a permanent party - save it
                 party.name = name;
+                await party.save();
+                Storage.setActiveParty(party.id);
+                console.log(`Created new permanent party: ${party.id} (name: "${name}")`);
+            } else {
+                // No name provided - create temporary in-memory party
+                party.name = null;
+                party._isTemporary = true;
+                console.log(`Created temporary in-memory party: ${party.id} (not saved to database)`);
             }
 
-            // Save the party
-            await party.save();
-
-            // Set as active party
-            Storage.setActiveParty(party.id);
-
-            console.log(`Created new party: ${party.id}`);
             return party;
 
         } catch (error) {
