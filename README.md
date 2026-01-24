@@ -109,6 +109,69 @@ Complete character creation with dual terminology support:
 
 </div>
 
+## 3D Dungeon Rendering & Mini-Map
+
+The game features authentic Wizardry-style 3D wireframe rendering with a real-time mini-map and fog of war system:
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/dungeon-exploration.png" alt="Dungeon Exploration" width="400"/><br/>
+      <b>Dungeon Exploration - 3D Wireframe Viewport</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/minimap-fogofwar.png" alt="Mini-Map with Fog of War" width="400"/><br/>
+      <b>Mini-Map with Fog of War</b>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+### Interactive Doors
+
+Doors are rendered as wireframe graphics with interactive open/close functionality:
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/door-closed.png" alt="Closed Door" width="400"/><br/>
+      <b>Closed Door - Wireframe Rendering</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/door-open-corridor.png" alt="Open Door Corridor" width="400"/><br/>
+      <b>Open Door - Corridor View</b>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+### Combat Encounters
+
+Face monsters in turn-based combat with 3D wireframe monster portraits:
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/ogre-encounter.png" alt="Ogre Encounter" width="400"/><br/>
+      <b>Ogre Encounter - 3D Monster Portrait</b>
+    </td>
+    <td align="center">
+      <img src="assets/readme/combat-ogre.png" alt="Grid Engagement Combat" width="400"/><br/>
+      <b>Grid Engagement - Combat Interface</b>
+    </td>
+  </tr>
+</table>
+
+</div>
+
 ## Current Playable Experience
 
 ### Training Grounds (Test Environment)
