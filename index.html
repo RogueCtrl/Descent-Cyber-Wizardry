@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Descent: Cyber Wizardry</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <link rel="stylesheet" href="styles/main.css">
 </head>
+
 <body>
     <div id="game-container">
         <canvas id="game-canvas" width="800" height="600"></canvas>
@@ -45,10 +48,10 @@
     <!-- Core Systems (EventSystem first, then GameState) -->
     <script src="src/core/EventSystem.js"></script>
     <script src="src/core/GameState.js"></script>
-    
+
     <!-- Data Systems -->
     <script src="src/data/terminology.js"></script>
-    
+
     <!-- Utilities -->
     <script src="src/utils/Random.js"></script>
     <script src="src/utils/Helpers.js"></script>
@@ -57,17 +60,18 @@
     <script src="src/utils/Modal.js"></script>
     <script src="src/utils/TextManager.js"></script>
     <script src="src/utils/PartySetupModal.js"></script>
-    
+
     <!-- Audio System -->
     <script src="src/audio/AudioManager.js"></script>
-    
+
     <!-- Rendering (load before Engine since Engine depends on these) -->
+    <script src="src/rendering/MiniMapRenderer.js"></script>
     <script src="src/rendering/Viewport3D.js"></script>
     <script src="src/rendering/MonsterPortraitRenderer.js"></script>
     <script src="src/rendering/Renderer.js"></script>
     <script src="src/rendering/CharacterUI.js"></script>
     <script src="src/rendering/UI.js"></script>
-    
+
     <!-- Game Logic -->
     <script src="src/game/Character.js"></script>
     <script src="src/game/CharacterCreator.js"></script>
@@ -84,10 +88,10 @@
     <script src="src/game/Formation.js"></script>
     <script src="src/game/CombatInterface.js"></script>
     <script src="src/game/TeamAssignmentService.js"></script>
-    
+
     <!-- Core Engine (load after ALL dependencies) -->
     <script src="src/core/Engine.js"></script>
-    
+
     <!-- Entity Migrations -->
     <script src="src/data/migrations/weapons-v1.0.0.js"></script>
     <script src="src/data/migrations/weapons-v1.1.0.js"></script>
@@ -100,13 +104,14 @@
     <script src="src/data/migrations/conditions-v1.0.0.js"></script>
     <script src="src/data/migrations/effects-v1.0.0.js"></script>
     <script src="src/data/migrations/monsters-v1.0.0.js"></script>
-    
+
     <script>
         // Initialize game when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const game = new Engine();
             game.initialize();
         });
     </script>
 </body>
+
 </html>

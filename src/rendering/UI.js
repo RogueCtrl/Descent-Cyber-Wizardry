@@ -126,7 +126,8 @@ class UI {
 
         if (this.controlButtons.openDoor) {
             this.controlButtons.openDoor.addEventListener('click', () => {
-                this.eventSystem.emit('player-action', 'open-door');
+                const action = this.controlButtons.openDoor.dataset.action || 'open-door';
+                this.eventSystem.emit('player-action', action);
             });
         }
 
@@ -623,8 +624,16 @@ class UI {
 
         if (tileInFront === 'door') {
             // Show Open Door button with flash animation
+            this.controlButtons.openDoor.textContent = 'Open Door';
+            this.controlButtons.openDoor.dataset.action = 'open-door';
             this.controlButtons.openDoor.style.display = 'block';
             this.controlButtons.openDoor.classList.add('animate-flash-blue');
+        } else if (tileInFront === 'open_door') {
+            // Show Close Door button
+            this.controlButtons.openDoor.textContent = 'Close Door';
+            this.controlButtons.openDoor.dataset.action = 'close-door';
+            this.controlButtons.openDoor.style.display = 'block';
+            this.controlButtons.openDoor.classList.remove('animate-flash-blue');
         } else {
             // Hide button
             this.controlButtons.openDoor.style.display = 'none';

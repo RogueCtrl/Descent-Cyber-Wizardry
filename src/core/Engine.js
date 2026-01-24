@@ -1137,12 +1137,25 @@ class Engine {
                 if (this.dungeon.openDoor()) {
                     this.ui.addMessage('You open the door.');
 
-                    // Immediately check context to update button state (hide it)
+                    // Immediately check context to update button state
                     if (this.ui) {
                         this.ui.updateContextualActions(this.dungeon);
                     }
                 } else {
                     this.ui.addMessage('The door is stuck or locked.');
+                }
+                break;
+
+            case 'close-door':
+                if (this.dungeon.closeDoor()) {
+                    this.ui.addMessage('You close the door.');
+
+                    // Immediately check context to update button state
+                    if (this.ui) {
+                        this.ui.updateContextualActions(this.dungeon);
+                    }
+                } else {
+                    this.ui.addMessage('You cannot close this.');
                 }
                 break;
 

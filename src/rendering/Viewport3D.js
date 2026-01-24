@@ -30,6 +30,9 @@ class Viewport3D {
 
         // Perspective calculation cache
         this.perspectiveCache = new Map();
+
+        // MiniMap Renderer
+        this.miniMapRenderer = new MiniMapRenderer();
     }
 
     /**
@@ -73,6 +76,11 @@ class Viewport3D {
 
         // Render special indicators
         this.renderSpecialIndicators(dungeon);
+
+        // Render Mini-Map
+        if (this.miniMapRenderer) {
+            this.miniMapRenderer.render(this.ctx, dungeon, this.width, this.height);
+        }
     }
 
 

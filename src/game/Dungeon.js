@@ -18,6 +18,9 @@ class Dungeon {
         this.disarmedTraps = new Set(); // Format: "floor:x:y"
         this.usedSpecials = new Set(); // Format: "floor:x:y" for one-time use items
 
+        // Exploration state for Fog-of-War
+        this.exploredTiles = new Set(); // Format: "floor:x:y"
+
         // Debug mode for static test map
         this.testMode = true; // Set to false for random generation
 
@@ -567,7 +570,11 @@ class Dungeon {
             this.playerX = 1; // Center of Room A (x: 0-2, center = 1)
             this.playerY = 2; // Center of Room A (y: 1-3, center = 2)
             this.playerDirection = 0; // Start facing north
+            this.playerDirection = 0; // Start facing north
             console.log(`Test mode: Player positioned at (${this.playerX}, ${this.playerY}) facing North`);
+
+            // Mark initial area as explored
+            this.markExplored(this.playerX, this.playerY, 4);
 
             // Check for position events at start position (like exit tile)
             setTimeout(() => {
@@ -586,7 +593,33 @@ class Dungeon {
                 this.playerX = x;
                 this.playerY = y;
                 this.playerDirection = 0; // Start facing north
+                this.markExplored(this.playerX, this.playerY, 4); // Initial radius
                 break;
+            }
+        }
+    }
+
+    /**
+     * Mark tiles as explored around a center point
+     */
+    markExplored(centerX, centerY, radius) {
+        if (!this.currentFloorData) return;
+
+        const width = this.currentFloorData.width;
+        const height = this.currentFloorData.height;
+        const floorNum = this.currentFloor;
+
+        for (let y = centerY - radius; y <= centerY + radius; y++) {
+            for (let x = centerX - radius; x <= centerX + radius; x++) {
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    // Simple distance check (squared distance for efficiency)
+                    const dx = x - centerX;
+                    const dy = y - centerY;
+                    if (dx * dx + dy * dy <= radius * radius) {
+                        const key = `${floorNum}:${x}:${y}`;
+                        this.exploredTiles.add(key);
+                    }
+                }
             }
         }
     }
@@ -614,7 +647,7 @@ class Dungeon {
     isWalkable(x, y, floor = null) {
         const tile = this.getTile(x, y, floor);
         const walkableTiles = [
-            'floor', 'hidden_door', 'secret_passage', 'exit', 'treasure',
+            'floor', 'hidden_door', 'secret_passage', 'exit', 'treasure', 'open_door',
             'trap_pit_trap', 'trap_poison_dart', 'trap_teleport_trap', 'trap_alarm_trap'
         ];
         return walkableTiles.includes(tile);
@@ -666,10 +699,41 @@ class Dungeon {
             // Check for events at new position
             this.checkPositionEvents();
 
+            // Reveal fog of war
+            this.markExplored(this.playerX, this.playerY, 4);
+
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Mark tiles as explored around a center point
+     */
+    markExplored(centerX, centerY, radius) {
+        if (!this.currentFloorData) return;
+
+        const width = this.currentFloorData.width;
+        const height = this.currentFloorData.height;
+        const floorNum = this.currentFloor;
+
+        for (let y = centerY - radius; y <= centerY + radius; y++) {
+            for (let x = centerX - radius; x <= centerX + radius; x++) {
+                // Calculate wrapped coordinates
+                const wrappedX = ((x % width) + width) % width;
+                const wrappedY = ((y % height) + height) % height;
+
+                // Check distance using original linear coordinates (simplest for radius)
+                const dx = x - centerX;
+                const dy = y - centerY;
+
+                if (dx * dx + dy * dy <= radius * radius) {
+                    const key = `${floorNum}:${wrappedX}:${wrappedY}`;
+                    this.exploredTiles.add(key);
+                }
+            }
+        }
     }
 
     /**
@@ -1474,10 +1538,46 @@ class Dungeon {
         const tile = this.getTile(targetX, targetY);
 
         if (tile === 'door') {
-            // "Open" the door by converting it to floor
+            // "Open" the door by converting it to open_door state
             if (this.currentFloorData && this.currentFloorData.tiles) {
                 if (this.currentFloorData.tiles[targetY] && typeof (this.currentFloorData.tiles[targetY][targetX]) !== 'undefined') {
-                    this.currentFloorData.tiles[targetY][targetX] = 'floor';
+                    this.currentFloorData.tiles[targetY][targetX] = 'open_door';
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Close a door at the specified coordinates (or in front if not specified)
+     */
+    closeDoor(startX = null, startY = null) {
+        let targetX = startX;
+        let targetY = startY;
+
+        // If no coordinates provided, close door in front
+        if (targetX === null || targetY === null) {
+            targetX = this.playerX;
+            targetY = this.playerY;
+
+            switch (this.playerDirection) {
+                case 0: targetY -= 1; break; // North
+                case 1: targetX += 1; break; // East
+                case 2: targetY += 1; break; // South
+                case 3: targetX -= 1; break; // West
+            }
+        }
+
+        const tile = this.getTile(targetX, targetY);
+
+        if (tile === 'open_door') {
+            // "Close" the door by converting it back to door state
+            if (this.currentFloorData && this.currentFloorData.tiles) {
+                if (this.currentFloorData.tiles[targetY] && typeof (this.currentFloorData.tiles[targetY][targetX]) !== 'undefined') {
+                    this.currentFloorData.tiles[targetY][targetX] = 'door';
+                    // Check if player is standing in the door (prevent crushing?)
+                    // For now, allow closing even if occupied (Wizardry style - or maybe it fails?)
                     return true;
                 }
             }
