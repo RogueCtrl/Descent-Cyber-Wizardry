@@ -233,10 +233,10 @@ class UI {
         headerElement.className = 'party-header';
         const gameState = window.engine ? window.engine.gameState : null;
         const currentState = gameState ? gameState.currentState : null;
-        const showAddButton = (currentState !== 'playing' && currentState !== 'dungeon' && party.size < 6);
+        const showAddButton = (currentState !== 'playing' && currentState !== 'dungeon' && party.size < party.maxSize);
 
         headerElement.innerHTML = `
-            <h4>Party (${party.size}/6)</h4>
+            <h4>Party (${party.size}/${party.maxSize})</h4>
             ${showAddButton ? '<button id="add-character-btn" class="btn-small">+</button>' : ''}
         `;
         this.partyDisplay.appendChild(headerElement);
@@ -1358,7 +1358,7 @@ class UI {
                     </div>
                     
                     <div class="party-status-section">
-                        <h3><span data-text-key="current_party">Current Party</span> (${party ? party.size : 0}/6)</h3>
+                        <h3><span data-text-key="current_party">Current Party</span> (${party ? party.size : 0}/${party ? party.maxSize : 4})</h3>
                         <div class="party-status-info">
                             ${hasActiveParty ? `
                                 <p class="status-ready">✅ <span data-text-key="strike_team_ready">Your party is ready for adventure!</span></p>

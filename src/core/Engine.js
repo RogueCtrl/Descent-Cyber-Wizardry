@@ -2088,9 +2088,11 @@ class Engine {
             });
         }
 
-        // Return to dungeon exploration
-        this.gameState.setState('playing');
-        this.ui.hideCombatInterface();
+        // NOTE: Don't automatically return to dungeon exploration here
+        // The victory/defeat modal buttons will handle the state transition
+        // when the user clicks "Continue" or "Return to Town"
+        // this.gameState.setState('playing');
+        // this.ui.hideCombatInterface();
         this.eventSystem.emit('party-update');
     }
 

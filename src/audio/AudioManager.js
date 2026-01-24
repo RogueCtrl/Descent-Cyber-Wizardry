@@ -29,7 +29,7 @@ class AudioManager {
             },
             victory: {
                 name: 'Victory Fanfare',
-                tempo: 130,
+                tempo: 70, // Much slower, more reflective
                 pattern: this.createVictoryTheme()
             },
             death: {
@@ -510,15 +510,36 @@ class AudioManager {
     }
 
     /**
-     * Create victory theme - triumphant fanfare
+     * Create victory theme - somber and reflective, acknowledging the cost of victory
      */
     createVictoryTheme() {
         return [
-            { freq: 523, duration: 0.5, wave: 'square' },  // C5
-            { freq: 659, duration: 0.5, wave: 'square' },  // E5
-            { freq: 784, duration: 0.5, wave: 'square' },  // G5
-            { freq: 1047, duration: 1.0, wave: 'square' }, // C6
-            { freq: 0, duration: 0.25 },                 // Rest
+            // Part A - Somber opening (minor key, reflective)
+            { freq: 330, duration: 1.5, wave: 'sine' },    // E4 (minor third)
+            { freq: 392, duration: 1.0, wave: 'sine' },    // G4
+            { freq: 440, duration: 2.0, wave: 'sine' },    // A4 (hold, contemplative)
+            { freq: 0, duration: 0.5 },                    // Rest
+
+            // Part B - Gentle rise (acknowledging victory)
+            { freq: 494, duration: 1.0, wave: 'sine' },    // B4
+            { freq: 523, duration: 1.5, wave: 'sine' },    // C5 (peak, but not triumphant)
+            { freq: 494, duration: 1.0, wave: 'sine' },    // B4 (falling back)
+            { freq: 440, duration: 2.5, wave: 'sine' },    // A4 (long, bittersweet resolution)
+            { freq: 0, duration: 1.0 },                    // Rest
+
+            // Part C - Lower register reflection (remembering the fallen)
+            { freq: 294, duration: 1.5, wave: 'triangle' }, // D4 (warm, lower)
+            { freq: 330, duration: 1.0, wave: 'triangle' }, // E4
+            { freq: 349, duration: 2.0, wave: 'triangle' }, // F4 (hold)
+            { freq: 330, duration: 1.0, wave: 'triangle' }, // E4
+            { freq: 294, duration: 3.0, wave: 'triangle' }, // D4 (very long, somber)
+            { freq: 0, duration: 1.5 },                    // Rest
+
+            // Part D - Quiet resolution (acceptance)
+            { freq: 220, duration: 2.0, wave: 'sine' },    // A3 (low, peaceful)
+            { freq: 262, duration: 1.5, wave: 'sine' },    // C4
+            { freq: 294, duration: 3.0, wave: 'sine' },    // D4 (final, quiet resolution)
+            { freq: 0, duration: 2.0 },                    // Long silence before loop
         ];
     }
 

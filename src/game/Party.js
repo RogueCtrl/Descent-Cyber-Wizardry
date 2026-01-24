@@ -7,7 +7,7 @@ class Party {
         this.id = `party_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.name = null; // Will be set when first created
         this.members = [];
-        this.maxSize = 6;
+        this.maxSize = 4;
         this.currentLeader = null;
         this.formation = 'default';
         this.gold = 0;
@@ -17,7 +17,7 @@ class Party {
         this.dateCreated = Date.now();
         this.lastModified = Date.now();
     }
-    
+
     /**
      * Add a character to the party
      */
@@ -25,19 +25,19 @@ class Party {
         if (this.members.length >= this.maxSize) {
             return false;
         }
-        
+
         this.members.push(character);
-        
+
         // Set the character's partyId to link them to this party
         character.partyId = this.id;
-        
+
         if (this.members.length === 1) {
             this.currentLeader = character;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Remove a character from the party
      */
@@ -46,47 +46,47 @@ class Party {
         if (index === -1) {
             return false;
         }
-        
+
         this.members.splice(index, 1);
-        
+
         // Clear the character's partyId since they're no longer in this party
         character.partyId = null;
-        
+
         if (this.currentLeader === character && this.members.length > 0) {
             this.currentLeader = this.members[0];
         }
-        
+
         return true;
     }
-    
+
     /**
      * Get party size
      */
     get size() {
         return this.members.length;
     }
-    
+
     /**
      * Check if party is empty
      */
     get isEmpty() {
         return this.members.length === 0;
     }
-    
+
     /**
      * Check if party is full
      */
     get isFull() {
         return this.members.length >= this.maxSize;
     }
-    
+
     /**
      * Get alive members
      */
     get aliveMembers() {
         return this.members.filter(member => member.isAlive);
     }
-    
+
     /**
      * Update party (called each frame)
      */
@@ -97,7 +97,7 @@ class Party {
             }
         });
     }
-    
+
     /**
      * Get save data
      */
@@ -111,27 +111,27 @@ class Party {
             experience: this.experience
         };
     }
-    
+
     /**
      * Load from save data
      */
     loadFromSave(saveData) {
         if (!saveData) return;
-        
+
         this.id = saveData.id || this.id; // Keep existing ID if not in save data
-        this.maxSize = saveData.maxSize || 6;
+        this.maxSize = saveData.maxSize || 4;
         this.formation = saveData.formation || 'default';
         this.gold = saveData.gold || 0;
         this.experience = saveData.experience || 0;
-        
+
         // For now, just create placeholder members
         this.members = saveData.members || [];
-        
+
         if (saveData.currentLeader && this.members.length > 0) {
             this.currentLeader = this.members.find(member => member.id === saveData.currentLeader) || this.members[0];
         }
     }
-    
+
     /**
      * Convert party to save data
      */
@@ -151,7 +151,7 @@ class Party {
             lastModified: this.lastModified
         };
     }
-    
+
     /**
      * Save party to persistent storage
      * @param {boolean} setAsActive - Whether to set this party as active (default: true)
@@ -162,7 +162,7 @@ class Party {
             const success = await Storage.saveParty(this);
             if (success) {
                 console.log(`Party ${this.id} saved successfully`);
-                
+
                 // Only set as active if requested and not camping
                 if (setAsActive && !this.campId && Storage.getActivePartyId() !== this.id) {
                     Storage.setActiveParty(this.id);
@@ -174,7 +174,7 @@ class Party {
             return false;
         }
     }
-    
+
     /**
      * Load party from persistent storage
      */
@@ -184,7 +184,7 @@ class Party {
             if (!partyData) {
                 return null;
             }
-            
+
             const party = new Party();
             party.id = partyData.id;
             party.name = partyData.name;
@@ -195,7 +195,7 @@ class Party {
             party.campId = partyData.campId || null;
             party.dateCreated = partyData.dateCreated || Date.now();
             party.lastModified = partyData.lastModified || Date.now();
-            
+
             // Load members from character storage
             if (partyData.memberIds && partyData.memberIds.length > 0) {
                 const members = [];
@@ -207,21 +207,21 @@ class Party {
                 }
                 party.members = members;
             }
-            
+
             // Set current leader
             if (partyData.currentLeaderId && party.members.length > 0) {
                 party.currentLeader = party.members.find(m => m.id === partyData.currentLeaderId) || party.members[0];
             } else if (party.members.length > 0) {
                 party.currentLeader = party.members[0];
             }
-            
+
             return party;
         } catch (error) {
             console.error('Failed to load party:', error);
             return null;
         }
     }
-    
+
     /**
      * Load all parties from persistent storage
      */
@@ -229,21 +229,21 @@ class Party {
         try {
             const partiesData = await Storage.loadAllParties();
             const parties = [];
-            
+
             for (const partyData of partiesData) {
                 const party = await Party.load(partyData.id);
                 if (party) {
                     parties.push(party);
                 }
             }
-            
+
             return parties;
         } catch (error) {
             console.error('Failed to load all parties:', error);
             return [];
         }
     }
-    
+
     /**
      * Delete party from persistent storage
      */
@@ -259,7 +259,7 @@ class Party {
             return false;
         }
     }
-    
+
     /**
      * Mark party as in town
      */
@@ -268,7 +268,7 @@ class Party {
         this.campId = null; // Clear camp reference when returning to town
         this.lastModified = Date.now();
     }
-    
+
     /**
      * Mark party as leaving town (entering dungeon)
      */
@@ -276,7 +276,7 @@ class Party {
         this.inTown = false;
         this.lastModified = Date.now();
     }
-    
+
     /**
      * Set camp reference
      */
@@ -284,7 +284,7 @@ class Party {
         this.campId = campId;
         this.lastModified = Date.now();
     }
-    
+
     /**
      * Clear camp reference
      */
@@ -292,7 +292,7 @@ class Party {
         this.campId = null;
         this.lastModified = Date.now();
     }
-    
+
     /**
      * Get party status summary
      */
