@@ -1086,7 +1086,7 @@ class Dungeon {
             let checkX = this.playerX;
             let checkY = this.playerY;
 
-            // Calculate position based on facing direction
+            // Calculate base front position for this distance
             switch (this.playerDirection) {
                 case 0: checkY -= distance; break; // North
                 case 1: checkX += distance; break; // East
@@ -1094,30 +1094,48 @@ class Dungeon {
                 case 3: checkX -= distance; break; // West
             }
 
-            const tile = this.getTile(checkX, checkY);
+            let centerBlocked = false;
 
-            if (tile === 'wall') {
-                walls.push({ distance, x: checkX, y: checkY });
-                frontWallDistance = distance; // Note where the front wall is
-                break; // Can't see past walls
-            } else if (tile === 'hidden_door') {
-                const secretKey = `${this.currentFloor}:${checkX}:${checkY}:hidden_door`;
-                if (this.discoveredSecrets.has(secretKey)) {
-                    doors.push({ distance, x: checkX, y: checkY, type: 'hidden' });
-                } else {
-                    walls.push({ distance, x: checkX, y: checkY }); // Appears as wall
-                    frontWallDistance = distance;
-                    break;
+            // Scan horizontally to detect walls in wider rooms
+            for (let offset = -2; offset <= 2; offset++) {
+                let offX = checkX;
+                let offY = checkY;
+
+                // Apply horizontal offset based on direction
+                switch (this.playerDirection) {
+                    case 0: offX += offset; break; // North: offset -1 is left (X-1)
+                    case 1: offY += offset; break; // East: offset -1 is left (Y-1)
+                    case 2: offX -= offset; break; // South: offset -1 is left (X+1)
+                    case 3: offY -= offset; break; // West: offset -1 is left (Y+1)
                 }
-            } else if (tile === 'secret_passage') {
-                const secretKey = `${this.currentFloor}:${checkX}:${checkY}:secret_passage`;
-                if (this.discoveredSecrets.has(secretKey)) {
-                    passages.push({ distance, x: checkX, y: checkY, type: 'secret' });
-                } else {
-                    walls.push({ distance, x: checkX, y: checkY }); // Appears as wall
-                    frontWallDistance = distance;
-                    break;
+
+                const tile = this.getTile(offX, offY);
+
+                if (tile === 'wall') {
+                    walls.push({ distance, x: offX, y: offY, offset });
+                    if (offset === 0) centerBlocked = true;
+                } else if (tile === 'hidden_door') {
+                    const secretKey = `${this.currentFloor}:${offX}:${offY}:hidden_door`;
+                    if (this.discoveredSecrets.has(secretKey)) {
+                        doors.push({ distance, x: offX, y: offY, offset, type: 'hidden' });
+                    } else {
+                        walls.push({ distance, x: offX, y: offY, offset }); // Appears as wall
+                        if (offset === 0) centerBlocked = true;
+                    }
+                } else if (tile === 'secret_passage') {
+                    const secretKey = `${this.currentFloor}:${offX}:${offY}:secret_passage`;
+                    if (this.discoveredSecrets.has(secretKey)) {
+                        passages.push({ distance, x: offX, y: offY, offset, type: 'secret' });
+                    } else {
+                        walls.push({ distance, x: offX, y: offY, offset }); // Appears as wall
+                        if (offset === 0) centerBlocked = true;
+                    }
                 }
+            }
+
+            if (centerBlocked) {
+                frontWallDistance = distance;
+                break; // Can't see past a centered wall
             }
         }
 
@@ -1135,53 +1153,80 @@ class Dungeon {
                 case 3: checkX -= sideDistance; break; // West
             }
 
-            // Calculate proper left/right based on facing direction
-            let leftX, leftY, rightX, rightY;
+            // Variables to track corridor framing positions (usually at offset 1)
+            let framingLeftX, framingLeftY, framingRightX, framingRightY;
 
+            // Initialize framing coordinates to offset 1 (default corridor width)
             switch (this.playerDirection) {
                 case 0: // North
-                    leftX = checkX - 1;
-                    leftY = checkY;
-                    rightX = checkX + 1;
-                    rightY = checkY;
+                    framingLeftX = checkX - 1; framingLeftY = checkY;
+                    framingRightX = checkX + 1; framingRightY = checkY;
                     break;
                 case 1: // East
-                    leftX = checkX;
-                    leftY = checkY - 1;
-                    rightX = checkX;
-                    rightY = checkY + 1;
+                    framingLeftX = checkX; framingLeftY = checkY - 1;
+                    framingRightX = checkX; framingRightY = checkY + 1;
                     break;
                 case 2: // South
-                    leftX = checkX + 1;
-                    leftY = checkY;
-                    rightX = checkX - 1;
-                    rightY = checkY;
+                    framingLeftX = checkX + 1; framingLeftY = checkY;
+                    framingRightX = checkX - 1; framingRightY = checkY;
                     break;
                 case 3: // West
-                    leftX = checkX;
-                    leftY = checkY + 1;
-                    rightX = checkX;
-                    rightY = checkY - 1;
+                    framingLeftX = checkX; framingLeftY = checkY + 1;
+                    framingRightX = checkX; framingRightY = checkY - 1;
                     break;
             }
 
-            // Enhanced coordinate validation
-            if (this.isValidCoordinate(leftX, leftY)) {
-                const leftTile = this.getTile(leftX, leftY);
-                if (leftTile === 'wall') {
-                    walls.push({ distance, x: leftX, y: leftY, side: 'left' });
+            // Scan for Left Wall (Room Boundary)
+            for (let offset = 1; offset <= 3; offset++) {
+                let leftX, leftY;
+                // Calculate left position at this offset
+                switch (this.playerDirection) {
+                    case 0: // North -> Left is X-
+                        leftX = checkX - offset; leftY = checkY; break;
+                    case 1: // East -> Left is Y-
+                        leftX = checkX; leftY = checkY - offset; break;
+                    case 2: // South -> Left is X+
+                        leftX = checkX + offset; leftY = checkY; break;
+                    case 3: // West -> Left is Y+
+                        leftX = checkX; leftY = checkY + offset; break;
+                }
+
+                if (this.isValidCoordinate(leftX, leftY)) {
+                    const tile = this.getTile(leftX, leftY);
+                    if (tile === 'wall' || tile === 'hidden_door' || tile === 'secret_passage') {
+                        walls.push({ distance, x: leftX, y: leftY, side: 'left', offset: -offset });
+                        break; // Found the boundary, stop scanning this side
+                    }
                 }
             }
 
-            if (this.isValidCoordinate(rightX, rightY)) {
-                const rightTile = this.getTile(rightX, rightY);
-                if (rightTile === 'wall') {
-                    walls.push({ distance, x: rightX, y: rightY, side: 'right' });
+            // Scan for Right Wall (Room Boundary)
+            for (let offset = 1; offset <= 3; offset++) {
+                let rightX, rightY;
+                // Calculate right position at this offset
+                switch (this.playerDirection) {
+                    case 0: // North -> Right is X+
+                        rightX = checkX + offset; rightY = checkY; break;
+                    case 1: // East -> Right is Y+
+                        rightX = checkX; rightY = checkY + offset; break;
+                    case 2: // South -> Right is X-
+                        rightX = checkX - offset; rightY = checkY; break;
+                    case 3: // West -> Right is Y-
+                        rightX = checkX; rightY = checkY - offset; break;
+                }
+
+                if (this.isValidCoordinate(rightX, rightY)) {
+                    const tile = this.getTile(rightX, rightY);
+                    if (tile === 'wall' || tile === 'hidden_door' || tile === 'secret_passage') {
+                        walls.push({ distance, x: rightX, y: rightY, side: 'right', offset: offset });
+                        break; // Found the boundary, stop scanning this side
+                    }
                 }
             }
 
             // Enhanced framing wall detection for corridor entrances
-            this.addFramingWalls(walls, distance, leftX, leftY, rightX, rightY);
+            // Uses the offset 1 coordinates since framing walls always occur at corridor mouths
+            this.addFramingWalls(walls, distance, framingLeftX, framingLeftY, framingRightX, framingRightY);
         }
 
         return {
