@@ -6,37 +6,37 @@ class UI {
     constructor(eventSystem) {
         this.eventSystem = eventSystem;
         this.isInitialized = false;
-        
+
         // UI Elements
         this.partyDisplay = null;
         this.messageLog = null;
         this.controlButtons = {};
         this.modals = {};
-        
+
         this.messages = [];
         this.maxMessages = 50;
-        
+
         // Character UI
         this.characterUI = new CharacterUI(eventSystem);
-        
+
         // Town Modal
         this.townModal = null;
-        
+
         // Training Grounds Modal
         this.trainingModal = null;
-        
+
         // Post-Combat Results Modal
         this.postCombatModal = null;
-        
+
         // Treasure Modal
         this.treasureModal = null;
-        
+
         // Strike Team Management Modal
         this.strikeTeamModal = null;
-        
+
         this.initialize();
     }
-    
+
     /**
      * Initialize UI elements and event listeners
      */
@@ -45,7 +45,7 @@ class UI {
             // Get UI elements
             this.partyDisplay = document.getElementById('party-display');
             this.messageLog = document.getElementById('message-log');
-            
+
             // Get control buttons
             this.controlButtons = {
                 moveForward: document.getElementById('move-forward'),
@@ -57,20 +57,20 @@ class UI {
                 rest: document.getElementById('rest'),
                 camp: document.getElementById('camp')
             };
-            
+
             // Apply TextManager to existing UI elements
             this.applyGlobalTextManager();
-            
+
             this.setupEventListeners();
             this.isInitialized = true;
-            
+
             console.log('UI initialized successfully');
-            
+
         } catch (error) {
             console.error('Failed to initialize UI:', error);
         }
     }
-    
+
     /**
      * Apply TextManager to global UI elements with data-text-key attributes
      */
@@ -79,7 +79,7 @@ class UI {
             console.warn('TextManager not available during UI initialization');
             return;
         }
-        
+
         // Apply TextManager to all elements with data-text-key attributes
         const textElements = document.querySelectorAll('[data-text-key]');
         textElements.forEach(element => {
@@ -88,41 +88,41 @@ class UI {
                 TextManager.applyToElement(element, textKey);
             }
         });
-        
+
         console.log(`Applied TextManager to ${textElements.length} elements`);
     }
-    
+
     /**
      * Set up event listeners for UI elements
      */
     setupEventListeners() {
         // Movement controls are handled by Engine.js to prevent duplicate event listeners
-        
+
         // Action controls
         if (this.controlButtons.castSpell) {
             this.controlButtons.castSpell.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'cast-spell');
             });
         }
-        
+
         if (this.controlButtons.useItem) {
             this.controlButtons.useItem.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'use-item');
             });
         }
-        
+
         if (this.controlButtons.rest) {
             this.controlButtons.rest.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'rest');
             });
         }
-        
+
         if (this.controlButtons.camp) {
             this.controlButtons.camp.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'camp');
             });
         }
-        
+
         // Audio controls
         const audioToggle = document.getElementById('toggle-audio');
         if (audioToggle) {
@@ -130,27 +130,27 @@ class UI {
                 this.toggleAudio();
             });
         }
-        
+
         // Keyboard controls
         this.eventSystem.on('keydown', (event) => {
             this.handleKeydown(event);
         });
-        
+
         // Message system
         this.eventSystem.on('show-message', (data) => {
             this.addMessage(data.text, data.type);
         });
-        
+
         // Combat ended event
         this.eventSystem.on('combat-ended', (data) => {
             this.showPostCombatResults(data.rewards, data.disconnectedCharacters || []);
         });
-        
+
         // Party defeated event
         this.eventSystem.on('party-defeated', async (data) => {
             const hasDisconnectedCharacters = (data.disconnectedCharacters || []).length > 0;
             const hasCasualties = (data.casualties || []).length > 0;
-            
+
             if (data.totalDefeat || (!hasDisconnectedCharacters && hasCasualties)) {
                 // Total party kill - no one escaped
                 await this.showTotalPartyKillScreen(data.casualties);
@@ -162,9 +162,9 @@ class UI {
                 await this.showPartyDeathScreen(data.casualties, data.disconnectedCharacters || []);
             }
         });
-        
 
-        
+
+
         // Character updated event (for real-time HP updates)
         this.eventSystem.on('character-updated', (data) => {
             this.refreshCombatDisplay();
@@ -174,34 +174,34 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Handle keyboard input
      */
     handleKeydown(event) {
         switch (event.key) {
             // Movement keys are handled by Engine.js to prevent duplicate handling
-            
+
             case ' ':
                 event.preventDefault();
                 this.eventSystem.emit('player-action', 'action');
                 break;
-                
+
             case 'Escape':
                 event.preventDefault();
                 this.eventSystem.emit('game-menu-toggle');
                 break;
         }
     }
-    
+
     /**
      * Update party display
      */
     updatePartyDisplay(party) {
         if (!this.partyDisplay) return;
-        
+
         this.partyDisplay.innerHTML = '';
-        
+
         if (!party || party.size === 0) {
             this.partyDisplay.innerHTML = `
                 <div class="no-party">
@@ -209,7 +209,7 @@ class UI {
                     <button id="create-character-btn" class="btn-primary">Create Character</button>
                 </div>
             `;
-            
+
             // Add event listener for create character button
             const createBtn = this.partyDisplay.querySelector('#create-character-btn');
             if (createBtn) {
@@ -219,20 +219,20 @@ class UI {
             }
             return;
         }
-        
+
         // Create party header
         const headerElement = document.createElement('div');
         headerElement.className = 'party-header';
         const gameState = window.engine ? window.engine.gameState : null;
         const currentState = gameState ? gameState.currentState : null;
         const showAddButton = (currentState !== 'playing' && currentState !== 'dungeon' && party.size < 6);
-        
+
         headerElement.innerHTML = `
             <h4>Party (${party.size}/6)</h4>
             ${showAddButton ? '<button id="add-character-btn" class="btn-small">+</button>' : ''}
         `;
         this.partyDisplay.appendChild(headerElement);
-        
+
         // Add event listener for add character button
         const addBtn = headerElement.querySelector('#add-character-btn');
         if (addBtn) {
@@ -240,25 +240,25 @@ class UI {
                 this.showCharacterCreation();
             });
         }
-        
+
         // Create character list
         if (party.members && Array.isArray(party.members)) {
             party.members.forEach((character, index) => {
-            const characterElement = document.createElement('div');
-            characterElement.className = `character-summary ${party.currentLeader === character ? 'leader' : ''}`;
-            characterElement.dataset.characterId = character.id;
-            
-            // Calculate HP percentage for health bar
-            const hpPercentage = Math.max(0, Math.round((character.currentHP / character.maxHP) * 100));
-            const hpBarClass = hpPercentage > 50 ? 'healthy' : hpPercentage > 25 ? 'wounded' : 'critical';
-            
-            characterElement.innerHTML = `
+                const characterElement = document.createElement('div');
+                characterElement.className = `character-summary ${party.currentLeader === character ? 'leader' : ''}`;
+                characterElement.dataset.characterId = character.id;
+
+                // Calculate HP percentage for health bar
+                const hpPercentage = Math.max(0, Math.round((character.currentHP / character.maxHP) * 100));
+                const hpBarClass = hpPercentage > 50 ? 'healthy' : hpPercentage > 25 ? 'wounded' : 'critical';
+
+                characterElement.innerHTML = `
                 <div class="character-header">
                     <div class="character-name">${character.name}</div>
                     <div class="character-level">Lvl ${character.level}</div>
                 </div>
                 <div class="character-info">
-                    <div class="character-race-class">${character.race} ${character.class}</div>
+                    <div class="character-race-class">${TextManager.getText(`race_${character.race.toLowerCase()}`, character.race)} ${TextManager.getText(`class_${character.class.toLowerCase()}`, character.class)}</div>
                     <div class="character-hp">
                         <div class="hp-bar-container">
                             <div class="hp-bar ${hpBarClass}" style="width: ${hpPercentage}%"></div>
@@ -272,21 +272,21 @@ class UI {
                     <button class="btn-tiny" onclick="engine.ui.viewCharacter('${character.id}')">View</button>
                 </div>
             `;
-            
-            // Add click handler for character selection
-            characterElement.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('btn-tiny')) {
-                    this.selectCharacter(character.id);
-                }
+
+                // Add click handler for character selection
+                characterElement.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn-tiny')) {
+                        this.selectCharacter(character.id);
+                    }
+                });
+
+                this.partyDisplay.appendChild(characterElement);
             });
-            
-            this.partyDisplay.appendChild(characterElement);
-        });
         }
-        
+
         // Add party actions only if not in dungeon mode  
         // Reuse gameState and currentState from above
-        
+
         if (currentState !== 'playing' && currentState !== 'dungeon') {
             const actionsElement = document.createElement('div');
             actionsElement.className = 'party-actions';
@@ -296,11 +296,11 @@ class UI {
             `;
             this.partyDisplay.appendChild(actionsElement);
         }
-        
+
         // Update party name display in the status bar
         this.updatePartyNameDisplay(party);
     }
-    
+
     /**
      * Update party name display in the Strike Team Manifest
      */
@@ -310,7 +310,7 @@ class UI {
             const partyName = party ? (party.name || 'Unnamed Party') : 'No Active Party';
             // Update the content with data-text-key for TextManager to handle
             partyNameDisplay.innerHTML = `<span data-text-key="party">Strike Team</span>: ${partyName}`;
-            
+
             // Apply TextManager to update the terminology
             if (typeof TextManager !== 'undefined') {
                 const textElement = partyNameDisplay.querySelector('[data-text-key="party"]');
@@ -320,7 +320,7 @@ class UI {
             }
         }
     }
-    
+
     /**
      * Select a character as the current leader
      */
@@ -329,18 +329,18 @@ class UI {
         this.partyDisplay.querySelectorAll('.character-summary').forEach(el => {
             el.classList.remove('leader');
         });
-        
+
         // Add selection to clicked character
         const characterElement = this.partyDisplay.querySelector(`[data-character-id="${characterId}"]`);
         if (characterElement) {
             characterElement.classList.add('leader');
         }
-        
+
         // Emit event for party leader change
         this.eventSystem.emit('party-leader-change', characterId);
         this.addMessage(`Selected ${characterElement?.querySelector('.character-name')?.textContent || 'character'} as party leader.`);
     }
-    
+
     /**
      * View character details
      */
@@ -348,7 +348,7 @@ class UI {
         this.addMessage(`Character sheet for ${characterId} would open here.`);
         // TODO: Implement character sheet modal
     }
-    
+
     /**
      * Show party management interface
      */
@@ -356,21 +356,21 @@ class UI {
         this.addMessage('Party management interface will be implemented in the next update.');
         // TODO: Implement party management modal
     }
-    
+
     /**
      * Show town center as modal overlay
      */
     async showTown(party = null) {
         console.log('UI.showTown() called with party:', party);
-        
+
         // Hide any existing town modal
         this.hideTown();
-        
+
         // Use passed party or fallback to engine
         const partyObj = party || (window.engine ? window.engine.party : null);
         const partyInfo = this.getPartyStatusInfo(partyObj);
         const hasActiveParty = partyObj && partyObj.size > 0;
-        
+
         // Check if there are any meaningful parties to manage
         let hasCamps = false;
         try {
@@ -384,19 +384,19 @@ class UI {
                 const partiesWithMembers = allParties.filter(p => p.members && p.members.length > 0);
                 const campingParties = await Storage.getCampingParties();
                 const lostParties = allParties.filter(p => p.isLost);
-                
-                hasCamps = allParties.length > 1 || 
-                          partiesWithMembers.length > 0 || 
-                          campingParties.length > 0 || 
-                          lostParties.length > 0;
+
+                hasCamps = allParties.length > 1 ||
+                    partiesWithMembers.length > 0 ||
+                    campingParties.length > 0 ||
+                    lostParties.length > 0;
             }
         } catch (error) {
             console.error('Error checking for camps:', error);
             hasCamps = false;
         }
-        
+
         console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
-        
+
         // Create modal content
         const townContent = `
             <div class="town-center-interface">
@@ -486,30 +486,30 @@ class UI {
                 </div>
             </div>
         `;
-        
+
         // Create and show modal
         this.townModal = new Modal({
             className: 'modal town-modal',
             closeOnEscape: false, // Town menu should not be dismissible with ESC
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.townModal.setOnClose(() => {
             this.hideTown();
         });
-        
+
         // Create and show modal
         this.townModal.create(townContent);
         this.townModal.show();
-        
+
         // Apply TextManager to town modal elements
         this.applyGlobalTextManager();
-        
+
         // Add event listeners
         this.setupTownCenterEventListeners(this.townModal.getBody());
     }
-    
+
     /**
      * Set up event listeners for town center interface
      */
@@ -518,7 +518,7 @@ class UI {
         const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
         const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
         const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
-        
+
         if (trainingBtn) {
             trainingBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -527,7 +527,7 @@ class UI {
                 this.eventSystem.emit('town-location-selected', 'training-grounds');
             });
         }
-        
+
         if (dungeonBtn && !dungeonBtn.disabled) {
             dungeonBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -536,7 +536,7 @@ class UI {
                 this.eventSystem.emit('town-location-selected', 'dungeon');
             });
         }
-        
+
         if (strikeTeamBtn && !strikeTeamBtn.disabled) {
             strikeTeamBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -545,17 +545,17 @@ class UI {
                 this.showStrikeTeamManagement();
             });
         }
-        
+
         if (modeToggleBtn) {
             // Update initial display
             this.updateModeToggleDisplay(modeToggleBtn);
-            
+
             modeToggleBtn.addEventListener('click', () => {
                 this.toggleTerminologyMode();
             });
         }
     }
-    
+
     /**
      * Toggle between Fantasy and Cyber terminology modes
      */
@@ -564,68 +564,68 @@ class UI {
             console.warn('TextManager not available for mode toggle');
             return;
         }
-        
+
         // Toggle the mode
         TextManager.toggleMode();
-        
+
         // Update the toggle button display
         const modeToggleBtn = document.querySelector('#terminology-mode-toggle');
         if (modeToggleBtn) {
             this.updateModeToggleDisplay(modeToggleBtn);
         }
-        
+
         // Show feedback message
         const newMode = TextManager.getMode();
         const modeLabel = newMode === 'cyber' ? 'Cyber' : 'Fantasy';
         this.addMessage(`Interface mode switched to ${modeLabel}`, 'info');
-        
+
         console.log(`Terminology mode switched to: ${newMode}`);
     }
-    
+
     /**
      * Update mode toggle button display
      */
     updateModeToggleDisplay(toggleBtn) {
         if (!toggleBtn || typeof TextManager === 'undefined') return;
-        
+
         const currentMode = TextManager.getMode();
         const modeDisplay = toggleBtn.querySelector('#current-mode-display');
         const toggleIcon = toggleBtn.querySelector('.toggle-icon');
-        
+
         if (modeDisplay) {
             modeDisplay.textContent = currentMode === 'cyber' ? 'Cyber' : 'Fantasy';
         }
-        
+
         if (toggleIcon) {
             toggleIcon.textContent = currentMode === 'cyber' ? '⚡' : '🏰';
         }
-        
+
         // Update button styling based on mode
         toggleBtn.className = `mode-toggle-btn ${currentMode}-mode`;
     }
-    
+
     /**
      * Show Strike Team Management interface
      */
     async showStrikeTeamManagement() {
         console.log('Opening Strike Team Management...');
-        
+
         try {
             // Get all parties from storage
             const allParties = await Storage.loadAllParties();
             const campingParties = await Storage.getCampingParties();
             const activePartyId = Storage.getActivePartyId();
-            
+
             console.log('Loaded parties:', { allParties, campingParties, activePartyId });
-            
+
             // Create the management interface
             const content = this.buildStrikeTeamManagementContent(allParties, campingParties, activePartyId);
-            
+
             // Hide existing modal if present
             if (this.strikeTeamModal) {
                 this.strikeTeamModal.hide();
             }
-            
+
             // Create modal with roster styling
             this.strikeTeamModal = new Modal({
                 title: TextManager ? TextManager.getText('manifest_title', 'Strike Team Manifest') : 'Strike Team Manifest',
@@ -633,15 +633,15 @@ class UI {
                 width: '90vw',
                 height: '80vh'
             });
-            
+
             this.strikeTeamModal.setOnClose(() => {
                 console.log('Strike Team Management modal closed');
                 this.strikeTeamModal = null;
             });
-            
+
             this.strikeTeamModal.create(content);
             this.strikeTeamModal.show();
-            
+
             // Apply TextManager to modal content
             if (typeof TextManager !== 'undefined') {
                 const modalBody = this.strikeTeamModal.getBody();
@@ -653,16 +653,16 @@ class UI {
                     }
                 });
             }
-            
+
             // Set up event listeners
             this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
-            
+
         } catch (error) {
             console.error('Failed to show Strike Team Management:', error);
             this.addMessage('Failed to load Strike Team Management', 'error');
         }
     }
-    
+
     /**
      * Build content for Strike Team Management
      */
@@ -671,7 +671,7 @@ class UI {
         const inactiveParties = allParties.filter(p => p.id !== activePartyId);
         const inTownParties = inactiveParties.filter(p => !p.campId && !p.isLost);
         const lostParties = allParties.filter(p => p.isLost);
-        
+
         console.log('Party filtering:', {
             total: allParties.length,
             inactive: inactiveParties.length,
@@ -679,7 +679,7 @@ class UI {
             inTown: inTownParties.length,
             lost: lostParties.length
         });
-        
+
         return `
             <div class="strike-team-management">
                 <div class="manifest-header">
@@ -695,10 +695,10 @@ class UI {
                             (${campingParties.length})
                         </h3>
                         <div class="camping-teams-grid">
-                            ${campingParties.length > 0 ? 
-                                campingParties.map(party => this.buildPartyCard(party, false, true)).join('') : 
-                                '<p class="no-parties">No camping parties</p>'
-                            }
+                            ${campingParties.length > 0 ?
+                campingParties.map(party => this.buildPartyCard(party, false, true)).join('') :
+                '<p class="no-parties">No camping parties</p>'
+            }
                         </div>
                     </div>
                     
@@ -709,10 +709,10 @@ class UI {
                             (${inTownParties.length})
                         </h3>
                         <div class="in-town-teams-grid">
-                            ${inTownParties.length > 0 ? 
-                                inTownParties.map(party => this.buildPartyCard(party, false)).join('') : 
-                                '<p class="no-parties">No inactive parties</p>'
-                            }
+                            ${inTownParties.length > 0 ?
+                inTownParties.map(party => this.buildPartyCard(party, false)).join('') :
+                '<p class="no-parties">No inactive parties</p>'
+            }
                         </div>
                     </div>
                     
@@ -723,10 +723,10 @@ class UI {
                             (${lostParties.length})
                         </h3>
                         <div class="lost-teams-grid">
-                            ${lostParties.length > 0 ? 
-                                lostParties.map(party => this.buildPartyCard(party, false, false, true)).join('') : 
-                                '<p class="no-parties">No lost parties</p>'
-                            }
+                            ${lostParties.length > 0 ?
+                lostParties.map(party => this.buildPartyCard(party, false, false, true)).join('') :
+                '<p class="no-parties">No lost parties</p>'
+            }
                         </div>
                     </div>
                 </div>
@@ -737,13 +737,13 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Build party card HTML
      */
     buildPartyCard(party, isActive = false, isCamping = false, isLost = false) {
         let status, statusClass, statusIcon;
-        
+
         if (isLost) {
             status = 'Lost';
             statusClass = 'lost';
@@ -757,7 +757,7 @@ class UI {
             statusClass = 'inactive';
             statusIcon = '🏛️';
         }
-        
+
         // Dynamic location display
         let locationDisplay = '';
         if (isCamping && party.campId) {
@@ -777,7 +777,7 @@ class UI {
                 locationDisplay = 'Lost in unknown location';
             }
         }
-        
+
         return `
             <div class="party-card ${statusClass}" data-party-id="${party.id}">
                 <div class="party-header">
@@ -803,7 +803,7 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Set up event listeners for Strike Team Management
      */
@@ -811,7 +811,7 @@ class UI {
         const closeBtn = modalBody.querySelector('#close-management-btn');
         const resumeButtons = modalBody.querySelectorAll('.resume-party-btn');
         const deleteButtons = modalBody.querySelectorAll('.delete-party-btn');
-        
+
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -823,7 +823,7 @@ class UI {
                 }
             });
         }
-        
+
         resumeButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (window.engine && window.engine.audioManager) {
@@ -833,7 +833,7 @@ class UI {
                 await this.resumeParty(partyId);
             });
         });
-        
+
         deleteButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (window.engine && window.engine.audioManager) {
@@ -844,26 +844,26 @@ class UI {
             });
         });
     }
-    
-    
+
+
     /**
      * Resume a party
      */
     async resumeParty(partyId) {
         console.log('Resuming party:', partyId);
-        
+
         try {
             if (window.engine && window.engine.resumeCampedParty) {
                 console.log('Calling engine.resumeCampedParty...');
                 await window.engine.resumeCampedParty(partyId);
                 console.log('Party resumed, hiding modals...');
-                
+
                 // Hide Strike Team Management modal
                 if (this.strikeTeamModal) {
                     this.strikeTeamModal.hide();
                     this.strikeTeamModal = null;
                 }
-                
+
                 // Only hide town if the game state is not 'town' (i.e., party went to dungeon)
                 if (window.engine.gameState.currentState !== 'town') {
                     this.hideTown();
@@ -871,13 +871,13 @@ class UI {
                 } else {
                     console.log('Party staying in town, keeping town visible...');
                 }
-                
+
                 console.log('Modals hidden, showing success message...');
                 this.addMessage('Party resumed successfully!', 'success');
             } else {
-                console.error('Engine or resumeCampedParty not available:', { 
-                    engine: !!window.engine, 
-                    resumeMethod: !!(window.engine && window.engine.resumeCampedParty) 
+                console.error('Engine or resumeCampedParty not available:', {
+                    engine: !!window.engine,
+                    resumeMethod: !!(window.engine && window.engine.resumeCampedParty)
                 });
                 this.addMessage('Failed to resume party - engine not available', 'error');
             }
@@ -886,7 +886,7 @@ class UI {
             this.addMessage('Failed to resume party', 'error');
         }
     }
-    
+
     /**
      * Show delete party confirmation modal
      */
@@ -896,10 +896,10 @@ class UI {
             const allParties = await Storage.loadAllParties();
             const party = allParties.find(p => p.id === partyId);
             const partyName = party ? party.name || 'Unnamed Team' : 'Unknown Party';
-            
+
             // NEW: Check if party is in town and prevent deletion (Agents Always Part of Teams)
             const isInTown = party && !party.campId && !party.dungeonName && !party.isInDungeon && !party.isLost;
-            
+
             if (isInTown) {
                 // Show prevention message instead of allowing deletion
                 const preventionContent = `
@@ -923,20 +923,20 @@ class UI {
                         </div>
                     </div>
                 `;
-                
+
                 this.deleteConfirmModal = new Modal({
                     className: 'modal delete-prevention-modal',
                     closeOnEscape: true,
                     closeOnBackdrop: true
                 });
-                
+
                 this.deleteConfirmModal.create(preventionContent);
                 this.deleteConfirmModal.show();
-                
+
                 // Event listener for acknowledge button
                 const modalBody = this.deleteConfirmModal.getBody();
                 const acknowledgeBtn = modalBody.querySelector('#acknowledge-btn');
-                
+
                 if (acknowledgeBtn) {
                     acknowledgeBtn.addEventListener('click', () => {
                         if (window.engine && window.engine.audioManager) {
@@ -946,10 +946,10 @@ class UI {
                         this.deleteConfirmModal = null;
                     });
                 }
-                
+
                 return; // Exit early - no deletion allowed
             }
-            
+
             const deleteContent = `
                 <div class="delete-confirmation-content">
                     <div class="warning-header">
@@ -974,21 +974,21 @@ class UI {
                     </div>
                 </div>
             `;
-            
+
             this.deleteConfirmModal = new Modal({
                 className: 'modal delete-confirmation-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: false
             });
-            
+
             this.deleteConfirmModal.create(deleteContent);
             this.deleteConfirmModal.show();
-            
+
             // Play warning sound effect
             if (window.engine && window.engine.audioManager) {
                 window.engine.audioManager.playSoundEffect('deletePartyWarning');
             }
-            
+
             // Apply TextManager to modal content
             if (typeof TextManager !== 'undefined') {
                 const modalBody = this.deleteConfirmModal.getBody();
@@ -1000,12 +1000,12 @@ class UI {
                     }
                 });
             }
-            
+
             // Event listeners
             const modalBody = this.deleteConfirmModal.getBody();
             const cancelBtn = modalBody.querySelector('#cancel-delete-btn');
             const confirmBtn = modalBody.querySelector('#confirm-delete-btn');
-            
+
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
                     if (window.engine && window.engine.audioManager) {
@@ -1015,7 +1015,7 @@ class UI {
                     this.deleteConfirmModal = null;
                 });
             }
-            
+
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
                     if (window.engine && window.engine.audioManager) {
@@ -1026,7 +1026,7 @@ class UI {
                     this.deleteConfirmModal = null;
                 });
             }
-            
+
         } catch (error) {
             console.error('Error showing delete confirmation:', error);
             this.addMessage('Failed to show delete confirmation', 'error');
@@ -1045,7 +1045,7 @@ class UI {
                 console.error('Party not found for deletion:', partyId);
                 return;
             }
-            
+
             // Load the full party with character objects (not just references)
             let party;
             try {
@@ -1054,12 +1054,12 @@ class UI {
                 console.error('Failed to load full party, using basic info:', error);
                 party = basicPartyInfo;
             }
-            
+
             console.log(`Deleting party: ${party.name} (${partyId})`);
-            
+
             // Use memberIds if members is undefined
             const memberList = party.members || party.memberIds || [];
-            
+
             // Load the actual character objects
             let actualMembers = [];
             if (memberList && memberList.length > 0) {
@@ -1078,19 +1078,19 @@ class UI {
                     }
                 }
             }
-            
+
             // 1. Delete associated camp if it exists
             if (party.campId) {
                 console.log(`Deleting camp: ${party.campId}`);
                 await Storage.deleteCamp(party.campId);
             }
-            
+
             // 2. Handle party members based on party location
             if (actualMembers.length > 0) {
                 // Check if party is in town (not in dungeon or lost)
                 // Lost parties should ALWAYS be treated as "in dungeon" for deletion
                 const isInTown = !party.campId && !party.dungeonName && !party.isInDungeon && !party.isLost;
-                
+
                 for (const member of actualMembers) {
                     if (isInTown) {
                         // Party is in town - preserve character state, just remove party association
@@ -1099,7 +1099,7 @@ class UI {
                     } else {
                         // Party is in dungeon - transition to "lost" state (using death system helper)
                         console.log(`Transitioning character to lost state: ${member.name} (${member.id})`);
-                        
+
                         // Update character status using death system helper for consistency
                         Helpers.setDeathState(member, Helpers.DEATH_STATES.LOST);
                         member.partyId = null; // Remove party association
@@ -1107,14 +1107,14 @@ class UI {
                         member.lostReason = 'Strike Team Deleted';
                         member.lastKnownLocation = party.dungeonName || 'Corrupted Network';
                     }
-                    
+
                     // Save updated character state
                     try {
                         await Storage.saveCharacter(member);
-                        
+
                         // Add small delay before verification to ensure save is complete
                         await new Promise(resolve => setTimeout(resolve, 100));
-                        
+
                         // Verify it was saved by immediately reloading
                         const reloadedChar = await Storage.loadCharacter(member.id);
                         if (isInTown) {
@@ -1135,16 +1135,16 @@ class UI {
                     }
                 }
             }
-            
+
             // 3. Delete the party itself
             await Storage.deleteParty(partyId);
-            
+
             // 4. Update game state and active party
             const activePartyId = Storage.getActivePartyId();
             if (activePartyId === partyId) {
                 Storage.setActivePartyId(null);
             }
-            
+
             // Always ensure we're in a proper state after party deletion
             if (window.engine && window.engine.gameState) {
                 const currentState = window.engine.gameState.getState();
@@ -1153,7 +1153,7 @@ class UI {
                     console.log('Game state set to town after party deletion');
                 }
             }
-            
+
             // 5. Force refresh of all character displays
             if (window.engine && window.engine.party) {
                 try {
@@ -1163,20 +1163,20 @@ class UI {
                     console.log('Engine party refresh not available:', error.message);
                 }
             }
-            
+
             // 6. Emit events for UI updates
             if (this.eventSystem) {
                 this.eventSystem.emit('party-deleted', { partyId, partyName: party.name });
                 this.eventSystem.emit('party-roster-changed');
                 this.eventSystem.emit('character-state-changed'); // Additional event for character updates
             }
-            
+
             // 7. Refresh the Strike Team Management interface
             await this.refreshStrikeTeamManagement();
-            
+
             console.log(`Successfully deleted party: ${party.name}`);
             this.addMessage('Party deleted successfully', 'info');
-            
+
         } catch (error) {
             console.error('Error deleting party:', error);
             this.addMessage('Failed to delete party', 'error');
@@ -1200,9 +1200,9 @@ class UI {
                 const allParties = await Storage.loadAllParties();
                 const campingParties = await Storage.getCampingParties();
                 const activePartyId = Storage.getActivePartyId();
-                
+
                 const content = this.buildStrikeTeamManagementContent(allParties, campingParties, activePartyId);
-                
+
                 // Update content if modal has updateContent method, otherwise recreate
                 if (this.strikeTeamModal.updateContent) {
                     this.strikeTeamModal.updateContent(content);
@@ -1213,10 +1213,10 @@ class UI {
                         modalBody.innerHTML = content;
                     }
                 }
-                
+
                 // Reapply event listeners
                 this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
-                
+
                 // Apply TextManager
                 if (typeof TextManager !== 'undefined') {
                     const modalBody = this.strikeTeamModal.getBody();
@@ -1228,13 +1228,13 @@ class UI {
                         }
                     });
                 }
-                
+
             } catch (error) {
                 console.error('Error refreshing Strike Team Management:', error);
             }
         }
     }
-    
+
     /**
      * Get party status information for display
      */
@@ -1246,11 +1246,11 @@ class UI {
             }
             return 'No Active Party';
         }
-        
-        const livingMembers = party.members.filter(member => 
+
+        const livingMembers = party.members.filter(member =>
             member.status !== 'dead' && member.status !== 'lost'
         ).length;
-        
+
         if (livingMembers === 0) {
             return 'Party Defeated';
         } else if (livingMembers < party.size) {
@@ -1259,7 +1259,7 @@ class UI {
             return `${party.size} Members Ready`;
         }
     }
-    
+
     /**
      * Get last save information
      */
@@ -1268,7 +1268,7 @@ class UI {
         // For now, return placeholder
         return 'Never';
     }
-    
+
     /**
      * Hide town modal
      */
@@ -1278,20 +1278,20 @@ class UI {
             this.townModal = null;
         }
     }
-    
+
     /**
      * Show training grounds as modal overlay
      */
     showTrainingGrounds() {
         console.log('UI.showTrainingGrounds() called');
-        
+
         // Hide any existing training modal
         this.hideTrainingGrounds();
-        
+
         // Get party info from the engine
         const party = window.engine ? window.engine.party : null;
         const hasActiveParty = party && party.size > 0;
-        
+
         // Create modal content
         const trainingContent = `
             <div class="training-grounds-interface">
@@ -1328,8 +1328,8 @@ class UI {
                                 <button id="strike-team-status-btn" class="action-btn compact enabled">
                                     <span data-text-key="view_party_stats">View Party Stats</span>
                                 </button>
-                            ` : 
-                                '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'}
+                            ` :
+                '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'}
                         </div>
                     </div>
                 </div>
@@ -1341,30 +1341,30 @@ class UI {
                 </div>
             </div>
         `;
-        
+
         // Create and show modal
         this.trainingModal = new Modal({
             className: 'modal training-modal',
             closeOnEscape: false, // Consistent with town menu
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.trainingModal.setOnClose(() => {
             this.hideTrainingGrounds();
         });
-        
+
         // Create and show modal
         this.trainingModal.create(trainingContent);
         this.trainingModal.show();
-        
+
         // Apply TextManager to training grounds modal elements
         this.applyGlobalTextManager();
-        
+
         // Add event listeners
         this.setupTrainingGroundsEventListeners(this.trainingModal.getBody());
     }
-    
+
     /**
      * Set up event listeners for training grounds interface
      */
@@ -1373,7 +1373,7 @@ class UI {
         const backBtn = container.querySelector('#back-to-town-btn');
         const viewRosterBtn = container.querySelector('#view-roster-btn');
         const strikeTeamStatusBtn = container.querySelector('#strike-team-status-btn');
-        
+
         if (createBtn) {
             createBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -1382,7 +1382,7 @@ class UI {
                 this.eventSystem.emit('training-action', 'create-character');
             });
         }
-        
+
         if (backBtn) {
             backBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -1391,7 +1391,7 @@ class UI {
                 this.eventSystem.emit('training-action', 'back-to-town');
             });
         }
-        
+
         if (viewRosterBtn) {
             viewRosterBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -1400,7 +1400,7 @@ class UI {
                 this.showCharacterRoster();
             });
         }
-        
+
         if (strikeTeamStatusBtn && !strikeTeamStatusBtn.disabled) {
             strikeTeamStatusBtn.addEventListener('click', () => {
                 if (window.engine && window.engine.audioManager) {
@@ -1412,7 +1412,7 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Hide training grounds modal
      */
@@ -1422,7 +1422,7 @@ class UI {
             this.trainingModal = null;
         }
     }
-    
+
     /**
      * Add a message to the message log
      */
@@ -1431,51 +1431,51 @@ class UI {
             text: text,
             type: type
         };
-        
+
         this.messages.push(message);
-        
+
         // Keep message count under limit
         if (this.messages.length > this.maxMessages) {
             this.messages.shift();
         }
-        
+
         this.updateMessageLog();
     }
-    
+
     /**
      * Update the message log display
      */
     updateMessageLog() {
         if (!this.messageLog) return;
-        
+
         this.messageLog.innerHTML = '';
-        
+
         this.messages.forEach(message => {
             const messageElement = document.createElement('div');
             messageElement.className = `message message-${message.type}`;
             messageElement.innerHTML = message.text;
-            
+
             this.messageLog.appendChild(messageElement);
         });
-        
+
         // Scroll to bottom
         this.messageLog.scrollTop = this.messageLog.scrollHeight;
     }
-    
+
     /**
      * Show character creation interface
      */
     showCharacterCreation() {
         this.characterUI.showCharacterCreation();
     }
-    
+
     /**
      * Hide character creation interface
      */
     hideCharacterCreation() {
         this.characterUI.hideCharacterCreation();
     }
-    
+
     /**
      * Show character roster interface
      */
@@ -1483,54 +1483,54 @@ class UI {
         try {
             // Get all characters from storage
             const allCharacters = await Storage.loadAllCharacters();
-            
+
             console.log(`Loading character roster: ${allCharacters.length} characters found`);
-            
+
             // Create roster modal content
             const rosterContent = await this.createCharacterRosterContent(allCharacters);
-            
+
             // Create and show modal
             this.rosterModal = new Modal({
                 className: 'modal roster-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: true
             });
-            
+
             // Set up close callback
             this.rosterModal.setOnClose(() => {
                 this.hideCharacterRoster();
             });
-            
+
             // Get dynamic title from TextManager
-            const modalTitle = typeof TextManager !== 'undefined' ? 
+            const modalTitle = typeof TextManager !== 'undefined' ?
                 TextManager.getText('character_roster') : 'Character Roster';
-            
+
             this.rosterModal.create(rosterContent, modalTitle);
             this.rosterModal.show();
-            
+
             // Apply TextManager to modal content
             this.applyGlobalTextManager();
-            
+
             // Register callback for dynamic roster updates when mode changes
             this.rosterModeChangeCallback = () => {
                 if (this.rosterModal && this.rosterModal.isVisible) {
                     this.refreshCharacterRosterContent(allCharacters);
                 }
             };
-            
+
             if (typeof TextManager !== 'undefined') {
                 TextManager.onModeChange(this.rosterModeChangeCallback);
             }
-            
+
             // Add event listeners after modal is created
             this.setupRosterEventListeners();
-            
+
         } catch (error) {
             console.error('Failed to show character roster:', error);
             this.addMessage('Failed to load character roster', 'error');
         }
     }
-    
+
     /**
      * Hide character roster interface
      */
@@ -1539,57 +1539,57 @@ class UI {
             this.rosterModal.hide();
             this.rosterModal = null;
         }
-        
+
         // Clean up TextManager callback
         if (this.rosterModeChangeCallback && typeof TextManager !== 'undefined') {
             TextManager.offModeChange(this.rosterModeChangeCallback);
             this.rosterModeChangeCallback = null;
         }
     }
-    
+
     /**
      * Refresh character roster content for mode changes
      */
     async refreshCharacterRosterContent(characters) {
         if (!this.rosterModal) return;
-        
+
         try {
             // Regenerate content with current mode
             const rosterContent = await this.createCharacterRosterContent(characters);
-            
+
             // Update modal title
-            const modalTitle = typeof TextManager !== 'undefined' ? 
+            const modalTitle = typeof TextManager !== 'undefined' ?
                 TextManager.getText('character_roster') : 'Character Roster';
-            
+
             // Update modal content
             const modalBody = this.rosterModal.getBody();
             if (modalBody) {
                 modalBody.innerHTML = rosterContent;
             }
-            
+
             // Update modal title if header exists
             const modalHeader = this.rosterModal.element?.querySelector('.modal-header h2');
             if (modalHeader) {
                 modalHeader.textContent = modalTitle;
             }
-            
+
             // Reapply TextManager to new content
             this.applyGlobalTextManager();
-            
+
             // Reattach event listeners
             this.setupRosterEventListeners();
-            
+
         } catch (error) {
             console.error('Failed to refresh character roster content:', error);
         }
     }
-    
+
     /**
      * Set up event listeners for roster modal
      */
     setupRosterEventListeners() {
         const modalBody = this.rosterModal.getBody();
-        
+
         // Close button
         const closeBtn = modalBody.querySelector('#close-roster-btn');
         if (closeBtn) {
@@ -1600,7 +1600,7 @@ class UI {
                 this.hideCharacterRoster();
             });
         }
-        
+
         // Character card click handlers (both old and new styles)
         const characterCards = modalBody.querySelectorAll('.character-roster-card, .summary-character-card');
         characterCards.forEach(card => {
@@ -1613,7 +1613,7 @@ class UI {
                 this.showCharacterDetails(characterId);
             });
         });
-        
+
         // Lost Agents button
         const lostCharactersBtn = modalBody.querySelector('#view-lost-characters-btn');
         if (lostCharactersBtn) {
@@ -1625,7 +1625,7 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Show detailed character sheet
      */
@@ -1635,42 +1635,42 @@ class UI {
                 this.addMessage('No character ID provided', 'error');
                 return;
             }
-            
+
             // Load character data
             const character = await Storage.loadCharacter(characterId);
             if (!character) {
                 this.addMessage('Character not found', 'error');
                 return;
             }
-            
+
             console.log(`Loading character details for: ${character.name}`);
-            
+
             // Create character sheet content
             const detailContent = await this.createCharacterDetailContent(character);
-            
+
             // Create and show character detail modal
             this.characterDetailModal = new Modal({
                 className: 'modal character-sheet-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: true
             });
-            
+
             this.characterDetailModal.setOnClose(() => {
                 this.hideCharacterDetails();
             });
-            
+
             this.characterDetailModal.create(detailContent);
             this.characterDetailModal.show();
-            
+
             // Add event listeners for character detail modal
             this.setupCharacterDetailEventListeners();
-            
+
         } catch (error) {
             console.error('Failed to show character details:', error);
             this.addMessage('Failed to load character details', 'error');
         }
     }
-    
+
     /**
      * Hide character details modal
      */
@@ -1680,7 +1680,7 @@ class UI {
             this.characterDetailModal = null;
         }
     }
-    
+
     /**
      * Create character detail modal content
      */
@@ -1688,13 +1688,13 @@ class UI {
         // Calculate derived stats
         const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
         const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
-        
+
         // Get status and location
         const status = character.status || 'Alive';
         const statusClass = status.toLowerCase().replace(/\s+/g, '-');
         const location = this.getCharacterLocation(character);
         const classIcon = this.getClassIcon(character.class);
-        
+
         // Format attributes (check both direct properties and nested attributes object)
         const attrs = character.attributes || character;
         const attributes = [
@@ -1705,13 +1705,13 @@ class UI {
             { name: 'Agility', value: attrs.agility || character.agility || 0, abbr: 'AGI' },
             { name: 'Luck', value: attrs.luck || character.luck || 0, abbr: 'LUC' }
         ];
-        
+
         // Format equipment (simplified for now)
         const equipment = this.formatCharacterEquipment(character);
-        
+
         // Format spells (simplified for now)
         const spells = this.formatCharacterSpells(character);
-        
+
         return `
             <div class="character-detail-interface">
                 <div class="character-detail-header">
@@ -1719,7 +1719,7 @@ class UI {
                         <div class="character-detail-icon">${classIcon}</div>
                         <div class="character-detail-name-block">
                             <h1 class="character-detail-name">${character.name}</h1>
-                            <p class="character-detail-subtitle">Level ${character.level} ${character.race} ${character.class}</p>
+                            <p class="character-detail-subtitle">Level ${character.level} ${TextManager.getText(`race_${character.race.toLowerCase()}`, character.race)} ${TextManager.getText(`class_${character.class.toLowerCase()}`, character.class)}</p>
                         </div>
                     </div>
                     <div class="character-detail-status">
@@ -1791,51 +1791,51 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Format character equipment for display
      */
     formatCharacterEquipment(character) {
         const equipment = character.equipment || {};
         const slots = [
-            { 
-                key: 'weapon', 
-                name: 'Weapon', 
+            {
+                key: 'weapon',
+                name: 'Weapon',
                 cyberName: 'Attack Algorithm',
                 icon: '⚔️',
                 cyberIcon: '🔸'
             },
-            { 
-                key: 'armor', 
-                name: 'Armor', 
+            {
+                key: 'armor',
+                name: 'Armor',
                 cyberName: 'Defense Protocol',
                 icon: '🛡️',
                 cyberIcon: '🔷'
             },
-            { 
-                key: 'shield', 
-                name: 'Shield', 
+            {
+                key: 'shield',
+                name: 'Shield',
                 cyberName: 'Firewall Module',
                 icon: '🔰',
                 cyberIcon: '🔶'
             },
-            { 
-                key: 'accessory', 
-                name: 'Accessory', 
+            {
+                key: 'accessory',
+                name: 'Accessory',
                 cyberName: 'Enhancement Chip',
                 icon: '💍',
                 cyberIcon: '🔹'
             }
         ];
-        
+
         return slots.map(slot => {
             const item = equipment[slot.key];
             const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
-            
+
             // Get contextual item name using TerminologyUtils if available
             let itemName = 'None';
             let digitalInfo = '';
-            
+
             if (item) {
                 if (typeof item === 'string') {
                     itemName = item;
@@ -1844,7 +1844,7 @@ class UI {
                 } else {
                     itemName = item.name || 'Unknown';
                 }
-                
+
                 // Add digital classification in cyber mode
                 if (isCyberMode && typeof item === 'object') {
                     if (item.digitalClassification) {
@@ -1858,11 +1858,11 @@ class UI {
             } else {
                 itemName = isCyberMode ? '(Uninstalled)' : 'None';
             }
-            
+
             // Get contextual slot name and icon
             const slotName = isCyberMode ? slot.cyberName : slot.name;
             const slotIcon = isCyberMode ? slot.cyberIcon : slot.icon;
-            
+
             return `
                 <div class="equipment-item cyber-enhanced">
                     <div class="equipment-slot">
@@ -1877,7 +1877,7 @@ class UI {
             `;
         }).join('');
     }
-    
+
     /**
      * Format character spells for display
      */
@@ -1885,20 +1885,20 @@ class UI {
         const memorizedSpells = character.memorizedSpells || {};
         const hasSpells = Object.keys(memorizedSpells).length > 0;
         const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
-        
+
         // Get contextual "no spells" message
         const noSpellsMessage = isCyberMode ? 'No subroutines loaded' : 'No spells memorized';
-        
+
         if (!hasSpells) {
             return `<div class="no-spells cyber-enhanced">${noSpellsMessage}</div>`;
         }
-        
+
         // Get contextual level label
         const levelLabel = isCyberMode ? 'Tier' : 'Level';
-        
+
         return Object.entries(memorizedSpells).map(([level, spells]) => {
             if (!spells || spells.length === 0) return '';
-            
+
             return `
                 <div class="spell-level program-tier">
                     <h4 class="tier-header">
@@ -1907,48 +1907,48 @@ class UI {
                     </h4>
                     <div class="spell-list program-suite">
                         ${spells.map(spell => {
-                            // Get contextual spell name
-                            let spellName = 'Unknown';
-                            let digitalInfo = '';
-                            
-                            if (typeof spell === 'string') {
-                                spellName = spell;
-                            } else if (typeof TerminologyUtils !== 'undefined') {
-                                spellName = TerminologyUtils.getContextualName(spell);
-                            } else {
-                                spellName = spell.name || 'Unknown Spell';
-                            }
-                            
-                            // Add program type information in cyber mode
-                            if (isCyberMode && typeof spell === 'object') {
-                                if (spell.programType) {
-                                    digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
-                                } else if (spell.executionMethod) {
-                                    digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
-                                } else if (spell.algorithmClass) {
-                                    digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
-                                }
-                            }
-                            
-                            return `
+                // Get contextual spell name
+                let spellName = 'Unknown';
+                let digitalInfo = '';
+
+                if (typeof spell === 'string') {
+                    spellName = spell;
+                } else if (typeof TerminologyUtils !== 'undefined') {
+                    spellName = TerminologyUtils.getContextualName(spell);
+                } else {
+                    spellName = spell.name || 'Unknown Spell';
+                }
+
+                // Add program type information in cyber mode
+                if (isCyberMode && typeof spell === 'object') {
+                    if (spell.programType) {
+                        digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
+                    } else if (spell.executionMethod) {
+                        digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
+                    } else if (spell.algorithmClass) {
+                        digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
+                    }
+                }
+
+                return `
                                 <div class="spell-item cyber-enhanced" data-cyber-enhanced="${isCyberMode}">
                                     <div class="spell-name">${spellName}</div>
                                     ${digitalInfo}
                                 </div>
                             `;
-                        }).join('')}
+            }).join('')}
                     </div>
                 </div>
             `;
         }).join('');
     }
-    
+
     /**
      * Set up event listeners for character detail modal
      */
     setupCharacterDetailEventListeners() {
         const modalBody = this.characterDetailModal.getBody();
-        
+
         // Close button
         const closeBtn = modalBody.querySelector('#close-character-detail-btn');
         if (closeBtn) {
@@ -1957,23 +1957,23 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Create character roster modal content
      */
     async createCharacterRosterContent(characters) {
         // Filter lost characters for memorial section
-        const lostCharacters = characters.filter(character => 
+        const lostCharacters = characters.filter(character =>
             this.isCharacterPermanentlyLost(character)
         );
-        
+
         // Load all parties/strike teams first (including lost/camped ones)
         const allParties = await Storage.loadAllParties();
-        
+
         // First pass: load member counts for sorting
         const partiesWithCounts = await Promise.all(allParties.map(async (party) => {
             let aliveCount = 0;
-            
+
             if (party.memberIds && party.memberIds.length > 0) {
                 for (const memberId of party.memberIds) {
                     try {
@@ -1986,28 +1986,28 @@ class UI {
                     }
                 }
             }
-            
+
             return {
                 party: party,
                 aliveCount: aliveCount
             };
         }));
-        
+
         // Sort parties by alive member count (largest first)
         const sortedParties = partiesWithCounts
             .sort((a, b) => b.aliveCount - a.aliveCount)
             .map(item => item.party);
-        
-        
+
+
         // Build strike team data by loading each team's members
         const strikeTeamData = [];
         let totalActiveCharacters = 0;
-        
+
         for (const party of sortedParties) {
-            
+
             // Load all characters for this party
             const partyMembers = [];
-            
+
             if (party.memberIds && party.memberIds.length > 0) {
                 for (const memberId of party.memberIds) {
                     try {
@@ -2020,26 +2020,26 @@ class UI {
                     }
                 }
             }
-            
+
             // Include ALL teams, even if they have no active members (shows empty teams)
             strikeTeamData.push({
                 party: party,
                 members: partyMembers
             });
             totalActiveCharacters += partyMembers.length;
-            
+
         }
-        
+
         const hasActiveCharacters = totalActiveCharacters > 0;
         const hasLostCharacters = lostCharacters.length > 0;
-        
+
         // Build content for each strike team
         let strikeTeamContent = '';
-        
+
         for (const teamData of strikeTeamData) {
             strikeTeamContent += await this.createStrikeTeamSection(teamData.party, teamData.members);
         }
-        
+
         return `
             <div class="roster-interface">
                 <div class="roster-header">
@@ -2085,7 +2085,7 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Create a strike team section with header and character cards
      */
@@ -2094,16 +2094,16 @@ class UI {
         let teamName = 'Uninstalled';
         let teamIcon = '📋'; // Manifest icon for all teams
         let teamStatusClass = 'disconnected'; // Keep CSS class as disconnected but display as Uninstalled
-        
+
         if (party) {
             teamName = party.name || 'Unnamed Strike Team';
             teamIcon = '📋'; // Manifest icon for all teams
             teamStatusClass = party.isLost ? 'lost' : (party.campId ? 'camping' : 'active');
         }
-        
+
         // Create character cards using the new summary card style
         let memberContent;
-        
+
         if (characters.length > 0) {
             const characterCards = characters.map(character => this.createSummaryCharacterCard(character));
             memberContent = characterCards.join('');
@@ -2115,7 +2115,7 @@ class UI {
                 </div>
             `;
         }
-        
+
         return `
             <div class="strike-team-section ${teamStatusClass}">
                 <div class="strike-team-header">
@@ -2129,18 +2129,18 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Create a character card for the roster
      */
     async createCharacterCard(character) {
         // Determine character location
         const location = this.getCharacterLocation(character);
-        
+
         // Determine character status with proper styling and terminology
         const rawStatus = character.status || 'Alive';
         let displayStatus = rawStatus;
-        
+
         // Map status to contextual terminology
         if (typeof TextManager !== 'undefined') {
             switch (rawStatus.toLowerCase()) {
@@ -2164,22 +2164,22 @@ class UI {
                     displayStatus = rawStatus;
             }
         }
-        
+
         const statusClass = rawStatus.toLowerCase().replace(/\s+/g, '-');
-        
+
         // Get class icon (implement later if icons are available)
         const classIcon = this.getClassIcon(character.class);
-        
+
         // Get contextual race and class names
-        const raceName = typeof TextManager !== 'undefined' ? 
+        const raceName = typeof TextManager !== 'undefined' ?
             TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
-        const className = typeof TextManager !== 'undefined' ? 
+        const className = typeof TextManager !== 'undefined' ?
             TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
-        
+
         // Calculate HP percentage for health indicator
         const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
         const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
-        
+
         return `
             <div class="character-roster-card" data-character-id="${character.id}">
                 <div class="character-card-header">
@@ -2209,7 +2209,7 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Get character location string
      */
@@ -2218,19 +2218,19 @@ class UI {
         if (character.location) {
             if (character.location.dungeon) {
                 const { floor, x, y } = character.location;
-                const dungeonName = typeof TextManager !== 'undefined' ? 
+                const dungeonName = typeof TextManager !== 'undefined' ?
                     TextManager.getText('dungeon') : 'Dungeon';
-                const levelLabel = typeof TextManager !== 'undefined' ? 
+                const levelLabel = typeof TextManager !== 'undefined' ?
                     TextManager.getText('level') : 'Lvl';
                 return `${dungeonName} (${levelLabel}.${floor} ${x},${y})`;
             }
-            return character.location.area || (typeof TextManager !== 'undefined' ? 
+            return character.location.area || (typeof TextManager !== 'undefined' ?
                 TextManager.getText('character_location_town') : 'Town');
         }
-        return typeof TextManager !== 'undefined' ? 
+        return typeof TextManager !== 'undefined' ?
             TextManager.getText('character_location_town') : 'Town';
     }
-    
+
     /**
      * Get class icon for character
      */
@@ -2245,10 +2245,10 @@ class UI {
             'Lord': '👑',
             'Ninja': '🥷'
         };
-        
+
         return classIcons[characterClass] || '⚔️';
     }
-    
+
     /**
      * Show lost agents memorial modal
      */
@@ -2256,58 +2256,58 @@ class UI {
         try {
             // Get all characters from storage and filter for lost ones
             const allCharacters = await Storage.loadAllCharacters();
-            const lostCharacters = allCharacters.filter(character => 
+            const lostCharacters = allCharacters.filter(character =>
                 this.isCharacterPermanentlyLost(character)
             );
-            
+
             console.log(`Loading lost agents memorial: ${lostCharacters.length} lost characters found`);
-            
+
             // Create modal content
             const lostAgentsContent = await this.createLostAgentsContent(lostCharacters);
             console.log('Lost agents content created successfully');
-            
+
             // Create and show modal with consistent sizing
             this.lostAgentsModal = new Modal({
                 className: 'modal lost-agents-modal memorial-modal character-roster-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: true
             });
-            
+
             // Set up close callback
             this.lostAgentsModal.setOnClose(() => {
                 this.hideLostAgentsModal();
             });
-            
+
             // Get dynamic title from TextManager
-            const modalTitle = typeof TextManager !== 'undefined' ? 
+            const modalTitle = typeof TextManager !== 'undefined' ?
                 TextManager.getText('lost_characters') : 'Fallen Heroes';
-            
+
             this.lostAgentsModal.create(lostAgentsContent, modalTitle);
             this.lostAgentsModal.show();
-            
+
             // Apply TextManager to modal content
             this.applyGlobalTextManager();
-            
+
             // Register callback for dynamic updates when mode changes
             this.lostAgentsModeChangeCallback = () => {
                 if (this.lostAgentsModal && this.lostAgentsModal.isVisible) {
                     this.refreshLostAgentsContent(lostCharacters);
                 }
             };
-            
+
             if (typeof TextManager !== 'undefined') {
                 TextManager.onModeChange(this.lostAgentsModeChangeCallback);
             }
-            
+
             // Add event listeners after modal is created
             this.setupLostAgentsEventListeners();
-            
+
         } catch (error) {
             console.error('Failed to show lost agents modal:', error);
             this.addMessage('Failed to load lost agents memorial', 'error');
         }
     }
-    
+
     /**
      * Hide lost agents modal
      */
@@ -2316,14 +2316,14 @@ class UI {
             this.lostAgentsModal.hide();
             this.lostAgentsModal = null;
         }
-        
+
         // Clean up TextManager callback
         if (this.lostAgentsModeChangeCallback && typeof TextManager !== 'undefined') {
             TextManager.offModeChange(this.lostAgentsModeChangeCallback);
             this.lostAgentsModeChangeCallback = null;
         }
     }
-    
+
     /**
      * Create lost agents modal content
      */
@@ -2333,9 +2333,9 @@ class UI {
             lostCharacters.map(character => this.createLostCharacterCard(character))
         );
         console.log('Lost character cards created successfully');
-        
+
         const hasLostCharacters = lostCharacters.length > 0;
-        
+
         return `
             <div class="roster-interface memorial-interface">
                 <div class="roster-header memorial-header">
@@ -2367,23 +2367,23 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Create a lost character card for the memorial
      */
     async createLostCharacterCard(character) {
         // Determine character location with memorial context
         const lastSeenLocation = this.getLostCharacterLocation(character);
-        
+
         // Get contextual race and class names
-        const raceName = typeof TextManager !== 'undefined' ? 
+        const raceName = typeof TextManager !== 'undefined' ?
             TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
-        const className = typeof TextManager !== 'undefined' ? 
+        const className = typeof TextManager !== 'undefined' ?
             TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
-        
+
         // Get class icon
         const classIcon = this.getClassIcon(character.class);
-        
+
         return `
             <div class="character-roster-card memorial-character-card clickable-card" data-character-id="${character.id}">
                 <div class="character-card-header">
@@ -2417,7 +2417,7 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Get lost character location with memorial context
      */
@@ -2426,25 +2426,25 @@ class UI {
         if (character.location) {
             if (character.location.dungeon) {
                 const { floor, x, y } = character.location;
-                const dungeonName = typeof TextManager !== 'undefined' ? 
+                const dungeonName = typeof TextManager !== 'undefined' ?
                     TextManager.getText('lost_in_dungeon') : 'Lost in Dungeon';
-                const levelLabel = typeof TextManager !== 'undefined' ? 
+                const levelLabel = typeof TextManager !== 'undefined' ?
                     TextManager.getText('level') : 'Level';
                 return `${dungeonName} - ${levelLabel} ${floor}`;
             }
-            return character.location.area || (typeof TextManager !== 'undefined' ? 
+            return character.location.area || (typeof TextManager !== 'undefined' ?
                 TextManager.getText('character_location_town') : 'Town');
         }
-        return typeof TextManager !== 'undefined' ? 
+        return typeof TextManager !== 'undefined' ?
             TextManager.getText('lost_in_dungeon') : 'Lost in Dungeon';
     }
-    
+
     /**
      * Set up event listeners for lost agents modal
      */
     setupLostAgentsEventListeners() {
         const modalBody = this.lostAgentsModal.getBody();
-        
+
         // Close button
         const closeBtn = modalBody.querySelector('#close-lost-agents-btn');
         if (closeBtn) {
@@ -2455,7 +2455,7 @@ class UI {
                 this.hideLostAgentsModal();
             });
         }
-        
+
         // Card click handlers for viewing character details
         const characterCards = modalBody.querySelectorAll('.memorial-character-card.clickable-card');
         characterCards.forEach(card => {
@@ -2464,7 +2464,7 @@ class UI {
                 if (e.target.closest('.memorial-redact-btn')) {
                     return; // Don't open details if clicking redact button
                 }
-                
+
                 const characterId = card.dataset.characterId;
                 if (window.engine && window.engine.audioManager) {
                     window.engine.audioManager.playSoundEffect('buttonClick');
@@ -2472,7 +2472,7 @@ class UI {
                 this.showCharacterDetails(characterId);
             });
         });
-        
+
         // Integrated Redact buttons
         const redactButtons = modalBody.querySelectorAll('.memorial-redact-btn');
         redactButtons.forEach(button => {
@@ -2486,7 +2486,7 @@ class UI {
             });
         });
     }
-    
+
     /**
      * Permanently delete a lost character from memory
      */
@@ -2498,58 +2498,58 @@ class UI {
                 this.addMessage('Character not found', 'error');
                 return;
             }
-            
+
             if (!this.isCharacterPermanentlyLost(character)) {
                 this.addMessage('Can only forget permanently lost characters', 'error');
                 return;
             }
-            
+
             // Show delete character confirmation modal
             this.showDeleteCharacterConfirmation(characterId);
-            
+
         } catch (error) {
             console.error('Failed to forget lost character:', error);
             this.addMessage('Failed to remove character from memorial', 'error');
         }
     }
-    
+
     /**
      * Refresh lost agents content for mode changes
      */
     async refreshLostAgentsContent(lostCharacters) {
         if (!this.lostAgentsModal) return;
-        
+
         try {
             // Regenerate content with current mode
             const lostAgentsContent = await this.createLostAgentsContent(lostCharacters);
-            
+
             // Update modal title
-            const modalTitle = typeof TextManager !== 'undefined' ? 
+            const modalTitle = typeof TextManager !== 'undefined' ?
                 TextManager.getText('lost_characters') : 'Fallen Heroes';
-            
+
             // Update modal content
             const modalBody = this.lostAgentsModal.getBody();
             if (modalBody) {
                 modalBody.innerHTML = lostAgentsContent;
             }
-            
+
             // Update modal title if header exists
             const modalHeader = this.lostAgentsModal.element?.querySelector('.modal-header h2');
             if (modalHeader) {
                 modalHeader.textContent = modalTitle;
             }
-            
+
             // Reapply TextManager to new content
             this.applyGlobalTextManager();
-            
+
             // Reattach event listeners
             this.setupLostAgentsEventListeners();
-            
+
         } catch (error) {
             console.error('Failed to refresh lost agents content:', error);
         }
     }
-    
+
     /**
      * Show delete character confirmation modal
      */
@@ -2561,29 +2561,29 @@ class UI {
                 this.addMessage('Character not found', 'error');
                 return;
             }
-            
+
             // Get contextual race and class names
-            const raceName = typeof TextManager !== 'undefined' ? 
+            const raceName = typeof TextManager !== 'undefined' ?
                 TextManager.getText(`race_${character.race.toLowerCase()}`) : character.race;
-            const className = typeof TextManager !== 'undefined' ? 
+            const className = typeof TextManager !== 'undefined' ?
                 TextManager.getText(`class_${character.class.toLowerCase()}`) : character.class;
-            
+
             // Get last known location
             const lastLocation = this.getLostCharacterLocation(character);
-            
+
             // Create template strings for dynamic content
-            const characterDetail = typeof TextManager !== 'undefined' ? 
+            const characterDetail = typeof TextManager !== 'undefined' ?
                 TextManager.getText('forget_character_detail')
                     .replace('{name}', character.name)
                     .replace('{race}', raceName)
                     .replace('{class}', className) :
                 `Forgetting ${character.name} (${raceName} ${className}) will remove all records permanently.`;
-            
-            const locationDetail = typeof TextManager !== 'undefined' ? 
+
+            const locationDetail = typeof TextManager !== 'undefined' ?
                 TextManager.getText('character_last_location')
                     .replace('{location}', lastLocation) :
                 `Last seen in ${lastLocation}`;
-            
+
             const deleteContent = `
                 <div class="delete-confirmation-content">
                     <div class="warning-header">
@@ -2610,21 +2610,21 @@ class UI {
                     </div>
                 </div>
             `;
-            
+
             this.deleteCharacterModal = new Modal({
                 className: 'modal delete-confirmation-modal character-delete-modal',
                 closeOnEscape: true,
                 closeOnBackdrop: false
             });
-            
+
             this.deleteCharacterModal.create(deleteContent);
             this.deleteCharacterModal.show();
-            
+
             // Play warning sound effect
             if (window.engine && window.engine.audioManager) {
                 window.engine.audioManager.playSoundEffect('deletePartyWarning');
             }
-            
+
             // Apply TextManager to modal content
             if (typeof TextManager !== 'undefined') {
                 const modalBody = this.deleteCharacterModal.getBody();
@@ -2636,12 +2636,12 @@ class UI {
                     }
                 });
             }
-            
+
             // Event listeners
             const modalBody = this.deleteCharacterModal.getBody();
             const cancelBtn = modalBody.querySelector('#cancel-delete-character-btn');
             const confirmBtn = modalBody.querySelector('#confirm-delete-character-btn');
-            
+
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
                     if (window.engine && window.engine.audioManager) {
@@ -2651,7 +2651,7 @@ class UI {
                     this.deleteCharacterModal = null;
                 });
             }
-            
+
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
                     if (window.engine && window.engine.audioManager) {
@@ -2662,13 +2662,13 @@ class UI {
                     this.deleteCharacterModal = null;
                 });
             }
-            
+
         } catch (error) {
             console.error('Error showing delete character confirmation:', error);
             this.addMessage('Failed to show delete confirmation', 'error');
         }
     }
-    
+
     /**
      * Execute character deletion with proper state management
      */
@@ -2677,24 +2677,24 @@ class UI {
             // Load character for final message
             const character = await Storage.loadCharacter(characterId);
             const characterName = character ? character.name : 'Unknown Character';
-            
+
             // Permanently delete the character
             await Storage.deleteCharacter(characterId);
-            
-            const memorialText = typeof TextManager !== 'undefined' && TextManager.isCyberMode() ? 
-                'Agent data redacted from memory banks' : 
+
+            const memorialText = typeof TextManager !== 'undefined' && TextManager.isCyberMode() ?
+                'Agent data redacted from memory banks' :
                 'Hero forgotten from the memorial';
-            
+
             this.addMessage(`${characterName}: ${memorialText}`, 'warning');
-            
+
             // Refresh the lost agents modal
             const allCharacters = await Storage.loadAllCharacters();
-            const lostCharacters = allCharacters.filter(char => 
+            const lostCharacters = allCharacters.filter(char =>
                 this.isCharacterPermanentlyLost(char)
             );
-            
+
             await this.refreshLostAgentsContent(lostCharacters);
-            
+
             // If no lost characters remain, close the modal
             if (lostCharacters.length === 0) {
                 this.hideLostAgentsModal();
@@ -2703,68 +2703,68 @@ class UI {
                     await this.refreshCharacterRosterContent(allCharacters);
                 }
             }
-            
+
         } catch (error) {
             console.error('Failed to delete character:', error);
             this.addMessage('Failed to delete character', 'error');
         }
     }
-    
+
     /**
      * Check if character is permanently lost (memorial eligible)
      */
     isCharacterPermanentlyLost(character) {
         return Helpers.isPermanentlyLost(character);
     }
-    
+
     /**
      * Check if character is dead (any death state)
      */
     isCharacterDead(character) {
         return Helpers.isDead(character);
     }
-    
+
     /**
      * Check if character is alive and functional
      */
     isCharacterAlive(character) {
         return Helpers.isAlive(character);
     }
-    
+
     /**
      * Show combat interface
      */
     showCombatInterface() {
         this.addMessage('Combat started!', 'combat');
-        
+
         // Disable movement controls during combat
         Object.values(this.controlButtons).forEach(button => {
             if (button && button.id.includes('move') || button.id.includes('turn')) {
                 button.disabled = true;
             }
         });
-        
+
         // Create combat interface in viewport
         this.createCombatInterface();
-        
+
         // Check if it's a player turn after interface is ready
         setTimeout(() => this.checkForPlayerTurn(), 100);
     }
-    
+
     /**
      * Create combat interface in viewport
      */
     createCombatInterface() {
         const viewport = document.getElementById('viewport');
         if (!viewport) return;
-        
+
         // IMPORTANT: Move canvas to hidden storage before clearing viewport
         const canvas = document.getElementById('game-canvas');
         const canvasStorage = document.getElementById('canvas-storage');
         if (canvas && canvasStorage) {
             canvasStorage.appendChild(canvas);
         }
-        
+
         // Clear viewport and create combat UI with cyber terminology
         viewport.innerHTML = `
             <div id="combat-interface" class="combat-interface">
@@ -2829,17 +2829,17 @@ class UI {
                 </div>
             </div>
         `;
-        
+
         // Apply TextManager to dynamic text elements
         this.applyCombatTextManager();
-        
+
         // Add event listeners for combat actions
         this.setupCombatEventListeners();
-        
+
         // Update combat status with current data
         this.updateCombatStatus();
     }
-    
+
     /**
      * Apply TextManager to combat interface elements
      */
@@ -2853,13 +2853,13 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Setup combat event listeners
      */
     setupCombatEventListeners() {
         const actionButtons = document.querySelectorAll('.combat-action-btn');
-        
+
         // Mouse click handlers for action buttons
         actionButtons.forEach(button => {
             button.addEventListener('click', async (e) => {
@@ -2871,7 +2871,7 @@ class UI {
                 }
             });
         });
-        
+
         // Specific handler for continue button
         const continueButton = document.getElementById('combat-continue');
         if (continueButton) {
@@ -2879,14 +2879,14 @@ class UI {
                 this.handleContinueButton();
             });
         }
-        
+
         // Keyboard handlers (1-5 keys and Enter for continue)
         document.addEventListener('keydown', async (e) => {
             if (this.gameState && this.gameState.currentState === 'combat') {
                 const key = e.key;
                 let action = null;
-                
-                switch(key) {
+
+                switch (key) {
                     case '1': action = 'attack'; break;
                     case '2': action = 'defend'; break;
                     case '3': action = 'cast-spell'; break;
@@ -2902,7 +2902,7 @@ class UI {
                         }
                         break;
                 }
-                
+
                 if (action) {
                     e.preventDefault();
                     await this.handleCombatAction(action);
@@ -2910,47 +2910,47 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Handle continue button click during enemy turns
      */
     handleContinueButton() {
         console.log('Continue button clicked');
-        
+
         // Play button click sound
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('buttonClick');
         }
-        
+
         // Simply update combat status and check for next turn
         // The combat system automatically advances after enemy actions
         this.updateCombatStatus();
         this.checkForPlayerTurn();
     }
-    
+
     /**
      * Update combat status display
      */
     updateCombatStatus() {
         console.log('Updating combat status...');
-        
+
         // Update party status
         this.updatePartyStatus();
-        
+
         // Update wave indicator and monster visual
         this.updateWaveIndicator();
         this.updateMonsterVisual();
-        
+
         // Update action context
         this.updateActionContext();
     }
-    
+
     /**
      * Update party status in new layout
      */
     updatePartyStatus() {
         const partyStatusDiv = document.getElementById('party-combat-status');
-        
+
         if (partyStatusDiv && window.engine && window.engine.party) {
             const party = window.engine.party;
             console.log('Party data:', party, 'Alive members:', party.aliveMembers);
@@ -2969,46 +2969,46 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Update wave indicator panel
      */
     updateWaveIndicator() {
         const waveDisplayDiv = document.getElementById('wave-display');
-        
+
         if (waveDisplayDiv && window.engine && window.engine.combatInterface) {
             const combat = window.engine.combatInterface.combat;
-            
+
             if (combat && combat.isActive) {
                 try {
                     // Get wave information
                     const waveInfo = combat.getCurrentEnemyPartyInfo();
                     const allPartyMembers = window.engine.party.members || [];
                     const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
-                    
+
                     if (enemies.length > 0) {
                         const enemyCount = enemies.length;
                         const enemyType = enemyCount === 1 ? enemies[0].name : 'Enemies';
                         const waveText = waveInfo ? ` - Wave ${waveInfo.currentWave} of ${waveInfo.totalWaves}` : '';
-                        
+
                         waveDisplayDiv.textContent = `${enemyCount} ${enemyType}${waveText}`;
                     } else {
-                        waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                        waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ?
                             TextManager.getText('no_enemies', 'No Enemies') : 'No Enemies';
                     }
                 } catch (error) {
                     console.log('Error updating wave indicator:', error);
-                    waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                    waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ?
                         TextManager.getText('combat_active', 'Combat Active') : 'Combat Active';
                 }
             } else {
-                waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ? 
+                waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ?
                     TextManager.getText('loading_combat', 'Loading Combat...') : 'Loading Combat...';
                 setTimeout(() => this.updateCombatStatus(), 500);
             }
         }
     }
-    
+
     /**
      * Update monster visual panel
      */
@@ -3017,33 +3017,33 @@ class UI {
         const monsterAsciiDiv = document.getElementById('monster-ascii-art');
         const monsterNameDiv = document.getElementById('monster-name');
         const monsterStatusDiv = document.getElementById('monster-status');
-        
-        if (monsterNameDiv && monsterStatusDiv && 
+
+        if (monsterNameDiv && monsterStatusDiv &&
             window.engine && window.engine.combatInterface) {
-            
+
             const combat = window.engine.combatInterface.combat;
-            
+
             if (combat && combat.isActive) {
                 try {
                     // Get current enemies
                     const allPartyMembers = window.engine.party.members || [];
                     const enemies = combat.combatants.filter(c => !allPartyMembers.includes(c));
-                    
+
                     if (enemies.length > 0) {
                         const primaryEnemy = enemies[0]; // Show first enemy as primary
-                        
+
                         // Try to use portrait rendering first
                         if (monsterCanvas && primaryEnemy.portraitModel) {
                             // Use 3D portrait rendering
                             monsterCanvas.style.display = 'block';
                             if (monsterAsciiDiv) monsterAsciiDiv.style.display = 'none';
-                            
+
                             // Initialize portrait renderer if needed
                             if (!this.portraitRenderer) {
                                 const ctx = monsterCanvas.getContext('2d');
                                 this.portraitRenderer = new MonsterPortraitRenderer(monsterCanvas, ctx);
                             }
-                            
+
                             // Render the portrait
                             this.portraitRenderer.renderMonsterPortrait(primaryEnemy, {
                                 healthRatio: primaryEnemy.currentHP / primaryEnemy.maxHP,
@@ -3058,16 +3058,16 @@ class UI {
                                 monsterAsciiDiv.textContent = primaryEnemy.asciiArt || '  👹\n /|||\\\n  /\\  ';
                             }
                         }
-                        
+
                         // Display monster name with cyber terminology support
                         if (typeof TerminologyUtils !== 'undefined') {
                             // Clear existing content
                             monsterNameDiv.innerHTML = '';
-                            
+
                             // Add primary name
                             const nameText = document.createTextNode(TerminologyUtils.getContextualName(primaryEnemy));
                             monsterNameDiv.appendChild(nameText);
-                            
+
                             // Add classification info for cyber mode
                             if (typeof TextManager !== 'undefined' && TextManager.isCyberMode() && primaryEnemy.digitalClassification) {
                                 const classificationSpan = document.createElement('span');
@@ -3080,10 +3080,10 @@ class UI {
                         } else {
                             monsterNameDiv.textContent = primaryEnemy.name;
                         }
-                        
+
                         // Display monster status
-                        const status = primaryEnemy.isUnconscious ? 'Unconscious' : 
-                                     primaryEnemy.isDead ? 'Dead' : 'Active';
+                        const status = primaryEnemy.isUnconscious ? 'Unconscious' :
+                            primaryEnemy.isDead ? 'Dead' : 'Active';
                         const hpInfo = `HP: ${primaryEnemy.currentHP}/${primaryEnemy.maxHP}`;
                         monsterStatusDiv.innerHTML = `${status}<br>${hpInfo}`;
                     } else {
@@ -3093,9 +3093,9 @@ class UI {
                             monsterAsciiDiv.style.display = 'block';
                             monsterAsciiDiv.textContent = '💀\n /|||\\\n  /\\  ';
                         }
-                        monsterNameDiv.textContent = typeof TextManager !== 'undefined' ? 
+                        monsterNameDiv.textContent = typeof TextManager !== 'undefined' ?
                             TextManager.getText('no_enemies', 'No Enemies') : 'No Enemies';
-                        monsterStatusDiv.textContent = typeof TextManager !== 'undefined' ? 
+                        monsterStatusDiv.textContent = typeof TextManager !== 'undefined' ?
                             TextManager.getText('wave_clear', 'Wave Clear') : 'Wave Clear';
                     }
                 } catch (error) {
@@ -3121,7 +3121,7 @@ class UI {
             }
         }
     }
-    
+
     /**
      * Update action context based on turn state
      */
@@ -3129,20 +3129,20 @@ class UI {
         const actionButtons = document.getElementById('action-buttons');
         const enemyTurnDiv = document.getElementById('action-enemy-turn');
         const actionHeader = document.getElementById('action-context-header');
-        
+
         if (!actionButtons || !enemyTurnDiv || !actionHeader) return;
-        
+
         const combat = window.engine.combatInterface?.combat;
         if (!combat || !combat.isActive) {
             return;
         }
-        
+
         try {
             const currentActor = combat.getCurrentActor();
             if (!currentActor) {
                 return;
             }
-            
+
             if (currentActor.isPlayer) {
                 // Player turn - show action buttons
                 actionButtons.style.display = 'flex';
@@ -3161,22 +3161,22 @@ class UI {
             enemyTurnDiv.style.display = 'none';
         }
     }
-    
+
     /**
      * Handle combat action selection
      */
     async handleCombatAction(action) {
         console.log('Combat action selected:', action);
         this.addMessage(`You selected: ${action}`, 'combat');
-        
+
         // Play button click sound
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('buttonClick');
         }
-        
+
         // Disable buttons immediately to prevent double-clicking
         this.disableCombatButtons();
-        
+
         // Emit combat action event for the combat system to process
         if (this.eventSystem) {
             this.eventSystem.emit('combat-action-selected', {
@@ -3184,13 +3184,13 @@ class UI {
                 timestamp: Date.now()
             });
         }
-        
+
         // Also try to process the action directly if combat system is available
         if (window.engine && window.engine.combatInterface) {
             await this.processCombatAction(action);
         }
     }
-    
+
     /**
      * Process combat action
      */
@@ -3200,13 +3200,13 @@ class UI {
             this.addMessage('Combat system not ready!', 'error');
             return;
         }
-        
+
         const currentActor = combat.getCurrentActor();
         if (!currentActor) {
             this.addMessage('No current actor!', 'error');
             return;
         }
-        
+
         // Check if it's actually a player turn
         if (!currentActor.isPlayer) {
             this.addMessage('It is not your turn!', 'error');
@@ -3214,18 +3214,18 @@ class UI {
             this.processMonsterTurn(currentActor.combatant);
             return;
         }
-        
+
         // Create action object based on selected action
         let actionData = {
             type: action,
             attacker: currentActor.combatant // Use correct property name for attack actions
         };
-        
-        switch(action) {
+
+        switch (action) {
             case 'attack':
                 // For attack, we need a target - target the first alive enemy
-                const enemies = combat.combatants.filter(c => 
-                    !window.engine.party.aliveMembers.includes(c) && 
+                const enemies = combat.combatants.filter(c =>
+                    !window.engine.party.aliveMembers.includes(c) &&
                     c.isAlive
                 );
                 if (enemies.length > 0) {
@@ -3236,39 +3236,39 @@ class UI {
                     return;
                 }
                 break;
-                
+
             case 'defend':
                 actionData.type = 'defend';
                 actionData.defender = currentActor.combatant;
                 break;
-                
+
             case 'run':
             case 'flee':
                 // Unified escape system - both use disconnect logic
                 actionData.type = 'disconnect';
                 actionData.character = currentActor.combatant;
                 break;
-                
+
             default:
                 this.addMessage(`${action} not implemented yet!`, 'warning');
                 return;
         }
-        
+
         // Process the action
         const result = await combat.processAction(actionData);
-        
+
         // Always log the result message (hit or miss)
         if (result.message) {
             const messageType = result.success ? 'combat' : 'combat'; // Both hits and misses are combat messages
             this.addMessage(result.message, messageType);
         }
-        
+
         // Check if combat ended
         if (result.combatEnded) {
             await this.handleCombatEnd(result.winner);
             return;
         }
-        
+
         // Always advance to next turn regardless of hit/miss
         // (Both hits and misses are valid turns)
         setTimeout(() => {
@@ -3276,37 +3276,37 @@ class UI {
             this.checkForPlayerTurn();
         }, 100);
     }
-    
+
     /**
      * Process monster AI turn
      */
     processMonsterTurn(monster) {
         console.log('Processing monster turn for:', monster.name);
-        
+
         if (!window.engine.combatInterface) {
             this.addMessage('Combat system not ready!', 'error');
             return;
         }
-        
+
         // Show enemy turn interface immediately
         this.showEnemyTurnInterface(monster);
-        
+
         // Process AI turn after a short delay
         setTimeout(async () => {
             try {
                 // Use the combat interface's AI processing (now async)
                 const aiResult = await window.engine.combatInterface.processAITurn(monster);
-                
+
                 if (aiResult && typeof aiResult === 'object') {
                     // Check if combat ended from AI action
                     if (aiResult.combatEnded) {
                         await this.handleCombatEnd(aiResult.winner);
                         return;
                     }
-                    
+
                     // Show the result of the enemy action and enable continue
                     this.showEnemyActionResult(monster, aiResult);
-                    
+
                 } else {
                     console.error('AI processing returned invalid result:', aiResult);
                     this.addMessage('Monster AI failed to act!', 'error');
@@ -3319,7 +3319,7 @@ class UI {
             }
         }, 1000);
     }
-    
+
     /**
      * Show enemy turn interface
      */
@@ -3329,18 +3329,18 @@ class UI {
         const actionHeader = document.getElementById('action-context-header');
         const enemyActionResult = document.getElementById('enemy-action-result');
         const continueButton = document.getElementById('combat-continue');
-        
+
         if (actionButtons && enemyTurnDiv && actionHeader) {
             // Hide player actions, show enemy turn
             actionButtons.style.display = 'none';
             enemyTurnDiv.style.display = 'block';
             actionHeader.querySelector('h3').textContent = 'Enemy Turn';
-            
+
             // Show "processing" message
             if (enemyActionResult) {
                 enemyActionResult.innerHTML = `<div class="enemy-action-processing">${monster.name} is preparing to act...</div>`;
             }
-            
+
             // Disable continue button until action is complete
             if (continueButton) {
                 continueButton.disabled = true;
@@ -3348,19 +3348,19 @@ class UI {
             }
         }
     }
-    
+
     /**
      * Show enemy action result and enable continue
      */
     showEnemyActionResult(monster, aiResult) {
         const enemyActionResult = document.getElementById('enemy-action-result');
         const continueButton = document.getElementById('combat-continue');
-        
+
         if (enemyActionResult) {
             let resultMessage = '';
-            
+
             if (aiResult.action) {
-                switch(aiResult.action) {
+                switch (aiResult.action) {
                     case 'attack':
                         const target = aiResult.target ? aiResult.target.name : 'party member';
                         const damage = aiResult.damage || 0;
@@ -3378,20 +3378,20 @@ class UI {
             } else {
                 resultMessage = `${monster.name} takes an action.`;
             }
-            
+
             enemyActionResult.innerHTML = `
                 <div class="enemy-action-description">${resultMessage}</div>
                 ${aiResult.result ? `<div class="enemy-action-details">${aiResult.result}</div>` : ''}
             `;
         }
-        
+
         // Enable continue button
         if (continueButton) {
             continueButton.disabled = false;
             continueButton.style.opacity = '1';
         }
     }
-    
+
     /**
      * Disable combat action buttons
      */
@@ -3403,7 +3403,7 @@ class UI {
             button.style.cursor = 'not-allowed';
         });
     }
-    
+
     /**
      * Enable combat action buttons
      */
@@ -3414,7 +3414,7 @@ class UI {
             button.style.opacity = '1';
             button.style.cursor = 'pointer';
         });
-        
+
         // Restore run button text to normal state first
         const runButton = document.getElementById('combat-run');
         if (runButton) {
@@ -3427,21 +3427,21 @@ class UI {
                 delete actionText.dataset.originalTextKey;
             }
         }
-        
+
         // Check if current character is confused/scrambled and disable run button
         const combat = window.engine.combatInterface?.combat;
         if (combat && combat.isActive) {
             const currentActor = combat.getCurrentActor();
             if (currentActor && currentActor.isPlayer) {
                 const character = currentActor.combatant;
-                
+
                 // Check if character has confused condition
                 if (character.conditions && character.conditions.some(condition => condition.type === 'confused')) {
                     if (runButton) {
                         runButton.disabled = true;
                         runButton.style.opacity = '0.4';
                         runButton.style.cursor = 'not-allowed';
-                        
+
                         // Update button text to show it's blocked
                         const actionText = runButton.querySelector('.action-text');
                         if (actionText) {
@@ -3455,19 +3455,19 @@ class UI {
             }
         }
     }
-    
+
     /**
      * Handle combat end based on winner
      */
     async handleCombatEnd(winner) {
         console.log('Combat ended, winner:', winner);
-        
+
         if (winner === 'party') {
             // Player victory - play victory sound and music
             if (window.engine?.audioManager) {
                 window.engine.audioManager.playSoundEffect('victory');
                 window.engine.audioManager.fadeToTrack('victory');
-                
+
                 // Return to dungeon music after victory fanfare
                 setTimeout(() => {
                     if (window.engine?.gameState?.getState() === 'playing') {
@@ -3475,50 +3475,50 @@ class UI {
                     }
                 }, 5000);
             }
-            
+
             // Let combat system handle victory and rewards
             window.engine.combatInterface.combat.endCombat();
-            
+
         } else {
             // Enemy victory - check if any party members survived or escaped
             const aliveMembers = window.engine.party.aliveMembers || [];
             const casualties = window.engine.party.members.filter(member => !member.isAlive);
             const disconnectedCharacters = window.engine.combatInterface?.combat?.disconnectedCharacters || [];
-            
+
             console.log('Combat defeat analysis:', {
                 aliveMembers: aliveMembers.length,
                 casualties: casualties.length,
                 disconnectedCharacters: disconnectedCharacters.length
             });
-            
+
             // Check if there are any survivors (alive members OR successfully disconnected characters)
             const totalSurvivors = aliveMembers.length + disconnectedCharacters.length;
-            
+
             if (totalSurvivors === 0) {
                 // True total party kill - play death music and show death screen
                 console.log('True total party kill - no survivors or escapees');
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('death');
                 }
-                
+
                 // Force end combat without rewards
                 window.engine.combatInterface.combat.isActive = false;
-                
+
                 // Show total party kill screen
                 await this.showPartyDeathScreen(casualties);
             } else {
                 // Some survived or escaped - handle as defeat with disconnects
                 console.log('Some characters survived/escaped - showing defeat with disconnect screen');
-                
+
                 // Force end combat without rewards
                 window.engine.combatInterface.combat.isActive = false;
-                
+
                 // Show defeat screen with escaped characters
                 await this.showDefeatWithDisconnectScreen(casualties, disconnectedCharacters);
             }
         }
     }
-    
+
     /**
      * Refresh combat display (for real-time HP updates during combat)
      */
@@ -3527,10 +3527,10 @@ class UI {
         if (window.engine?.gameState?.current === 'combat' && window.engine?.combatInterface?.combat?.isActive) {
             this.updateCombatStatus();
         }
-        
+
         // Don't emit events to avoid recursion
     }
-    
+
     /**
      * Check if it's a player turn and enable/disable actions accordingly
      */
@@ -3539,60 +3539,60 @@ class UI {
         if (!combat || !combat.isActive) {
             return;
         }
-        
+
         const currentActor = combat.getCurrentActor();
         if (!currentActor) {
             return;
         }
-        
+
         if (currentActor.isPlayer) {
             // Enable action buttons for player
             this.enableCombatButtons();
         } else {
             // Disable action buttons and process monster turn
             this.disableCombatButtons();
-            
+
             // Process monster turn after a short delay
             setTimeout(() => {
                 this.processMonsterTurn(currentActor.combatant);
             }, 500);
         }
     }
-    
+
     /**
      * Hide combat interface
      */
     hideCombatInterface() {
         this.addMessage('Combat ended.', 'info');
-        
+
         // Re-enable movement controls
         Object.values(this.controlButtons).forEach(button => {
             if (button) {
                 button.disabled = false;
             }
         });
-        
+
         // Restore 3D viewport
         this.restoreDungeonViewport();
     }
-    
+
     /**
      * Restore 3D dungeon viewport
      */
     restoreDungeonViewport() {
         const viewport = document.getElementById('viewport');
         if (!viewport) return;
-        
+
         // CRITICAL: Force cleanup all modals first to prevent z-index blocking
         this.clearAllModals();
-        
+
         // Clear combat interface and restore 3D view
         viewport.innerHTML = '';
-        
+
         // Retrieve canvas from hidden storage
         const canvas = document.getElementById('game-canvas');
         const canvasStorage = document.getElementById('canvas-storage');
-        
+
         if (canvas && viewport) {
             // Move canvas from storage back to viewport
             viewport.appendChild(canvas);
@@ -3604,49 +3604,49 @@ class UI {
             canvas.style.zIndex = '500'; // Match CSS z-index value
             canvas.style.display = 'block';
         }
-        
+
     }
-    
+
     /**
      * Show post-combat results screen
      */
     showPostCombatResults(rewards, disconnectedCharacters = []) {
         console.log('Showing post-combat results:', rewards);
-        
+
         // Hide combat interface first
         this.hideCombatInterface();
-        
+
         // Check for casualties in victory
         const aliveMembers = window.engine?.party?.aliveMembers || [];
         const allMembers = window.engine?.party?.members || [];
         const casualties = allMembers.filter(member => !member.isAlive);
-        
+
         console.log('Post-combat analysis:', {
             aliveMembers: aliveMembers.length,
             casualties: casualties.length,
-            allMembers: allMembers.map(m => ({ 
-                name: m.name, 
-                isAlive: m.isAlive, 
-                status: m.status, 
+            allMembers: allMembers.map(m => ({
+                name: m.name,
+                isAlive: m.isAlive,
+                status: m.status,
                 currentHP: m.currentHP,
-                maxHP: m.maxHP 
+                maxHP: m.maxHP
             })),
-            casualtyDetails: casualties.map(c => ({ 
-                name: c.name, 
-                isAlive: c.isAlive, 
+            casualtyDetails: casualties.map(c => ({
+                name: c.name,
+                isAlive: c.isAlive,
                 status: c.status,
                 currentHP: c.currentHP,
-                isDead: c.isDead, 
-                isUnconscious: c.isUnconscious 
+                isDead: c.isDead,
+                isUnconscious: c.isUnconscious
             }))
         });
-        
+
         // If there are casualties or disconnected characters, show victory with casualties screen instead
         if (casualties.length > 0 || disconnectedCharacters.length > 0) {
             this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards, disconnectedCharacters);
             return;
         }
-        
+
         // No casualties - show normal victory screen
         // Create post-combat modal following town modal pattern
         this.postCombatModal = new Modal({
@@ -3654,38 +3654,38 @@ class UI {
             closeOnEscape: false,
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.postCombatModal.setOnClose(() => {
             this.postCombatModal = null;
         });
-        
+
         // Create the modal content with buttons
-        const content = this.createPostCombatContent(rewards) + 
+        const content = this.createPostCombatContent(rewards) +
             '<div class="post-combat-actions">' +
             '<button id="continue-btn" class="btn btn-primary">Return to Grid</button>' +
             '</div>';
-        
+
         // Create and show modal
         this.postCombatModal.create(content, '🎉 Victory!');
         this.postCombatModal.show();
-        
+
         // Add event listeners using getBody() method
         this.setupPostCombatEventListeners(this.postCombatModal.getBody(), rewards);
     }
-    
+
     /**
      * Create post-combat results content
      */
     createPostCombatContent(rewards) {
         let content = '<div class="post-combat-results">';
-        
+
         // Experience section
         content += '<div class="reward-section">';
         content += '<h3>💫 Experience Gained</h3>';
         content += `<p class="experience-reward">${rewards.experience} XP</p>`;
         content += '</div>';
-        
+
         // Gold section
         if (rewards.gold > 0) {
             content += '<div class="reward-section">';
@@ -3693,13 +3693,13 @@ class UI {
             content += `<p class="gold-reward">${rewards.gold} gold pieces</p>`;
             content += '</div>';
         }
-        
+
         // Loot section
         if (rewards.loot && rewards.loot.length > 0) {
             content += '<div class="reward-section">';
             content += '<h3>🎁 Treasure Found</h3>';
             content += '<div class="loot-list">';
-            
+
             rewards.loot.forEach(item => {
                 const rarity = item.magical ? 'magical' : 'normal';
                 content += `<div class="loot-item ${rarity}">`;
@@ -3712,7 +3712,7 @@ class UI {
                 }
                 content += '</div>';
             });
-            
+
             content += '</div>';
             content += '</div>';
         } else {
@@ -3721,76 +3721,76 @@ class UI {
             content += '<p class="no-loot">No treasure found...</p>';
             content += '</div>';
         }
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Set up event listeners for post-combat interface
      */
     setupPostCombatEventListeners(viewport, rewards) {
         const continueBtn = viewport.querySelector('#continue-btn');
-        
+
         if (continueBtn) {
             continueBtn.addEventListener('click', async () => {
                 this.postCombatModal.hide();
                 this.postCombatModal = null;
-                
+
                 // Apply rewards to party
                 await this.applyRewardsToParty(rewards);
-                
+
                 // Stop victory music and play dungeon music
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('dungeon');
                 }
-                
+
                 // Return directly to dungeon - no confirmation modal needed
                 await window.engine.enterDungeon(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
     }
-    
+
     /**
      * Apply rewards to party members
      */
     async applyRewardsToParty(rewards) {
         if (!window.engine || !window.engine.party) return;
-        
+
         const party = window.engine.party;
         const aliveMembers = party.aliveMembers;
-        
+
         if (aliveMembers.length === 0) return;
-        
+
         // Distribute experience among alive party members
         const expPerMember = Math.floor(rewards.experience / aliveMembers.length);
-        
+
         // Process all members and collect save promises
         const savePromises = aliveMembers.map(async member => {
             member.experience = (member.experience || 0) + expPerMember;
-            
+
             // Check for level up
             const newLevel = this.calculateLevel(member.experience);
             if (newLevel > member.level) {
                 member.level = newLevel;
                 this.addMessage(`${member.name} gained a level! Now level ${newLevel}`, 'level-up');
-                
+
                 // Increase HP for level up
                 const hpIncrease = Random.die(member.class === 'Fighter' ? 10 : 6);
                 member.maxHP += hpIncrease;
                 member.currentHP += hpIncrease;
             }
-            
+
             // Save character using Storage method (compatible with both Character instances and plain objects)
             await Storage.saveCharacter(member);
         });
-        
+
         // Wait for all saves to complete
         await Promise.all(savePromises);
-        
+
         // Add gold to party
         party.gold = (party.gold || 0) + rewards.gold;
-        
+
         // Add loot to party inventory (if inventory system exists)
         if (rewards.loot && rewards.loot.length > 0) {
             rewards.loot.forEach(item => {
@@ -3799,7 +3799,7 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Calculate character level based on experience
      */
@@ -3807,144 +3807,144 @@ class UI {
         // Simple level calculation - every 1000 XP = 1 level
         return Math.floor(experience / 1000) + 1;
     }
-    
+
     /**
      * Process total party kill - convert unconscious to dead
      */
     async processTotalPartyKill() {
         console.log('Processing total party kill - converting unconscious to dead');
-        
+
         if (!window.engine?.party?.members) return;
-        
+
         for (const member of window.engine.party.members) {
             if (member.status === 'unconscious') {
                 member.status = 'dead';
                 member.currentHP = -10; // Ensure they're truly dead
                 member.isAlive = false;
-                
+
                 // Save the updated character state
                 try {
                     await Storage.saveCharacter(member);
                 } catch (error) {
                     console.error(`Failed to save character ${member.name}:`, error);
                 }
-                
+
                 this.addMessage(`${member.name} has died from their injuries...`, 'death');
             }
         }
     }
-    
+
     /**
      * Show party death screen
      */
     async showPartyDeathScreen(casualties, disconnectedCharacters = []) {
         console.log('Showing party death screen:', casualties);
-        
+
         // Check if entire party is defeated (no alive members)
         const aliveMembers = window.engine?.party?.aliveMembers || [];
         const isTotalPartyKill = aliveMembers.length === 0;
-        
+
         if (isTotalPartyKill) {
             // Play party wipe sound effect
             if (window.engine?.audioManager) {
                 window.engine.audioManager.playSoundEffect('partyWipe');
             }
-            
+
             // In a total party kill, all unconscious characters die
             await this.processTotalPartyKill();
-            
+
             // Show actual defeat screen
             this.showTotalPartyKillScreen(casualties);
         } else {
             // Survivors exist - this should be a victory with casualties screen instead
             console.log('Party has survivors - showing victory with casualties instead of defeat');
-            
+
             // Calculate rewards and show victory screen with casualties
             const rewards = window.engine.combatInterface.combat.getLastCombatRewards() || {
                 experience: 0,
                 loot: [],
                 gold: 0
             };
-            
+
             this.showVictoryWithCasualtiesScreen(casualties, aliveMembers, rewards, disconnectedCharacters);
         }
     }
-    
+
     /**
      * Show total party kill screen (actual defeat)
      */
     showTotalPartyKillScreen(casualties) {
         // Hide combat interface first
         this.hideCombatInterface();
-        
+
         // Create death modal following town modal pattern
         this.deathModal = new Modal({
             className: 'modal party-death-modal',
             closeOnEscape: false,
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.deathModal.setOnClose(() => {
             this.deathModal = null;
         });
-        
+
         // Get proper terminology for return button
         const returnButtonText = TextManager.getText('town', 'Town');
-        
+
         // Create the modal content with buttons
-        const content = this.createTotalPartyKillContent(casualties) + 
+        const content = this.createTotalPartyKillContent(casualties) +
             '<div class="death-actions">' +
             `<button id="return-to-town-btn" class="btn btn-primary">Return to ${returnButtonText}</button>` +
             '</div>';
-        
+
         // Create and show modal
         this.deathModal.create(content, '💀 Total Party Kill');
         this.deathModal.show();
-        
+
         // Add event listeners using getBody() method
         this.setupDeathScreenEventListeners(this.deathModal.getBody());
     }
-    
+
     /**
      * Show defeat screen when some characters disconnected but others fell
      */
     async showDefeatWithDisconnectScreen(casualties, disconnectedCharacters) {
         console.log('Showing defeat with disconnect screen:', { casualties, disconnectedCharacters });
-        
+
         // Hide combat interface first
         this.hideCombatInterface();
-        
+
         // Create defeat modal following post-combat pattern (like town modals)
         this.deathModal = new Modal({
             className: 'modal party-defeat-modal',
             closeOnEscape: false,
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.deathModal.setOnClose(() => {
             this.deathModal = null;
         });
-        
+
         // Get proper terminology
         const returnButtonText = TextManager.getText('town', 'Town');
         const defeatTitle = TextManager.getText('defeat_some_escaped', 'Defeat - Some 🏃 Fled');
-        
+
         // Create the modal content with buttons
-        const content = this.createDefeatWithDisconnectContent(casualties, disconnectedCharacters) + 
+        const content = this.createDefeatWithDisconnectContent(casualties, disconnectedCharacters) +
             '<div class="defeat-actions">' +
             `<button id="return-to-town-btn" class="btn btn-primary">Return to ${returnButtonText}</button>` +
             '</div>';
-        
+
         // Create and show modal
         this.deathModal.create(content, `💔 ${defeatTitle}`);
         this.deathModal.show();
-        
+
         // Add event listeners using getBody() method
         this.setupDeathScreenEventListeners(this.deathModal.getBody());
     }
-    
+
     /**
      * Create a summary character card for post-combat modals
      */
@@ -3954,13 +3954,13 @@ class UI {
         const currentHP = character.currentHP || 0;
         const maxHP = character.maxHP || 1;
         const isAlive = character.isAlive || false;
-        
+
         // Get contextual race and class names using terminology system
-        const raceName = typeof TextManager !== 'undefined' ? 
+        const raceName = typeof TextManager !== 'undefined' ?
             TextManager.getText(`race_${race.toLowerCase()}`, race) : race;
-        const className = typeof TextManager !== 'undefined' ? 
+        const className = typeof TextManager !== 'undefined' ?
             TextManager.getText(`class_${characterClass.toLowerCase()}`, characterClass) : characterClass;
-        
+
         // Calculate health percentage and determine health class
         const healthPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
         let healthClass = 'dead';
@@ -3969,23 +3969,23 @@ class UI {
             else if (healthPercent > 25) healthClass = 'wounded';
             else healthClass = 'critical';
         }
-        
+
         // Get appropriate icon for class
         const classIcon = this.getClassIcon(characterClass);
-        
+
         // Determine status badge text based on card type
         let statusBadgeText = '';
         if (cardType === 'escaped') {
             // Show condition status: "Scrambled" for cyber mode, "Confused" for fantasy mode
             statusBadgeText = TextManager.isCyberMode() ? 'Scrambled' : 'Confused';
         } else if (cardType === 'casualty') {
-            statusBadgeText = character.status === 'dead' ? 
-                TextManager.getText('character_status_dead', 'Dead') : 
+            statusBadgeText = character.status === 'dead' ?
+                TextManager.getText('character_status_dead', 'Dead') :
                 TextManager.getText('character_status_unconscious', 'Unconscious');
         } else if (cardType === 'survivor') {
             statusBadgeText = TextManager.getText('character_status_alive', 'Alive');
         }
-        
+
         return `
             <div class="summary-character-card ${cardType}" data-character-id="${character.id}">
                 <div class="summary-card-icon">${classIcon}</div>
@@ -4015,91 +4015,91 @@ class UI {
      */
     createDefeatWithDisconnectContent(casualties, disconnectedCharacters) {
         let content = '<div class="defeat-with-disconnect">';
-        
+
         // Defeat message
         content += '<h2>💔 Defeat</h2>';
         content += '<div class="defeat-message">The battle is lost, but not all is lost...</div>';
-        
+
         // Two-column layout for casualties and escaped
         content += '<div class="defeat-grid">';
-        
+
         // Escaped characters section (left side - positive news first)
         if (disconnectedCharacters && disconnectedCharacters.length > 0) {
             // Use "Fled" for classic mode, "Disconnected" for cyber mode
             const disconnectTerm = TextManager.isCyberMode() ? 'Disconnected' : 'Fled';
-            
+
             content += '<div class="escaped-section">';
             content += `<h3>🏃 ${disconnectTerm}</h3>`;
             content += '<div class="escaped-list">';
-            
+
             disconnectedCharacters.forEach(disconnected => {
                 const character = disconnected.character;
                 content += this.createSummaryCharacterCard(character, 'escaped');
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         // Casualties section (right side)
         if (casualties && casualties.length > 0) {
             content += '<div class="casualties-section">';
             content += '<h3>💀 Fallen in Battle</h3>';
             content += '<div class="casualty-list">';
-            
+
             casualties.forEach(casualty => {
                 content += this.createSummaryCharacterCard(casualty, 'casualty');
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         content += '</div>'; // End defeat-grid
-        
+
         content += '</div>'; // End defeat-with-disconnect
-        
+
         return content;
     }
-    
 
-    
+
+
     /**
      * Show victory with casualties screen
      */
     showVictoryWithCasualtiesScreen(casualties, survivors, rewards, disconnectedCharacters = []) {
-        console.log('Showing victory with casualties:', { 
-            casualties: casualties.map(c => ({ name: c.name, status: c.status, isAlive: c.isAlive, hp: c.currentHP })), 
-            survivors: survivors.map(s => ({ name: s.name, status: s.status, isAlive: s.isAlive, hp: s.currentHP })), 
+        console.log('Showing victory with casualties:', {
+            casualties: casualties.map(c => ({ name: c.name, status: c.status, isAlive: c.isAlive, hp: c.currentHP })),
+            survivors: survivors.map(s => ({ name: s.name, status: s.status, isAlive: s.isAlive, hp: s.currentHP })),
             disconnectedCharacters: disconnectedCharacters.map(d => ({ name: d.character.name, status: d.character.status })),
-            rewards 
+            rewards
         });
-        
+
         // Hide combat interface first
         this.hideCombatInterface();
-        
+
         // Cleanup any existing modal first
         if (this.postCombatModal) {
             console.log('Cleaning up existing post-combat modal');
             this.postCombatModal.destroy();
             this.postCombatModal = null;
         }
-        
+
         // Create victory modal following post-combat pattern
         this.postCombatModal = new Modal({
             className: 'modal post-combat-modal victory-with-casualties',
             closeOnEscape: false,
             closeOnBackdrop: false
         });
-        
+
         // Set up close callback
         this.postCombatModal.setOnClose(() => {
             this.postCombatModal = null;
         });
-        
+
         // Create the modal content with casualties, survivors, disconnected characters, and rewards
         let actionButtons = '<div class="post-combat-actions">';
-        
+
         // Determine available actions based on survivors
         if (survivors && survivors.length > 0) {
             // Have survivors - can return to grid with casualties in tow
@@ -4108,11 +4108,11 @@ class UI {
             // No survivors - only option is to return to town
             actionButtons += '<button id="return-town-btn" class="btn btn-primary">Return to Town</button>';
         }
-        
+
         actionButtons += '</div>';
-        
+
         const content = this.createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters) + actionButtons;
-        
+
         // Create and show modal with additional error handling
         try {
             this.postCombatModal.create(content, '⚔️ Victory with Casualties');
@@ -4125,135 +4125,135 @@ class UI {
             this.handleDungeonExit();
             return;
         }
-        
+
         // Add event listeners using getBody() method
         this.setupVictoryWithCasualtiesEventListeners(this.postCombatModal.getBody(), rewards);
     }
-    
+
     /**
      * Create victory with casualties content
      */
     createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters = []) {
         let content = '<div class="victory-with-casualties">';
-        
+
         // Victory message
         content += '<h2>⚔️ Victory with Casualties</h2>';
         content += '<div class="victory-message">You have emerged victorious, but at a cost...</div>';
-        
+
         // Casualties of War section (matching defeat screen layout)
         content += '<div class="casualties-of-war">';
         content += '<div class="casualties-grid">';
-        
+
         // Survivors section (left side)
         if (survivors && survivors.length > 0) {
             content += '<div class="survivors-section">';
             content += '<h3>🛡️ Survivors</h3>';
             content += '<div class="survivor-list">';
-            
+
             survivors.forEach(survivor => {
                 content += this.createSummaryCharacterCard(survivor, 'survivor');
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         // Casualties section (right side)
         if (casualties && casualties.length > 0) {
             content += '<div class="casualties-section">';
             content += '<h3>💔 Fallen Companions</h3>';
             content += '<div class="casualty-list">';
-            
+
             casualties.forEach(casualty => {
                 content += this.createSummaryCharacterCard(casualty, 'casualty');
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         // Disconnected characters section (center)
         if (disconnectedCharacters && disconnectedCharacters.length > 0) {
             content += '<div class="disconnected-section">';
             content += `<h3>🏃 ${TextManager.getText('combat_disconnect', 'Fled')}</h3>`;
             content += '<div class="disconnected-list">';
-            
+
             disconnectedCharacters.forEach(disconnected => {
                 const character = disconnected.character;
                 content += this.createSummaryCharacterCard(character, 'escaped');
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         content += '</div>'; // Close casualties-grid
         content += '</div>'; // Close casualties-of-war
-        
+
         // Rewards section (below casualties)
         if (rewards) {
             content += this.createRewardsSection(rewards);
         }
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Create total party kill content
      */
     createTotalPartyKillContent(casualties) {
         let content = '<div class="total-party-kill">';
-        
+
         // Death message
         content += '<h2>💀 Total Party Kill</h2>';
         content += '<div class="death-message">Your entire party has been slain in the depths of the dungeon...</div>';
-        
+
         // All casualties
         if (casualties && casualties.length > 0) {
             content += '<div class="death-details">';
             content += '<h3>💀 Fallen Heroes</h3>';
             content += '<div class="casualty-list">';
-            
+
             casualties.forEach(casualty => {
                 content += '<div class="casualty-item">';
                 content += `<span class="casualty-name">${casualty.name}</span>`;
                 content += `<span class="casualty-status">Killed</span>`;
                 content += '</div>';
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         content += '<div class="death-message">The surviving party members retreat to town for healing and rest.</div>';
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Create rewards section content
      */
     createRewardsSection(rewards) {
         let content = '<div class="rewards-section">';
         content += '<h3>🎁 Battle Rewards</h3>';
-        
+
         // Experience
         if (rewards.experience > 0) {
             content += `<div class="reward-item"><span class="reward-type">Experience:</span> <span class="reward-value">${rewards.experience} XP</span></div>`;
         }
-        
+
         // Gold
         if (rewards.gold > 0) {
             content += `<div class="reward-item"><span class="reward-type">Gold:</span> <span class="reward-value">${rewards.gold} coins</span></div>`;
         }
-        
+
         // Loot
         if (rewards.loot && rewards.loot.length > 0) {
             content += '<div class="loot-section">';
             content += '<h4>🎒 Items Found:</h4>';
             content += '<div class="loot-list">';
-            
+
             rewards.loot.forEach(item => {
                 content += '<div class="loot-item">';
                 content += `<span class="loot-name">${item.name}</span>`;
@@ -4262,89 +4262,89 @@ class UI {
                 }
                 content += '</div>';
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Setup event listeners for victory with casualties screen
      */
     setupVictoryWithCasualtiesEventListeners(viewport, rewards) {
         const continueBtn = viewport.querySelector('#continue-btn');
         const returnTownBtn = viewport.querySelector('#return-town-btn');
-        
+
         if (continueBtn) {
             continueBtn.addEventListener('click', async () => {
                 console.log('Continue to dungeon clicked');
                 this.postCombatModal.hide();
-                
+
                 // Clear modal reference
                 this.postCombatModal = null;
-                
+
                 // Stop victory music and play dungeon music
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('dungeon');
                 }
-                
+
                 // Return directly to dungeon - no confirmation modal needed
                 await window.engine.enterDungeon(false, true); // fromAgentOps=false, postCombatReturn=true
             });
         }
-        
+
         if (returnTownBtn) {
             returnTownBtn.addEventListener('click', async () => {
                 console.log('Return to town clicked');
                 this.postCombatModal.hide();
-                
+
                 // Clear modal reference
                 this.postCombatModal = null;
-                
+
                 // Stop combat music and play town music
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('town');
                 }
-                
+
                 // Return to town
                 await window.engine.returnToTown();
             });
         }
     }
-    
+
     /**
      * Show dungeon entrance confirmation modal
      */
     showDungeonEntranceConfirmation(fromAgentOps = false, postCombatReturn = false) {
         console.log('Showing dungeon entrance confirmation', { fromAgentOps, postCombatReturn });
-        
+
         // Store where we came from for the cancel button and modal context
         this.dungeonEntranceOrigin = fromAgentOps ? 'agentops' : (postCombatReturn ? 'post-combat' : 'town');
         this.postCombatReturn = postCombatReturn;
-        
+
         const validation = window.engine.validateDungeonEntry(fromAgentOps, postCombatReturn);
-        
+
         if (!validation.valid && validation.casualties) {
             // Show casualty modal instead
             this.showDungeonEntranceCasualtyModal(validation);
             return;
         }
-        
+
         // Create confirmation modal
         this.dungeonEntranceModal = new Modal({
             className: 'modal dungeon-entrance-modal',
             closeOnEscape: true,
             closeOnBackdrop: true
         });
-        
+
         // Set up close callback
         this.dungeonEntranceModal.setOnClose(() => {
             this.dungeonEntranceModal = null;
         });
-        
+
         // Create content with appropriate button text based on context
         let enterText, returnText;
         if (postCombatReturn) {
@@ -4354,100 +4354,100 @@ class UI {
             enterText = TextManager.getText('enter_dungeon');
             returnText = this.dungeonEntranceOrigin === 'agentops' ? 'Return to AgentOps' : 'Return to Town';
         }
-        
+
         const content = this.createDungeonEntranceContent(validation) +
             '<div class="dungeon-entrance-actions">' +
             `<button id="confirm-enter-btn" class="btn btn-primary">${enterText}</button>` +
             `<button id="cancel-enter-btn" class="btn btn-secondary">${returnText}</button>` +
             '</div>';
-        
+
         // Create and show modal
         this.dungeonEntranceModal.create(content, `${TextManager.getText('dungeon_entrance')}`);
         this.dungeonEntranceModal.show();
-        
+
         // Add event listeners
         this.setupDungeonEntranceEventListeners(this.dungeonEntranceModal.getBody(), validation);
     }
-    
+
     /**
      * Show dungeon entrance casualty modal (when party has casualties)
      */
     showDungeonEntranceCasualtyModal(validation) {
         console.log('Showing dungeon entrance casualty modal');
-        
+
         // Create casualty modal
         this.dungeonCasualtyModal = new Modal({
             className: 'modal dungeon-casualty-modal',
             closeOnEscape: true,
             closeOnBackdrop: true
         });
-        
+
         // Set up close callback
         this.dungeonCasualtyModal.setOnClose(() => {
             this.dungeonCasualtyModal = null;
         });
-        
+
         // Create content
         const content = this.createDungeonCasualtyContent(validation) +
             '<div class="dungeon-casualty-actions">' +
             '<button id="clear-party-btn" class="btn btn-danger">Clear Party</button>' +
             '<button id="cancel-casualty-btn" class="btn btn-secondary">Cancel</button>' +
             '</div>';
-        
+
         // Create and show modal
         this.dungeonCasualtyModal.create(content, '⚠️ Party Has Casualties');
         this.dungeonCasualtyModal.show();
-        
+
         // Add event listeners
         this.setupDungeonCasualtyEventListeners(this.dungeonCasualtyModal.getBody(), validation);
     }
-    
+
     /**
      * Create dungeon entrance confirmation content
      */
     createDungeonEntranceContent(validation) {
         let content = '<div class="dungeon-entrance-confirmation">';
-        
+
         if (validation.valid) {
             content += `<div class="entrance-message" data-text-key="dungeon_entrance_flavor">${TextManager.getText('dungeon_entrance_flavor')}</div>`;
-            
+
             // Show party composition
             content += '<div class="party-composition">';
             content += `<h3 data-text-key="party_composition">${TextManager.getText('party_composition')}</h3>`;
             content += '<div class="party-cards-grid">';
-            
+
             validation.party.forEach(member => {
                 content += this.createDungeonPartyCard(member);
             });
-            
+
             content += '</div>';
             content += '</div>';
-            
+
             content += `<div class="entrance-warning" data-text-key="dungeon_warning">${TextManager.getText('dungeon_warning')}</div>`;
         } else {
             content += '<h2>❌ Cannot Enter Dungeon</h2>';
             content += `<div class="entrance-error">${validation.reason}</div>`;
         }
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Create a character card for dungeon entrance party display
      */
     createDungeonPartyCard(character) {
         // Get class icon
         const classIcon = this.getClassIcon(character.class);
-        
+
         // Calculate HP percentage for health indicator
         const hpPercentage = character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
         const hpStatusClass = hpPercentage > 75 ? 'excellent' : hpPercentage > 50 ? 'good' : hpPercentage > 25 ? 'wounded' : 'critical';
-        
+
         // Status is always "Ready" for dungeon entrance since we filter for alive members
         const status = character.isAlive ? 'Ready' : (character.isUnconscious ? 'Unconscious' : 'Dead');
         const statusClass = status.toLowerCase().replace(/\s+/g, '-');
-        
+
         return `
             <div class="character-roster-card dungeon-party-card" data-character-id="${character.id}">
                 <div class="character-card-header">
@@ -4477,21 +4477,21 @@ class UI {
             </div>
         `;
     }
-    
+
     /**
      * Create dungeon casualty content
      */
     createDungeonCasualtyContent(validation) {
         let content = '<div class="dungeon-casualty-warning">';
-        
+
         content += '<h2>⚠️ Party Has Casualties</h2>';
         content += '<div class="casualty-message">Your party has casualties and cannot enter the dungeon in this state.</div>';
-        
+
         // Show casualties
         if (validation.casualties && validation.casualties.length > 0) {
             content += '<div class="casualties-list">';
             content += '<h3>💔 Casualties</h3>';
-            
+
             validation.casualties.forEach(casualty => {
                 const status = casualty.isDead ? 'Dead' : 'Unconscious';
                 content += '<div class="casualty-member">';
@@ -4499,25 +4499,25 @@ class UI {
                 content += `<span class="casualty-status">${status}</span>`;
                 content += '</div>';
             });
-            
+
             content += '</div>';
         }
-        
+
         // Show survivors
         if (validation.survivors && validation.survivors.length > 0) {
             content += '<div class="survivors-list">';
             content += '<h3>🛡️ Survivors</h3>';
-            
+
             validation.survivors.forEach(survivor => {
                 content += '<div class="survivor-member">';
                 content += `<span class="survivor-name">${survivor.name}</span>`;
                 content += `<span class="survivor-hp">${survivor.currentHP}/${survivor.maxHP} HP</span>`;
                 content += '</div>';
             });
-            
+
             content += '</div>';
         }
-        
+
         content += '<div class="casualty-options">';
         content += '<p><strong>Options:</strong></p>';
         content += '<ul>';
@@ -4526,11 +4526,11 @@ class UI {
         content += '<li>Use rest areas to heal unconscious members</li>';
         content += '</ul>';
         content += '</div>';
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Setup event listeners for dungeon entrance confirmation
      */
@@ -4539,16 +4539,16 @@ class UI {
             viewport: !!viewport,
             validation: validation
         });
-        
+
         const confirmBtn = viewport.querySelector('#confirm-enter-btn');
         const cancelBtn = viewport.querySelector('#cancel-enter-btn');
-        
+
         console.log('Found buttons:', {
             confirmBtn: !!confirmBtn,
             cancelBtn: !!cancelBtn,
             validationValid: validation.valid
         });
-        
+
         if (confirmBtn) {
             confirmBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
@@ -4557,32 +4557,32 @@ class UI {
                     this.dungeonEntranceModal.hide();
                     const fromAgentOps = this.dungeonEntranceOrigin === 'agentops';
                     const postCombatReturn = this.postCombatReturn || false;
-                    
+
                     // Play dungeon music when entering/returning to dungeon
                     if (window.engine?.audioManager) {
                         window.engine.audioManager.fadeToTrack('dungeon');
                     }
-                    
+
                     await window.engine.enterDungeon(fromAgentOps, postCombatReturn);
                 } else {
                     console.log('Cannot enter dungeon - validation failed');
                     this.addMessage('Cannot enter dungeon - party validation failed', 'error');
                 }
             });
-            
+
             // Disable button if validation failed
             if (!validation.valid) {
                 confirmBtn.disabled = true;
                 confirmBtn.classList.add('disabled');
             }
         }
-        
+
         if (cancelBtn) {
             cancelBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 console.log('Cancelled dungeon entry');
                 this.dungeonEntranceModal.hide();
-                
+
                 // Return to the appropriate location
                 if (this.dungeonEntranceOrigin === 'agentops') {
                     this.showTrainingGrounds();
@@ -4590,7 +4590,7 @@ class UI {
                     // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
                     if (window.engine.party) {
                         const casualties = window.engine.party.members.filter(member => Helpers.isDead(member));
-                        
+
                         // Phase out casualties instead of removing them
                         casualties.forEach(casualty => {
                             if (casualty.phaseOut) {
@@ -4600,23 +4600,23 @@ class UI {
                             this.addMessage(`${casualty.name} (${status}) is phased out but remains part of the Strike Team...`, 'warning');
                         });
                     }
-                    
+
                     // Return to town after post-combat cancellation
                     const success = window.engine.gameState.setState('town');
                     console.log('Combat to town transition:', success);
-                    
+
                     if (success) {
                         // Play town music when exiting to town
                         if (window.engine?.audioManager) {
                             window.engine.audioManager.fadeToTrack('town');
                         }
-                        
+
                         this.showTown();
-                        
+
                         // Check if party is wiped and handle accordingly
                         if (window.engine.party.members.length === 0) {
                             this.addMessage('No one survived to return to town.', 'error');
-                            
+
                             // Handle party wipe - create new party
                             setTimeout(async () => {
                                 await window.engine.handlePartyWipe();
@@ -4632,28 +4632,28 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Setup event listeners for dungeon casualty modal
      */
     setupDungeonCasualtyEventListeners(viewport, validation) {
         const clearPartyBtn = viewport.querySelector('#clear-party-btn');
         const cancelBtn = viewport.querySelector('#cancel-casualty-btn');
-        
+
         if (clearPartyBtn) {
             clearPartyBtn.addEventListener('click', () => {
                 console.log('Clearing party due to casualties');
                 this.dungeonCasualtyModal.hide();
-                
+
                 // Clear the party
                 window.engine.party.clear();
-                
+
                 // Return to town center
                 this.addMessage('Party cleared due to casualties. Returning to town center.', 'info');
                 this.showTown();
             });
         }
-        
+
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
                 console.log('Cancelled casualty action');
@@ -4661,14 +4661,14 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Set up event listeners for death screen interface
      */
     setupDeathScreenEventListeners(viewport) {
         const returnBtn = viewport.querySelector('#return-to-town-btn');
         const statusBtn = viewport.querySelector('#view-status-btn');
-        
+
         if (returnBtn) {
             returnBtn.addEventListener('click', async () => {
                 this.deathModal.hide();
@@ -4676,20 +4676,20 @@ class UI {
                 await this.returnToTownAfterDeath();
             });
         }
-        
+
         if (statusBtn) {
             statusBtn.addEventListener('click', () => {
                 this.characterUI.showCharacterRoster();
             });
         }
     }
-    
+
     /**
      * Create death screen content
      */
     createDeathScreenContent(casualties) {
         let content = '<div class="death-screen">';
-        
+
         // Death message
         if (casualties.length === window.engine.party.members.length) {
             content += '<h2>💀 Total Party Kill</h2>';
@@ -4698,49 +4698,49 @@ class UI {
             content += '<h2>⚰️ Casualties of War</h2>';
             content += '<div class="death-message">Some of your companions have fallen in battle...</div>';
         }
-        
+
         // Casualties of War section (matching victory screen layout)
         content += '<div class="casualties-of-war">';
         content += '<div class="casualties-grid">';
-        
+
         // Survivors section (left side) - show even in defeat to mirror victory
         const survivors = window.engine.party.aliveMembers;
         if (survivors.length > 0) {
             content += '<div class="survivors-section">';
             content += '<h3>🛡️ Survivors</h3>';
             content += '<div class="survivor-list">';
-            
+
             survivors.forEach(survivor => {
                 content += '<div class="survivor-item">';
                 content += `<span class="survivor-name">${survivor.name}</span>`;
                 content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
                 content += '</div>';
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         // Casualties section (right side)
         if (casualties && casualties.length > 0) {
             content += '<div class="casualties-section">';
             content += '<h3>💀 Fallen Heroes</h3>';
             content += '<div class="casualty-list">';
-            
+
             casualties.forEach(casualty => {
                 content += '<div class="casualty-item">';
                 content += `<span class="casualty-name">${casualty.name}</span>`;
                 content += `<span class="casualty-status">${casualty.status === 'dead' ? 'Killed' : 'Unconscious'}</span>`;
                 content += '</div>';
             });
-            
+
             content += '</div>';
             content += '</div>';
         }
-        
+
         content += '</div>'; // Close casualties-grid
         content += '</div>'; // Close casualties-of-war
-        
+
         // Instructions
         content += '<div class="death-message">';
         if (survivors.length > 0) {
@@ -4749,17 +4749,17 @@ class UI {
             content += 'The adventure ends here. Create new characters to continue exploring.';
         }
         content += '</div>';
-        
+
         content += '</div>';
         return content;
     }
-    
+
     /**
      * Return to town after party death
      */
     async returnToTownAfterDeath() {
         console.log('Returning to town after death...');
-        
+
         if (window.engine) {
             // Save dungeon state and characters before exiting
             if (window.engine.dungeon && window.engine.party && window.engine.party.id) {
@@ -4769,7 +4769,7 @@ class UI {
                 } catch (error) {
                     console.error('Failed to save dungeon before town exit:', error);
                 }
-                
+
                 // Save all party members
                 if (window.engine.party.members) {
                     for (const member of window.engine.party.members) {
@@ -4782,11 +4782,11 @@ class UI {
                     console.log('Party members saved before exiting to town');
                 }
             }
-            
+
             // First exit combat (combat → playing)
             const success1 = window.engine.gameState.setState('playing');
             console.log('Combat to playing transition:', success1);
-            
+
             // Add small delay to ensure state change is processed
             setTimeout(async () => {
                 // Handle party status before returning to town
@@ -4795,13 +4795,13 @@ class UI {
                     const aliveMembers = window.engine.party.aliveMembers || [];
                     const totalMembers = window.engine.party.members.length;
                     const isCompleteWipe = aliveMembers.length === 0 && totalMembers > 0;
-                    
+
                     console.log('Party wipe check:', {
                         aliveMembers: aliveMembers.length,
                         totalMembers: totalMembers,
                         isCompleteWipe: isCompleteWipe
                     });
-                    
+
                     if (isCompleteWipe) {
                         // Mark party as LOST IN DUNGEON, not returned to town
                         const wipedPartyId = window.engine.party.id;
@@ -4813,53 +4813,53 @@ class UI {
                             level: window.engine.dungeon?.currentLevel || 1,
                             position: window.engine.party.position
                         };
-                        
+
                         console.log('Party marked as lost in dungeon - complete wipe');
-                        
+
                         // DO NOT remove casualties for wiped parties - they stay with the lost party
                         // DO NOT call returnToTown() - no survivors exist
-                        
+
                         // Show wipe message
                         window.engine.party.members.forEach(member => {
                             const status = member.status || 'dead';
                             this.addMessage(`${member.name} was lost with the expedition...`, 'death');
                         });
-                        
+
                         // Save the lost party state
                         await window.engine.party.save();
-                        
+
                         // Remove as active party - this party is now lost
                         Storage.setActiveParty(null);
                         console.log(`Wiped party ${wipedPartyId} removed as active party`);
-                        
+
                         // Clear the current party from engine to force new party creation
                         window.engine.party = null;
-                        
+
                     } else {
                         // Party has survivors but was forced to return after death
                         // DO NOT remove casualties - they can be revived/resurrected if party continues
                         // Only mark party as returned to town
-                        
+
                         // Count casualties for messaging
                         const casualties = window.engine.party.members.filter(m => m.status === 'dead' || m.status === 'unconscious');
                         const survivors = window.engine.party.members.filter(m => m.status !== 'dead' && m.status !== 'unconscious');
-                        
+
                         console.log(`Party forced to return with ${survivors.length} survivors and ${casualties.length} casualties`);
-                        
+
                         // Show status messages
                         casualties.forEach(casualty => {
                             const status = casualty.status || 'dead';
                             this.addMessage(`${casualty.name} (${status}) needs healing...`, 'warning');
                         });
-                        
+
                         if (survivors.length > 0) {
                             this.addMessage(`The party retreats to town with their wounded...`, 'system');
                         }
-                        
+
                         window.engine.party.returnToTown();
                         console.log('Party returned to town after defeat');
                     }
-                    
+
                     // Save party state only if party still exists (not wiped)
                     if (window.engine.party) {
                         try {
@@ -4870,20 +4870,20 @@ class UI {
                         }
                     }
                 }
-                
+
                 // Then exit dungeon and return to town (playing → town)
                 const success2 = window.engine.gameState.setState('town');
                 console.log('Playing to town transition:', success2);
-                
+
                 if (success2) {
                     // Check if party was wiped (no active party)
                     const activePartyId = Storage.getActivePartyId();
-                    
+
                     if (!activePartyId || !window.engine.party) {
                         // Party was wiped - show town with no party
                         this.showTown(null);
                         this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
-                        
+
                         // Handle party wipe - create new party
                         setTimeout(async () => {
                             await window.engine.handlePartyWipe();
@@ -4892,10 +4892,10 @@ class UI {
                     } else {
                         // Show town interface with surviving party
                         this.showTown(window.engine.party);
-                        
+
                         if (window.engine.party.members.length === 0) {
                             this.addMessage('Word reaches the town of a failed expedition. No survivors returned...', 'death');
-                            
+
                             // Handle party wipe - create new party
                             setTimeout(async () => {
                                 await window.engine.handlePartyWipe();
@@ -4906,7 +4906,7 @@ class UI {
                             this.updatePartyDisplay(window.engine.party);
                         }
                     }
-                    
+
                     // Save all remaining character states (if party exists)
                     if (window.engine.party && window.engine.party.members) {
                         const savePromises = window.engine.party.members.map(member => {
@@ -4923,7 +4923,7 @@ class UI {
             }, 50);
         }
     }
-    
+
     /**
      * Show game menu
      */
@@ -4941,28 +4941,28 @@ class UI {
                 <button id="new-game">New Game</button>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
-        
+
         // Add event listeners
         modal.querySelector('#resume-game').addEventListener('click', () => {
             this.hideGameMenu();
             this.eventSystem.emit('game-state-change', 'playing');
         });
-        
+
         modal.querySelector('#save-game').addEventListener('click', () => {
             this.eventSystem.emit('save-game');
             this.addMessage('Game saved!');
         });
-        
+
         modal.querySelector('#new-game').addEventListener('click', () => {
             // Use the game's modal system instead of browser confirm
             this.showNewGameConfirmation();
         });
-        
+
         this.modals.gameMenu = modal;
     }
-    
+
     /**
      * Hide game menu
      */
@@ -4972,7 +4972,7 @@ class UI {
             delete this.modals.gameMenu;
         }
     }
-    
+
     /**
      * Show new game confirmation modal
      */
@@ -4989,20 +4989,20 @@ class UI {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
-        
+
         // Add event listeners
         modal.querySelector('#cancel-new-game').addEventListener('click', () => {
             modal.remove();
         });
-        
+
         modal.querySelector('#confirm-new-game').addEventListener('click', () => {
             modal.remove();
             this.hideGameMenu();
             this.eventSystem.emit('game-state-change', 'character-creation');
         });
-        
+
         // Close on backdrop click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -5010,7 +5010,7 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Update UI (called each frame)
      */
@@ -5018,7 +5018,7 @@ class UI {
         // Update any animated UI elements here
         // For now, this is a placeholder
     }
-    
+
     /**
      * Enable or disable controls
      */
@@ -5029,7 +5029,7 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Show loading screen
      */
@@ -5043,11 +5043,11 @@ class UI {
                 <div class="loading-bar"></div>
             </div>
         `;
-        
+
         document.body.appendChild(loadingScreen);
         return loadingScreen;
     }
-    
+
     /**
      * Hide loading screen
      */
@@ -5057,7 +5057,7 @@ class UI {
             loadingScreen.remove();
         }
     }
-    
+
     /**
      * Show notification
      */
@@ -5076,40 +5076,40 @@ class UI {
             font-family: 'Courier New', monospace;
             z-index: 1000;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
         }, duration);
     }
-    
+
     /**
      * Show dungeon exploration interface
      */
     showDungeonInterface() {
         console.log('UI.showDungeonInterface() called');
-        
+
         // Ensure game panels are visible
         const gameContainer = document.getElementById('game-container');
         const uiOverlay = document.getElementById('ui-overlay');
-        
+
         if (gameContainer) {
             gameContainer.style.display = 'block';
         }
-        
+
         if (uiOverlay) {
             uiOverlay.style.display = 'grid';
         }
-        
+
         // Make sure viewport is visible
         const viewport = document.getElementById('viewport');
         if (viewport) {
             viewport.style.display = 'block';
         }
-        
+
         // Position canvas inside viewport
         const canvas = document.getElementById('game-canvas');
         if (canvas && viewport) {
@@ -5121,43 +5121,43 @@ class UI {
             canvas.style.height = '100%';
             canvas.style.zIndex = '1';
         }
-        
+
         // Show movement controls
         const movementControls = document.getElementById('movement-controls');
         if (movementControls) {
             movementControls.style.display = 'block';
         }
-        
+
         // Show action controls
         const actionControls = document.getElementById('action-controls');
         if (actionControls) {
             actionControls.style.display = 'block';
         }
-        
+
         console.log('Dungeon interface elements made visible');
     }
-    
+
     /**
      * Enable movement controls
      */
     enableMovementControls() {
         console.log('UI.enableMovementControls() called');
-        
+
         // Enable all movement buttons
         const movementButtons = document.querySelectorAll('#movement-controls button');
         movementButtons.forEach(button => {
             button.disabled = false;
         });
-        
+
         // Enable action buttons
         const actionButtons = document.querySelectorAll('#action-controls button');
         actionButtons.forEach(button => {
             button.disabled = false;
         });
-        
+
         console.log('Movement and action controls enabled');
     }
-    
+
     /**
      * Toggle audio on/off
      */
@@ -5165,22 +5165,22 @@ class UI {
         if (window.engine && window.engine.audioManager) {
             const isEnabled = window.engine.audioManager.toggle();
             const button = document.getElementById('toggle-audio');
-            
+
             if (button) {
                 button.textContent = isEnabled ? '🎵' : '🔇';
                 button.title = isEnabled ? 'Turn Music Off' : 'Turn Music On';
             }
-            
+
             const status = isEnabled ? 'enabled' : 'disabled';
             this.addMessage(`Music ${status}`, 'system');
-            
+
             // Also refresh tracks when toggling to ensure new compositions are loaded
             if (isEnabled) {
                 window.engine.audioManager.refreshTracks();
             }
         }
     }
-    
+
     /**
      * Force cleanup of all modals to prevent z-index layering issues
      * This is necessary when transitioning back to dungeon view after combat
@@ -5189,7 +5189,7 @@ class UI {
         // List of all possible modal properties
         const modalProperties = [
             'postCombatModal',
-            'dungeonEntranceModal', 
+            'dungeonEntranceModal',
             'dungeonCasualtyModal',
             'townModal',
             'trainingModal',
@@ -5197,7 +5197,7 @@ class UI {
             'characterDetailModal',
             'deathModal'
         ];
-        
+
         // Destroy modal objects if they exist
         modalProperties.forEach(modalName => {
             if (this[modalName]) {
@@ -5205,7 +5205,7 @@ class UI {
                 this[modalName] = null;
             }
         });
-        
+
         // Also clear any orphaned modal elements from the DOM
         const orphanedModals = document.querySelectorAll('.modal');
         orphanedModals.forEach((modal) => {
@@ -5214,7 +5214,7 @@ class UI {
             }
         });
     }
-    
+
     /**
      * Show exit button when player is on exit tile
      */
@@ -5224,16 +5224,16 @@ class UI {
         if (existingButton) {
             return; // Button already shown
         }
-        
+
         // Play sound effect when exit becomes available
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('exitAvailable');
         }
-        
+
         // Find the control panel to add the exit button
         const controlPanel = document.getElementById('control-panel');
         const actionControls = document.getElementById('action-controls');
-        
+
         if (actionControls) {
             // Create exit button
             const exitButton = document.createElement('button');
@@ -5241,25 +5241,25 @@ class UI {
             exitButton.className = 'btn btn-warning exit-btn';
             exitButton.innerHTML = '<span data-text-key="exit_dungeon">⚡ Exit to Town</span>';
             exitButton.title = 'Save progress and return to town';
-            
+
             // Apply TextManager if available
             if (typeof TextManager !== 'undefined') {
                 TextManager.applyToElement(exitButton.querySelector('[data-text-key]'), 'exit_dungeon');
             }
-            
+
             // Add click handler
             exitButton.addEventListener('click', async () => {
                 await this.handleDungeonExit();
             });
-            
+
             // Insert the button at the end of action controls
             actionControls.appendChild(exitButton);
-            
+
             // Add message about the exit
             this.addMessage('You found the dungeon exit! Use the Exit button to return to town.', 'system');
         }
     }
-    
+
     /**
      * Hide exit button when player leaves exit tile
      */
@@ -5269,7 +5269,7 @@ class UI {
             exitButton.remove();
         }
     }
-    
+
     /**
      * Show treasure button when player is on treasure tile
      */
@@ -5279,16 +5279,16 @@ class UI {
         if (existingButton) {
             return; // Button already shown
         }
-        
+
         // Play sound effect when treasure becomes available
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('treasureAvailable');
         }
-        
+
         // Find the control panel to add the treasure button
         const controlPanel = document.getElementById('control-panel');
         const actionControls = document.getElementById('action-controls');
-        
+
         if (actionControls) {
             // Create treasure button
             const treasureButton = document.createElement('button');
@@ -5296,7 +5296,7 @@ class UI {
             treasureButton.className = 'btn btn-success treasure-btn treasure-glow';
             treasureButton.innerHTML = '<span data-text-key="open_treasure">💎 Open Chest</span>';
             treasureButton.title = 'Open the treasure chest';
-            
+
             // Apply TextManager if available
             if (typeof TextManager !== 'undefined') {
                 const span = treasureButton.querySelector('[data-text-key]');
@@ -5304,17 +5304,17 @@ class UI {
                     TextManager.applyToElement(span, 'open_treasure');
                 }
             }
-            
+
             // Add click handler
             treasureButton.addEventListener('click', () => {
                 this.handleTreasureOpen(data);
             });
-            
+
             // Add to action controls
             actionControls.appendChild(treasureButton);
         }
     }
-    
+
     /**
      * Hide treasure button when player leaves treasure tile
      */
@@ -5324,37 +5324,37 @@ class UI {
             treasureButton.remove();
         }
     }
-    
+
     /**
      * Handle treasure chest opening - generate loot and show rewards
      */
     async handleTreasureOpen(data) {
         console.log('Opening treasure chest at', data);
-        
+
         // Play treasure opening sound effect
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('treasureOpen');
         }
-        
+
         // Hide the treasure button immediately
         this.hideTreasureButton();
-        
+
         // Mark treasure as looted in dungeon
         if (window.engine && window.engine.dungeon) {
             window.engine.dungeon.usedSpecials.add(data.treasureKey);
         }
-        
+
         // Generate loot from migration files
         const loot = this.generateTreasureLoot();
-        
+
         // Show loot modal
         this.showTreasureLootModal(loot);
-        
+
         // Add to party inventory if inventory system exists
         if (loot.length > 0 && window.engine && window.engine.party) {
             // Add message about finding treasure
             this.addMessage(`You open the treasure chest and find valuable items!`, 'success');
-            
+
             // TODO: Add items to party inventory when inventory system is integrated
             loot.forEach(item => {
                 this.addMessage(`Found: ${item.name}`, 'treasure');
@@ -5363,58 +5363,58 @@ class UI {
             this.addMessage('The treasure chest is empty...', 'info');
         }
     }
-    
+
     /**
      * Generate random loot from migration files
      */
     generateTreasureLoot() {
         const loot = [];
         const lootCount = Math.floor(Math.random() * 3) + 1; // 1-3 items
-        
+
         // Define loot pools from migration files
         const weaponIds = [
             'weapon_dagger_001', 'weapon_short_sword_001', 'weapon_long_sword_001',
             'weapon_staff_001', 'weapon_mace_001', 'weapon_bow_001', 'weapon_crossbow_001',
             'weapon_war_hammer_001', 'weapon_katana_001', 'weapon_ninja_blade_001'
         ];
-        
+
         const armorIds = [
             'armor_leather_001', 'armor_studded_leather_001', 'armor_chain_mail_001',
             'armor_plate_mail_001', 'armor_chain_mail_plus_1_001', 'armor_cloth_001',
             'armor_banded_mail_001'
         ];
-        
+
         const shieldIds = [
             'shield_small_001', 'shield_large_001', 'shield_plus_1_001', 'shield_attraction_001'
         ];
-        
+
         const accessoryIds = [
-            'accessory_ring_protection_001', 'accessory_amulet_health_001', 
+            'accessory_ring_protection_001', 'accessory_amulet_health_001',
             'accessory_cloak_elvenkind_001', 'accessory_ring_weakness_001',
             'accessory_cloak_misfortune_001', 'accessory_amulet_mysterious_001'
         ];
-        
+
         // All item pools combined
         const allItemIds = [...weaponIds, ...armorIds, ...shieldIds, ...accessoryIds];
-        
+
         // Generate random loot
         for (let i = 0; i < lootCount; i++) {
             const randomIndex = Math.floor(Math.random() * allItemIds.length);
             const itemId = allItemIds[randomIndex];
-            
+
             // Create basic item info (would normally come from migration data)
             const item = {
                 id: itemId,
                 name: this.getItemDisplayName(itemId),
                 type: this.getItemType(itemId)
             };
-            
+
             loot.push(item);
         }
-        
+
         return loot;
     }
-    
+
     /**
      * Get display name for item ID
      */
@@ -5422,15 +5422,15 @@ class UI {
         // Simple name extraction from ID
         const parts = itemId.split('_');
         let name = parts.slice(1, -1).join(' ');
-        
+
         // Capitalize words
-        name = name.split(' ').map(word => 
+        name = name.split(' ').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
-        
+
         return name;
     }
-    
+
     /**
      * Get item type from ID
      */
@@ -5441,7 +5441,7 @@ class UI {
         if (itemId.startsWith('accessory_')) return 'accessory';
         return 'unknown';
     }
-    
+
     /**
      * Show treasure loot modal with found items
      */
@@ -5449,7 +5449,7 @@ class UI {
         // Create modal content
         let content = '<div class="treasure-modal-content">';
         content += '<h3>🏆 Treasure Found!</h3>';
-        
+
         if (loot.length > 0) {
             content += '<div class="loot-list">';
             loot.forEach(item => {
@@ -5464,12 +5464,12 @@ class UI {
         } else {
             content += '<p class="no-loot">The chest is empty...</p>';
         }
-        
+
         content += '<div class="modal-actions">';
         content += '<button id="treasure-continue-btn" class="btn btn-primary">Continue</button>';
         content += '</div>';
         content += '</div>';
-        
+
         // Create treasure modal if it doesn't exist
         if (!this.treasureModal) {
             this.treasureModal = new Modal({
@@ -5480,11 +5480,11 @@ class UI {
                 }
             });
         }
-        
+
         // Create and show modal
         this.treasureModal.create(content, '💎 Treasure Chest');
         this.treasureModal.show();
-        
+
         // Add continue button handler
         const modalBody = this.treasureModal.getBody();
         const continueBtn = modalBody.querySelector('#treasure-continue-btn');
@@ -5494,12 +5494,12 @@ class UI {
             });
         }
     }
-    
+
     /**
      * Get icon for item type
      */
     getItemTypeIcon(type) {
-        switch(type) {
+        switch (type) {
             case 'weapon': return '⚔️';
             case 'armor': return '🛡️';
             case 'shield': return '🔰';
@@ -5507,7 +5507,7 @@ class UI {
             default: return '❓';
         }
     }
-    
+
     /**
      * Handle dungeon exit - save state and return to town
      */
@@ -5517,12 +5517,12 @@ class UI {
         console.log('Dungeon exists:', !!window.engine?.dungeon);
         console.log('Party exists:', !!window.engine?.party);
         console.log('Party ID:', window.engine?.party?.id);
-        
+
         // Play exit sound effect
         if (window.engine?.audioManager) {
             window.engine.audioManager.playSoundEffect('exitDungeon');
         }
-        
+
         if (window.engine) {
             // Save dungeon state and characters before exiting
             if (window.engine.dungeon && window.engine.party && window.engine.party.id) {
@@ -5534,7 +5534,7 @@ class UI {
                     console.error('Failed to save dungeon before town exit:', error);
                     this.addMessage('Warning: Failed to save dungeon progress.', 'error');
                 }
-                
+
                 // Save all party members
                 if (window.engine.party.members) {
                     for (const member of window.engine.party.members) {
@@ -5548,14 +5548,14 @@ class UI {
                     this.addMessage('Party members saved.', 'system');
                 }
             }
-            
+
             // Hide the exit button
             this.hideExitButton();
-            
+
             // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
             if (window.engine.party) {
                 const casualties = window.engine.party.members.filter(member => Helpers.isDead(member));
-                
+
                 // Phase out casualties instead of removing them
                 casualties.forEach(casualty => {
                     if (casualty.phaseOut) {
@@ -5564,10 +5564,10 @@ class UI {
                     const status = casualty.status || 'dead';
                     this.addMessage(`${casualty.name} (${status}) is phased out but remains part of the Strike Team...`, 'warning');
                 });
-                
+
                 // Mark party as returning to town
                 window.engine.party.returnToTown();
-                
+
                 // Save party state
                 try {
                     await window.engine.party.save();
@@ -5576,23 +5576,23 @@ class UI {
                     console.error('Failed to save party town status:', error);
                 }
             }
-            
+
             // Transition to town
             const success = window.engine.gameState.setState('town');
-            
+
             if (success) {
                 // Play town music when exiting to town
                 if (window.engine?.audioManager) {
                     window.engine.audioManager.fadeToTrack('town');
                 }
-                
+
                 // Show town interface
                 this.showTown(window.engine.party);
-                
+
                 // Check if party is wiped and handle accordingly
                 if (window.engine.party.members.length === 0) {
                     this.addMessage('No one survived to return to town.', 'error');
-                    
+
                     // Handle party wipe - create new party
                     setTimeout(async () => {
                         await window.engine.handlePartyWipe();

@@ -426,7 +426,7 @@ class Dungeon {
             triggered: false,
             type: 'boss',
             monsterId: 'monster_ogre_001', // Specific boss monster
-            message: 'A massive ogre blocks your path, wielding a fearsome greatclub!'
+            message: TextManager.getText('training_grounds_boss_message', 'A massive ogre blocks your path, wielding a fearsome greatclub!')
         }];
 
         console.log('Training grounds encounters generated:', encounters);
@@ -463,15 +463,15 @@ class Dungeon {
      */
     generateSpecialMessage(type) {
         const messages = {
-            healing_fountain: "A crystal clear fountain bubbles with restorative waters.",
-            stamina_fountain: "This fountain glows with energizing light.",
-            poison_fountain: "The water here has a sickly green tint.",
-            teleporter: "Strange runes circle this magical portal.",
-            message_square: "Ancient text is carved into the floor here.",
-            treasure_chest: "A sturdy chest sits here, lock gleaming."
+            healing_fountain: TextManager.getText('special_healing_fountain', "A crystal clear fountain bubbles with restorative waters."),
+            stamina_fountain: TextManager.getText('special_stamina_fountain', "This fountain glows with energizing light."),
+            poison_fountain: TextManager.getText('special_poison_fountain', "The water here has a sickly green tint."),
+            teleporter: TextManager.getText('special_teleporter', "Strange runes circle this magical portal."),
+            message_square: TextManager.getText('special_message_square', "Ancient text is carved into the floor here."),
+            treasure_chest: TextManager.getText('special_treasure_chest', "A sturdy chest sits here, lock gleaming.")
         };
 
-        return messages[type] || "Something unusual is here.";
+        return messages[type] || TextManager.getText('special_unknown', "Something unusual is here.");
     }
 
     /**

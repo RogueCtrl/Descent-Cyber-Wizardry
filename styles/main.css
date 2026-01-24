@@ -3443,7 +3443,8 @@ h3 {
     background: var(--bg-secondary);
     border: 2px solid var(--border-accent);
     border-radius: var(--radius-lg);
-    padding: var(--space-4);
+    padding: var(--space-2);
+    /* Reduced from space-4 */
     display: flex;
     flex-direction: column;
     color: var(--text-primary);
@@ -3454,29 +3455,37 @@ h3 {
 
 .combat-header {
     text-align: center;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-2);
+    /* Reduced from space-6 */
     border-bottom: 1px solid var(--border-primary);
-    padding-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
+    /* Reduced from space-4 */
 }
 
 .combat-header h2 {
-    margin: 0 0 var(--space-2) 0;
+    margin: 0 0 var(--space-1) 0;
+    /* Reduced margin */
     color: var(--accent-primary);
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-lg);
+    /* Reduced from 2xl */
     text-shadow: 0 0 10px var(--glow-primary);
 }
 
 .encounter-message {
     color: var(--text-secondary);
     font-style: italic;
-    margin-top: var(--space-2);
+    margin-top: var(--space-1);
+    /* Reduced from space-2 */
+    font-size: var(--font-size-sm);
+    /* Made smaller */
 }
 
 .combat-body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
+    gap: var(--space-2);
+    /* Reduced from space-6 */
     overflow: hidden;
     min-height: 0;
 }
@@ -3820,8 +3829,10 @@ h3 {
     background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border: 2px solid var(--border-accent);
     border-radius: var(--radius-md);
-    padding: var(--space-3);
-    margin-bottom: var(--space-4);
+    padding: var(--space-2);
+    /* Reduced from space-3 */
+    margin-bottom: var(--space-2);
+    /* Reduced from space-4 */
     text-align: center;
 }
 
@@ -3835,16 +3846,19 @@ h3 {
 .combat-main-area {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: var(--space-4);
+    gap: var(--space-2);
+    /* Reduced from space-4 */
     height: 100%;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 450px);
+    /* Further reduced */
 }
 
 .combat-monster-visual {
-    background: var(--bg-tertiary);
-    border: 2px solid var(--border-primary);
+    background: linear-gradient(135deg, #0a0f1a 0%, #0d1117 50%, #0a0f1a 100%);
+    border: 2px solid #1e3a5f;
     border-radius: var(--radius-md);
-    padding: var(--space-4);
+    padding: var(--space-2);
+    /* Reduced from space-4 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3852,6 +3866,40 @@ h3 {
     text-align: center;
     position: relative;
     overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(0, 0, 0, 0.6);
+    /* Pentagon Pizza tactical panel styling */
+    background-image:
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    /* Tactical grid pattern */
+}
+
+/* Pentagon Pizza Index corner brackets */
+.combat-monster-visual::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 30px;
+    height: 30px;
+    border-top: 3px solid var(--accent-primary);
+    border-left: 3px solid var(--accent-primary);
+    opacity: 0.6;
+    z-index: 10;
+}
+
+.combat-monster-visual::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-bottom: 3px solid var(--accent-primary);
+    border-right: 3px solid var(--accent-primary);
+    opacity: 0.6;
+    z-index: 10;
 }
 
 .monster-ascii-art {
@@ -3868,7 +3916,8 @@ h3 {
     border: 2px solid var(--border-secondary);
     border-radius: var(--radius-sm);
     background: var(--bg-primary);
-    margin-bottom: var(--space-3);
+    margin: 0 auto var(--space-2);
+    /* Centered horizontally and reduced bottom margin */
     box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -3876,7 +3925,8 @@ h3 {
     width: 95%;
     height: auto;
     aspect-ratio: 1;
-    max-width: 600px;
+    max-width: 400px;
+    /* Reduced from 600px */
     flex-shrink: 0;
     position: relative;
     display: block;
@@ -3895,11 +3945,13 @@ h3 {
 }
 
 .combat-party-status {
-    background: var(--bg-tertiary);
-    border: 2px solid var(--border-primary);
+    background: linear-gradient(135deg, #0a0f1a 0%, #0d1117 50%, #0a0f1a 100%);
+    border: 2px solid #1e3a5f;
     border-radius: var(--radius-md);
-    padding: var(--space-4);
+    padding: var(--space-2);
+    /* Reduced from space-4 */
     overflow-y: auto;
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.08), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .combat-party-status h3 {
@@ -3911,12 +3963,14 @@ h3 {
 }
 
 .combat-actions-context {
-    background: var(--bg-tertiary);
-    border: 2px solid var(--border-primary);
+    background: linear-gradient(135deg, #0a0f1a 0%, #0d1117 50%, #0a0f1a 100%);
+    border: 2px solid #1e3a5f;
     border-radius: var(--radius-md);
-    padding: var(--space-4);
+    padding: var(--space-2);
+    /* Reduced from space-4 */
     display: flex;
     flex-direction: column;
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.08), 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .action-context-header h3 {
@@ -3938,15 +3992,18 @@ h3 {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-3);
+    padding: var(--space-2);
+    /* Reduced from space-3 */
     border: 2px solid var(--border-primary);
     background: var(--bg-secondary);
     color: var(--text-primary);
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
+    /* Reduced from base */
     transition: all 0.2s ease;
     cursor: pointer;
-    min-height: 50px;
+    min-height: 36px;
+    /* Reduced from 50px */
 }
 
 .combat-action-btn:hover {
