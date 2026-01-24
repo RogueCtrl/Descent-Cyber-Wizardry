@@ -381,6 +381,11 @@ class UI {
 
         // Check if there are any meaningful parties to manage
         let hasCamps = false;
+        let charStats = null;
+        let activePartiesCount = 0;
+        let campingPartiesCount = 0;
+        let lostPartiesCount = 0;
+
         try {
             const allParties = await Storage.loadAllParties();
             // Camps exist if there are:
@@ -393,105 +398,183 @@ class UI {
                 const campingParties = await Storage.getCampingParties();
                 const lostParties = allParties.filter(p => p.isLost);
 
+                activePartiesCount = partiesWithMembers.length;
+                campingPartiesCount = campingParties.length;
+                lostPartiesCount = lostParties.length;
+
                 hasCamps = allParties.length > 1 ||
                     partiesWithMembers.length > 0 ||
                     campingParties.length > 0 ||
                     lostParties.length > 0;
             }
+
+            // Fetch character stats
+            charStats = await Storage.getCharacterStatistics();
+
         } catch (error) {
-            console.error('Error checking for camps:', error);
+            console.error('Error checking for camps/stats:', error);
             hasCamps = false;
         }
 
-        console.log('Party info:', { partyObj, partyInfo, hasActiveParty });
+        console.log('Party info:', { partyObj, partyInfo, hasActiveParty, charStats });
 
-        // Create modal content
+        // Helper to generate histogram bars (new style)
+        const renderHistogramBars = (values, max = 10) => {
+            return values.map((val, idx) => {
+                const height = Math.max(10, Math.min(100, (val / max) * 100));
+                const classes = idx === values.length - 1 ? 'histogram-bar-new current' : 'histogram-bar-new';
+                return `<div class="${classes}" style="height: ${height}%"></div>`;
+            }).join('');
+        };
+
+        // Create modal content with new Style Guide structure
         const townContent = `
             <div class="town-center-interface">
-                <div class="game-header">
-                    <h1 class="game-title">DESCENT: CYBER WIZARDRY</h1>
-                    <p class="game-subtitle">Welcome to the Mad Overlord's Domain</p>
-                </div>
+                <!-- Town Header - Style Guide -->
+                <header class="town-header">
+                    <span class="town-logo">🌐</span>
+                    <div class="town-title-group">
+                        <h1 class="town-main-title">DESCENT: CYBER WIZARDRY</h1>
+                        <p class="town-main-subtitle" data-text-key="town_description">Network Operations Hub</p>
+                    </div>
+                </header>
                 
-                <div class="town-center-content">
-                    <h2 class="town-name" data-text-key="town">Terminal Hub</h2>
-                    <p class="town-description" data-text-key="town_description">The central access node of the grid, where agents prepare for their infiltration into the hostile data maze.</p>
+                <!-- Card Grid - Style Guide -->
+                <main class="town-grid">
                     
-                    <div class="town-locations-grid">
-                        <div class="location-card ${hasActiveParty ? 'enabled' : 'primary'}">
-                            <button id="training-grounds-btn" class="location-btn primary">
-                                <div class="location-icon">👥</div>
-                                <div class="location-info">
-                                    <h3 data-text-key="training_grounds">Training Grounds</h3>
-                                    <p data-text-key="training_grounds_flavor">Create and manage your party of adventurers</p>
-                                    <span class="location-status">${hasActiveParty ? 'Manage Strike Team' : 'Initialize Strike Team'}</span>
-                                </div>
-                            </button>
+                    <!-- AgentOps Card -->
+                    <article class="location-card-new">
+                        <div class="card-header-row">
+                            <span class="card-icon-lg">👥</span>
+                            <h3 class="card-title-new" data-text-key="training_grounds">AgentOps</h3>
                         </div>
-                        
-                        <div class="location-card ${hasActiveParty ? 'enabled' : 'disabled'}">
-                            <button id="dungeon-entrance-btn" class="location-btn ${hasActiveParty ? 'enabled' : 'disabled'}" ${hasActiveParty ? '' : 'disabled'}>
-                                <div class="location-icon" data-text-key="dungeon_icon">${TextManager.getText('dungeon_icon')}</div>
-                                <div class="location-info">
-                                    <h3 data-text-key="dungeon">Dungeon</h3>
-                                    <p data-text-key="grid_sector_flavor">Enter the Mad Overlord's treacherous maze</p>
-                                    <span class="location-status">${hasActiveParty ? 'Enter Grid' : 'Strike Team Required'}</span>
-                                </div>
-                            </button>
+                        <div class="card-action-row">
+                            <div class="status-group">
+                                <span class="status-badge open">OPEN</span>
+                            </div>
+                            <div class="action-btn-group">
+                                <button id="training-grounds-btn" class="card-action-btn primary" title="Enter">🔘</button>
+                                <button class="card-action-btn" title="Info">ℹ️</button>
+                            </div>
                         </div>
-                        
-                        <div class="location-card disabled">
-                            <button class="location-btn disabled" disabled>
-                                <div class="location-icon">🏪</div>
-                                <div class="location-info">
-                                    <h3 data-text-key="data_exchange">Trading Post</h3>
-                                    <p data-text-key="data_exchange_flavor">Trade upgrades and equipment with merchants</p>
-                                    <span class="location-status">Coming Soon</span>
-                                </div>
-                            </button>
+                        <div class="card-data-row">
+                            <div class="data-chip">
+                                <span class="chip-value">${charStats ? charStats.totalCharacters : 0}</span> AGENTS REGISTRY
+                            </div>
+                            <div class="data-label">AGENT STATUS ANALYSIS</div>
+                            <div class="histogram-new">
+                                ${renderHistogramBars([
+            charStats ? charStats.byStatus['Ok'] || 0 : 0,
+            charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Ashes'] || 0) : 0,
+            charStats ? charStats.byStatus['Lost'] || 0 : 0,
+            charStats ? charStats.totalCharacters : 0,
+            charStats ? Math.floor(charStats.totalCharacters * 0.8) : 0,
+            charStats ? Math.floor(charStats.totalCharacters * 0.6) : 0
+        ], charStats ? Math.max(1, charStats.totalCharacters) : 10)}
+                            </div>
                         </div>
-                        
-                        <div class="location-card disabled">
-                            <button class="location-btn disabled" disabled>
-                                <div class="location-icon">⛪</div>
-                                <div class="location-info">
-                                    <h3 data-text-key="restoration_center">Temple</h3>
-                                    <p data-text-key="restoration_center_flavor">Repair damage and restore fallen adventurers</p>
-                                    <span class="location-status">Coming Soon</span>
-                                </div>
-                            </button>
+                    </article>
+                    
+                    <!-- Corrupted Network Card -->
+                    <article class="location-card-new ${hasActiveParty ? '' : 'disabled'}">
+                        <div class="card-header-row">
+                            <span class="card-icon-lg" data-text-key="dungeon_icon">${TextManager.getText('dungeon_icon')}</span>
+                            <h3 class="card-title-new" data-text-key="dungeon">Corrupted Network</h3>
                         </div>
-                        
-                        <div class="location-card ${hasCamps ? 'enabled' : 'disabled'}">
-                            <button id="strike-team-management-btn" class="location-btn ${hasCamps ? 'enabled' : 'disabled'}" ${hasCamps ? '' : 'disabled'}>
-                                <div class="location-icon">📋</div>
-                                <div class="location-info">
-                                    <h3 data-text-key="party_management">Strike Team Management</h3>
-                                    <p data-text-key="party_management_flavor">Manage multiple parties and character roster</p>
-                                    <span class="location-status party-name-display">${hasCamps ? `<span data-text-key="party">Strike Team</span>: ${partyObj ? partyObj.name || 'Unnamed Party' : 'No Active Party'}` : 'No Strike Teams Available'}</span>
-                                </div>
-                            </button>
+                        <div class="card-action-row">
+                            <div class="status-group">
+                                <span class="status-badge grid-active">GRID ACTIVE</span>
+                            </div>
+                            <div class="action-btn-group">
+                                <button id="dungeon-entrance-btn" class="card-action-btn primary" title="Enter Grid" ${hasActiveParty ? '' : 'disabled'}>🔘</button>
+                                <button class="card-action-btn" title="Info">ℹ️</button>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="card-data-row">
+                            <div class="data-label">DATA TRAFFIC</div>
+                            <div class="histogram-new">
+                                ${renderHistogramBars([5, 8, 3, 9, 6, 7, 2, 5], 10)}
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- Data Exchange Card (Coming Soon) -->
+                    <article class="location-card-new disabled">
+                        <div class="card-header-row">
+                            <span class="card-icon-lg">🏪</span>
+                            <h3 class="card-title-new" data-text-key="data_exchange">Data Exchange</h3>
+                        </div>
+                        <div class="card-action-row">
+                            <div class="status-group">
+                                <span class="status-badge locked">LOCKED</span>
+                            </div>
+                            <div class="action-btn-group">
+                                <button class="card-action-btn" disabled title="Coming Soon">🔘</button>
+                            </div>
+                        </div>
+                        <div class="card-data-row">
+                            <div class="data-label">COMING SOON</div>
+                        </div>
+                    </article>
+                    
+                    <!-- Restoration Center Card (Coming Soon) -->
+                    <article class="location-card-new disabled">
+                        <div class="card-header-row">
+                            <span class="card-icon-lg">💾</span>
+                            <h3 class="card-title-new" data-text-key="restoration_center">Backup Sanctuary</h3>
+                        </div>
+                        <div class="card-action-row">
+                            <div class="status-group">
+                                <span class="status-badge locked">LOCKED</span>
+                            </div>
+                            <div class="action-btn-group">
+                                <button class="card-action-btn" disabled title="Coming Soon">🔘</button>
+                            </div>
+                        </div>
+                        <div class="card-data-row">
+                            <div class="data-label">COMING SOON</div>
+                        </div>
+                    </article>
+                    
+                    <!-- Strike Team Manifest Card -->
+                    <article class="location-card-new ${hasCamps ? '' : 'disabled'}">
+                        <div class="card-header-row">
+                            <span class="card-icon-lg">📋</span>
+                            <h3 class="card-title-new" data-text-key="party_management">Strike Team Manifest</h3>
+                        </div>
+                        <div class="card-action-row">
+                            <div class="status-group">
+                                <span class="status-badge ${hasCamps ? 'open' : 'locked'}">${hasCamps ? 'AVAILABLE' : 'EMPTY'}</span>
+                            </div>
+                            <div class="action-btn-group">
+                                <button id="strike-team-management-btn" class="card-action-btn primary" title="Manage Teams" ${hasCamps ? '' : 'disabled'}>🔘</button>
+                                <button class="card-action-btn" title="Info">ℹ️</button>
+                            </div>
+                        </div>
+                        <div class="card-data-row">
+                            <div class="data-chip">
+                                <span class="chip-value">${activePartiesCount + campingPartiesCount + lostPartiesCount}</span> TEAMS DEPLOYED
+                            </div>
+                            <div class="data-label">DEPLOYMENT STATUS</div>
+                            <div class="histogram-new">
+                                ${renderHistogramBars([
+            activePartiesCount,
+            campingPartiesCount,
+            lostPartiesCount,
+            activePartiesCount + campingPartiesCount + lostPartiesCount
+        ], Math.max(1, activePartiesCount + campingPartiesCount + lostPartiesCount))}
+                            </div>
+                        </div>
+                    </article>
+                    
+                </main>
                 
-                <div class="game-status-bar">
-                    <div class="status-section party-status">
-                        <div class="status-content">
-                            <span class="status-label"><span data-text-key="party">Party</span> Status:</span>
-                            <span class="status-value ${hasActiveParty ? 'active' : 'inactive'}">${partyInfo}</span>
-                        </div>
-                    </div>
-                    <div class="status-section mode-toggle-section">
-                        <div class="status-content">
-                            <span class="status-label">Interface Mode:</span>
-                            <button id="terminology-mode-toggle" class="mode-toggle-btn">
-                                <span id="current-mode-display">Cyber</span>
-                                <span class="toggle-icon">⚡</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Town Footer - Style Guide -->
+                <footer class="town-footer">
+                    <span class="footer-text">
+                        CLASSIFIED <span class="footer-divider">//</span> FOR OFFICIAL USE ONLY <span class="footer-divider">//</span> NETWORK OPERATIONS DIVISION
+                    </span>
+                </footer>
             </div>
         `;
 
