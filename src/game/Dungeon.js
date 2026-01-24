@@ -56,6 +56,31 @@ class Dungeon {
         }
 
         console.log(`Floor ${floorNumber} generated with ${floor.encounters.length} encounters and ${floor.specialSquares.length} special features`);
+
+        // Hydrate encounters with monster data for rendering portraits
+        this.hydrateEncounters(floor.encounters);
+    }
+
+    /**
+     * Hydrate encounters with full monster data (including portraits)
+     */
+    async hydrateEncounters(encounters) {
+        if (!encounters || encounters.length === 0) return;
+
+        console.log('Hydrating encounters with monster data...');
+        for (const encounter of encounters) {
+            if (encounter.monsterId) {
+                // Fetch full monster data
+                const monsterData = await Monster.getMonsterData(encounter.monsterId);
+                if (monsterData) {
+                    encounter.monster = monsterData;
+                    console.log(`Hydrated encounter at (${encounter.x}, ${encounter.y}) with ${monsterData.name}`);
+                }
+            } else if (encounter.type === 'boss') {
+                // Fallback for bosses without specific ID
+                // (This logic might need adjustment if bosses aren't consistent)
+            }
+        }
     }
 
     /**
@@ -1078,6 +1103,7 @@ class Dungeon {
         const walls = [];
         const doors = [];
         const passages = [];
+        const monsters = [];
 
         // Check front tiles until we hit a wall or reach max distance
         let frontWallDistance = viewDistance + 1; // Default to beyond max distance
@@ -1129,6 +1155,24 @@ class Dungeon {
                     } else {
                         walls.push({ distance, x: offX, y: offY, offset }); // Appears as wall
                         if (offset === 0) centerBlocked = true;
+                    }
+                }
+
+                // Check for visible monsters
+                // Only show monsters if there isn't a wall blocking the view or if the monster is in front of the wall
+                if (offset === 0 && !centerBlocked) {
+                    const encounter = this.currentFloorData.encounters.find(enc =>
+                        enc.x === offX && enc.y === offY && !enc.triggered
+                    );
+
+                    if (encounter && encounter.monster) {
+                        monsters.push({
+                            distance,
+                            x: offX,
+                            y: offY,
+                            offset: 0,
+                            monster: encounter.monster
+                        });
                     }
                 }
             }
@@ -1233,6 +1277,7 @@ class Dungeon {
             walls,
             doors,
             passages,
+            monsters,
             facing: this.getDirectionName(),
             position: this.getPlayerPosition()
         };

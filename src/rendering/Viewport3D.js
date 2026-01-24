@@ -65,6 +65,7 @@ class Viewport3D {
             this.renderWallsAtDistance(viewInfo, distance, centerX);
             this.renderDoorsAtDistance(viewInfo, distance, centerX);
             this.renderPassagesAtDistance(viewInfo, distance, centerX);
+            this.renderMonstersAtDistance(viewInfo, distance, centerX);
         }
 
         // Render status information
@@ -587,5 +588,107 @@ class Viewport3D {
      */
     clearCache() {
         this.perspectiveCache.clear();
+    }
+
+    /**
+     * Render monsters at a specific distance
+     */
+    renderMonstersAtDistance(viewInfo, distance, centerX) {
+        if (!viewInfo.monsters) return;
+
+        const perspective = this.calculatePerspective(distance);
+
+        viewInfo.monsters.forEach(monsterData => {
+            if (monsterData.distance === distance && monsterData.monster.portraitModel) {
+                this.renderMonsterWireframe(
+                    monsterData.monster.portraitModel,
+                    perspective,
+                    centerX,
+                    monsterData.offset || 0
+                );
+            }
+        });
+    }
+
+    /**
+     * Render a monster's 3D wireframe in the dungeon view
+     */
+    renderMonsterWireframe(model, perspective, centerX, offset) {
+        if (!model || !model.vertices || !model.edges) return;
+
+        const { wallWidth, wallHeight, topY, bottomY } = perspective;
+
+        // Calculate center position for the monster
+        // Use offset to handle positioning if we ever support side-monsters (though mainly center for now)
+        const monsterCenterX = centerX + offset * wallWidth;
+
+        // Position relative to the floor/ceiling perspective
+        // Center it vertically between floor and ceiling, then adjust to stand on floor
+        // The perspective.centerY is exactly the middle of the corridor at that distance
+        const monsterCenterY = perspective.centerY + (wallHeight * 0.1);
+
+        // Scale factor relative to wall height
+        // Adjust this multiplier to tune monster size in the corridor
+        const sizeScale = wallHeight * 0.45;
+
+        // Use model specific scale or default
+        const modelScale = (model.scale || 1.0) * sizeScale;
+
+        // Transform vertices
+        const transformedVertices = model.vertices.map(vertex => {
+            // Basic 3D rotation from model data
+            const [vx, vy, vz] = vertex;
+
+            // Apply model rotation if present (e.g., [0, 15, 0])
+            let x = vx, y = vy, z = vz;
+
+            if (model.rotation) {
+                const [rotX, rotY, rotZ] = model.rotation;
+
+                // Apply Y rotation (most common)
+                if (rotY !== 0) {
+                    const rad = rotY * Math.PI / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    const nx = x * cos - z * sin;
+                    const nz = x * sin + z * cos;
+                    x = nx;
+                    z = nz;
+                }
+            }
+
+            return { x, y, z };
+        });
+
+        // Project and Draw
+        this.ctx.beginPath();
+        // Use a distinct color (e.g. Warning Red)
+        this.ctx.strokeStyle = '#ef4444';
+
+        // Thinner lines further away, but minimum width of 1
+        this.ctx.lineWidth = Math.max(1, 2 * perspective.scale);
+
+        model.edges.forEach(edge => {
+            const [startIdx, endIdx] = edge;
+
+            if (startIdx < transformedVertices.length && endIdx < transformedVertices.length) {
+                const v1 = transformedVertices[startIdx];
+                const v2 = transformedVertices[endIdx];
+
+                // Project to screen space
+                // x is horizontal, y is vertical (up is positive in model, down is positive in canvas)
+                // We invert Y because canvas Y increases downwards
+                const x1 = monsterCenterX + v1.x * modelScale;
+                const y1 = monsterCenterY - v1.y * modelScale;
+
+                const x2 = monsterCenterX + v2.x * modelScale;
+                const y2 = monsterCenterY - v2.y * modelScale;
+
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+            }
+        });
+
+        this.ctx.stroke();
     }
 }
