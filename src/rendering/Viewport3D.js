@@ -16,16 +16,16 @@ class Viewport3D {
         this.floorLevel = this.height * 0.7; // Floor line position
         this.ceilingLevel = this.height * 0.3; // Ceiling line position
 
-        // Color scheme (authentic Wizardry green on black)
+        // Color scheme (Pentagon Pizza Index Style)
         this.colors = {
-            background: '#000000',
-            wall: '#00ff00',
-            hiddenDoor: '#00aa00',
-            secretPassage: '#00cc00',
-            specialSquare: '#ffff00',
-            trap: '#ff4400',
+            background: '#050505',
+            wall: '#3b82f6',        // Cyber Blue
+            hiddenDoor: '#60a5fa',  // Light Blue
+            secretPassage: '#1d4ed8', // Darker Blue
+            specialSquare: '#10b981', // Matrix Green
+            trap: '#ef4444',        // Alert Red
             stairs: '#ffffff',
-            text: '#00ff00'
+            text: '#3b82f6'
         };
 
         // Perspective calculation cache
