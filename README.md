@@ -5,113 +5,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
-**Built with:** Cursor + Claude Code | **Models:** Claude 4.0 Opus & Sonnet *-- Spend: $100/month + $20/month*
-
-A modern browser-based homage to the classic dungeon crawler Wizardry, featuring a unique dual-mode system that switches between classic fantasy and cyberpunk aesthetics. Experience authentic turn-based RPG combat with striking 3D wireframe monster portraits in a persistent dungeon world.
-
-> **⚠️ Breaking Change:**  
-> This update is not compatible with previous versions.  
-> Please delete your `DescentCyberWizardy` IndexedDB instance before running the new version.
-
-## Current Development Status
-
-🎯 **Party Lifecycle Management Complete** - Advanced party management system with naming, temporary party handling, and multi-party support. Features complete dual-terminology system supporting both classic fantasy and cyberpunk themes with persistent dungeon world and treasure mechanics.
-
-### ✅ Implemented Features
-- **Party Lifecycle Management**: Complete party creation, naming, temporary party handling, and multi-party support
-- **Dual-Mode System**: Complete terminology switching between classic fantasy and cyberpunk modes
-- **Character Creation**: Full character creation with dual terminology ("Create Character" ↔ "Initialize Agent")
-- **3D Monster Portraits**: Five wireframe monster models with cyberpunk visual effects
-- **Combat System**: Turn-based party combat with Grid Engagement interface
-- **Persistent Dungeons**: Shared dungeon world with treasure chests and loot generation
-- **Audio System**: Dynamic chiptune music with contextual sound effects
-- **Storage System**: Complete character and party persistence with IndexedDB (v6 schema)
-- **Advanced RPG Mechanics**: Death system, rest system, spell memorization, equipment management
-
-### 🔄 In Development
-- **Wizardry-Tron Fusion Completion**: Finalize remaining deep integration elements (75% complete)
-- **Advanced Treasure Mechanics**: Chest types, trap systems, rare loot generation
-- **Rescue Party System**: Multi-party interaction in shared dungeon environments
-
-### 🧪 Experimental Features
-- **Wizardry-Tron Fusion**: 75% complete transformation supporting dynamic terminology switching
-- **Program Classifications**: Monster types displayed as digital classifications in cyber mode
-- **Equipment Cyber Terminology**: Items with dual naming (e.g., "Dagger" ↔ "Blade Subroutine")
-
-## Dual-Mode Experience
-
-The game features a unique dual-terminology system that transforms the entire experience:
-
-**Classic Mode**: Traditional fantasy RPG with parties, characters, dungeons, and magic
-**Cyber Mode**: Cyberpunk aesthetic with strike teams, agents, grid networks, and programs
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/mm-fantasy.jpg" alt="Fantasy Mode" width="400"/><br/>
-      <b>Fantasy Mode - Classic Wizardry</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/mm-cyber.jpg" alt="Cyber Mode" width="400"/><br/>
-      <b>Cyber Mode - Tron Aesthetic</b>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-## Character Creation System
-
-Complete character creation with dual terminology support:
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/tg-step1.jpg" alt="Fantasy Character Creation" width="275"/><br/>
-      <b>Choose Your Race</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/ao-step1.jpg" alt="Cyber Agent Initialization" width="275"/><br/>
-      <b>Choose Your Platform</b>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/tg-step2.jpg" alt="Fantasy Attributes" width="275"/><br/>
-      <b>Your Attributes</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/ao-step2.jpg" alt="Cyber Configuration" width="275"/><br/>
-      <b>Your Configuration</b>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/tg-step3.jpg" alt="Fantasy Class Selection" width="275"/><br/>
-      <b>Choose Your Class</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/ao-step3.jpg" alt="Cyber Specialization" width="275"/><br/>
-      <b>Choose Your Specialization</b>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="assets/readme/network-entrance.jpg" alt="Network Entrance" width="560"/><br/>
-      <b>Network Entrance - Begin Your Descent</b>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-## 3D Dungeon Rendering & Mini-Map
-
-The game features authentic Wizardry-style 3D wireframe rendering with a real-time mini-map and fog of war system:
+**A modern browser-based homage to the classic dungeon crawler Wizardry, featuring a unique dual-mode system that transforms the game between classic fantasy and cyberpunk aesthetics.**
 
 <div align="center">
 
@@ -119,179 +13,201 @@ The game features authentic Wizardry-style 3D wireframe rendering with a real-ti
   <tr>
     <td align="center">
       <img src="assets/readme/dungeon-exploration.png" alt="Dungeon Exploration" width="400"/><br/>
-      <b>Dungeon Exploration - 3D Wireframe Viewport</b>
+      <b>3D Wireframe Dungeon</b>
     </td>
     <td align="center">
-      <img src="assets/readme/minimap-fogofwar.png" alt="Mini-Map with Fog of War" width="400"/><br/>
-      <b>Mini-Map with Fog of War</b>
+      <img src="assets/readme/combat-ogre.png" alt="Combat System" width="400"/><br/>
+      <b>Turn-Based Combat</b>
     </td>
   </tr>
 </table>
 
 </div>
 
-### Interactive Doors
-
-Doors are rendered as wireframe graphics with interactive open/close functionality:
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/door-closed.png" alt="Closed Door" width="400"/><br/>
-      <b>Closed Door - Wireframe Rendering</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/door-open-corridor.png" alt="Open Door Corridor" width="400"/><br/>
-      <b>Open Door - Corridor View</b>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-### Combat Encounters
-
-Face monsters in turn-based combat with 3D wireframe monster portraits:
-
-<div align="center">
-
-<table>
-  <tr>
-    <td align="center">
-      <img src="assets/readme/ogre-encounter.png" alt="Ogre Encounter" width="400"/><br/>
-      <b>Ogre Encounter - 3D Monster Portrait</b>
-    </td>
-    <td align="center">
-      <img src="assets/readme/combat-ogre.png" alt="Grid Engagement Combat" width="400"/><br/>
-      <b>Grid Engagement - Combat Interface</b>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-## Current Playable Experience
-
-### Training Grounds (Test Environment)
-```text
-  0 1 2 3 4 5 6 7 8  (x coordinates)
-0 █ █ █ █ █ █ █ █ █  
-1 . . . █ █ . . . █  (Room A)    (Room B)
-2 . p . + O . T . █  (Room A)(corridor)(Room B)
-3 . . . █ █ . . . █  (Room A)    (Room B)
-4 █ █ █ █ █ █ █ █ █  
-
-p = player start position (1,2)
-O = fixed Ogre encounter at (4,2)
-T = treasure chest at (6,2)
-```
-
-### What You Can Do
-- **Create Characters**: Full character creation with 5 races and 8 classes
-- **Manage Parties**: Create, name, and switch between multiple parties seamlessly
-- **Explore Dungeons**: Navigate the training grounds with 3D wireframe rendering
-- **Combat Encounters**: Face monsters in turn-based combat with 3D wireframe portraits
-- **Collect Treasures**: Discover treasure chests with randomized loot
-- **Audio Experience**: Dynamic chiptune music and sound effects
-- **Mode Switching**: Toggle between fantasy and cyberpunk terminology
-
-### Party Management System
-- **Party Creation**: Automatic party creation with naming workflow
-- **Temporary Parties**: Seamless handling of temporary parties that become permanent
-- **Party Switching**: Easy switching between multiple saved parties
-- **Party Naming**: Dynamic party names displayed in Strike Team Manifest
-- **Multi-Party Support**: Multiple parties can exist in the same dungeon world
-
-### Combat System
-- **Turn-Based Combat**: Classic Wizardry-style party vs monster encounters
-- **3D Monster Portraits**: Five wireframe models with health-based visual effects
-- **Grid Engagement**: Cyberpunk-themed combat interface with digital terminology
-- **Party Management**: Handle unconscious/dead party members with casualty removal
-- **Formation System**: Front and back row positioning affects combat
-
-### Technical Features
-- **Persistent Storage**: Characters and parties saved using IndexedDB (v6 schema)
-- **Shared Dungeon World**: Multiple parties can explore the same dungeon instance
-- **Dynamic Terminology**: Real-time switching between classic and cyber terms
-- **Audio Integration**: Web Audio API with generated chiptune music
-- **Responsive Design**: Works across different screen sizes and devices
-
-## Getting Started
-
-1. Clone the repository
-2. Open `index.html` in a modern web browser
-3. No installation required - runs entirely in the browser
-
-## Current Limitations
-
-While the game has solid foundations, it's still in active development:
-
-- **Limited Content**: Only training grounds dungeon available
-- **Basic Magic System**: Spell casting implementation is basic
-- **Equipment System**: Limited equipment interactions beyond basic stats
-- **AI Behaviors**: Monster AI is functional but simple
-- **Dungeon Variety**: Currently only one test dungeon
-
-## Development Architecture
-
-The project uses vanilla JavaScript with a modular architecture:
-
-### Core Systems
-- **Engine.js**: Main game loop and event handling with party lifecycle management
-- **Combat.js**: Turn-based combat mechanics
-- **Dungeon.js**: Maze generation and exploration with shared architecture
-- **Storage.js**: Data persistence and party management (v6 schema)
-- **TextManager.js**: Dynamic terminology switching
-- **AudioManager.js**: Music and sound effect synthesis
-- **Party.js**: Party lifecycle management with naming and temporary party handling
-
-### Key Features
-- **50 JavaScript files** totaling over 30,667 lines of code
-- **Entity-based data system** with migration support
-- **Dual-terminology system** with 80+ mapped terms
-- **3D wireframe rendering** for authentic retro aesthetics
-- **Complete audio system** with dynamic music generation
-- **Advanced party management** with lifecycle support
-
-## Technical Highlights
-
-- **No External Dependencies**: Pure vanilla JavaScript implementation
-- **Modern Web APIs**: Uses Canvas, IndexedDB, and Web Audio API
-- **Modular Design**: Clean separation of concerns across 50 files
-- **Event-Driven Architecture**: Robust event system for UI updates
-- **Performance Optimized**: Efficient rendering and storage systems
-- **Advanced Storage**: IndexedDB v6 schema with entity-based architecture
-
-## Project Statistics
-
-- **50 JavaScript files** with 30,667 lines of code (1.2MB)
-- **4,531 lines of CSS** with comprehensive styling
-- **21 history files** documenting complete project evolution (external)
-- **23 screenshot files** showcasing dual-mode interfaces
-- **11 migration files** for entity-based data system
-- **5 audio tracks** with extended compositions
-- **12+ sound effects** covering all gameplay interactions
-- **50+ spells** across 7 levels with dual terminology
-- **75+ equipment items** with advanced mechanics
-- **12+ monster types** with AI behaviors and 3D portraits
-- **80+ terminology mappings** for classic/cyber dual-display
-
-## Contributing
-
-The project is actively developed and welcomes contributions. Key areas for improvement:
-
-- **Content Creation**: More dungeons, monsters, and equipment
-- **Magic System**: Enhanced spell casting mechanics
-- **AI Improvements**: More sophisticated monster behaviors
-- **UI/UX Enhancements**: Better visual feedback and animations
-- **Audio Content**: Additional music tracks and sound effects
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+Experience authentic turn-based RPG combat, persistent dungeon exploration, and deep party management mechanics—all rendered in a striking 3D wireframe style with procedurally generated chiptune audio.
 
 ---
 
-*A passion project exploring the intersection of classic RPG mechanics and modern web technologies, with a unique dual-mode system that transforms the entire game experience and advanced party management capabilities.*
+## Two Worlds, One Engine
+
+Toggle between fantasy and cyberpunk at any time. This isn't just a skin—it's a complete semantic translation layer affecting all text, terminology, and theming.
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/tg-step3.jpg" alt="Fantasy Mode" width="400"/><br/>
+      <b>Fantasy Mode</b><br/>
+      <i>"Dwarven Priest" • "Dungeon" • "Party"</i>
+    </td>
+    <td align="center">
+      <img src="assets/readme/ao-step3.jpg" alt="Cyber Mode" width="400"/><br/>
+      <b>Cyber Mode</b><br/>
+      <i>"Iron Kernel Infrastructure" • "Corrupted Network" • "Strike Team"</i>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+---
+
+## Key Features
+
+### 🧊 3D Wireframe Rendering
+Authentic retro-3D rendering built from scratch using HTML5 Canvas. Features proper perspective, occlusion culling, and a real-time mini-map with fog of war.
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/door-open-corridor.png" alt="Corridor View" width="260"/>
+    </td>
+    <td align="center">
+      <img src="assets/readme/door-closed.png" alt="Door View" width="260"/>
+    </td>
+    <td align="center">
+      <img src="assets/readme/minimap-fogofwar.png" alt="Mini-map" width="260"/>
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><i>Corridor Exploration</i></td>
+    <td align="center"><i>Doors & Secrets</i></td>
+    <td align="center"><i>Fog of War Mini-map</i></td>
+  </tr>
+</table>
+
+</div>
+
+### ⚔️ Grid Engagement Combat
+Tactical turn-based combat with 3D wireframe monster portraits that react to damage with glitching and fragmentation effects.
+
+<div align="center">
+  <img src="assets/readme/ogre-encounter.png" alt="Monster Encounter" width="500"/><br/>
+  <i>3D Monster Portraits with Health-Based Visual Effects</i>
+</div>
+
+<br/>
+
+- **Formation Strategy**: Front/back row positioning affects damage and targeting
+- **Initiative System**: Agility and class bonuses determine turn order
+- **Monster AI**: Different behavior patterns (aggressive, tactical, pack, intelligent)
+
+### 📜 Deep Party Management
+Create characters from 5 races and 8 classes. Manage multiple parties in a persistent shared world. Handle permadeath, resurrection, and future rescue missions.
+
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/readme/tg-step1.jpg" alt="Character Creation" width="400"/><br/>
+      <i>Character Creation</i>
+    </td>
+    <td align="center">
+      <img src="assets/readme/tg-step5.jpg" alt="Party Management" width="400"/><br/>
+      <i>Party Formation</i>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+### 🎵 Procedural Audio
+Custom-built audio engine generating situational chiptune music and sound effects using the Web Audio API. No external audio files—pure code-generated synthesis with 5 dynamic tracks and 19+ sound effects.
+
+### 💾 Persistent World
+Robust IndexedDB storage saves every step. Characters, parties, dungeon progress, and fog of war are all persistently stored locally. Multiple parties share the same dungeon instance.
+
+---
+
+## Recent Changes
+
+### Mini-Map Navigation
+Real-time 2D mini-map with fog of war rendering. Explored tiles persist across sessions and are shared between all parties in the same dungeon. The player arrow rotates to indicate facing direction.
+
+### Monster Rendering
+Monsters now appear in both the 3D dungeon viewport and on the mini-map. Encounter positions are tracked and displayed, giving players situational awareness before engaging in combat.
+
+### Visual & Audio Polish
+- Updated CSS styling with improved cyberpunk glow effects
+- New victory chiptune track
+- Refined dungeon theme with dynamic intensity modes
+- Enhanced UI transitions and feedback
+
+---
+
+## Getting Started
+
+```bash
+# Clone
+git clone https://github.com/RogueCtrl/Descent-Cyber-Wizardry.git
+cd Descent-Cyber-Wizardry
+
+# Launch (recommended for audio)
+python -m http.server 8000
+# Then open http://localhost:8000
+
+# Or just open index.html directly in any modern browser
+```
+
+No build steps. No npm install. No dependencies. Just pure vanilla web technologies.
+
+---
+
+## Technical Architecture
+
+The project demonstrates modern capability using only vanilla standards:
+
+| Component | Technology |
+|-----------|------------|
+| **Core** | Pure Vanilla JavaScript (ES2024+) |
+| **Rendering** | HTML5 Canvas (2D Context for 3D projection) |
+| **Audio** | Web Audio API (Oscillator synthesis) |
+| **Storage** | IndexedDB v7 with migration system |
+| **Styling** | Modern CSS3 (Variables, Grid, Flexbox) |
+
+**~32,000 lines of JavaScript** across 51 files, organized into:
+- `src/core/` - Engine, events, state machine
+- `src/game/` - Combat, dungeon, characters, parties
+- `src/rendering/` - 3D viewport, portraits, UI
+- `src/audio/` - Procedural music and sound
+- `src/data/` - Terminology, entity migrations
+
+Detailed system documentation: [`docs/systems/`](docs/systems/)
+
+---
+
+## Game Content
+
+| Category | Content |
+|----------|---------|
+| **Races** | Human, Elf, Dwarf, Hobbit, Gnome |
+| **Classes** | Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord, Ninja |
+| **Spells** | 50+ across 7 levels (arcane & divine) |
+| **Equipment** | 75+ items with dual terminology |
+| **Monsters** | 12+ types with 3D wireframe portraits |
+| **Audio** | 5 tracks, 19+ sound effects |
+
+---
+
+## Development & Credits
+
+This project explores AI-assisted software engineering.
+
+**Built by**: Matt Cox
+
+**AI Assistants**:
+- **Anthropic**: Claude Sonnet (2025) & Opus 4 (2025), Sonnet 4.5 (2026), Opus 4.5 (2026)
+- **Google**: Gemini 3 Flash & Pro (2026)
+- **IDE**: Cursor (2025), Antigravity (2026)
+
+**License**: [MIT](LICENSE)
+
+---
+
+<div align="center">
+  <i>A passion project exploring the intersection of classic RPG mechanics and modern web technologies.</i>
+</div>
