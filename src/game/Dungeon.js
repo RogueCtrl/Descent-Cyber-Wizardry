@@ -1207,6 +1207,7 @@ class Dungeon {
         const doors = [];
         const passages = [];
         const monsters = [];
+        const objects = [];
 
         // Check front tiles until we hit a wall or reach max distance
         let frontWallDistance = viewDistance + 1; // Default to beyond max distance
@@ -1264,6 +1265,9 @@ class Dungeon {
                     doors.push({ distance, x: offX, y: offY, offset, type: 'normal' });
                     // Closed doors block the view
                     if (offset === 0) centerBlocked = true;
+                } else if (tile === 'treasure') {
+                    // Treasure chest / Data cache
+                    objects.push({ distance, x: offX, y: offY, offset, type: 'treasure' });
                 }
 
                 // Check for visible monsters
@@ -1386,6 +1390,7 @@ class Dungeon {
             doors,
             passages,
             monsters,
+            objects,
             facing: this.getDirectionName(),
             position: this.getPlayerPosition()
         };

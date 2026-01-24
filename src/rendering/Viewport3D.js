@@ -68,6 +68,7 @@ class Viewport3D {
             this.renderWallsAtDistance(viewInfo, distance, centerX);
             this.renderDoorsAtDistance(viewInfo, distance, centerX);
             this.renderPassagesAtDistance(viewInfo, distance, centerX);
+            this.renderObjectsAtDistance(viewInfo, distance, centerX);
             this.renderMonstersAtDistance(viewInfo, distance, centerX);
         }
 
@@ -748,5 +749,73 @@ class Viewport3D {
         });
 
         this.ctx.stroke();
+    }
+
+    /**
+     * Render objects at a specific distance
+     */
+    renderObjectsAtDistance(viewInfo, distance, centerX) {
+        if (!viewInfo.objects) return;
+
+        const perspective = this.calculatePerspective(distance);
+
+        viewInfo.objects.forEach(obj => {
+            if (obj.distance === distance) {
+                if (obj.type === 'treasure') {
+                    this.renderTreasure(perspective, centerX, obj.offset || 0);
+                }
+            }
+        });
+    }
+
+    /**
+     * Render a treasure chest / data cache
+     */
+    renderTreasure(perspective, centerX, offset) {
+        const { wallWidth, wallHeight, topY, bottomY } = perspective;
+
+        // Calculate center position
+        const objCenterX = centerX + offset * wallWidth;
+
+        // Chest dimensions relative to wall
+        const chestWidth = wallWidth * 0.4;
+        const chestHeight = wallHeight * 0.25;
+        const chestDepth = wallWidth * 0.3; // Estimated depth distortion
+
+        // Position on floor
+        const chestBottom = bottomY - (wallHeight * 0.05); // Slightly raised or on floor
+        const chestTop = chestBottom - chestHeight;
+        const chestLeft = objCenterX - chestWidth / 2;
+        const chestRight = objCenterX + chestWidth / 2;
+
+        // Color: Amber/Gold for Data Cache
+        this.ctx.strokeStyle = '#f59e0b'; // Amber 500
+        this.ctx.lineWidth = 2;
+
+        this.ctx.beginPath();
+
+        // Front Face
+        this.ctx.rect(chestLeft, chestTop, chestWidth, chestHeight);
+
+        // Lid (Trapezoid top)
+        const lidHeight = chestHeight * 0.3;
+        const lidTop = chestTop - lidHeight;
+        const lidInset = chestWidth * 0.1;
+
+        this.ctx.moveTo(chestLeft, chestTop);
+        this.ctx.lineTo(chestLeft + lidInset, lidTop);
+        this.ctx.lineTo(chestRight - lidInset, lidTop);
+        this.ctx.lineTo(chestRight, chestTop);
+
+        // Lock/Detail
+        const lockSize = chestWidth * 0.1;
+        this.ctx.rect(objCenterX - lockSize / 2, chestTop + chestHeight * 0.2, lockSize, lockSize);
+
+        this.ctx.stroke();
+
+        // Fill with semi-transparent black to obscure implementation details behind it
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fill();
+        this.ctx.stroke(); // Stroke again to ensure lines are on top
     }
 }

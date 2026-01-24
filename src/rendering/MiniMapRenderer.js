@@ -36,24 +36,36 @@ class MiniMapRenderer {
         // Calculate map position (bottom right)
         const mapX = viewportWidth - this.size - this.padding;
         const mapY = viewportHeight - this.size - this.padding;
+        const radius = 8; // Border radius to match --radius-lg
 
         // Save context
         ctx.save();
 
-        // 1. Draw Background & Frame
-        ctx.fillStyle = this.colors.background;
-        ctx.fillRect(mapX, mapY, this.size, this.size);
+        // 1. Draw Shadow (before background for layering)
+        ctx.shadowColor = 'rgba(59, 130, 246, 0.4)'; // --glow-primary
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
+        // 2. Draw Background with rounded corners
+        ctx.fillStyle = this.colors.background;
+        this.roundRect(ctx, mapX, mapY, this.size, this.size, radius, true, false);
+
+        // Reset shadow for border
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+
+        // 3. Draw Border with rounded corners
         ctx.strokeStyle = this.colors.border;
         ctx.lineWidth = 2;
-        ctx.strokeRect(mapX, mapY, this.size, this.size);
+        this.roundRect(ctx, mapX, mapY, this.size, this.size, radius, false, true);
 
-        // Clip to map area
+        // Clip to map area with rounded corners
         ctx.beginPath();
-        ctx.rect(mapX, mapY, this.size, this.size);
+        this.roundRect(ctx, mapX, mapY, this.size, this.size, radius, false, false);
         ctx.clip();
 
-        // 2. Calculate transform to center on player
+        // 4. Calculate transform to center on player
         const playerX = dungeon.playerX;
         const playerY = dungeon.playerY;
 
@@ -61,7 +73,7 @@ class MiniMapRenderer {
         const centerX = mapX + this.size / 2;
         const centerY = mapY + this.size / 2;
 
-        // 3. Render Tiles
+        // 5. Render Tiles
         const floor = dungeon.currentFloorData;
         const floorNum = dungeon.currentFloor;
 
@@ -98,20 +110,47 @@ class MiniMapRenderer {
             }
         }
 
-        // 4. Render Monsters
+        // 6. Render Monsters
         this.renderMonsters(ctx, dungeon, startX, endX, startY, endY, centerX, centerY);
 
-        // 5. Render Player
+        // 7. Render Player
         this.renderPlayerArrow(ctx, centerX, centerY, dungeon.playerDirection);
 
-        // 6. Restore context
+        // 8. Restore context
         ctx.restore();
 
-        // 6. Draw "2D MAP" Label
+        // 9. Draw "2D-NAV" Label (outside of clipping region)
         ctx.fillStyle = this.colors.border;
         ctx.font = '10px "Courier New", monospace';
         ctx.textAlign = 'left';
         ctx.fillText('2D-NAV', mapX + 5, mapY + 12);
+    }
+
+    /**
+     * Helper function to draw rounded rectangles
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} width - Width
+     * @param {number} height - Height
+     * @param {number} radius - Corner radius
+     * @param {boolean} fill - Whether to fill
+     * @param {boolean} stroke - Whether to stroke
+     */
+    roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        if (fill) ctx.fill();
+        if (stroke) ctx.stroke();
     }
 
     /**
@@ -129,53 +168,32 @@ class MiniMapRenderer {
             // Draw wall as a block
             ctx.fillRect(x, y, this.tileSize, this.tileSize);
         } else if (type === 'door' || type === 'hidden_door') {
-            ctx.fillStyle = this.colors.door;
-            // Draw door as a plus sign (+)
-            const midX = x + this.tileSize / 2;
-            const midY = y + this.tileSize / 2;
-            const thickness = 2;
-            const size = this.tileSize - 4;
-
-            // Vertical part
-            ctx.fillRect(midX - thickness / 2, midY - size / 2, thickness, size);
-            // Horizontal part
-            ctx.fillRect(midX - size / 2, midY - thickness / 2, size, thickness);
+            // Draw closed door as emoji 🚪
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🚪', x + this.tileSize / 2, y + this.tileSize / 2);
         } else if (type === 'open_door') {
-            ctx.fillStyle = this.colors.door;
-            // Draw open door as a hash (#)
-            const midX = x + this.tileSize / 2;
-            const midY = y + this.tileSize / 2;
-            const thickness = 2;
-            const size = this.tileSize - 6;
-            const gap = 4;
-
-            // Two vertical lines
-            ctx.fillRect(midX - gap / 2 - thickness, midY - size / 2, thickness, size);
-            ctx.fillRect(midX + gap / 2, midY - size / 2, thickness, size);
-
-            // Two horizontal lines
-            ctx.fillRect(midX - size / 2, midY - gap / 2 - thickness, size, thickness);
-            ctx.fillRect(midX - size / 2, midY + gap / 2, size, thickness);
+            // Draw open door as emoji ⬜
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⬜', x + this.tileSize / 2, y + this.tileSize / 2);
         } else if (type.startsWith('stairs')) {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(x + 3, y + 3, this.tileSize - 6, this.tileSize - 6);
         } else if (type === 'exit') {
-            ctx.fillStyle = '#f59e0b'; // Amber/Orange for Jack Out
-            // Draw an exit arrow or icon
-            ctx.beginPath();
-            const cx = x + this.tileSize / 2;
-            const cy = y + this.tileSize / 2;
-            const size = this.tileSize / 2;
-
-            // Draw simple doorway with arrow
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(cx - size / 2, cy - size / 2, size, size);
-
-            // Arrow pointing out
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + size, cy);
-            ctx.stroke();
+            // Draw exit/jack-out point as emoji 🔌
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🔌', x + this.tileSize / 2, y + this.tileSize / 2);
+        } else if (type === 'treasure') {
+            // Draw data cache/treasure as emoji 🔶
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🔶', x + this.tileSize / 2, y + this.tileSize / 2);
         }
 
         // Grid lines (optional, distinct look)
