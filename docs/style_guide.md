@@ -1,5 +1,154 @@
 # Descent: Cyber Wizardry - Game Style Guide
 
+> **Scope**: Main Menu System (Phase 2 - Dashboard Redesign)  
+> **Inspired by**: [pizzint.watch](https://www.pizzint.watch/) Pentagon Pizza Index  
+> **Last Updated**: 2026-01-24
+
+---
+
+## 1. Design Philosophy
+
+### Core Aesthetic: "Tactical OSINT Dashboard"
+The visual language mimics a **military precision dashboard**. It replaces scrolling lists with a fixed-grid "situational awareness" display. Every element is anchored, data-dense, and purposeful.
+
+### Key Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **Fixed Viewport** | No scrolling. The entire state of the network is visible at a glance. |
+| **Zone-Based Layout** | Information is compartmentalized into specific "monitors" (AgentOps, Network, etc.). |
+| **High Contrast** | Neon accents against deep black/void backgrounds for maximum readability. |
+| **Living Data** | Histograms, pulsing status lights, and live counters replace static text. |
+
+---
+
+## 2. Color System
+
+### 2.1 Backgrounds
+
+```css
+:root {
+    /* Base Layers */
+    --bg-primary: #000000;      /* Void black */
+    --bg-secondary: #050505;    /* Panel background */
+    --bg-tertiary: #0a0a0a;     /* Raised elements */
+    
+    /* Overlays */
+    --bg-glass: rgba(0, 0, 0, 0.85); /* Glassmorphism panels */
+    --bg-overlay: rgba(0, 0, 0, 0.5); /* Dimming layers */
+}
+```
+
+### 2.2 Functional Accents (Refined)
+
+| Color | Variable | Hex | Usage |
+|-------|----------|-----|-------|
+| ⚡ **Cyber Blue** | `--accent-primary` | `#22d3ee` | Primary interactions, healthy systems, borders (Cyan-600) |
+| 🚨 **Critical Red** | `--accent-alert` | `#ef4444` | Breaches, combat, critical failures (Red-500) |
+| 🧬 **Bio Green** | `--accent-success` | `#10b981` | Stable biologicals, active agents, success (Emerald-500) |
+| ⚠️ **Warning Amber** | `--accent-warning` | `#f59e0b` | Caution, busy, processing (Amber-500) |
+| 🔮 **Data Purple** | `--accent-data` | `#a855f7` | Arcane data, magical subsystems (Purple-500) |
+
+### 2.3 Status Indicators
+
+| Status | Color | Visual |
+|--------|-------|--------|
+| **ONLINE** | Green | Solid glow + Pulse |
+| **OFFLINE** | Gray | Dimmed + Striped pattern |
+| **ERROR** | Red | Rapid flash + Glitch effect |
+| **PROCESSING** | Amber | Rotating spinner or scanning bar |
+
+---
+
+## 3. Typography
+
+**Font**: `JetBrains Mono` (Primary)
+
+### Type Scale
+
+```css
+:root {
+    --text-xs: 0.75rem;   /* Data labels */
+    --text-sm: 0.875rem;  /* Body text */
+    --text-base: 1rem;    /* Standard inputs */
+    --text-lg: 1.125rem;  /* Subheaders */
+    --text-xl: 1.25rem;   /* Panel headers */
+    --text-2xl: 1.5rem;   /* Key metrics */
+    --text-3xl: 2rem;     /* Main titles */
+}
+```
+
+---
+
+## 4. Main Menu Layout ("The Dashboard")
+
+The Main Menu is a **full-screen dashboard** (100vw x 100vh) with a 2-row grid structure overlaid on a circuit-board background.
+
+### 4.1 Grid Structure
+
+```css
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 Columns */
+    grid-template-rows: 1.2fr 1fr;         /* Top row slightly taller */
+    gap: var(--space-6);
+    padding: var(--space-6);
+    max-width: 1600px;
+    margin: 0 auto;
+    height: 100vh;
+}
+```
+
+### 4.2 Panel Assignment
+
+#### Top Row (Mission Control)
+1. **AgentOps** (Left): Roster management, health monitoring, recruitment.
+2. **Corrupted Network** (Center): Main dungeon interface, threat levels, connection status.
+3. **Data Exchange** (Right): Market, shop, item storage.
+
+#### Bottom Row (Support Systems)
+4. **Restoration Center** (Left): Healing, resurrection, battery recharge.
+5. **Strike Team Manifest** (Right): Party configuration, active deployment tracking.
+
+### 4.3 Panel Design
+
+Each panel uses a glassmorphism effect to separate it from the background while letting the circuit board texture peek through.
+
+```css
+.dashboard-panel {
+    background: var(--bg-glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header with specialized "Cyber Brackets" */
+.panel-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: var(--space-4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+```
+
+---
+
+## 5. Components
+
+### 5.1 Histograms
+Visual bar charts used to show distribution of data (e.g., agent health spread, danger levels).
+
+### 5.2 Status Badges
+Pill-shaped indicators for quick status checks.
+
+### 5.3 Action Buttons
+Square, icon-centric buttons for primary interactions. Hover effects trigger a "holographic projection" glow.
+
+
 > **Scope**: Town Menu System (Phase 1)  
 > **Inspired by**: [pizzint.watch](https://www.pizzint.watch/) Pentagon Pizza Index  
 > **Last Updated**: 2026-01-24

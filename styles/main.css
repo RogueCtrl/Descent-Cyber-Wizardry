@@ -1,37 +1,46 @@
 /* Descent: Cyber Wizardry - Main Stylesheet */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import 'dashboard.css';
 
 :root {
-    /* Color Palette - Pentagon Pizza Index Inspired */
-    --bg-primary: #020202;
+    /* Color Palette - Refined Cyberpunk Neon */
+    --bg-primary: #000000;
     --bg-secondary: #050505;
     --bg-tertiary: #0a0a0a;
     --bg-panel: #080808;
-    --bg-tactical: #060918;
+    --bg-glass: rgba(0, 0, 0, 0.85);
+    /* Glassmorphism base */
 
-    --accent-primary: #3b82f6;
-    /* Cyber Blue */
+    /* Neon Accents */
+    --accent-primary: #22d3ee;
+    /* Electric Cyan (replacing old Blue) */
     --accent-secondary: #00d4ff;
-    --accent-alert: #960c19;
-    /* Alert Red */
-    --accent-success: #00ff88;
-    /* Matrix Green */
-    --accent-warning: #ffcc00;
-    /* Warning Yellow */
-    --accent-data: #cc66ff;
-    /* Data Purple */
+    /* Bright Cyan */
+    --accent-alert: #ef4444;
+    /* Critical Red */
+    --accent-success: #10b981;
+    /* Bio-Emerald */
+    --accent-warning: #f59e0b;
+    /* Industrial Amber */
+    --accent-data: #a855f7;
+    /* Arcane Purple */
 
     --text-primary: #f0f0f0;
-    --text-secondary: #a0a0a0;
-    --text-muted: #555555;
+    --text-secondary: #9ca3af;
+    /* Cool Gray */
+    --text-muted: #4b5563;
+    /* Dim Gray */
 
-    --border-primary: #1f1f1f;
-    --border-accent: #333333;
-    --border-glow: #3b82f6;
+    --border-primary: #1f2937;
+    /* Slate-800 */
+    --border-accent: #374151;
+    /* Slate-700 */
+    --border-glow: #22d3ee;
+    /* Matches Primary */
 
-    --glow-primary: rgba(59, 130, 246, 0.6);
-    --glow-alert: rgba(255, 51, 51, 0.6);
-    --glow-success: rgba(0, 255, 136, 0.6);
+    --glow-primary: rgba(34, 211, 238, 0.4);
+    --glow-alert: rgba(239, 68, 68, 0.4);
+    --glow-success: rgba(16, 185, 129, 0.4);
 
     /* Typography */
     --font-primary: 'JetBrains Mono', 'Courier New', monospace;
@@ -55,7 +64,6 @@
     --radius-sm: 2px;
     --radius-md: 4px;
     --radius-lg: 8px;
-    /* Slightly rounded, but industrial */
     --radius-xl: 12px;
 
     /* Transitions */

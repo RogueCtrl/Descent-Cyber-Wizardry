@@ -366,7 +366,7 @@ class UI {
     }
 
     /**
-     * Show town center as modal overlay
+     * Show town center as Dashboard
      */
     async showTown(party = null) {
         console.log('UI.showTown() called with party:', party);
@@ -376,23 +376,17 @@ class UI {
 
         // Use passed party or fallback to engine
         const partyObj = party || (window.engine ? window.engine.party : null);
-        const partyInfo = this.getPartyStatusInfo(partyObj);
         const hasActiveParty = partyObj && partyObj.size > 0;
 
-        // Check if there are any meaningful parties to manage
-        let hasCamps = false;
-        let charStats = null;
-        let activePartiesCount = 0;
+        // Check for camp management states
         let campingPartiesCount = 0;
+        let activePartiesCount = 0;
         let lostPartiesCount = 0;
+        let charStats = null;
+        let hasCamps = false;
 
         try {
             const allParties = await Storage.loadAllParties();
-            // Camps exist if there are:
-            // 1. Multiple parties (more than just the current one), OR
-            // 2. Parties with members (not empty), OR  
-            // 3. Camping parties, OR
-            // 4. Lost parties
             if (allParties && allParties.length > 0) {
                 const partiesWithMembers = allParties.filter(p => p.members && p.members.length > 0);
                 const campingParties = await Storage.getCampingParties();
@@ -402,202 +396,182 @@ class UI {
                 campingPartiesCount = campingParties.length;
                 lostPartiesCount = lostParties.length;
 
-                hasCamps = allParties.length > 1 ||
-                    partiesWithMembers.length > 0 ||
-                    campingParties.length > 0 ||
-                    lostParties.length > 0;
+                hasCamps = allParties.length > 1 || partiesWithMembers.length > 0;
             }
-
-            // Fetch character stats
             charStats = await Storage.getCharacterStatistics();
-
         } catch (error) {
-            console.error('Error checking for camps/stats:', error);
-            hasCamps = false;
+            console.error('Error checking for camps:', error);
         }
 
-        console.log('Party info:', { partyObj, partyInfo, hasActiveParty, charStats });
-
-        // Helper to generate histogram bars (new style)
-        const renderHistogramBars = (values, max = 10) => {
-            return values.map((val, idx) => {
-                const height = Math.max(10, Math.min(100, (val / max) * 100));
-                const classes = idx === values.length - 1 ? 'histogram-bar-new current' : 'histogram-bar-new';
-                return `<div class="${classes}" style="height: ${height}%"></div>`;
-            }).join('');
-        };
-
-        // Create modal content with new Style Guide structure
+        // Render the Dashboard Grid
         const townContent = `
-            <div class="town-center-interface">
-                <!-- Town Header - Style Guide -->
-                <header class="town-header">
-                    <span class="town-logo">🌐</span>
-                    <div class="town-title-group">
-                        <h1 class="town-main-title">DESCENT: CYBER WIZARDRY</h1>
-                        <p class="town-main-subtitle" data-text-key="town_description">Network Operations Hub</p>
+            <div class="town-menu">
+                <div class="crt-overlay"></div>
+                
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    
+                    <!-- 1. AgentOps (Top Left) -->
+                    <div class="dashboard-panel panel-agentops dash-pos-1">
+                        <header class="panel-header">
+                            <div class="panel-title"><span class="icon">👤</span> AGENTOPS</div>
+                            <div class="panel-controls">
+                                <button class="panel-btn-icon" title="Minimize">_</button>
+                                <button class="panel-btn-icon" title="Maximize">□</button>
+                            </div>
+                        </header>
+                        <div class="panel-content">
+                            <div class="data-table-row">
+                                <div class="big-stat healthy">
+                                    <span class="big-stat-value">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
+                                    <span class="big-stat-label">ALIVE</span>
+                                </div>
+                                <div class="big-stat critical">
+                                    <span class="big-stat-value">${charStats ? (charStats.byStatus['Dead'] || 0) : 0}</span>
+                                    <span class="big-stat-label">DEAD</span>
+                                </div>
+                                <div class="big-stat warning">
+                                    <span class="big-stat-value">${charStats ? charStats.byStatus['Lost'] || 0 : 0}</span>
+                                    <span class="big-stat-label">LOST</span>
+                                </div>
+                            </div>
+                            <div class="panel-actions">
+                                <button id="training-grounds-btn" class="panel-action-btn primary">OPEN</button> 
+                            </div>
+                        </div>
+                        <footer class="panel-footer">
+                            <span class="status status-active">ACTIVE OPERATIONS</span>
+                        </footer>
                     </div>
-                </header>
-                
-                <!-- Card Grid - Style Guide -->
-                <main class="town-grid">
-                    
-                    <!-- AgentOps Card -->
-                    <article class="location-card-new">
-                        <div class="card-header-row">
-                            <span class="card-icon-lg">👥</span>
-                            <h3 class="card-title-new" data-text-key="training_grounds">AgentOps</h3>
-                        </div>
-                        <div class="card-action-row">
-                            <div class="status-group">
-                                <span class="status-badge open">OPEN</span>
+
+                    <!-- 2. Corrupted Network (Top Center) -->
+                    <div class="dashboard-panel panel-network dash-pos-2">
+                        <header class="panel-header">
+                            <div class="panel-title"><span class="icon">🌐</span> CORRUPTED NETWORK</div>
+                            <div class="panel-controls">
+                                <button class="panel-btn-icon">_</button>
                             </div>
-                            <div class="action-btn-group">
-                                <button id="training-grounds-btn" class="card-action-btn primary" title="Enter">🔘</button>
-                                <button class="card-action-btn" title="Info">ℹ️</button>
+                        </header>
+                        <div class="panel-content">
+                             <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8;">
+                                >> INTRUSION DETECTED AT NODE 7...<br>
+                                << PACKET LOSS 45%...<br>
+                                >> RE-ROUTING CYBER-LEYLINES...
+                             </div>
+                             <div class="big-stat critical" style="margin-top: auto;">
+                                <span class="big-stat-value">DANGER</span>
+                                <span class="big-stat-label">SECTOR 4</span>
                             </div>
-                        </div>
-                        <div class="card-data-row">
-                            <div class="data-chip">
-                                <span class="chip-value">${charStats ? charStats.totalCharacters : 0}</span> AGENTS REGISTRY
-                            </div>
-                            <div class="data-label">AGENT STATUS ANALYSIS</div>
-                            <div class="histogram-new">
-                                ${renderHistogramBars([
-            charStats ? charStats.byStatus['Ok'] || 0 : 0,
-            charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Ashes'] || 0) : 0,
-            charStats ? charStats.byStatus['Lost'] || 0 : 0,
-            charStats ? charStats.totalCharacters : 0,
-            charStats ? Math.floor(charStats.totalCharacters * 0.8) : 0,
-            charStats ? Math.floor(charStats.totalCharacters * 0.6) : 0
-        ], charStats ? Math.max(1, charStats.totalCharacters) : 10)}
+                            <div class="panel-actions">
+                                <button id="dungeon-entrance-btn" class="panel-action-btn primary" ${hasActiveParty ? '' : 'disabled'}>
+                                    ${hasActiveParty ? 'ENTER GRID' : 'NO CARRIER'}
+                                </button>
                             </div>
                         </div>
-                    </article>
-                    
-                    <!-- Corrupted Network Card -->
-                    <article class="location-card-new ${hasActiveParty ? '' : 'disabled'}">
-                        <div class="card-header-row">
-                            <span class="card-icon-lg" data-text-key="dungeon_icon">${TextManager.getText('dungeon_icon')}</span>
-                            <h3 class="card-title-new" data-text-key="dungeon">Corrupted Network</h3>
-                        </div>
-                        <div class="card-action-row">
-                            <div class="status-group">
-                                <span class="status-badge grid-active">GRID ACTIVE</span>
+                        <footer class="panel-footer">
+                            <span class="status status-critical">INTEGRITY: CRITICAL</span>
+                        </footer>
+                    </div>
+
+                    <!-- 3. Data Exchange (Top Right) -->
+                    <div class="dashboard-panel panel-data dash-pos-3">
+                        <header class="panel-header">
+                            <div class="panel-title"><span class="icon">💾</span> DATA EXCHANGE</div>
+                             <div class="panel-controls">
+                                <button class="panel-btn-icon">🔒</button>
                             </div>
-                            <div class="action-btn-group">
-                                <button id="dungeon-entrance-btn" class="card-action-btn primary" title="Enter Grid" ${hasActiveParty ? '' : 'disabled'}>🔘</button>
-                                <button class="card-action-btn" title="Info">ℹ️</button>
+                        </header>
+                        <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.5;">
+                            <div style="font-size: 3rem; color: var(--accent-primary);">🔒</div>
+                            <p style="text-align: center;">ENCRYPTED CONDUIT.<br>AUTHORIZATION REQUIRED.</p>
+                        </div>
+                        <footer class="panel-footer">
+                            <span class="status status-neutral">LOCKED</span>
+                        </footer>
+                    </div>
+
+                    <!-- 4. Restoration Center (Bottom Left) -->
+                    <div class="dashboard-panel panel-restoration dash-pos-4">
+                        <header class="panel-header">
+                             <div class="panel-title"><span class="icon">💾</span> RESTORATION CENTER</div>
+                             <div class="panel-controls">
+                                <button class="panel-btn-icon">_</button>
                             </div>
+                        </header>
+                         <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.5;">
+                            <div style="font-size: 3rem; color: var(--accent-warning);">➕</div>
+                             <p style="text-align: center;">SYSTEM OFFLINE.<br>AWAITING BIOMASS INPUT.</p>
                         </div>
-                        <div class="card-data-row">
-                            <div class="data-label">DATA TRAFFIC</div>
-                            <div class="histogram-new">
-                                ${renderHistogramBars([5, 8, 3, 9, 6, 7, 2, 5], 10)}
+                         <footer class="panel-footer">
+                             <span class="status status-neutral">LOCKED</span>
+                        </footer>
+                    </div>
+
+                    <!-- 5. Strike Team Manifest (Bottom Right - Wide) -->
+                    <div class="dashboard-panel panel-manifest dash-pos-5">
+                       <header class="panel-header">
+                            <div class="panel-title"><span class="icon">📋</span> STRIKE TEAM MANIFEST</div>
+                             <div class="panel-controls">
+                                <button class="panel-btn-icon">_</button>
+                                <button class="panel-btn-icon">□</button>
                             </div>
-                        </div>
-                    </article>
-                    
-                    <!-- Data Exchange Card (Coming Soon) -->
-                    <article class="location-card-new disabled">
-                        <div class="card-header-row">
-                            <span class="card-icon-lg">🏪</span>
-                            <h3 class="card-title-new" data-text-key="data_exchange">Data Exchange</h3>
-                        </div>
-                        <div class="card-action-row">
-                            <div class="status-group">
-                                <span class="status-badge locked">LOCKED</span>
+                        </header>
+                        <div class="panel-content">
+                             <div class="data-table-row">
+                                <div class="big-stat healthy">
+                                    <span class="big-stat-value">${activePartiesCount}</span>
+                                    <span class="big-stat-label">ACTIVE</span>
+                                    <span style="font-size: 2rem;">🏃</span>
+                                </div>
+                                <div class="big-stat warning">
+                                    <span class="big-stat-value">${campingPartiesCount}</span>
+                                    <span class="big-stat-label">CAMPED</span>
+                                    <span style="font-size: 2rem;">⛺</span>
+                                </div>
+                                <div class="big-stat neutral">
+                                    <span class="big-stat-value">${activePartiesCount + campingPartiesCount + lostPartiesCount}</span>
+                                    <span class="big-stat-label">IN HUB</span>
+                                    <span style="font-size: 2rem;">🏢</span>
+                                </div>
                             </div>
-                            <div class="action-btn-group">
-                                <button class="card-action-btn" disabled title="Coming Soon">🔘</button>
-                            </div>
-                        </div>
-                        <div class="card-data-row">
-                            <div class="data-label">COMING SOON</div>
-                        </div>
-                    </article>
-                    
-                    <!-- Restoration Center Card (Coming Soon) -->
-                    <article class="location-card-new disabled">
-                        <div class="card-header-row">
-                            <span class="card-icon-lg">💾</span>
-                            <h3 class="card-title-new" data-text-key="restoration_center">Backup Sanctuary</h3>
-                        </div>
-                        <div class="card-action-row">
-                            <div class="status-group">
-                                <span class="status-badge locked">LOCKED</span>
-                            </div>
-                            <div class="action-btn-group">
-                                <button class="card-action-btn" disabled title="Coming Soon">🔘</button>
-                            </div>
-                        </div>
-                        <div class="card-data-row">
-                            <div class="data-label">COMING SOON</div>
-                        </div>
-                    </article>
-                    
-                    <!-- Strike Team Manifest Card -->
-                    <article class="location-card-new ${hasCamps ? '' : 'disabled'}">
-                        <div class="card-header-row">
-                            <span class="card-icon-lg">📋</span>
-                            <h3 class="card-title-new" data-text-key="party_management">Strike Team Manifest</h3>
-                        </div>
-                        <div class="card-action-row">
-                            <div class="status-group">
-                                <span class="status-badge ${hasCamps ? 'open' : 'locked'}">${hasCamps ? 'AVAILABLE' : 'EMPTY'}</span>
-                            </div>
-                            <div class="action-btn-group">
-                                <button id="strike-team-management-btn" class="card-action-btn primary" title="Manage Teams" ${hasCamps ? '' : 'disabled'}>🔘</button>
-                                <button class="card-action-btn" title="Info">ℹ️</button>
+
+                             <div class="panel-actions">
+                                <button id="strike-team-management-btn" class="panel-action-btn primary" ${hasCamps ? '' : 'disabled'}>
+                                    ${hasCamps ? 'MANAGE CONFIGURATION' : 'AVAILABLE'}
+                                </button>
                             </div>
                         </div>
-                        <div class="card-data-row">
-                            <div class="data-chip">
-                                <span class="chip-value">${activePartiesCount + campingPartiesCount + lostPartiesCount}</span> TEAMS DEPLOYED
-                            </div>
-                            <div class="data-label">DEPLOYMENT STATUS</div>
-                            <div class="histogram-new">
-                                ${renderHistogramBars([
-            activePartiesCount,
-            campingPartiesCount,
-            lostPartiesCount,
-            activePartiesCount + campingPartiesCount + lostPartiesCount
-        ], Math.max(1, activePartiesCount + campingPartiesCount + lostPartiesCount))}
-                            </div>
-                        </div>
-                    </article>
-                    
-                </main>
-                
-                <!-- Town Footer - Style Guide -->
-                <footer class="town-footer">
-                    <span class="footer-text">
-                        CLASSIFIED <span class="footer-divider">//</span> FOR OFFICIAL USE ONLY <span class="footer-divider">//</span> NETWORK OPERATIONS DIVISION
-                    </span>
-                </footer>
+                        <footer class="panel-footer">
+                            <span class="status status-active">DEPLOYMENT: READY</span>
+                        </footer>
+                    </div>
+                </div>
+
+                <!-- Footer Ticker -->
+                 <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: var(--accent-alert); padding: 5px 20px; font-family: monospace; font-size: 0.8rem; border-top: 1px solid var(--accent-alert); z-index: 10;">
+                    BREAKING: MANA SURGE IN SECTOR 4 // NEW CYBER-SPELLS AUTHORIZED FOR FIELD AGENTS // DARK WEB RUMORS OF 'PROJECT: ASCENSION' //
+                 </div>
             </div>
         `;
 
         // Create and show modal
         this.townModal = new Modal({
             className: 'modal town-modal',
-            closeOnEscape: false, // Town menu should not be dismissible with ESC
+            closeOnEscape: false,
             closeOnBackdrop: false
         });
 
-        // Set up close callback
         this.townModal.setOnClose(() => {
             this.hideTown();
         });
 
-        // Create and show modal
         this.townModal.create(townContent);
         this.townModal.show();
 
-        // Apply TextManager to town modal elements
+        // Apply global text manager (if needed, though we hardcoded strict Cyber style here as requested)
         this.applyGlobalTextManager();
 
-        // Add event listeners
+        // Add event listeners (re-using existing logic)
         this.setupTownCenterEventListeners(this.townModal.getBody());
     }
 
@@ -671,6 +645,11 @@ class UI {
         this.addMessage(`Interface mode switched to ${modeLabel}`, 'info');
 
         console.log(`Terminology mode switched to: ${newMode}`);
+
+        // Restart town music if currently in town
+        if (window.engine && window.engine.audioManager && !window.engine.dungeon) {
+            window.engine.audioManager.playTrack('town');
+        }
     }
 
     /**
