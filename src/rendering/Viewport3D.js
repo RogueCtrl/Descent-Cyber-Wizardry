@@ -286,7 +286,7 @@ class Viewport3D {
                     this.ctx.lineTo(leftX, topY);
                     this.ctx.moveTo(prevPerspective.leftX, prevPerspective.bottomY);
                     this.ctx.lineTo(leftX, bottomY);
-                } else {
+                } else if (distance === 1) {
                     // Start new wall segment (gap in wall)
                     // Connect to screen edge if no previous wall
                     this.ctx.moveTo(0, 0);
@@ -351,7 +351,7 @@ class Viewport3D {
                     this.ctx.lineTo(rightX, topY);
                     this.ctx.moveTo(prevPerspective.rightX, prevPerspective.bottomY);
                     this.ctx.lineTo(rightX, bottomY);
-                } else {
+                } else if (distance === 1) {
                     // Start new wall segment (gap in wall)
                     // Connect to screen edge if no previous wall
                     this.ctx.moveTo(this.width, 0);
