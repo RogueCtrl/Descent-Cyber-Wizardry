@@ -1186,6 +1186,20 @@ class Engine {
                 }
                 break;
 
+            case 'search':
+                const discovered = this.dungeon.searchForSecrets();
+                if (discovered.length > 0) {
+                    for (const secret of discovered) {
+                        const typeName = secret.type === 'hidden_door' ? 'hidden door' : 'secret passage';
+                        this.ui.addMessage(`You discovered a ${typeName} to the ${secret.direction}!`);
+                    }
+                    // Update the view to show the discovered secrets
+                    this.updateDungeonView();
+                } else {
+                    this.ui.addMessage('You search carefully but find nothing hidden.');
+                }
+                break;
+
             default:
                 console.warn('Unknown player action:', action);
         }

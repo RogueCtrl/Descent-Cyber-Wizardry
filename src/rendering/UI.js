@@ -55,6 +55,7 @@ class UI {
                 castSpell: document.getElementById('cast-spell'),
                 useItem: document.getElementById('use-item'),
                 rest: document.getElementById('rest'),
+                search: document.getElementById('search'),
                 camp: document.getElementById('camp'),
                 openDoor: document.getElementById('open-door')
             };
@@ -115,6 +116,12 @@ class UI {
         if (this.controlButtons.rest) {
             this.controlButtons.rest.addEventListener('click', () => {
                 this.eventSystem.emit('player-action', 'rest');
+            });
+        }
+
+        if (this.controlButtons.search) {
+            this.controlButtons.search.addEventListener('click', () => {
+                this.eventSystem.emit('player-action', 'search');
             });
         }
 

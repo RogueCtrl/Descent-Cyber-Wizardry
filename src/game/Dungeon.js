@@ -1984,6 +1984,42 @@ class Dungeon {
     }
 
     /**
+     * Search for secret doors and passages in all cardinal directions
+     * Returns array of discovered secrets
+     */
+    searchForSecrets() {
+        const discovered = [];
+        const directions = [
+            { dx: 0, dy: -1, name: 'north' },  // North
+            { dx: 1, dy: 0, name: 'east' },    // East
+            { dx: 0, dy: 1, name: 'south' },   // South
+            { dx: -1, dy: 0, name: 'west' }    // West
+        ];
+
+        for (const dir of directions) {
+            const checkX = this.playerX + dir.dx;
+            const checkY = this.playerY + dir.dy;
+            const tile = this.getTile(checkX, checkY);
+
+            if (tile === 'hidden_door' || tile === 'secret_passage') {
+                const secretKey = `${this.currentFloor}:${checkX}:${checkY}:${tile}`;
+
+                if (!this.discoveredSecrets.has(secretKey)) {
+                    this.discoveredSecrets.add(secretKey);
+                    discovered.push({
+                        x: checkX,
+                        y: checkY,
+                        type: tile,
+                        direction: dir.name
+                    });
+                }
+            }
+        }
+
+        return discovered;
+    }
+
+    /**
      * Create a new Dungeon instance from saved data
      * @param {string} dungeonId - ID of the dungeon to load
      * @param {string} partyId - ID of the party to load position for
