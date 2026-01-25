@@ -161,13 +161,16 @@ class Dungeon {
         // Step 4: Add maze-like passages for complexity
         this.addMazePassages(tiles, width, height, complexity);
 
-        // Step 5: Add hidden doors and secret passages
+        // Step 5: Generate doors at valid doorway positions
+        this.generateDoors(tiles, width, height, 0.4);
+
+        // Step 6: Add hidden doors and secret passages
         this.addSecretFeatures(tiles, width, height, secretChance);
 
-        // Step 6: Add trap squares
+        // Step 7: Add trap squares
         this.addTraps(tiles, width, height, trapChance, floorNumber);
 
-        // Step 7: Ensure proper connections and validate maze
+        // Step 8: Ensure proper connections and validate maze
         this.validateAndFixMaze(tiles, width, height);
 
         return tiles;
@@ -354,6 +357,81 @@ class Dungeon {
                 }
             }
         }
+    }
+
+    /**
+     * Generate doors at proper doorway positions
+     * A valid door position is a wall tile with exactly 2 opposing floor tiles
+     * (north/south or east/west - creating a passage through the wall)
+     */
+    generateDoors(tiles, width, height, doorChance = 0.3) {
+        const potentialDoors = [];
+
+        // Find all valid door positions
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                if (tiles[y][x] === 'wall') {
+                    const doorType = this.isValidDoorPosition(tiles, x, y);
+                    if (doorType) {
+                        potentialDoors.push({ x, y, type: doorType });
+                    }
+                }
+            }
+        }
+
+        // Place doors at some of the valid positions
+        const doorCount = Math.floor(potentialDoors.length * doorChance);
+        const selectedDoors = Random.shuffle(potentialDoors).slice(0, doorCount);
+
+        for (const door of selectedDoors) {
+            tiles[door.y][door.x] = 'door';
+        }
+
+        console.log(`Generated ${selectedDoors.length} doors from ${potentialDoors.length} valid positions`);
+    }
+
+    /**
+     * Check if a wall tile is a valid door position
+     * Returns 'horizontal' or 'vertical' if valid, null if not
+     */
+    isValidDoorPosition(tiles, x, y) {
+        const north = tiles[y - 1] && tiles[y - 1][x];
+        const south = tiles[y + 1] && tiles[y + 1][x];
+        const east = tiles[y][x + 1];
+        const west = tiles[y][x - 1];
+
+        // Check for vertical passage (north and south are floors, east and west are walls)
+        const isVerticalDoor =
+            this.isFloorTile(north) &&
+            this.isFloorTile(south) &&
+            this.isWallTile(east) &&
+            this.isWallTile(west);
+
+        // Check for horizontal passage (east and west are floors, north and south are walls)
+        const isHorizontalDoor =
+            this.isFloorTile(east) &&
+            this.isFloorTile(west) &&
+            this.isWallTile(north) &&
+            this.isWallTile(south);
+
+        if (isVerticalDoor) return 'vertical';
+        if (isHorizontalDoor) return 'horizontal';
+        return null;
+    }
+
+    /**
+     * Check if a tile is a floor-like tile (walkable)
+     */
+    isFloorTile(tile) {
+        return tile === 'floor' || tile === 'open_door' ||
+            (tile && tile.startsWith && tile.startsWith('trap_'));
+    }
+
+    /**
+     * Check if a tile is a wall-like tile (blocking)
+     */
+    isWallTile(tile) {
+        return tile === 'wall' || tile === 'door' || tile === 'hidden_door';
     }
 
     /**
