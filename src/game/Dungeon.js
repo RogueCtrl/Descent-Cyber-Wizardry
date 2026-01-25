@@ -22,7 +22,7 @@ class Dungeon {
         this.exploredTiles = new Set(); // Format: "floor:x:y"
 
         // Debug mode for static test map
-        this.testMode = true; // Set to false for random generation
+        this.testMode = false; // Set to false for random generation
 
         this.initializeFloor(1);
     }
@@ -35,8 +35,8 @@ class Dungeon {
 
         const floor = {
             number: floorNumber,
-            width: 9,
-            height: 5,
+            width: this.testMode ? 9 : 20,
+            height: this.testMode ? 5 : 20,
             tiles: this.testMode ? this.generateTestMap() : this.generateWizardryMaze(20, 20, floorNumber),
             monsters: [],
             treasures: [],
@@ -44,12 +44,6 @@ class Dungeon {
             specialSquares: this.testMode ? [] : this.generateSpecialSquares(floorNumber),
             stairs: this.testMode ? {} : this.generateStairs(floorNumber)
         };
-
-        // Adjust floor size for test mode
-        if (this.testMode) {
-            floor.width = 9;
-            floor.height = 5;
-        }
 
         this.floors.set(floorNumber, floor);
 

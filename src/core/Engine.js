@@ -2182,12 +2182,15 @@ class Engine {
                 }
             } else {
                 console.log('No saved dungeons found for this party');
-                // Use existing shared dungeon, but reset this party's position to entrance
-                console.log('Resetting party to test room entrance...');
-                this.dungeon.playerX = 1;  // Test room entrance
-                this.dungeon.playerY = 2;
-                this.dungeon.playerDirection = 0; // North
+                // Use existing shared dungeon, reset this party's position to a valid starting location
+                console.log('Setting party starting position on procedural map...');
                 this.dungeon.currentFloor = 1;
+
+                // Use the dungeon's setStartPosition method to find a valid spawn point
+                const currentFloor = this.dungeon.floors.get(this.dungeon.currentFloor);
+                if (currentFloor) {
+                    this.dungeon.setStartPosition(currentFloor);
+                }
 
                 // Clear party-specific progress (but keep shared world state)
                 this.dungeon.discoveredSecrets = new Set();
