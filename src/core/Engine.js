@@ -460,8 +460,17 @@ class Engine {
             } else {
                 // Party was camping in dungeon - restore dungeon state and enter dungeon
                 const positionData = await Storage.loadPartyPosition(party.id);
+
+                // NEW: Restore full dungeon layout if available in the resume result
+                if (resumeResult.dungeonData) {
+                    console.log('Restoring procedural dungeon layout from save...');
+                    this.dungeon.loadFromSave(resumeResult.dungeonData);
+                } else {
+                    console.warn('No dungeon layout found in save - dungeon will be Regenerated (seed may not match).');
+                }
+
                 if (positionData) {
-                    // Restore dungeon state
+                    // Restore dungeon state (position, direction, etc)
                     this.dungeon.currentFloor = positionData.currentFloor;
                     this.dungeon.playerX = positionData.playerX;
                     this.dungeon.playerY = positionData.playerY;

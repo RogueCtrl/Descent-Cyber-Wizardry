@@ -11,7 +11,7 @@ class Storage {
     static CAMP_KEY_PREFIX = 'descent_camp_'; // For individual party camps
     static DUNGEON_STATE_KEY = 'descent_dungeon_states';
     static ACTIVE_PARTY_KEY = 'descent_active_party'; // For tracking current active party
-    
+
     // IndexedDB configuration
     static DB_NAME = 'DescentCyberWizardry';
     static DB_VERSION = 7; // Incremented for party store
@@ -30,15 +30,15 @@ class Storage {
     static VERSION_STORE = 'entity_versions';
     static DUNGEON_STORE = 'dungeons';
     static PARTY_POSITION_STORE = 'party_positions';
-    
+
     static _db = null;
     static _dbInitialized = false;
-    
+
     // Entity version tracking
     static ENTITY_VERSION = '1.1.0'; // Increment this when migration files change
     static ENTITY_TYPES = [
         'weapons',
-        'armor', 
+        'armor',
         'shields',
         'accessories',
         'spells',
@@ -46,7 +46,7 @@ class Storage {
         'effects',
         'monsters'
     ];
-    
+
     /**
      * Save game data
      */
@@ -57,47 +57,47 @@ class Storage {
                 version: '1.0.0',
                 timestamp: Date.now()
             };
-            
+
             const serialized = JSON.stringify(saveData);
             localStorage.setItem(this.SAVE_KEY, serialized);
-            
+
             console.log('Game saved successfully');
             return true;
-            
+
         } catch (error) {
             console.error('Failed to save game:', error);
             throw new Error('Failed to save game: ' + error.message);
         }
     }
-    
+
     /**
      * Load game data
      */
     static loadGame() {
         try {
             const serialized = localStorage.getItem(this.SAVE_KEY);
-            
+
             if (!serialized) {
                 return null;
             }
-            
+
             const saveData = JSON.parse(serialized);
-            
+
             // Validate save data
             if (!this.validateSaveData(saveData)) {
                 console.warn('Invalid save data detected');
                 return null;
             }
-            
+
             console.log('Game loaded successfully');
             return saveData;
-            
+
         } catch (error) {
             console.error('Failed to load game:', error);
             return null;
         }
     }
-    
+
     /**
      * Check if a save game exists
      */
@@ -105,7 +105,7 @@ class Storage {
         const serialized = localStorage.getItem(this.SAVE_KEY);
         return serialized !== null;
     }
-    
+
     /**
      * Delete saved game
      */
@@ -119,7 +119,7 @@ class Storage {
             return false;
         }
     }
-    
+
     /**
      * Save game settings
      */
@@ -129,40 +129,40 @@ class Storage {
                 ...settings,
                 timestamp: Date.now()
             };
-            
+
             const serialized = JSON.stringify(settingsData);
             localStorage.setItem(this.SETTINGS_KEY, serialized);
-            
+
             return true;
-            
+
         } catch (error) {
             console.error('Failed to save settings:', error);
             return false;
         }
     }
-    
+
     /**
      * Load game settings
      */
     static loadSettings() {
         try {
             const serialized = localStorage.getItem(this.SETTINGS_KEY);
-            
+
             if (!serialized) {
                 return this.getDefaultSettings();
             }
-            
+
             const settings = JSON.parse(serialized);
-            
+
             // Merge with defaults to ensure all settings exist
             return { ...this.getDefaultSettings(), ...settings };
-            
+
         } catch (error) {
             console.error('Failed to load settings:', error);
             return this.getDefaultSettings();
         }
     }
-    
+
     /**
      * Get default settings
      */
@@ -199,9 +199,9 @@ class Storage {
             }
         };
     }
-    
+
     // IndexedDB Methods for Character Persistence
-    
+
     /**
      * Initialize IndexedDB for character storage
      * @returns {Promise<boolean>} Success status
@@ -210,36 +210,36 @@ class Storage {
         if (this._dbInitialized && this._db) {
             return true;
         }
-        
+
         if (!window.indexedDB) {
             console.error('IndexedDB not supported');
             return false;
         }
-        
+
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-            
+
             request.onerror = () => {
                 console.error('Failed to open IndexedDB:', request.error);
                 reject(false);
             };
-            
+
             request.onsuccess = () => {
                 this._db = request.result;
                 this._dbInitialized = true;
                 console.log('IndexedDB initialized successfully');
                 resolve(true);
             };
-            
+
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                
+
                 // Create characters store
                 if (!db.objectStoreNames.contains(this.CHARACTER_STORE)) {
                     const characterStore = db.createObjectStore(this.CHARACTER_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     // Create indexes for efficient queries
                     characterStore.createIndex('name', 'name', { unique: false });
                     characterStore.createIndex('race', 'race', { unique: false });
@@ -249,24 +249,24 @@ class Storage {
                     characterStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                     characterStore.createIndex('lastModified', 'lastModified', { unique: false });
                 }
-                
+
                 // Create roster store for party management
                 if (!db.objectStoreNames.contains(this.ROSTER_STORE)) {
                     const rosterStore = db.createObjectStore(this.ROSTER_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     rosterStore.createIndex('name', 'name', { unique: false });
                     rosterStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                     rosterStore.createIndex('lastModified', 'lastModified', { unique: false });
                 }
-                
+
                 // Create camps store for dungeon camp saves
                 if (!db.objectStoreNames.contains(this.CAMP_STORE)) {
                     const campStore = db.createObjectStore(this.CAMP_STORE, {
                         keyPath: 'campId'
                     });
-                    
+
                     campStore.createIndex('partyId', 'partyId', { unique: false });
                     campStore.createIndex('partyName', 'partyName', { unique: false });
                     campStore.createIndex('currentFloor', 'location.currentFloor', { unique: false });
@@ -275,51 +275,51 @@ class Storage {
                     campStore.createIndex('memberCount', 'memberCount', { unique: false });
                     campStore.createIndex('aliveCount', 'aliveCount', { unique: false });
                 }
-                
+
                 // Create weapon entity store
                 if (!db.objectStoreNames.contains(this.WEAPON_STORE)) {
                     const weaponStore = db.createObjectStore(this.WEAPON_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     weaponStore.createIndex('name', 'name', { unique: false });
                     weaponStore.createIndex('type', 'type', { unique: false });
                     weaponStore.createIndex('subtype', 'subtype', { unique: false });
                     weaponStore.createIndex('magical', 'magical', { unique: false });
                     weaponStore.createIndex('cursed', 'cursed', { unique: false });
                 }
-                
+
                 // Create armor entity store
                 if (!db.objectStoreNames.contains(this.ARMOR_STORE)) {
                     const armorStore = db.createObjectStore(this.ARMOR_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     armorStore.createIndex('name', 'name', { unique: false });
                     armorStore.createIndex('type', 'type', { unique: false });
                     armorStore.createIndex('subtype', 'subtype', { unique: false });
                     armorStore.createIndex('magical', 'magical', { unique: false });
                     armorStore.createIndex('cursed', 'cursed', { unique: false });
                 }
-                
+
                 // Create shield entity store
                 if (!db.objectStoreNames.contains(this.SHIELD_STORE)) {
                     const shieldStore = db.createObjectStore(this.SHIELD_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     shieldStore.createIndex('name', 'name', { unique: false });
                     shieldStore.createIndex('type', 'type', { unique: false });
                     shieldStore.createIndex('magical', 'magical', { unique: false });
                     shieldStore.createIndex('cursed', 'cursed', { unique: false });
                 }
-                
+
                 // Create accessory entity store
                 if (!db.objectStoreNames.contains(this.ACCESSORY_STORE)) {
                     const accessoryStore = db.createObjectStore(this.ACCESSORY_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     accessoryStore.createIndex('name', 'name', { unique: false });
                     accessoryStore.createIndex('type', 'type', { unique: false });
                     accessoryStore.createIndex('subtype', 'subtype', { unique: false });
@@ -327,50 +327,50 @@ class Storage {
                     accessoryStore.createIndex('cursed', 'cursed', { unique: false });
                     accessoryStore.createIndex('unidentified', 'unidentified', { unique: false });
                 }
-                
+
                 // Create spell entity store
                 if (!db.objectStoreNames.contains(this.SPELL_STORE)) {
                     const spellStore = db.createObjectStore(this.SPELL_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     spellStore.createIndex('name', 'name', { unique: false });
                     spellStore.createIndex('school', 'school', { unique: false });
                     spellStore.createIndex('level', 'level', { unique: false });
                     spellStore.createIndex('effect', 'effect', { unique: false });
                 }
-                
+
                 // Create condition entity store
                 if (!db.objectStoreNames.contains(this.CONDITION_STORE)) {
                     const conditionStore = db.createObjectStore(this.CONDITION_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     conditionStore.createIndex('name', 'name', { unique: false });
                     conditionStore.createIndex('type', 'type', { unique: false });
                     conditionStore.createIndex('category', 'category', { unique: false });
                     conditionStore.createIndex('severity', 'severity', { unique: false });
                 }
-                
+
                 // Create effect entity store
                 if (!db.objectStoreNames.contains(this.EFFECT_STORE)) {
                     const effectStore = db.createObjectStore(this.EFFECT_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     effectStore.createIndex('name', 'name', { unique: false });
                     effectStore.createIndex('type', 'type', { unique: false });
                     effectStore.createIndex('category', 'category', { unique: false });
                     effectStore.createIndex('beneficial', 'beneficial', { unique: false });
                     effectStore.createIndex('dispellable', 'dispellable', { unique: false });
                 }
-                
+
                 // Create monster entity store
                 if (!db.objectStoreNames.contains(this.MONSTER_STORE)) {
                     const monsterStore = db.createObjectStore(this.MONSTER_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     monsterStore.createIndex('name', 'name', { unique: false });
                     monsterStore.createIndex('type', 'type', { unique: false });
                     monsterStore.createIndex('level', 'level', { unique: false });
@@ -378,35 +378,35 @@ class Storage {
                     monsterStore.createIndex('experienceValue', 'experienceValue', { unique: false });
                     monsterStore.createIndex('treasureType', 'treasureType', { unique: false });
                 }
-                
+
                 // Create version store for tracking entity updates
                 if (!db.objectStoreNames.contains(this.VERSION_STORE)) {
                     const versionStore = db.createObjectStore(this.VERSION_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     versionStore.createIndex('version', 'version', { unique: false });
                     versionStore.createIndex('lastUpdated', 'lastUpdated', { unique: false });
                 }
-                
+
                 // Create dungeon store for saving dungeon states (now for shared dungeon instances)
                 if (!db.objectStoreNames.contains(this.DUNGEON_STORE)) {
                     const dungeonStore = db.createObjectStore(this.DUNGEON_STORE, {
                         keyPath: 'dungeonId'
                     });
-                    
+
                     dungeonStore.createIndex('dungeonType', 'dungeonType', { unique: false });
                     dungeonStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                     dungeonStore.createIndex('lastModified', 'lastModified', { unique: false });
                     dungeonStore.createIndex('testMode', 'testMode', { unique: false });
                 }
-                
+
                 // Create party store for persistent party data
                 if (!db.objectStoreNames.contains(this.PARTY_STORE)) {
                     const partyStore = db.createObjectStore(this.PARTY_STORE, {
                         keyPath: 'id'
                     });
-                    
+
                     partyStore.createIndex('name', 'name', { unique: false });
                     partyStore.createIndex('inTown', 'inTown', { unique: false });
                     partyStore.createIndex('campId', 'campId', { unique: false });
@@ -415,23 +415,23 @@ class Storage {
                     partyStore.createIndex('memberCount', 'memberCount', { unique: false });
                     partyStore.createIndex('aliveCount', 'aliveCount', { unique: false });
                 }
-                
+
                 // Create party position store for tracking party locations/state in dungeons
                 if (!db.objectStoreNames.contains(this.PARTY_POSITION_STORE)) {
                     const partyPositionStore = db.createObjectStore(this.PARTY_POSITION_STORE, {
                         keyPath: 'partyId'
                     });
-                    
+
                     partyPositionStore.createIndex('dungeonId', 'dungeonId', { unique: false });
                     partyPositionStore.createIndex('currentFloor', 'currentFloor', { unique: false });
                     partyPositionStore.createIndex('lastSaved', 'lastSaved', { unique: false });
                 }
-                
+
                 console.log('IndexedDB upgrade completed');
             };
         });
     }
-    
+
     /**
      * Save character to IndexedDB
      * @param {Object} character - Character object to save
@@ -448,14 +448,14 @@ class Storage {
                     // Don't throw - just warn for now to avoid breaking existing saves
                 }
             }
-            
+
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
             const store = transaction.objectStore(this.CHARACTER_STORE);
-            
+
             // Prepare character data for storage
             const characterData = {
                 id: character.id,
@@ -479,42 +479,42 @@ class Storage {
                 temporaryEffects: character.temporaryEffects ? [...character.temporaryEffects] : [],
                 classHistory: character.classHistory ? [...character.classHistory] : [],
                 partyId: character.partyId || null,
-                
+
                 // NEW: Phased out system properties
                 isPhasedOut: character.isPhasedOut || false,
                 phaseOutReason: character.phaseOutReason || null,
                 phaseOutDate: character.phaseOutDate || null,
                 canPhaseBackIn: character.canPhaseBackIn !== undefined ? character.canPhaseBackIn : true,
-                
+
                 // NEW: Team assignment tracking
                 originalTeamAssignment: character.originalTeamAssignment || null,
                 teamAssignmentDate: character.teamAssignmentDate || null,
                 teamLoyalty: character.teamLoyalty !== undefined ? character.teamLoyalty : 100,
-                
+
                 dateCreated: character.dateCreated || Date.now(),
                 lastModified: Date.now()
             };
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(characterData);
-                
+
                 request.onsuccess = () => {
                     console.log(`Character ${character.name} saved to IndexedDB`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to save character:', request.error);
                     reject(false);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to save character:', error);
             return false;
         }
     }
-    
+
     /**
      * Load character from IndexedDB
      * @param {string} characterId - Character ID to load
@@ -525,13 +525,13 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get(characterId);
-                
+
                 request.onsuccess = () => {
                     const character = request.result;
                     if (character) {
@@ -539,19 +539,19 @@ class Storage {
                     }
                     resolve(character || null);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load character:', request.error);
                     reject(null);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load character:', error);
             return null;
         }
     }
-    
+
     /**
      * Load all characters from IndexedDB
      * @returns {Promise<Array>} Array of character objects
@@ -561,31 +561,31 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.getAll();
-                
+
                 request.onsuccess = () => {
                     const characters = request.result || [];
                     console.log(`Loaded ${characters.length} characters from IndexedDB`);
                     resolve(characters);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load characters:', request.error);
                     reject([]);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load characters:', error);
             return [];
         }
     }
-    
+
     /**
      * Delete character from IndexedDB
      * @param {string} characterId - Character ID to delete
@@ -596,30 +596,30 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
             const store = transaction.objectStore(this.CHARACTER_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.delete(characterId);
-                
+
                 request.onsuccess = () => {
                     console.log(`Character ${characterId} deleted from IndexedDB`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to delete character:', request.error);
                     reject(false);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to delete character:', error);
             return false;
         }
     }
-    
+
     /**
      * Query characters by criteria
      * @param {Object} criteria - Query criteria (race, class, level, status, etc.)
@@ -630,22 +630,22 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
-            
+
             // If no criteria, return all characters
             if (Object.keys(criteria).length === 0) {
                 return this.loadAllCharacters();
             }
-            
+
             // Use index if available
             const indexName = Object.keys(criteria)[0];
             const indexValue = criteria[indexName];
-            
+
             return new Promise((resolve, reject) => {
                 let request;
-                
+
                 if (store.indexNames.contains(indexName)) {
                     const index = store.index(indexName);
                     request = index.getAll(indexValue);
@@ -653,10 +653,10 @@ class Storage {
                     // Fallback to full scan
                     request = store.getAll();
                 }
-                
+
                 request.onsuccess = () => {
                     let characters = request.result || [];
-                    
+
                     // Apply additional filters if using fallback
                     if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
                         characters = characters.filter(char => {
@@ -665,23 +665,23 @@ class Storage {
                             });
                         });
                     }
-                    
+
                     console.log(`Found ${characters.length} characters matching criteria`);
                     resolve(characters);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to query characters:', request.error);
                     reject([]);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to query characters:', error);
             return [];
         }
     }
-    
+
     /**
      * Get character statistics
      * @returns {Promise<Object>} Character statistics
@@ -689,7 +689,7 @@ class Storage {
     static async getCharacterStatistics() {
         try {
             const characters = await this.loadAllCharacters();
-            
+
             const stats = {
                 totalCharacters: characters.length,
                 aliveCharacters: characters.filter(c => c.isAlive).length,
@@ -703,42 +703,42 @@ class Storage {
                 oldestCharacter: null,
                 newestCharacter: null
             };
-            
+
             if (characters.length > 0) {
                 // Calculate distributions
                 characters.forEach(char => {
                     // Race distribution
                     stats.byRace[char.race] = (stats.byRace[char.race] || 0) + 1;
-                    
+
                     // Class distribution
                     stats.byClass[char.class] = (stats.byClass[char.class] || 0) + 1;
-                    
+
                     // Level distribution
                     stats.byLevel[char.level] = (stats.byLevel[char.level] || 0) + 1;
-                    
+
                     // Status distribution
                     stats.byStatus[char.status] = (stats.byStatus[char.status] || 0) + 1;
                 });
-                
+
                 // Calculate averages and extremes
                 const levels = characters.map(c => c.level);
                 stats.averageLevel = Math.round(levels.reduce((a, b) => a + b, 0) / levels.length);
                 stats.highestLevel = Math.max(...levels);
-                
+
                 // Find oldest and newest characters
                 const sortedByDate = characters.sort((a, b) => a.dateCreated - b.dateCreated);
                 stats.oldestCharacter = sortedByDate[0];
                 stats.newestCharacter = sortedByDate[sortedByDate.length - 1];
             }
-            
+
             return stats;
-            
+
         } catch (error) {
             console.error('Failed to get character statistics:', error);
             return null;
         }
     }
-    
+
     /**
      * NEW: Get all active team members for a specific party
      * @param {string} partyId - Party ID to find members for
@@ -747,9 +747,9 @@ class Storage {
     static async getActiveTeamMembers(partyId) {
         try {
             const allCharacters = await this.loadAllCharacters();
-            return allCharacters.filter(char => 
-                char.partyId === partyId && 
-                !char.isPhasedOut && 
+            return allCharacters.filter(char =>
+                char.partyId === partyId &&
+                !char.isPhasedOut &&
                 !this.isCharacterPermanentlyLost(char)
             );
         } catch (error) {
@@ -757,7 +757,7 @@ class Storage {
             return [];
         }
     }
-    
+
     /**
      * NEW: Get all phased out team members for a specific party
      * @param {string} partyId - Party ID to find phased out members for
@@ -766,8 +766,8 @@ class Storage {
     static async getPhasedOutTeamMembers(partyId) {
         try {
             const allCharacters = await this.loadAllCharacters();
-            return allCharacters.filter(char => 
-                char.partyId === partyId && 
+            return allCharacters.filter(char =>
+                char.partyId === partyId &&
                 char.isPhasedOut
             );
         } catch (error) {
@@ -775,7 +775,7 @@ class Storage {
             return [];
         }
     }
-    
+
     /**
      * NEW: Check if character is permanently lost (memorial state)
      * Helper method for team membership validation
@@ -784,12 +784,12 @@ class Storage {
      */
     static isCharacterPermanentlyLost(character) {
         if (!character) return false;
-        return character.status === 'lost' || 
-               character.status === 'uninstalled' || 
-               (character.isLost === true) || 
-               (character.status === 'ashes' && character.isLost);
+        return character.status === 'lost' ||
+            character.status === 'uninstalled' ||
+            (character.isLost === true) ||
+            (character.status === 'ashes' && character.isLost);
     }
-    
+
     /**
      * Save character templates (legacy localStorage method)
      */
@@ -799,38 +799,38 @@ class Storage {
                 templates: templates,
                 timestamp: Date.now()
             };
-            
+
             const serialized = JSON.stringify(templatesData);
             localStorage.setItem(this.CHARACTERS_KEY, serialized);
-            
+
             return true;
-            
+
         } catch (error) {
             console.error('Failed to save character templates:', error);
             return false;
         }
     }
-    
+
     /**
      * Load character templates
      */
     static loadCharacterTemplates() {
         try {
             const serialized = localStorage.getItem(this.CHARACTERS_KEY);
-            
+
             if (!serialized) {
                 return [];
             }
-            
+
             const data = JSON.parse(serialized);
             return data.templates || [];
-            
+
         } catch (error) {
             console.error('Failed to load character templates:', error);
             return [];
         }
     }
-    
+
     /**
      * Validate save data structure
      */
@@ -838,7 +838,7 @@ class Storage {
         if (!saveData || typeof saveData !== 'object') {
             return false;
         }
-        
+
         // Check required fields
         const requiredFields = ['timestamp', 'version'];
         for (const field of requiredFields) {
@@ -846,16 +846,16 @@ class Storage {
                 return false;
             }
         }
-        
+
         // Check version compatibility
         if (saveData.version !== '1.0.0') {
             console.warn('Save data version mismatch:', saveData.version);
             // For now, we'll allow it but this is where migration logic would go
         }
-        
+
         return true;
     }
-    
+
     /**
      * Export save data as JSON string
      */
@@ -864,30 +864,30 @@ class Storage {
         if (!saveData) {
             throw new Error('No save data to export');
         }
-        
+
         return JSON.stringify(saveData, null, 2);
     }
-    
+
     /**
      * Import save data from JSON string
      */
     static importSave(jsonString) {
         try {
             const saveData = JSON.parse(jsonString);
-            
+
             if (!this.validateSaveData(saveData)) {
                 throw new Error('Invalid save data format');
             }
-            
+
             this.saveGame(saveData);
             return true;
-            
+
         } catch (error) {
             console.error('Failed to import save:', error);
             throw new Error('Failed to import save: ' + error.message);
         }
     }
-    
+
     /**
      * Get storage usage information
      */
@@ -896,7 +896,7 @@ class Storage {
             const saveSize = localStorage.getItem(this.SAVE_KEY)?.length || 0;
             const settingsSize = localStorage.getItem(this.SETTINGS_KEY)?.length || 0;
             const charactersSize = localStorage.getItem(this.CHARACTERS_KEY)?.length || 0;
-            
+
             return {
                 totalSize: saveSize + settingsSize + charactersSize,
                 saveSize: saveSize,
@@ -906,13 +906,13 @@ class Storage {
                 hasSettings: settingsSize > 0,
                 hasCharacters: charactersSize > 0
             };
-            
+
         } catch (error) {
             console.error('Failed to get storage info:', error);
             return null;
         }
     }
-    
+
     /**
      * Clear all stored data
      */
@@ -921,16 +921,16 @@ class Storage {
             localStorage.removeItem(this.SAVE_KEY);
             localStorage.removeItem(this.SETTINGS_KEY);
             localStorage.removeItem(this.CHARACTERS_KEY);
-            
+
             console.log('All stored data cleared');
             return true;
-            
+
         } catch (error) {
             console.error('Failed to clear storage:', error);
             return false;
         }
     }
-    
+
     /**
      * Check if localStorage is available
      */
@@ -944,7 +944,7 @@ class Storage {
             return false;
         }
     }
-    
+
     /**
      * Get available storage space
      */
@@ -952,20 +952,20 @@ class Storage {
         try {
             const totalSize = 5 * 1024 * 1024; // 5MB typical localStorage limit
             let usedSize = 0;
-            
+
             for (let key in localStorage) {
                 if (localStorage.hasOwnProperty(key)) {
                     usedSize += localStorage[key].length;
                 }
             }
-            
+
             return {
                 total: totalSize,
                 used: usedSize,
                 available: totalSize - usedSize,
                 percentage: Math.round((usedSize / totalSize) * 100)
             };
-            
+
         } catch (error) {
             console.error('Failed to get storage info:', error);
             return null;
@@ -984,7 +984,7 @@ class Storage {
     static savePartyInDungeon(party, dungeon, gameState = {}) {
         try {
             const campId = `${this.CAMP_KEY_PREFIX}${party.id}_${Date.now()}`;
-            
+
             const campData = {
                 campId,
                 partyId: party.id,
@@ -1021,7 +1021,7 @@ class Storage {
             localStorage.setItem(campId, serialized);
 
             console.log(`Party ${party.name} camped in dungeon at floor ${dungeon.currentFloor}`);
-            
+
             return {
                 success: true,
                 campId,
@@ -1046,7 +1046,7 @@ class Storage {
     static resumePartyFromDungeon(campId) {
         try {
             const serialized = localStorage.getItem(campId);
-            
+
             if (!serialized) {
                 return {
                     success: false,
@@ -1056,7 +1056,7 @@ class Storage {
             }
 
             const campData = JSON.parse(serialized);
-            
+
             // Validate camp data
             if (!this.validateCampData(campData)) {
                 return {
@@ -1110,7 +1110,7 @@ class Storage {
      */
     static getSavedCamps() {
         const camps = [];
-        
+
         try {
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -1134,7 +1134,7 @@ class Storage {
 
             // Sort by most recent first
             camps.sort((a, b) => b.campTime - a.campTime);
-            
+
         } catch (error) {
             console.error('Failed to get saved camps:', error);
         }
@@ -1166,7 +1166,7 @@ class Storage {
     static saveDungeonState(dungeon) {
         try {
             const dungeonStates = this.loadDungeonStates() || {};
-            
+
             const dungeonId = dungeon.id || 'main_dungeon';
             dungeonStates[dungeonId] = {
                 currentFloor: dungeon.currentFloor,
@@ -1183,7 +1183,7 @@ class Storage {
 
             const serialized = JSON.stringify(dungeonStates);
             localStorage.setItem(this.DUNGEON_STATE_KEY, serialized);
-            
+
             return true;
         } catch (error) {
             console.error('Failed to save dungeon state:', error);
@@ -1259,14 +1259,14 @@ class Storage {
         return serializedMembers.map(memberData => {
             // Reconstruct member object with proper structure
             const member = { ...memberData };
-            
+
             // Ensure arrays and objects are properly reconstructed
             member.inventory = memberData.inventory || [];
             member.memorizedSpells = memberData.memorizedSpells || { arcane: [], divine: [] };
             member.conditions = memberData.conditions || [];
             member.temporaryEffects = memberData.temporaryEffects || [];
             member.classHistory = memberData.classHistory || [];
-            
+
             return member;
         });
     }
@@ -1278,12 +1278,12 @@ class Storage {
      */
     static validateCampData(campData) {
         if (!campData || typeof campData !== 'object') return false;
-        
+
         const requiredFields = [
-            'campId', 'partyId', 'partyName', 'members', 
+            'campId', 'partyId', 'partyName', 'members',
             'location', 'campTime', 'resources'
         ];
-        
+
         for (const field of requiredFields) {
             if (!(field in campData)) {
                 console.warn(`Missing required field in camp data: ${field}`);
@@ -1292,8 +1292,8 @@ class Storage {
         }
 
         // Validate location data
-        if (!campData.location.currentFloor || 
-            campData.location.playerX === undefined || 
+        if (!campData.location.currentFloor ||
+            campData.location.playerX === undefined ||
             campData.location.playerY === undefined) {
             console.warn('Invalid location data in camp save');
             return false;
@@ -1314,13 +1314,13 @@ class Storage {
      */
     static getCampStatistics() {
         const camps = this.getSavedCamps();
-        
+
         return {
             totalCamps: camps.length,
             partiesInDungeons: new Set(camps.map(c => c.partyId)).size,
             oldestCamp: camps.length > 0 ? Math.min(...camps.map(c => c.campTime)) : null,
             newestCamp: camps.length > 0 ? Math.max(...camps.map(c => c.campTime)) : null,
-            averageFloor: camps.length > 0 ? 
+            averageFloor: camps.length > 0 ?
                 Math.round(camps.reduce((sum, c) => sum + c.floor, 0) / camps.length) : 0,
             deepestFloor: camps.length > 0 ? Math.max(...camps.map(c => c.floor)) : 0
         };
@@ -1334,23 +1334,23 @@ class Storage {
     static cleanupOldCamps(maxAgeDays = 30) {
         const cutoffTime = Date.now() - (maxAgeDays * 24 * 60 * 60 * 1000);
         let deletedCount = 0;
-        
+
         try {
             const camps = this.getSavedCamps();
-            
+
             for (const camp of camps) {
                 if (camp.campTime < cutoffTime) {
                     this.deleteCamp(camp.campId);
                     deletedCount++;
                 }
             }
-            
+
             return {
                 success: true,
                 deletedCount,
                 message: `Cleaned up ${deletedCount} old camp saves.`
             };
-            
+
         } catch (error) {
             console.error('Failed to cleanup old camps:', error);
             return {
@@ -1370,10 +1370,10 @@ class Storage {
         try {
             const serialized = localStorage.getItem(campId);
             if (!serialized) return null;
-            
+
             const campData = JSON.parse(serialized);
             return JSON.stringify(campData, null, 2);
-            
+
         } catch (error) {
             console.error('Failed to export camp:', error);
             return null;
@@ -1388,28 +1388,28 @@ class Storage {
     static importCamp(jsonString) {
         try {
             const campData = JSON.parse(jsonString);
-            
+
             if (!this.validateCampData(campData)) {
                 return {
                     success: false,
                     error: 'Invalid camp data format'
                 };
             }
-            
+
             // Generate new camp ID to avoid conflicts
             const newCampId = `${this.CAMP_KEY_PREFIX}${campData.partyId}_${Date.now()}`;
             campData.campId = newCampId;
-            
+
             const serialized = JSON.stringify(campData);
             localStorage.setItem(newCampId, serialized);
-            
+
             return {
                 success: true,
                 campId: newCampId,
                 partyName: campData.partyName,
                 message: `Imported camp for ${campData.partyName}.`
             };
-            
+
         } catch (error) {
             console.error('Failed to import camp:', error);
             return {
@@ -1434,13 +1434,13 @@ class Storage {
             if (!await this.initializeDB()) {
                 return true; // If DB fails, assume we need to load
             }
-            
+
             const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
             const store = transaction.objectStore(this.VERSION_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get('entity_version');
-                
+
                 request.onsuccess = () => {
                     const versionRecord = request.result;
                     if (!versionRecord || versionRecord.version !== this.ENTITY_VERSION) {
@@ -1451,19 +1451,19 @@ class Storage {
                         resolve(false);
                     }
                 };
-                
+
                 request.onerror = () => {
                     console.log('Failed to check entity version, assuming update needed');
                     resolve(true);
                 };
             });
-            
+
         } catch (error) {
             console.error('Error checking entity version:', error);
             return true; // If error, assume we need to load
         }
     }
-    
+
     /**
      * Update entity version record
      * @returns {Promise<boolean>} Success status
@@ -1472,34 +1472,34 @@ class Storage {
         try {
             const transaction = this._db.transaction([this.VERSION_STORE], 'readwrite');
             const store = transaction.objectStore(this.VERSION_STORE);
-            
+
             const versionRecord = {
                 id: 'entity_version',
                 version: this.ENTITY_VERSION,
                 lastUpdated: Date.now(),
                 entityTypes: this.ENTITY_TYPES
             };
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(versionRecord);
-                
+
                 request.onsuccess = () => {
                     console.log(`Entity version updated to ${this.ENTITY_VERSION}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to update entity version:', request.error);
                     reject(false);
                 };
             });
-            
+
         } catch (error) {
             console.error('Error updating entity version:', error);
             return false;
         }
     }
-    
+
     /**
      * Load entity data from migration files into IndexedDB
      * @param {boolean} forceReload - Force reload even if version matches
@@ -1510,43 +1510,43 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             // Check if update is needed (unless forced)
             if (!forceReload && !(await this.needsEntityUpdate())) {
                 console.log('Entities are up to date, skipping migration load');
                 return true;
             }
-            
+
             console.log('Loading entities from migration files...');
 
             // Load all entities from migrations
             const weapons = await this.loadEntityMigration('weapons');
             await this.bulkSaveEntities(this.WEAPON_STORE, weapons);
-            
+
             const armor = await this.loadEntityMigration('armor');
             await this.bulkSaveEntities(this.ARMOR_STORE, armor);
-            
+
             const shields = await this.loadEntityMigration('shields');
             await this.bulkSaveEntities(this.SHIELD_STORE, shields);
-            
+
             const accessories = await this.loadEntityMigration('accessories');
             await this.bulkSaveEntities(this.ACCESSORY_STORE, accessories);
-            
+
             const spells = await this.loadEntityMigration('spells');
             await this.bulkSaveEntities(this.SPELL_STORE, spells);
-            
+
             const conditions = await this.loadEntityMigration('conditions');
             await this.bulkSaveEntities(this.CONDITION_STORE, conditions);
-            
+
             const effects = await this.loadEntityMigration('effects');
             await this.bulkSaveEntities(this.EFFECT_STORE, effects);
-            
+
             const monsters = await this.loadEntityMigration('monsters');
             await this.bulkSaveEntities(this.MONSTER_STORE, monsters);
 
             // Update version record after successful load
             await this.updateEntityVersion();
-            
+
             console.log('All entities loaded successfully from migration files');
             return true;
 
@@ -1577,7 +1577,7 @@ class Storage {
                     console.log(`Bulk saved ${Object.keys(entities).length} entities to ${storeName}`);
                     resolve(true);
                 };
-                
+
                 transaction.onerror = () => {
                     console.error(`Failed to bulk save entities to ${storeName}:`, transaction.error);
                     reject(false);
@@ -1607,11 +1607,11 @@ class Storage {
 
             return new Promise((resolve, reject) => {
                 const request = store.get(entityId);
-                
+
                 request.onsuccess = () => {
                     resolve(request.result || null);
                 };
-                
+
                 request.onerror = () => {
                     console.error(`Failed to get entity ${entityId} from ${storeName}:`, request.error);
                     reject(null);
@@ -1686,7 +1686,7 @@ class Storage {
     static async getEffect(effectId) {
         return this.getEntity(this.EFFECT_STORE, effectId);
     }
-    
+
     /**
      * Get monster by ID
      * @param {string} monsterId - Monster ID to retrieve
@@ -1712,11 +1712,11 @@ class Storage {
 
             return new Promise((resolve, reject) => {
                 const request = store.getAll();
-                
+
                 request.onsuccess = () => {
                     resolve(request.result || []);
                 };
-                
+
                 request.onerror = () => {
                     console.error(`Failed to get all entities from ${storeName}:`, request.error);
                     reject([]);
@@ -1784,7 +1784,7 @@ class Storage {
     static async getAllEffects() {
         return this.getAllEntities(this.EFFECT_STORE);
     }
-    
+
     /**
      * Get all monsters
      * @returns {Promise<Array>} Array of monsters
@@ -1819,7 +1819,7 @@ class Storage {
 
             return new Promise((resolve, reject) => {
                 let request;
-                
+
                 if (store.indexNames.contains(indexName)) {
                     const index = store.index(indexName);
                     request = index.getAll(indexValue);
@@ -1827,10 +1827,10 @@ class Storage {
                     // Fallback to full scan
                     request = store.getAll();
                 }
-                
+
                 request.onsuccess = () => {
                     let entities = request.result || [];
-                    
+
                     // Apply additional filters if using fallback or multiple criteria
                     if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
                         entities = entities.filter(entity => {
@@ -1839,10 +1839,10 @@ class Storage {
                             });
                         });
                     }
-                    
+
                     resolve(entities);
                 };
-                
+
                 request.onerror = () => {
                     console.error(`Failed to query entities from ${storeName}:`, request.error);
                     reject([]);
@@ -1873,43 +1873,53 @@ class Storage {
             }
 
             const campId = `camp_${party.id}_${Date.now()}`;
-            
+
+            // Use existing dungeon ID or generate one
+            const dungeonId = dungeon.id || `dungeon_${party.id}_${Date.now()}`;
+
+            // Save full dungeon state
+            // Only save if it's a procedural dungeon (which they usually are in this game)
+            if (dungeon.getSaveData) {
+                const dungeonData = dungeon.getSaveData();
+                await this.saveDungeonState(dungeonId, dungeonData);
+            }
+
             const campData = {
                 campId,
                 partyId: party.id,
                 partyName: party.name,
-                
+
                 // Store character entity references instead of full data
                 memberIds: party.members.map(member => member.id),
-                
+
                 // Quick stats for indexing
                 memberCount: party.members.length,
                 aliveCount: party.members.filter(m => m.isAlive).length,
-                
+
                 location: {
                     currentFloor: dungeon.currentFloor,
                     playerX: dungeon.playerX,
                     playerY: dungeon.playerY,
                     playerDirection: dungeon.playerDirection,
-                    dungeonId: dungeon.id || 'main_dungeon'
+                    dungeonId: dungeonId
                 },
-                
+
                 campTime: Date.now(),
-                
+
                 resources: {
                     gold: party.gold || 0,
                     food: party.food || 0,
                     torches: party.torches || 0,
                     lightRemaining: party.lightRemaining || 0
                 },
-                
+
                 dungeonProgress: {
                     floorsExplored: dungeon.floorsExplored || [],
                     encountersDefeated: dungeon.encountersDefeated || 0,
                     treasuresFound: dungeon.treasuresFound || 0,
                     secretsDiscovered: dungeon.secretsDiscovered || 0
                 },
-                
+
                 gameVersion: '1.0.0',
                 saveType: 'dungeon_camp'
             };
@@ -1917,10 +1927,10 @@ class Storage {
             // Save to IndexedDB camps store
             const transaction = this._db.transaction([this.CAMP_STORE], 'readwrite');
             const store = transaction.objectStore(this.CAMP_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(campData);
-                
+
                 request.onsuccess = () => {
                     console.log(`Camp saved with entity references: ${campId}`);
                     resolve({
@@ -1929,7 +1939,7 @@ class Storage {
                         message: `${party.name} has made camp on floor ${dungeon.currentFloor}.`
                     });
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to save camp with entity references:', request.error);
                     reject({
@@ -1964,14 +1974,14 @@ class Storage {
             // Get camp data
             const transaction = this._db.transaction([this.CAMP_STORE], 'readonly');
             const store = transaction.objectStore(this.CAMP_STORE);
-            
+
             const campData = await new Promise((resolve, reject) => {
                 const request = store.get(campId);
-                
+
                 request.onsuccess = () => {
                     resolve(request.result);
                 };
-                
+
                 request.onerror = () => {
                     reject(request.error);
                 };
@@ -2059,12 +2069,12 @@ class Storage {
 
             return new Promise((resolve, reject) => {
                 const request = store.delete(campId);
-                
+
                 request.onsuccess = () => {
                     console.log(`Camp deleted from IndexedDB: ${campId}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error(`Failed to delete camp from IndexedDB: ${campId}`, request.error);
                     reject(false);
@@ -2076,7 +2086,82 @@ class Storage {
             return false;
         }
     }
-    
+
+    /**
+     * Save dungeon state to IndexedDB
+     * @param {string} dungeonId - Dungeon ID
+     * @param {Object} dungeonData - Dungeon save data
+     * @returns {Promise<boolean>} Success status
+     */
+    static async saveDungeonState(dungeonId, dungeonData) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const store = transaction.objectStore(this.DUNGEON_STORE);
+
+            const record = {
+                dungeonId,
+                data: dungeonData,
+                lastModified: Date.now(),
+                type: 'procedural'
+            };
+
+            return new Promise((resolve, reject) => {
+                const request = store.put(record);
+
+                request.onsuccess = () => {
+                    console.log(`Dungeon state saved: ${dungeonId}`);
+                    resolve(true);
+                };
+
+                request.onerror = () => {
+                    console.error('Failed to save dungeon state:', request.error);
+                    reject(false);
+                };
+            });
+
+        } catch (error) {
+            console.error('Failed to save dungeon state:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Load dungeon state from IndexedDB
+     * @param {string} dungeonId - Dungeon ID to load
+     * @returns {Promise<Object|null>} Dungeon data or null
+     */
+    static async loadDungeonState(dungeonId) {
+        try {
+            if (!await this.initializeDB()) {
+                throw new Error('Failed to initialize database');
+            }
+
+            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readonly');
+            const store = transaction.objectStore(this.DUNGEON_STORE);
+
+            return new Promise((resolve, reject) => {
+                const request = store.get(dungeonId);
+
+                request.onsuccess = () => {
+                    resolve(request.result ? request.result.data : null);
+                };
+
+                request.onerror = () => {
+                    console.error('Failed to load dungeon state:', request.error);
+                    reject(null);
+                };
+            });
+
+        } catch (error) {
+            console.error('Failed to load dungeon state:', error);
+            return null;
+        }
+    }
+
     /**
      * Force reload entities from JSON files (for development)
      * @returns {Promise<boolean>} Success status
@@ -2085,7 +2170,7 @@ class Storage {
         console.log('Force reloading entities from JSON files...');
         return await this.loadEntitiesFromJSON(true);
     }
-    
+
     /**
      * Clear all entity stores (for development)
      * @returns {Promise<boolean>} Success status
@@ -2095,7 +2180,7 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const stores = [
                 this.WEAPON_STORE,
                 this.ARMOR_STORE,
@@ -2107,39 +2192,39 @@ class Storage {
                 this.MONSTER_STORE,
                 this.VERSION_STORE
             ];
-            
+
             const transaction = this._db.transaction(stores, 'readwrite');
-            
+
             return new Promise((resolve, reject) => {
                 let completedStores = 0;
-                
+
                 stores.forEach(storeName => {
                     const store = transaction.objectStore(storeName);
                     const request = store.clear();
-                    
+
                     request.onsuccess = () => {
                         completedStores++;
                         console.log(`Cleared ${storeName} store`);
-                        
+
                         if (completedStores === stores.length) {
                             console.log('All entity stores cleared');
                             resolve(true);
                         }
                     };
-                    
+
                     request.onerror = () => {
                         console.error(`Failed to clear ${storeName} store:`, request.error);
                         reject(false);
                     };
                 });
             });
-            
+
         } catch (error) {
             console.error('Failed to clear entity stores:', error);
             return false;
         }
     }
-    
+
     /**
      * Get entity version information
      * @returns {Promise<Object>} Version information
@@ -2149,13 +2234,13 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
             const store = transaction.objectStore(this.VERSION_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get('entity_version');
-                
+
                 request.onsuccess = () => {
                     const versionRecord = request.result;
                     resolve({
@@ -2166,26 +2251,26 @@ class Storage {
                         entityTypes: this.ENTITY_TYPES
                     });
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to get version info:', request.error);
                     reject(null);
                 };
             });
-            
+
         } catch (error) {
             console.error('Error getting version info:', error);
             return null;
         }
     }
-    
+
     /**
      * Load entity migration by type
      */
     static async loadEntityMigration(entityType) {
         try {
             let migration;
-            
+
             switch (entityType) {
                 case 'weapons':
                     migration = window.weaponsMigration;
@@ -2211,18 +2296,18 @@ class Storage {
                 case 'monsters':
                     migration = window.monstersMigration;
                     break;
-                    
+
                 default:
                     throw new Error(`Unknown entity type: ${entityType}`);
             }
-            
+
             // Validate migration
             if (!migration || !migration.data || !migration.version) {
                 throw new Error(`Invalid migration for ${entityType}`);
             }
-            
+
             console.log(`Loading ${entityType} migration v${migration.version}: ${migration.description}`);
-            
+
             // Apply any transformations
             let data = migration.data;
             if (migration.transform) {
@@ -2231,25 +2316,25 @@ class Storage {
                     return acc;
                 }, {});
             }
-            
+
             // Validate data if validation function exists
             if (migration.validate) {
-                const invalidEntries = Object.entries(data).filter(([key, value]) => 
+                const invalidEntries = Object.entries(data).filter(([key, value]) =>
                     !migration.validate(value)
                 );
                 if (invalidEntries.length > 0) {
                     console.warn(`Invalid entries in ${entityType}:`, invalidEntries);
                 }
             }
-            
+
             return data;
-            
+
         } catch (error) {
             console.error(`Failed to load ${entityType} migration:`, error);
             throw error;
         }
     }
-    
+
     /**
      * Get embedded weapons data (CORS fallback)
      */
@@ -2358,7 +2443,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded armor data (CORS fallback)
      */
@@ -2426,7 +2511,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded shields data (CORS fallback)
      */
@@ -2472,7 +2557,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded accessories data (CORS fallback)
      */
@@ -2571,7 +2656,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded spells data (CORS fallback)
      */
@@ -2758,7 +2843,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded conditions data (CORS fallback)
      */
@@ -2885,7 +2970,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded effects data (CORS fallback)
      */
@@ -3042,7 +3127,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Get embedded monsters data (CORS fallback)
      */
@@ -3276,7 +3361,7 @@ class Storage {
             }
         };
     }
-    
+
     /**
      * Save dungeon state to IndexedDB
      * @param {Object} dungeon - Dungeon object to save
@@ -3288,26 +3373,26 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             // Use fixed dungeon ID for shared instance
             const dungeonId = 'corrupted_network';
             const now = new Date().toISOString();
-            
+
             // Create deep copy of dungeon structure (without party-specific data)
             const dungeonData = {
                 dungeonId,
                 dungeonType: 'corrupted_network',
                 maxFloors: dungeon.maxFloors,
                 testMode: dungeon.testMode,
-                
+
                 // Convert Map to serializable object
                 floors: {},
-                
+
                 // Metadata
                 dateCreated: now,
                 lastModified: now
             };
-            
+
             // Serialize floors Map to object
             if (dungeon.floors && dungeon.floors instanceof Map) {
                 for (const [floorNumber, floorData] of dungeon.floors) {
@@ -3324,30 +3409,30 @@ class Storage {
                     };
                 }
             }
-            
+
             const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
             const store = transaction.objectStore(this.DUNGEON_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(dungeonData);
-                
+
                 request.onsuccess = () => {
                     console.log(`Dungeon saved with ID: ${dungeonId}`);
                     resolve(dungeonId);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to save dungeon:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to save dungeon:', error);
             throw error;
         }
     }
-    
+
     /**
      * Load dungeon state from IndexedDB
      * @param {string} dungeonId - ID of the dungeon to load
@@ -3358,66 +3443,66 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.DUNGEON_STORE], 'readonly');
             const store = transaction.objectStore(this.DUNGEON_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get(dungeonId);
-                
+
                 request.onsuccess = () => {
                     const dungeonData = request.result;
-                    
+
                     if (!dungeonData) {
                         resolve(null);
                         return;
                     }
-                    
+
                     // Reconstruct dungeon object (shared structure only)
                     const reconstructedDungeon = {
                         dungeonId: dungeonData.dungeonId,
                         dungeonType: dungeonData.dungeonType,
                         maxFloors: dungeonData.maxFloors,
                         testMode: dungeonData.testMode,
-                        
+
                         // Reconstruct Map from serialized object
                         floors: new Map(),
-                        
+
                         // Initialize empty sets for party-specific data (will be loaded separately)
                         discoveredSecrets: new Set(),
                         disarmedTraps: new Set(),
                         usedSpecials: new Set(),
-                        
+
                         // Default position (will be overridden by party position data)
                         currentFloor: 1,
                         playerX: 1,
                         playerY: 2,
                         playerDirection: 0
                     };
-                    
+
                     // Reconstruct floors Map
                     for (const [floorNumber, floorData] of Object.entries(dungeonData.floors || {})) {
                         reconstructedDungeon.floors.set(parseInt(floorNumber), floorData);
                     }
-                    
+
                     // Set initial current floor data
                     reconstructedDungeon.currentFloorData = reconstructedDungeon.floors.get(reconstructedDungeon.currentFloor);
-                    
+
                     resolve(reconstructedDungeon);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load dungeon:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load dungeon:', error);
             throw error;
         }
     }
-    
+
     /**
      * Get saved dungeons for a party (now returns party position data)
      * @param {string} partyId - Party ID to find position for
@@ -3432,7 +3517,7 @@ class Storage {
             return [];
         }
     }
-    
+
     /**
      * Delete a saved dungeon
      * @param {string} dungeonId - ID of the dungeon to delete
@@ -3443,30 +3528,30 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
             const store = transaction.objectStore(this.DUNGEON_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.delete(dungeonId);
-                
+
                 request.onsuccess = () => {
                     console.log(`Dungeon ${dungeonId} deleted successfully`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to delete dungeon:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to delete dungeon:', error);
             return false;
         }
     }
-    
+
     /**
      * Save party position and state in a dungeon
      * @param {string} partyId - Party ID
@@ -3479,9 +3564,9 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const now = new Date().toISOString();
-            
+
             const partyPositionData = {
                 partyId,
                 dungeonId,
@@ -3490,39 +3575,39 @@ class Storage {
                 playerY: positionData.playerY,
                 playerDirection: positionData.playerDirection,
                 testMode: positionData.testMode,
-                
+
                 // Convert Sets to arrays for serialization
                 discoveredSecrets: Array.from(positionData.discoveredSecrets || []),
                 disarmedTraps: Array.from(positionData.disarmedTraps || []),
                 usedSpecials: Array.from(positionData.usedSpecials || []),
-                
+
                 // Metadata
                 lastSaved: now
             };
-            
+
             const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(partyPositionData);
-                
+
                 request.onsuccess = () => {
                     console.log(`Party position saved: ${partyId} in ${dungeonId}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to save party position:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to save party position:', error);
             return false;
         }
     }
-    
+
     /**
      * Load party position and state from a dungeon
      * @param {string} partyId - Party ID
@@ -3533,21 +3618,21 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get(partyId);
-                
+
                 request.onsuccess = () => {
                     const positionData = request.result;
-                    
+
                     if (!positionData) {
                         resolve(null);
                         return;
                     }
-                    
+
                     // Reconstruct position data with proper data types
                     const reconstructedPosition = {
                         partyId: positionData.partyId,
@@ -3557,30 +3642,30 @@ class Storage {
                         playerY: positionData.playerY,
                         playerDirection: positionData.playerDirection,
                         testMode: positionData.testMode,
-                        
+
                         // Reconstruct Sets from arrays
                         discoveredSecrets: new Set(positionData.discoveredSecrets || []),
                         disarmedTraps: new Set(positionData.disarmedTraps || []),
                         usedSpecials: new Set(positionData.usedSpecials || []),
-                        
+
                         lastSaved: positionData.lastSaved
                     };
-                    
+
                     resolve(reconstructedPosition);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load party position:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load party position:', error);
             return null;
         }
     }
-    
+
     /**
      * Get all parties in a specific dungeon
      * @param {string} dungeonId - Dungeon ID to search for parties
@@ -3591,30 +3676,30 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
             const index = store.index('dungeonId');
-            
+
             return new Promise((resolve, reject) => {
                 const request = index.getAll(dungeonId);
-                
+
                 request.onsuccess = () => {
                     resolve(request.result || []);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to get parties in dungeon:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to get parties in dungeon:', error);
             return [];
         }
     }
-    
+
     /**
      * Delete party position data
      * @param {string} partyId - Party ID to delete position for
@@ -3625,32 +3710,32 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.delete(partyId);
-                
+
                 request.onsuccess = () => {
                     console.log(`Party position deleted: ${partyId}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to delete party position:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to delete party position:', error);
             return false;
         }
     }
-    
+
     // Party Management Methods
-    
+
     /**
      * Save party to IndexedDB
      * @param {Object} party - Party object to save
@@ -3661,7 +3746,7 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const now = Date.now();
             const partyData = {
                 id: party.id,
@@ -3682,30 +3767,30 @@ class Storage {
                 dateCreated: party.dateCreated || now,
                 lastModified: now
             };
-            
+
             const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.put(partyData);
-                
+
                 request.onsuccess = () => {
                     console.log(`Party saved: ${party.id}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to save party:', request.error);
                     reject(request.error);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to save party:', error);
             return false;
         }
     }
-    
+
     /**
      * Load party from IndexedDB
      * @param {string} partyId - Party ID to load
@@ -3716,13 +3801,13 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.get(partyId);
-                
+
                 request.onsuccess = () => {
                     const party = request.result;
                     if (party) {
@@ -3730,19 +3815,19 @@ class Storage {
                     }
                     resolve(party || null);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load party:', request.error);
                     reject(null);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load party:', error);
             return null;
         }
     }
-    
+
     /**
      * Load all parties from IndexedDB
      * @returns {Promise<Array>} Array of party objects
@@ -3752,31 +3837,31 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.getAll();
-                
+
                 request.onsuccess = () => {
                     const parties = request.result || [];
                     console.log(`Loaded ${parties.length} parties from IndexedDB`);
                     resolve(parties);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to load parties:', request.error);
                     reject([]);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to load parties:', error);
             return [];
         }
     }
-    
+
     /**
      * Query parties by criteria
      * @param {Object} criteria - Query criteria (inTown, campId, etc.)
@@ -3787,22 +3872,22 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
-            
+
             // If no criteria, return all parties
             if (Object.keys(criteria).length === 0) {
                 return this.loadAllParties();
             }
-            
+
             // Use index if available
             const indexName = Object.keys(criteria)[0];
             const indexValue = criteria[indexName];
-            
+
             return new Promise((resolve, reject) => {
                 let request;
-                
+
                 if (store.indexNames.contains(indexName)) {
                     const index = store.index(indexName);
                     request = index.getAll(indexValue);
@@ -3810,10 +3895,10 @@ class Storage {
                     // Fallback to full scan
                     request = store.getAll();
                 }
-                
+
                 request.onsuccess = () => {
                     let parties = request.result || [];
-                    
+
                     // Apply additional filters if using fallback
                     if (!store.indexNames.contains(indexName) || Object.keys(criteria).length > 1) {
                         parties = parties.filter(party => {
@@ -3822,23 +3907,23 @@ class Storage {
                             });
                         });
                     }
-                    
+
                     console.log(`Found ${parties.length} parties matching criteria`);
                     resolve(parties);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to query parties:', request.error);
                     reject([]);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to query parties:', error);
             return [];
         }
     }
-    
+
     /**
      * Delete party from IndexedDB
      * @param {string} partyId - Party ID to delete
@@ -3849,30 +3934,30 @@ class Storage {
             if (!await this.initializeDB()) {
                 throw new Error('Failed to initialize database');
             }
-            
+
             const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_STORE);
-            
+
             return new Promise((resolve, reject) => {
                 const request = store.delete(partyId);
-                
+
                 request.onsuccess = () => {
                     console.log(`Party deleted: ${partyId}`);
                     resolve(true);
                 };
-                
+
                 request.onerror = () => {
                     console.error('Failed to delete party:', request.error);
                     reject(false);
                 };
             });
-            
+
         } catch (error) {
             console.error('Failed to delete party:', error);
             return false;
         }
     }
-    
+
     /**
      * Set the active party ID
      * @param {string} partyId - Party ID to set as active
@@ -3893,7 +3978,7 @@ class Storage {
             return false;
         }
     }
-    
+
     /**
      * Get the active party ID
      * @returns {string|null} Active party ID or null if none set
@@ -3906,7 +3991,7 @@ class Storage {
             return null;
         }
     }
-    
+
     /**
      * Load the active party
      * @returns {Promise<Object|null>} Active party object or null if none exists
@@ -3917,21 +4002,21 @@ class Storage {
             if (!activePartyId) {
                 return null;
             }
-            
+
             const party = await this.loadParty(activePartyId);
             if (!party) {
                 // Clear invalid active party reference
                 this.setActiveParty(null);
                 return null;
             }
-            
+
             return party;
         } catch (error) {
             console.error('Failed to load active party:', error);
             return null;
         }
     }
-    
+
     /**
      * Create and set a new active party
      * @param {string} name - Optional party name
@@ -3944,17 +4029,17 @@ class Storage {
             if (name) {
                 party.name = name;
             }
-            
+
             // Save the party
             const saveSuccess = await this.saveParty(party);
             if (!saveSuccess) {
                 console.error('Failed to save new party');
                 return null;
             }
-            
+
             // Set as active party
             this.setActiveParty(party.id);
-            
+
             console.log(`Created new active party: ${party.id}`);
             return party;
         } catch (error) {
@@ -3962,7 +4047,7 @@ class Storage {
             return null;
         }
     }
-    
+
     /**
      * Get all camping parties (parties with campId)
      * @returns {Promise<Array>} Array of camping parties
@@ -3977,7 +4062,7 @@ class Storage {
             return [];
         }
     }
-    
+
     /**
      * Get all lost parties (parties marked as isLost: true)
      * @returns {Promise<Array>} Array of lost parties
@@ -3985,7 +4070,7 @@ class Storage {
     static async getLostParties() {
         try {
             const allParties = await this.loadAllParties();
-            
+
             // Filter for parties that are marked as lost
             return allParties.filter(party => party.isLost === true);
         } catch (error) {
