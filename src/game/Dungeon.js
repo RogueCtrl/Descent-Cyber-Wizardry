@@ -829,31 +829,6 @@ class Dungeon {
     }
 
     /**
-     * Mark tiles as explored around a center point
-     */
-    markExplored(centerX, centerY, radius) {
-        if (!this.currentFloorData) return;
-
-        const width = this.currentFloorData.width;
-        const height = this.currentFloorData.height;
-        const floorNum = this.currentFloor;
-
-        for (let y = centerY - radius; y <= centerY + radius; y++) {
-            for (let x = centerX - radius; x <= centerX + radius; x++) {
-                if (x >= 0 && x < width && y >= 0 && y < height) {
-                    // Simple distance check (squared distance for efficiency)
-                    const dx = x - centerX;
-                    const dy = y - centerY;
-                    if (dx * dx + dy * dy <= radius * radius) {
-                        const key = `${floorNum}:${x}:${y}`;
-                        this.exploredTiles.add(key);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Get tile at position
      */
     getTile(x, y, floor = null) {
