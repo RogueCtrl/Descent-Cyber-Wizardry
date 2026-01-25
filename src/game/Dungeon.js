@@ -489,13 +489,9 @@ class Dungeon {
      * Check if a secret feature can be placed at location
      */
     canPlaceSecret(tiles, x, y) {
-        const adjacentFloors = [[0, 1], [1, 0], [0, -1], [-1, 0]]
-            .map(([dx, dy]) => tiles[y + dy] && tiles[y + dy][x + dx])
-            .filter(tile => tile === 'floor')
-            .length;
-
-        // Secret features should connect two areas
-        return adjacentFloors >= 2;
+        // Use strict door placement logic for secret doors too
+        // This prevents corner doors and ensures valid placement
+        return this.isValidDoorPosition(tiles, x, y) !== null;
     }
 
     /**

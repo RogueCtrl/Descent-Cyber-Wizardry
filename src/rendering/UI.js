@@ -717,13 +717,40 @@ class UI {
         // Check for door interaction
         const tileInFront = dungeon.getTileInFront();
 
+        // Calculate interaction coordinates to check for discovered secrets
+        let targetX = dungeon.playerX;
+        let targetY = dungeon.playerY;
+        switch (dungeon.playerDirection) {
+            case 0: targetY -= 1; break; // North
+            case 1: targetX += 1; break; // East
+            case 2: targetY += 1; break; // South
+            case 3: targetX -= 1; break; // West
+        }
+
+        let canOpen = false;
+        let canClose = false;
+
         if (tileInFront === 'door') {
+            canOpen = true;
+        } else if (tileInFront === 'open_door') {
+            canClose = true;
+        } else if (tileInFront === 'hidden_door' || tileInFront === 'secret_passage') {
+            // Only allow opening if discovered
+            const secretKey = `${dungeon.currentFloor}:${targetX}:${targetY}:${tileInFront}`;
+            if (dungeon.discoveredSecrets && dungeon.discoveredSecrets.has(secretKey)) {
+                canOpen = true;
+            }
+        } else if (tileInFront === 'open_hidden_door' || tileInFront === 'open_secret_passage') {
+            canClose = true;
+        }
+
+        if (canOpen) {
             // Show Open Door button with flash animation
             this.controlButtons.openDoor.textContent = 'Open Door';
             this.controlButtons.openDoor.dataset.action = 'open-door';
             this.controlButtons.openDoor.style.display = 'block';
             this.controlButtons.openDoor.classList.add('animate-flash-blue');
-        } else if (tileInFront === 'open_door') {
+        } else if (canClose) {
             // Show Close Door button
             this.controlButtons.openDoor.textContent = 'Close Door';
             this.controlButtons.openDoor.dataset.action = 'close-door';
@@ -2879,8 +2906,11 @@ class UI {
         // Create combat interface in viewport
         this.createCombatInterface();
 
+        // Clear existing timeout
+        if (this.playerCheckTimeout) clearTimeout(this.playerCheckTimeout);
+
         // Check if it's a player turn after interface is ready
-        setTimeout(() => this.checkForPlayerTurn(), 100);
+        this.playerCheckTimeout = setTimeout(() => this.checkForPlayerTurn(), 100);
     }
 
     /**
@@ -2911,6 +2941,9 @@ class UI {
                 </div>
                 
                 <div class="combat-body">
+                    <div class="combat-side-panel">
+                        <div id="party-combat-status" class="party-combat-status"></div>
+                    </div>
                     <div class="combat-main-area">
                         <!-- Monster Visual Panel -->
                         <div class="combat-monster-visual" id="combat-monster-visual">
@@ -3680,12 +3713,21 @@ class UI {
         if (currentActor.isPlayer) {
             // Enable action buttons for player
             this.enableCombatButtons();
+
+            // Clear any pending monster turn
+            if (this.monsterTurnTimeout) {
+                clearTimeout(this.monsterTurnTimeout);
+                this.monsterTurnTimeout = null;
+            }
         } else {
             // Disable action buttons and process monster turn
             this.disableCombatButtons();
 
+            // Clear existing monster turn timeout to prevent duplicates (debounce)
+            if (this.monsterTurnTimeout) clearTimeout(this.monsterTurnTimeout);
+
             // Process monster turn after a short delay
-            setTimeout(() => {
+            this.monsterTurnTimeout = setTimeout(() => {
                 this.processMonsterTurn(currentActor.combatant);
             }, 500);
         }
@@ -3696,6 +3738,16 @@ class UI {
      */
     hideCombatInterface() {
         this.addMessage('Combat ended.', 'info');
+
+        // Clear any pending timeouts
+        if (this.playerCheckTimeout) {
+            clearTimeout(this.playerCheckTimeout);
+            this.playerCheckTimeout = null;
+        }
+        if (this.monsterTurnTimeout) {
+            clearTimeout(this.monsterTurnTimeout);
+            this.monsterTurnTimeout = null;
+        }
 
         // Re-enable movement controls
         Object.values(this.controlButtons).forEach(button => {

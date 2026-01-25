@@ -124,8 +124,12 @@ class Party {
         this.gold = saveData.gold || 0;
         this.experience = saveData.experience || 0;
 
-        // For now, just create placeholder members
-        this.members = saveData.members || [];
+        // Rehydrate members
+        this.members = (saveData.members || []).map(memberData => {
+            const character = new Character();
+            character.loadFromSave(memberData);
+            return character;
+        });
 
         if (saveData.currentLeader && this.members.length > 0) {
             this.currentLeader = this.members.find(member => member.id === saveData.currentLeader) || this.members[0];
@@ -200,8 +204,10 @@ class Party {
             if (partyData.memberIds && partyData.memberIds.length > 0) {
                 const members = [];
                 for (const memberId of partyData.memberIds) {
-                    const character = await Storage.loadCharacter(memberId);
-                    if (character) {
+                    const characterData = await Storage.loadCharacter(memberId);
+                    if (characterData) {
+                        const character = new Character();
+                        character.loadFromSave(characterData);
                         members.push(character);
                     }
                 }
