@@ -323,56 +323,55 @@ class AudioManager {
 
     /**
      * Create Cyber Town Theme (Dashboard)
-     * Synthwave style: Arpeggios, driving bass, crisp sawtooth leads
+     * Atmospheric style inspired by dungeon exploration: sparse pings, low drones, minimal melody
      */
     createTownThemeCyber() {
         const theme = [];
 
-        // --- SECTION 1: The 'Scan' (Arpeggiated intro) ---
-        // A minor arpeggio (A3, C4, E4, A4) repeated
-        for (let i = 0; i < 4; i++) {
-            theme.push({ freq: 220, duration: 0.25, wave: 'square', volume: 0.15 }); // A3
-            theme.push({ freq: 261, duration: 0.25, wave: 'square', volume: 0.15 }); // C4
-            theme.push({ freq: 329, duration: 0.25, wave: 'square', volume: 0.15 }); // E4
-            theme.push({ freq: 440, duration: 0.25, wave: 'square', volume: 0.15 }); // A4
-        }
+        // --- SECTION 1: Deep Atmospheric Foundation ---
+        // Low sub-bass drone (like dungeon stealth mode)
+        theme.push({ freq: 55, duration: 2.0, wave: 'triangle', volume: 0.6 });   // A1 sub-bass
+        theme.push({ freq: 65, duration: 2.0, wave: 'triangle', volume: 0.5 });   // C2 sub-bass
 
-        // F Major Arpeggio (F3, A3, C4, F4)
-        for (let i = 0; i < 4; i++) {
-            theme.push({ freq: 174, duration: 0.25, wave: 'square', volume: 0.15 }); // F3
-            theme.push({ freq: 220, duration: 0.25, wave: 'square', volume: 0.15 }); // A3
-            theme.push({ freq: 261, duration: 0.25, wave: 'square', volume: 0.15 }); // C4
-            theme.push({ freq: 349, duration: 0.25, wave: 'square', volume: 0.15 }); // F4
-        }
+        // Sparse high sonar pings (dungeon-style)
+        theme.push({ freq: 880, duration: 0.15, wave: 'sine', volume: 0.3 });     // A5 ping
+        theme.push({ freq: 0, duration: 1.85 });                                  // Long silence
 
-        // --- SECTION 2: The 'Datasteam' (Bass + Melody) ---
+        // --- SECTION 2: Minimal Melodic Elements ---
+        // Very sparse, atmospheric melody (not driving like before)
+        theme.push({ freq: 110, duration: 0.5, wave: 'sawtooth', volume: 0.4 });  // A2 bass tick
+        theme.push({ freq: 0, duration: 0.5 });                                   // Rest
 
-        // Bassline: Steady A2 pulse (Active)
-        // Melody: High sawtooth tech-lead
+        theme.push({ freq: 659, duration: 0.2, wave: 'sine', volume: 0.25 });     // E5 distant ping
+        theme.push({ freq: 0, duration: 1.8 });                                   // Long rest
 
-        // Measure 1
-        theme.push({ freq: 110, duration: 0.25, wave: 'sawtooth', volume: 0.4 }); // Bass kick
-        theme.push({ freq: 880, duration: 0.25, wave: 'sine', volume: 0.2 });     // High ping
-        theme.push({ freq: 110, duration: 0.25, wave: 'sawtooth', volume: 0.3 }); // Bass
-        theme.push({ freq: 110, duration: 0.25, wave: 'sawtooth', volume: 0.3 }); // Bass
+        // Low rumble
+        theme.push({ freq: 82, duration: 1.5, wave: 'triangle', volume: 0.5 });   // E2 drone
+        theme.push({ freq: 0, duration: 0.5 });                                   // Rest
 
-        theme.push({ freq: 880, duration: 0.25, wave: 'sine', volume: 0.2 });     // High ping
-        theme.push({ freq: 110, duration: 0.25, wave: 'sawtooth', volume: 0.3 }); // Bass
-        theme.push({ freq: 0, duration: 0.25 });                              // Gap
-        theme.push({ freq: 659, duration: 0.25, wave: 'square', volume: 0.3 });   // E5 melody
+        // --- SECTION 3: Sparse High Frequency Accents ---
+        // Occasional high pings (like dungeon sonar)
+        theme.push({ freq: 1046, duration: 0.1, wave: 'sine', volume: 0.2 });     // C6 high ping
+        theme.push({ freq: 0, duration: 1.9 });                                   // Silence
 
-        // Measure 2
-        theme.push({ freq: 587, duration: 0.5, wave: 'square', volume: 0.3 });    // D5
-        theme.push({ freq: 523, duration: 0.5, wave: 'square', volume: 0.3 });    // C5
-        theme.push({ freq: 440, duration: 1.0, wave: 'square', volume: 0.3 });    // A4 (Hold)
+        theme.push({ freq: 55, duration: 1.0, wave: 'triangle', volume: 0.6 });   // A1 drone
+        theme.push({ freq: 0, duration: 1.0 });                                   // Rest
 
-        theme.push({ freq: 110, duration: 0.5, wave: 'sawtooth', volume: 0.4 });  // Bass reset
-        theme.push({ freq: 174, duration: 0.5, wave: 'sawtooth', volume: 0.4 });  // F3 Bass move
-        theme.push({ freq: 220, duration: 1.0, wave: 'sawtooth', volume: 0.4 });  // A3 Bass resolve
+        // --- SECTION 4: Minimal Bass Pulse ---
+        // Subtle rhythmic element (more structured than dungeon, but still sparse)
+        theme.push({ freq: 110, duration: 0.3, wave: 'sawtooth', volume: 0.5 });  // A2
+        theme.push({ freq: 0, duration: 0.7 });                                   // Rest
+        theme.push({ freq: 110, duration: 0.3, wave: 'sawtooth', volume: 0.4 });  // A2
+        theme.push({ freq: 0, duration: 0.7 });                                   // Rest
 
-        // --- SECTION 3: The 'Cooling' (Fade out) ---
-        theme.push({ freq: 55, duration: 2.0, wave: 'triangle', volume: 0.5 });  // A1 Sub-bass drone
-        theme.push({ freq: 0, duration: 1.0 });                               // Silence
+        // High atmospheric ping
+        theme.push({ freq: 440, duration: 0.15, wave: 'sine', volume: 0.3 });     // A4 ping
+        theme.push({ freq: 0, duration: 1.85 });                                  // Long silence
+
+        // --- SECTION 5: Deep Drone Outro ---
+        // Return to atmospheric foundation
+        theme.push({ freq: 65, duration: 2.5, wave: 'triangle', volume: 0.6 });   // C2 long drone
+        theme.push({ freq: 0, duration: 1.5 });                                   // Silence before loop
 
         return theme;
     }
