@@ -35,9 +35,22 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.65);
-    /* Adjust opacity for background visibility */
+    background: rgba(0, 0, 0, 0.75);
+    /* Darker for better contrast */
     z-index: 1;
+}
+
+/* Digital Noise Overlay */
+.noise-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    pointer-events: none;
 }
 
 /* Dashboard Grid Container */
@@ -251,11 +264,15 @@
 
 /* Restoration */
 .dash-pos-5 {
-    grid-column: 2 / span 2;
+    grid-column: 2;
     grid-row: 2;
 }
 
-/* Manifest (Wide) */
+/* New Panel: News/Lore (Bottom Right) */
+.dash-pos-6 {
+    grid-column: 3;
+    grid-row: 2;
+}
 
 /* Center Panel (Corrupted Network) Specifics */
 .dash-pos-2 {
@@ -355,7 +372,7 @@
     cursor: not-allowed;
 }
 
-/* Scanlines Effect for that retro feel (Optional, can be subtle) */
+/* Scanlines Effect */
 .crt-overlay {
     background: linear-gradient(rgba(18, 16, 16, 0) 50%,
             rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg,
@@ -370,5 +387,85 @@
     width: 100%;
     height: 100%;
     z-index: 10;
-    opacity: 0.4;
+    opacity: 0.6;
+    animation: flicker 0.15s infinite;
+}
+
+/* Rolling scanline */
+.crt-overlay::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px;
+    z-index: 2;
+    animation: scanline 10s linear infinite;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes flicker {
+    0% {
+        opacity: 0.55;
+    }
+
+    5% {
+        opacity: 0.6;
+    }
+
+    10% {
+        opacity: 0.55;
+    }
+
+    15% {
+        opacity: 0.6;
+    }
+
+    20% {
+        opacity: 0.55;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
+
+    55% {
+        opacity: 0.6;
+    }
+
+    60% {
+        opacity: 0.55;
+    }
+
+    100% {
+        opacity: 0.55;
+    }
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(100vh);
+    }
+}
+
+/* Enhanced Panel Hover */
+.dashboard-panel:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.2), inset 0 0 10px rgba(34, 211, 238, 0.1);
+    transform: scale(1.005);
+    z-index: 5;
+}
+
+/* Glitch effect on hover for titles */
+.dashboard-panel:hover .panel-title {
+    text-shadow: 2px 0 var(--accent-alert), -2px 0 var(--accent-primary);
 }

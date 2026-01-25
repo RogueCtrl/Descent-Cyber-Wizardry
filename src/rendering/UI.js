@@ -406,6 +406,7 @@ class UI {
         // Render the Dashboard Grid
         const townContent = `
             <div class="town-menu">
+                <div class="noise-overlay"></div>
                 <div class="crt-overlay"></div>
                 
                 <!-- Dashboard Grid -->
@@ -416,74 +417,83 @@ class UI {
                         <header class="panel-header">
                             <div class="panel-title"><span class="icon">👤</span> AGENTOPS</div>
                             <div class="panel-controls">
-                                <button class="panel-btn-icon" title="Minimize">_</button>
-                                <button class="panel-btn-icon" title="Maximize">□</button>
+                                <span class="status-indicator">ONLINE</span>
                             </div>
                         </header>
                         <div class="panel-content">
-                            <div class="data-table-row">
-                                <div class="big-stat healthy">
-                                    <span class="big-stat-value">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
-                                    <span class="big-stat-label">ALIVE</span>
-                                </div>
-                                <div class="big-stat critical">
-                                    <span class="big-stat-value">${charStats ? (charStats.byStatus['Dead'] || 0) : 0}</span>
-                                    <span class="big-stat-label">DEAD</span>
-                                </div>
-                                <div class="big-stat warning">
-                                    <span class="big-stat-value">${charStats ? charStats.byStatus['Lost'] || 0 : 0}</span>
-                                    <span class="big-stat-label">LOST</span>
-                                </div>
-                            </div>
+                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                <span>ACTIVE AGENTS:</span>
+                                <span style="color: var(--accent-success);">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
+                             </div>
+                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                <span>INJURED:</span>
+                                <span style="color: var(--accent-warning);">0</span> <!-- Placeholder for injury tracking -->
+                             </div>
+                             <div class="stat-row" style="display: flex; justify-content: space-between;">
+                                <span>M.I.A.:</span>
+                                <span style="color: var(--accent-alert);">${charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Lost'] || 0) : 0}</span>
+                             </div>
+
+                             <div class="recruitment-status" style="margin-top: auto; font-size: 0.8em; color: var(--text-muted);">
+                                RECRUITMENT POOL: <span style="color: var(--text-primary);">OPEN</span>
+                             </div>
+
                             <div class="panel-actions">
-                                <button id="training-grounds-btn" class="panel-action-btn primary">OPEN</button> 
+                                <button id="training-grounds-btn" class="panel-action-btn primary">ACCESS REGISTRY</button> 
                             </div>
                         </div>
                         <footer class="panel-footer">
-                            <span class="status status-active">ACTIVE OPERATIONS</span>
+                            <span class="status status-active">OPERATIONAL</span>
                         </footer>
                     </div>
 
                     <!-- 2. Corrupted Network (Top Center) -->
                     <div class="dashboard-panel panel-network dash-pos-2">
                         <header class="panel-header">
-                            <div class="panel-title"><span class="icon">🌐</span> CORRUPTED NETWORK</div>
+                            <div class="panel-title"><span class="icon">🌐</span> LINK STATUS</div>
                             <div class="panel-controls">
-                                <button class="panel-btn-icon">_</button>
+                                <button class="panel-btn-icon" id="dashboard-exit-btn" title="Exit Grid" style="border: 1px solid var(--accent-alert); color: var(--accent-alert);">X</button>
                             </div>
                         </header>
                         <div class="panel-content">
-                             <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8;">
-                                >> INTRUSION DETECTED AT NODE 7...<br>
-                                << PACKET LOSS 45%...<br>
-                                >> RE-ROUTING CYBER-LEYLINES...
+                             <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8; line-height: 1.4;">
+                                > ESTABLISHING CONNECTION...<br>
+                                > ERROR: SECTOR 7 UNSTABLE<br>
+                                > MANA FLUX: 89% CRITICAL<br>
+                                > ENEMY SIGNATURES DETECTED
                              </div>
-                             <div class="big-stat critical" style="margin-top: auto;">
-                                <span class="big-stat-value">DANGER</span>
-                                <span class="big-stat-label">SECTOR 4</span>
-                            </div>
+                             
+                             <div class="network-viz" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                                <div style="width: 80%; height: 2px; background: #333; position: relative;">
+                                    <div style="position: absolute; top: -4px; left: ${Math.random() * 80}%; width: 10px; height: 10px; background: var(--accent-alert); box-shadow: 0 0 10px var(--accent-alert);"></div>
+                                </div>
+                             </div>
+
                             <div class="panel-actions">
                                 <button id="dungeon-entrance-btn" class="panel-action-btn primary" ${hasActiveParty ? '' : 'disabled'}>
-                                    ${hasActiveParty ? 'ENTER GRID' : 'NO CARRIER'}
+                                    ${hasActiveParty ? 'INITIATE DIVE' : 'NO ACTIVE TEAM'}
                                 </button>
                             </div>
                         </div>
                         <footer class="panel-footer">
-                            <span class="status status-critical">INTEGRITY: CRITICAL</span>
+                            <span class="status status-critical">INTEGRITY: UNSTABLE</span>
                         </footer>
                     </div>
 
                     <!-- 3. Data Exchange (Top Right) -->
                     <div class="dashboard-panel panel-data dash-pos-3">
                         <header class="panel-header">
-                            <div class="panel-title"><span class="icon">💾</span> DATA EXCHANGE</div>
-                             <div class="panel-controls">
+                            <div class="panel-title"><span class="icon">💾</span> DATA VAULT</div>
+                            <div class="panel-controls">
                                 <button class="panel-btn-icon">🔒</button>
                             </div>
                         </header>
-                        <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.5;">
-                            <div style="font-size: 3rem; color: var(--accent-primary);">🔒</div>
-                            <p style="text-align: center;">ENCRYPTED CONDUIT.<br>AUTHORIZATION REQUIRED.</p>
+                        <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.6;">
+                            <div style="font-size: 3rem; color: var(--text-muted); text-shadow: 0 0 5px rgba(255,255,255,0.2);">🔒</div>
+                            <p style="text-align: center; color: var(--accent-alert); font-family: monospace;">
+                                ENCRYPTION LEVEL: 5<br>
+                                <span style="font-size: 0.8em; color: var(--text-muted);">ACCESS DENIED</span>
+                            </p>
                         </div>
                         <footer class="panel-footer">
                             <span class="status status-neutral">LOCKED</span>
@@ -493,64 +503,72 @@ class UI {
                     <!-- 4. Restoration Center (Bottom Left) -->
                     <div class="dashboard-panel panel-restoration dash-pos-4">
                         <header class="panel-header">
-                             <div class="panel-title"><span class="icon">💾</span> RESTORATION CENTER</div>
-                             <div class="panel-controls">
-                                <button class="panel-btn-icon">_</button>
-                            </div>
+                             <div class="panel-title"><span class="icon">⚕️</span> MED-BAY</div>
                         </header>
-                         <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.5;">
-                            <div style="font-size: 3rem; color: var(--accent-warning);">➕</div>
-                             <p style="text-align: center;">SYSTEM OFFLINE.<br>AWAITING BIOMASS INPUT.</p>
+                         <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.6;">
+                            <div style="font-size: 3rem; color: var(--text-muted);">⚡</div>
+                             <p style="text-align: center; color: var(--accent-warning); font-family: monospace;">
+                                BIOMASS DEPLETED<br>
+                                <span style="font-size: 0.8em; color: var(--text-muted);">OFFLINE FOR MAINTENANCE</span>
+                             </p>
                         </div>
                          <footer class="panel-footer">
-                             <span class="status status-neutral">LOCKED</span>
+                             <span class="status status-neutral">OFFLINE</span>
                         </footer>
                     </div>
 
-                    <!-- 5. Strike Team Manifest (Bottom Right - Wide) -->
+                    <!-- 5. Strike Team Manifest (Bottom Center) -->
                     <div class="dashboard-panel panel-manifest dash-pos-5">
                        <header class="panel-header">
-                            <div class="panel-title"><span class="icon">📋</span> STRIKE TEAM MANIFEST</div>
-                             <div class="panel-controls">
-                                <button class="panel-btn-icon">_</button>
-                                <button class="panel-btn-icon">□</button>
-                            </div>
+                            <div class="panel-title"><span class="icon">📋</span> STRIKE TEAM</div>
                         </header>
                         <div class="panel-content">
-                             <div class="data-table-row">
-                                <div class="big-stat healthy">
-                                    <span class="big-stat-value">${activePartiesCount}</span>
-                                    <span class="big-stat-label">ACTIVE</span>
-                                    <span style="font-size: 2rem;">🏃</span>
+                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                <span>SQUAD CAPACITY:</span>
+                                <span style="color: var(--text-primary);">${activePartiesCount}/5</span>
+                             </div>
+                             
+                             <div class="deployment-status" style="margin-top: 10px;">
+                                <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 5px;">READY FOR DEPLOYMENT</div>
+                                <div style="display: flex; gap: 5px;">
+                                    ${Array(5).fill(0).map((_, i) =>
+            `<div style="width: 20px; height: 10px; background: ${i < activePartiesCount ? 'var(--accent-primary)' : '#333'}; border: 1px solid #555;"></div>`
+        ).join('')}
                                 </div>
-                                <div class="big-stat warning">
-                                    <span class="big-stat-value">${campingPartiesCount}</span>
-                                    <span class="big-stat-label">CAMPED</span>
-                                    <span style="font-size: 2rem;">⛺</span>
-                                </div>
-                                <div class="big-stat neutral">
-                                    <span class="big-stat-value">${activePartiesCount + campingPartiesCount + lostPartiesCount}</span>
-                                    <span class="big-stat-label">IN HUB</span>
-                                    <span style="font-size: 2rem;">🏢</span>
-                                </div>
-                            </div>
+                             </div>
 
                              <div class="panel-actions">
                                 <button id="strike-team-management-btn" class="panel-action-btn primary" ${hasCamps ? '' : 'disabled'}>
-                                    ${hasCamps ? 'MANAGE CONFIGURATION' : 'AVAILABLE'}
+                                    ${hasCamps ? 'MANAGE' : 'CREATE'}
                                 </button>
                             </div>
                         </div>
                         <footer class="panel-footer">
-                            <span class="status status-active">DEPLOYMENT: READY</span>
+                            <span class="status status-active">READY</span>
                         </footer>
                     </div>
-                </div>
 
-                <!-- Footer Ticker -->
-                 <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: var(--accent-alert); padding: 5px 20px; font-family: monospace; font-size: 0.8rem; border-top: 1px solid var(--accent-alert); z-index: 10;">
-                    BREAKING: MANA SURGE IN SECTOR 4 // NEW CYBER-SPELLS AUTHORIZED FOR FIELD AGENTS // DARK WEB RUMORS OF 'PROJECT: ASCENSION' //
-                 </div>
+                    <!-- 6. Global News / Lore (Bottom Right) -->
+                    <div class="dashboard-panel panel-news dash-pos-6">
+                        <header class="panel-header">
+                            <div class="panel-title"><span class="icon">📡</span> SIGNAL FEED</div>
+                        </header>
+                        <div class="panel-content" style="overflow: hidden;">
+                            <div class="news-feed" style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                                <div style="margin-bottom: 10px; color: var(--accent-primary);">>> LATEST INTERCEPTS:</div>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin-bottom: 8px;">* CorpSec increasing patrols in Sector 7 due to mana spikes.</li>
+                                    <li style="margin-bottom: 8px;">* "Project Ascension" rumors verified by dark mesh agents.</li>
+                                    <li style="margin-bottom: 8px;">* Bioware upgrades now available at black market nodes.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <footer class="panel-footer">
+                            <span class="status status-active">RECEIVING</span>
+                        </footer>
+                    </div>
+
+                </div>
             </div>
         `;
 
@@ -583,6 +601,14 @@ class UI {
         const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
         const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
         const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
+        const exitBtn = viewport.querySelector('#dashboard-exit-btn');
+
+        if (exitBtn) {
+            exitBtn.addEventListener('click', () => {
+                // Exit to main menu / game menu
+                this.eventSystem.emit('game-state-change', 'menu');
+            });
+        }
 
         if (trainingBtn) {
             trainingBtn.addEventListener('click', () => {

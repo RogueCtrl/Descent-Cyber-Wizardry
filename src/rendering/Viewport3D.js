@@ -20,7 +20,9 @@ class Viewport3D {
         this.colors = {
             background: '#050505',
             wall: '#3b82f6',        // Cyber Blue
-            hiddenDoor: '#60a5fa',  // Light Blue
+            hiddenDoor: '#60a5fa',  // Light Blue (Unused for wall-style)
+            door: '#ef4444',        // Dangerous Red
+            doorHidden: '#000000',  // Void Black
             secretPassage: '#1d4ed8', // Darker Blue
             specialSquare: '#10b981', // Matrix Green
             trap: '#ef4444',        // Alert Red
@@ -384,6 +386,9 @@ class Viewport3D {
     /**
      * Render a door opening
      */
+    /**
+     * Render a door opening
+     */
     renderDoor(perspective, centerX, doorType, offset = 0) {
         const { wallWidth, topY, bottomY } = perspective;
 
@@ -397,78 +402,30 @@ class Viewport3D {
         const tileHeight = bottomY - topY;
 
         // 1. OCCLUSION: Fill the entire tile face with black to hide what's behind
-        // This fixes the "see through" issue and effectively "closes" the door visually
-        this.ctx.fillStyle = '#000000';
+        this.ctx.fillStyle = this.colors.background;
         this.ctx.fillRect(leftX - 1, topY - 1, tileWidth + 2, tileHeight + 2); // Slight overlap to prevent seam cracks
 
-        // 2. JAMB/WALL FRAME: Draw the outline of the tile face
-        // This ensures it looks "connected" to the floor, ceiling, and walls
-        this.ctx.strokeStyle = this.colors.wall;
+        // 2. WALL-STYLE DOOR: Just a colored wall frame
         this.ctx.lineWidth = 2;
+
+        let doorColor;
+        if (doorType === 'hidden') {
+            // "Discovered secret doors - are black walls"
+            doorColor = this.colors.doorHidden;
+        } else {
+            // Normal door - "Make other doors Red"
+            doorColor = this.colors.door;
+        }
+
+        this.ctx.fillStyle = doorColor;
+        this.ctx.strokeStyle = doorColor;
+
+        // Fill tile face (solid color)
+        this.ctx.fillRect(leftX - 1, topY - 1, tileWidth + 2, tileHeight + 2);
+
         this.ctx.beginPath();
         this.ctx.rect(leftX, topY, tileWidth, tileHeight);
         this.ctx.stroke();
-
-        if (doorType === 'hidden') {
-            // Hidden door - subtle indication
-            this.ctx.setLineDash([5, 5]);
-            this.ctx.strokeRect(leftX + tileWidth * 0.1, topY + tileHeight * 0.1, tileWidth * 0.8, tileHeight * 0.8);
-            this.ctx.setLineDash([]);
-
-            this.ctx.fillStyle = this.colors.hiddenDoor;
-            this.ctx.font = '12px "Courier New", monospace';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('?', (leftX + rightX) / 2, (topY + bottomY) / 2);
-            this.ctx.textAlign = 'left';
-        } else {
-            // 3. BETTER DOOR DESIGN
-            // Calculate door dimensions (slightly smaller than full tile to show frame)
-            const doorMargin = tileWidth * 0.15;
-            const doorLeft = leftX + doorMargin;
-            const doorTop = topY + doorMargin;
-            const doorRight = rightX - doorMargin;
-            const doorBottom = bottomY; // Door goes to floor
-            const w = doorRight - doorLeft;
-            const h = doorBottom - doorTop;
-
-            this.ctx.strokeStyle = this.colors.wall;
-
-            // Outer Frame (The Door Frame)
-            this.ctx.beginPath();
-            this.ctx.rect(doorLeft, doorTop, w, h);
-            this.ctx.stroke();
-
-            // Inner Panel (Recessed)
-            const innerMargin = w * 0.1;
-            this.ctx.beginPath();
-            this.ctx.rect(doorLeft + innerMargin, doorTop + innerMargin, w - innerMargin * 2, h - innerMargin * 1.5);
-            this.ctx.stroke();
-
-            // Detail: Cross Bracing (X) or Horizontal Bars?
-            // Let's go with a sturdy "reinforced" look
-
-            // Mid-bar
-            const midY = doorTop + h * 0.55; // Slightly below center (handle height)
-
-            this.ctx.beginPath();
-            // Horizontal bar
-            this.ctx.moveTo(doorLeft + innerMargin, midY);
-            this.ctx.lineTo(doorRight - innerMargin, midY);
-
-            // Diagonal bracing (bottom half)
-            this.ctx.moveTo(doorLeft + innerMargin, midY);
-            this.ctx.lineTo(doorRight - innerMargin, doorBottom - innerMargin * 0.5);
-
-            this.ctx.moveTo(doorRight - innerMargin, midY);
-            this.ctx.lineTo(doorLeft + innerMargin, doorBottom - innerMargin * 0.5);
-
-            this.ctx.stroke();
-
-            // Handle (Small rect)
-            this.ctx.fillStyle = '#000000'; // Black handle hole?
-            this.ctx.fillRect(doorRight - innerMargin * 2, midY - tileHeight * 0.05, tileWidth * 0.05, tileHeight * 0.05);
-            this.ctx.strokeRect(doorRight - innerMargin * 2, midY - tileHeight * 0.05, tileWidth * 0.05, tileHeight * 0.05);
-        }
     }
 
     /**
