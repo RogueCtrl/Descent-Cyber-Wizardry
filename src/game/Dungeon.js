@@ -36,13 +36,24 @@ class Dungeon {
         // Generate tiles first so jacks and encounters can modify them
         const width = this.testMode ? 9 : 20;
         const height = this.testMode ? 5 : 20;
-        const tiles = this.testMode ? this.generateTestMap() : this.generateWizardryMaze(width, height, floorNumber);
+
+        // generateWizardryMaze now returns { tiles, rooms } for room-aware features
+        let tiles, rooms = [];
+        if (this.testMode) {
+            tiles = this.generateTestMap();
+            rooms = []; // Test mode has no formal rooms
+        } else {
+            const mazeResult = this.generateWizardryMaze(width, height, floorNumber);
+            tiles = mazeResult.tiles;
+            rooms = mazeResult.rooms;
+        }
 
         const floor = {
             number: floorNumber,
             width: width,
             height: height,
             tiles: tiles,
+            rooms: rooms, // NEW: Persist room data for room-aware features
             monsters: [],
             treasures: [],
             encounters: this.testMode ? this.generateTrainingGroundsEncounters() : this.generateEncounters(floorNumber, tiles),
@@ -59,7 +70,7 @@ class Dungeon {
             this.setStartPosition(floor);
         }
 
-        console.log(`Floor ${floorNumber} generated with ${floor.encounters.length} encounters and ${floor.specialSquares.length} special features`);
+        console.log(`Floor ${floorNumber} generated with ${rooms.length} rooms, ${floor.encounters.length} encounters and ${floor.specialSquares.length} special features`);
 
         // Hydrate encounters with monster data for rendering portraits
         this.hydrateEncounters(floor.encounters);
@@ -138,6 +149,7 @@ class Dungeon {
 
     /**
      * Generate authentic Wizardry-style maze with complex layouts
+     * Returns { tiles, rooms } for room-aware features
      */
     generateWizardryMaze(width, height, floorNumber) {
         const tiles = Array(height).fill().map(() => Array(width).fill('wall'));
@@ -161,8 +173,8 @@ class Dungeon {
         // Step 4: Add maze-like passages for complexity
         this.addMazePassages(tiles, width, height, complexity);
 
-        // Step 5: Generate doors at valid doorway positions
-        this.generateDoors(tiles, width, height, 0.4);
+        // Step 5: Generate doors at room entrances only (room-aware placement)
+        this.generateDoors(tiles, width, height, rooms);
 
         // Step 6: Add hidden doors and secret passages
         this.addSecretFeatures(tiles, width, height, secretChance);
@@ -173,7 +185,8 @@ class Dungeon {
         // Step 8: Ensure proper connections and validate maze
         this.validateAndFixMaze(tiles, width, height);
 
-        return tiles;
+        // Return both tiles and rooms for persistence
+        return { tiles, rooms };
     }
 
     /**
@@ -360,33 +373,89 @@ class Dungeon {
     }
 
     /**
-     * Generate doors at proper doorway positions
-     * A valid door position is a wall tile with exactly 2 opposing floor tiles
-     * (north/south or east/west - creating a passage through the wall)
+     * Generate doors at room entrances only (room-aware placement)
+     * Doors are placed where rooms connect to corridors, not in corridors
+     * @param {Array} tiles - The tile grid
+     * @param {number} width - Grid width
+     * @param {number} height - Grid height
+     * @param {Array} rooms - Array of room objects {x, y, width, height}
      */
-    generateDoors(tiles, width, height, doorChance = 0.3) {
+    generateDoors(tiles, width, height, rooms = []) {
+        if (!rooms || rooms.length === 0) {
+            console.log('No rooms defined - skipping door generation');
+            return;
+        }
+
+        // Build a Set of all room tiles for quick lookup
+        const roomTiles = new Set();
+        rooms.forEach(room => {
+            for (let ry = room.y; ry < room.y + room.height; ry++) {
+                for (let rx = room.x; rx < room.x + room.width; rx++) {
+                    roomTiles.add(`${rx},${ry}`);
+                }
+            }
+        });
+
+        // Helper to check if a tile is inside a room
+        const isRoomTile = (x, y) => roomTiles.has(`${x},${y}`);
+
+        // Helper to check if a tile is a corridor (floor but not in a room)
+        const isCorridorTile = (x, y) => {
+            const tile = tiles[y] && tiles[y][x];
+            return this.isFloorTile(tile) && !isRoomTile(x, y);
+        };
+
         const potentialDoors = [];
 
-        // Find all valid door positions
+        // Find wall tiles that separate rooms from corridors
         for (let y = 1; y < height - 1; y++) {
             for (let x = 1; x < width - 1; x++) {
                 if (tiles[y][x] === 'wall') {
+                    // Check if this wall is a valid door position structurally
                     const doorType = this.isValidDoorPosition(tiles, x, y);
-                    if (doorType) {
+                    if (!doorType) continue;
+
+                    // Now check if it connects a room to a corridor
+                    const north = { x, y: y - 1 };
+                    const south = { x, y: y + 1 };
+                    const east = { x: x + 1, y };
+                    const west = { x: x - 1, y };
+
+                    let connectsRoomToCorridor = false;
+
+                    if (doorType === 'vertical') {
+                        // North-south passage - check if one side is room and other is corridor
+                        const northIsRoom = isRoomTile(north.x, north.y);
+                        const southIsRoom = isRoomTile(south.x, south.y);
+                        const northIsCorridor = isCorridorTile(north.x, north.y);
+                        const southIsCorridor = isCorridorTile(south.x, south.y);
+
+                        connectsRoomToCorridor =
+                            (northIsRoom && southIsCorridor) ||
+                            (southIsRoom && northIsCorridor);
+                    } else if (doorType === 'horizontal') {
+                        // East-west passage - check if one side is room and other is corridor
+                        const eastIsRoom = isRoomTile(east.x, east.y);
+                        const westIsRoom = isRoomTile(west.x, west.y);
+                        const eastIsCorridor = isCorridorTile(east.x, east.y);
+                        const westIsCorridor = isCorridorTile(west.x, west.y);
+
+                        connectsRoomToCorridor =
+                            (eastIsRoom && westIsCorridor) ||
+                            (westIsRoom && eastIsCorridor);
+                    }
+
+                    if (connectsRoomToCorridor) {
                         potentialDoors.push({ x, y, type: doorType });
                     }
                 }
             }
         }
 
-        // Place doors at some of the valid positions
-        const doorCount = Math.floor(potentialDoors.length * doorChance);
-        const shuffledDoors = Random.shuffle(potentialDoors);
+        // Place doors at all valid room entrances (no random chance - rooms should have doors)
         let placedCount = 0;
 
-        for (const door of shuffledDoors) {
-            if (placedCount >= doorCount) break;
-
+        for (const door of potentialDoors) {
             // Check if any adjacent tile is already a door (prevent double doors)
             const hasAdjacentDoor =
                 tiles[door.y - 1][door.x] === 'door' ||
@@ -400,7 +469,7 @@ class Dungeon {
             }
         }
 
-        console.log(`Generated ${placedCount} doors from ${potentialDoors.length} valid positions`);
+        console.log(`Generated ${placedCount} room entrance doors from ${potentialDoors.length} valid positions`);
     }
 
     /**
@@ -423,13 +492,9 @@ class Dungeon {
 
         // All diagonals must be walls - this ensures the door is in a proper corridor
         // not at a room corner where you could walk around it
-        const allDiagonalsWalls =
-            this.isWallTile(ne) &&
-            this.isWallTile(nw) &&
-            this.isWallTile(se) &&
-            this.isWallTile(sw);
-
-        if (!allDiagonalsWalls) return null;
+        // We used to check all diagonals to ensure "proper" corridors, but this is too strict
+        // and prevents doors from being placed at room entrances (where inside diagonals are floors).
+        // const allDiagonalsWalls = ... -> REMOVED strict check
 
         // Check for vertical passage (north and south are floors, east and west are walls)
         const isVerticalDoor =
