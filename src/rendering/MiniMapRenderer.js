@@ -99,7 +99,16 @@ class MiniMapRenderer {
 
                 if (!isExplored) continue; // Skip unexplored tiles (Fog of War)
 
-                const tileType = floor.tiles[y][x];
+                let tileType = floor.tiles[y][x];
+
+                // Handle hidden doors and secret passages
+                // They should appear as walls until discovered
+                if (tileType === 'hidden_door' || tileType === 'secret_passage') {
+                    const secretKey = `${floorNum}:${x}:${y}:${tileType}`;
+                    if (!dungeon.discoveredSecrets || !dungeon.discoveredSecrets.has(secretKey)) {
+                        tileType = 'wall'; // Show as wall until discovered
+                    }
+                }
 
                 // Calculate position on screen
                 // (x - playerX) gives relative position
@@ -167,13 +176,13 @@ class MiniMapRenderer {
             ctx.fillStyle = this.colors.wall;
             // Draw wall as a block
             ctx.fillRect(x, y, this.tileSize, this.tileSize);
-        } else if (type === 'door' || type === 'hidden_door') {
+        } else if (type === 'door' || type === 'hidden_door' || type === 'secret_passage') {
             // Draw closed door as emoji 🚪
             ctx.font = `${this.tileSize - 4}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('🚪', x + this.tileSize / 2, y + this.tileSize / 2);
-        } else if (type === 'open_door') {
+        } else if (type === 'open_door' || type === 'open_hidden_door' || type === 'open_secret_passage') {
             // Draw open door as emoji ⬜
             ctx.font = `${this.tileSize - 4}px Arial`;
             ctx.textAlign = 'center';

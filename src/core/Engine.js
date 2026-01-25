@@ -1947,12 +1947,25 @@ class Engine {
                 break;
 
             case 'teleport_trap':
-                // Teleport party to random location on same floor
-                const newX = Random.integer(1, 19);
-                const newY = Random.integer(1, 19);
-                this.dungeon.playerX = newX;
-                this.dungeon.playerY = newY;
-                message = `You are suddenly teleported to another part of the dungeon!`;
+                // Teleport party to random WALKABLE location on same floor
+                let newX, newY;
+                let attempts = 0;
+                const maxAttempts = 100;
+
+                do {
+                    newX = Random.integer(1, this.dungeon.currentFloorData.width - 2);
+                    newY = Random.integer(1, this.dungeon.currentFloorData.height - 2);
+                    attempts++;
+                } while (!this.dungeon.isWalkable(newX, newY) && attempts < maxAttempts);
+
+                if (this.dungeon.isWalkable(newX, newY)) {
+                    this.dungeon.playerX = newX;
+                    this.dungeon.playerY = newY;
+                    this.dungeon.markExplored(newX, newY, 4);
+                    message = `You are suddenly teleported to another part of the dungeon!`;
+                } else {
+                    message = `The teleport trap fizzles - you remain in place.`;
+                }
                 break;
 
             case 'alarm_trap':

@@ -381,24 +381,55 @@ class Dungeon {
 
         // Place doors at some of the valid positions
         const doorCount = Math.floor(potentialDoors.length * doorChance);
-        const selectedDoors = Random.shuffle(potentialDoors).slice(0, doorCount);
+        const shuffledDoors = Random.shuffle(potentialDoors);
+        let placedCount = 0;
 
-        for (const door of selectedDoors) {
-            tiles[door.y][door.x] = 'door';
+        for (const door of shuffledDoors) {
+            if (placedCount >= doorCount) break;
+
+            // Check if any adjacent tile is already a door (prevent double doors)
+            const hasAdjacentDoor =
+                tiles[door.y - 1][door.x] === 'door' ||
+                tiles[door.y + 1][door.x] === 'door' ||
+                tiles[door.y][door.x - 1] === 'door' ||
+                tiles[door.y][door.x + 1] === 'door';
+
+            if (!hasAdjacentDoor) {
+                tiles[door.y][door.x] = 'door';
+                placedCount++;
+            }
         }
 
-        console.log(`Generated ${selectedDoors.length} doors from ${potentialDoors.length} valid positions`);
+        console.log(`Generated ${placedCount} doors from ${potentialDoors.length} valid positions`);
     }
 
     /**
      * Check if a wall tile is a valid door position
      * Returns 'horizontal' or 'vertical' if valid, null if not
+     * A valid door must create a proper corridor passage, not a corner
+     * Stricter check: ALL 4 diagonal tiles must be walls to ensure it's a true doorway
      */
     isValidDoorPosition(tiles, x, y) {
         const north = tiles[y - 1] && tiles[y - 1][x];
         const south = tiles[y + 1] && tiles[y + 1][x];
         const east = tiles[y][x + 1];
         const west = tiles[y][x - 1];
+
+        // Check all diagonals - ALL must be walls for a valid door
+        const ne = tiles[y - 1] && tiles[y - 1][x + 1];
+        const nw = tiles[y - 1] && tiles[y - 1][x - 1];
+        const se = tiles[y + 1] && tiles[y + 1][x + 1];
+        const sw = tiles[y + 1] && tiles[y + 1][x - 1];
+
+        // All diagonals must be walls - this ensures the door is in a proper corridor
+        // not at a room corner where you could walk around it
+        const allDiagonalsWalls =
+            this.isWallTile(ne) &&
+            this.isWallTile(nw) &&
+            this.isWallTile(se) &&
+            this.isWallTile(sw);
+
+        if (!allDiagonalsWalls) return null;
 
         // Check for vertical passage (north and south are floors, east and west are walls)
         const isVerticalDoor =
@@ -849,7 +880,8 @@ class Dungeon {
     isWalkable(x, y, floor = null) {
         const tile = this.getTile(x, y, floor);
         const walkableTiles = [
-            'floor', 'hidden_door', 'secret_passage', 'exit', 'treasure', 'open_door',
+            'floor', 'exit', 'treasure',
+            'open_door', 'open_hidden_door', 'open_secret_passage',  // Only OPEN doors are walkable
             'jack_entry', 'jack_deep',  // Jack egress points (nodes/edges)
             'stairs_up', 'stairs_down',  // Legacy compatibility
             'trap_pit_trap', 'trap_poison_dart', 'trap_teleport_trap', 'trap_alarm_trap'
@@ -1885,11 +1917,21 @@ class Dungeon {
 
         const tile = this.getTile(targetX, targetY);
 
+        // Determine the open state for different door types
+        let openState = null;
         if (tile === 'door') {
-            // "Open" the door by converting it to open_door state
+            openState = 'open_door';
+        } else if (tile === 'hidden_door') {
+            openState = 'open_hidden_door';
+        } else if (tile === 'secret_passage') {
+            openState = 'open_secret_passage';
+        }
+
+        if (openState) {
+            // "Open" the door by converting it to open state
             if (this.currentFloorData && this.currentFloorData.tiles) {
                 if (this.currentFloorData.tiles[targetY] && typeof (this.currentFloorData.tiles[targetY][targetX]) !== 'undefined') {
-                    this.currentFloorData.tiles[targetY][targetX] = 'open_door';
+                    this.currentFloorData.tiles[targetY][targetX] = openState;
                     return true;
                 }
             }
@@ -1919,13 +1961,21 @@ class Dungeon {
 
         const tile = this.getTile(targetX, targetY);
 
+        // Determine the closed state for different door types
+        let closedState = null;
         if (tile === 'open_door') {
-            // "Close" the door by converting it back to door state
+            closedState = 'door';
+        } else if (tile === 'open_hidden_door') {
+            closedState = 'hidden_door';
+        } else if (tile === 'open_secret_passage') {
+            closedState = 'secret_passage';
+        }
+
+        if (closedState) {
+            // "Close" the door by converting it back to closed state
             if (this.currentFloorData && this.currentFloorData.tiles) {
                 if (this.currentFloorData.tiles[targetY] && typeof (this.currentFloorData.tiles[targetY][targetX]) !== 'undefined') {
-                    this.currentFloorData.tiles[targetY][targetX] = 'door';
-                    // Check if player is standing in the door (prevent crushing?)
-                    // For now, allow closing even if occupied (Wizardry style - or maybe it fails?)
+                    this.currentFloorData.tiles[targetY][targetX] = closedState;
                     return true;
                 }
             }
