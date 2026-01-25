@@ -179,9 +179,22 @@ class MiniMapRenderer {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('⬜', x + this.tileSize / 2, y + this.tileSize / 2);
-        } else if (type.startsWith('stairs')) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(x + 3, y + 3, this.tileSize - 6, this.tileSize - 6);
+        } else if (type === 'jack_entry' || type === 'stairs_up') {
+            // Jack entry - return to previous node / town (🔌 plug icon)
+            ctx.fillStyle = '#22c55e'; // Green for entry/exit
+            ctx.fillRect(x + 2, y + 2, this.tileSize - 4, this.tileSize - 4);
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🔌', x + this.tileSize / 2, y + this.tileSize / 2);
+        } else if (type === 'jack_deep' || type === 'stairs_down') {
+            // Jack deep - go to next node / deeper (🔌 plug icon)
+            ctx.fillStyle = '#06b6d4'; // Cyan for deeper
+            ctx.fillRect(x + 2, y + 2, this.tileSize - 4, this.tileSize - 4);
+            ctx.font = `${this.tileSize - 4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🔌', x + this.tileSize / 2, y + this.tileSize / 2);
         } else if (type === 'exit') {
             // Draw exit/jack-out point as emoji 🔌
             ctx.font = `${this.tileSize - 4}px Arial`;

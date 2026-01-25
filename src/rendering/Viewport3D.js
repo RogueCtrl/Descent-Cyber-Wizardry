@@ -489,12 +489,12 @@ class Viewport3D {
             this.renderTrapIndicator(tile);
         }
 
-        // Check for stairs
-        const stairs = dungeon.currentFloorData.stairs;
-        if (stairs.up && stairs.up.x === dungeon.playerX && stairs.up.y === dungeon.playerY) {
-            this.renderStairsIndicator('up');
-        } else if (stairs.down && stairs.down.x === dungeon.playerX && stairs.down.y === dungeon.playerY) {
-            this.renderStairsIndicator('down');
+        // Check for jacks (edge egress points)
+        const currentTile = dungeon.getTile(dungeon.playerX, dungeon.playerY);
+        if (currentTile === 'jack_entry' || currentTile === 'stairs_up') {
+            this.renderJackIndicator('entry');
+        } else if (currentTile === 'jack_deep' || currentTile === 'stairs_down') {
+            this.renderJackIndicator('deep');
         }
 
         // Check for special squares
@@ -524,7 +524,26 @@ class Viewport3D {
     }
 
     /**
-     * Render stairs indicator
+     * Render jack (edge egress point) indicator
+     */
+    renderJackIndicator(jackType) {
+        this.ctx.fillStyle = jackType === 'entry' ? '#22c55e' : '#06b6d4';
+        this.ctx.font = 'bold 16px "Courier New", monospace';
+        this.ctx.textAlign = 'center';
+
+        if (jackType === 'entry') {
+            this.ctx.fillText('🔌 JACK OUT 🔌', this.width / 2, this.height - 60);
+            this.ctx.fillText('Press U to return to Hub', this.width / 2, this.height - 40);
+        } else {
+            this.ctx.fillText('🔌 JACK IN DEEPER 🔌', this.width / 2, this.height - 60);
+            this.ctx.fillText('Press D to dive deeper', this.width / 2, this.height - 40);
+        }
+
+        this.ctx.textAlign = 'left';
+    }
+
+    /**
+     * Render stairs indicator (legacy - use renderJackIndicator)
      */
     renderStairsIndicator(direction) {
         this.ctx.fillStyle = this.colors.stairs;

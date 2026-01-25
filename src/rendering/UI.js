@@ -5396,6 +5396,198 @@ class UI {
     }
 
     /**
+     * Show jack deep button when player is on jack deep tile (go deeper)
+     */
+    showJackDeepButton(data) {
+        // Check if button already exists
+        const existingButton = document.getElementById('jack-deep-btn');
+        if (existingButton) {
+            return; // Button already shown
+        }
+
+        // Play sound effect when jack becomes available
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('exitAvailable');
+        }
+
+        // Find the control panel to add the jack button
+        const actionControls = document.getElementById('action-controls');
+
+        if (actionControls) {
+            // Create jack deep button
+            const jackButton = document.createElement('button');
+            jackButton.id = 'jack-deep-btn';
+            jackButton.className = 'btn btn-info jack-deep-btn';
+            jackButton.innerHTML = '<span>⚡ Jack In Deeper</span>';
+            jackButton.title = 'Descend to the next network layer';
+            jackButton.style.cssText = 'background: linear-gradient(135deg, #06b6d4, #0891b2); border-color: #06b6d4;';
+
+            // Add click handler
+            jackButton.addEventListener('click', async () => {
+                await this.handleJackDeep();
+            });
+
+            // Insert the button at the end of action controls
+            actionControls.appendChild(jackButton);
+
+            // Add message about the jack
+            this.addMessage('Network jack detected! Jack in to dive deeper into the system.', 'system');
+        }
+    }
+
+    /**
+     * Hide jack deep button when player leaves jack deep tile
+     */
+    hideJackDeepButton() {
+        const jackButton = document.getElementById('jack-deep-btn');
+        if (jackButton) {
+            jackButton.remove();
+        }
+    }
+
+    /**
+     * Show jack entry button when player is on jack entry tile (go up / exit)
+     */
+    showJackEntryButton(data) {
+        // Check if button already exists
+        const existingButton = document.getElementById('jack-entry-btn');
+        if (existingButton) {
+            return; // Button already shown
+        }
+
+        // Play sound effect when jack becomes available
+        if (window.engine?.audioManager) {
+            window.engine.audioManager.playSoundEffect('exitAvailable');
+        }
+
+        // Find the control panel to add the jack button
+        const actionControls = document.getElementById('action-controls');
+
+        if (actionControls) {
+            // Create jack entry button - text depends on floor level
+            const jackButton = document.createElement('button');
+            jackButton.id = 'jack-entry-btn';
+            jackButton.className = 'btn btn-warning jack-entry-btn';
+
+            const currentFloor = window.engine?.dungeon?.currentFloor || 1;
+
+            if (currentFloor === 1) {
+                // Floor 1 - exit to town
+                jackButton.innerHTML = '<span>⚡ Jack Out</span>';
+                jackButton.title = 'Return to town';
+            } else {
+                // Floor 2+ - go back to previous floor
+                jackButton.innerHTML = '<span>⚡ Jack Up</span>';
+                jackButton.title = `Return to Node ${currentFloor - 1}`;
+            }
+
+            jackButton.style.cssText = 'background: linear-gradient(135deg, #f97316, #ea580c); border-color: #f97316;';
+
+            // Store floor info for handler
+            jackButton.dataset.goesToTown = data.goesToTown ? 'true' : 'false';
+
+            // Add click handler
+            jackButton.addEventListener('click', async () => {
+                await this.handleJackEntry(data);
+            });
+
+            // Insert the button at the end of action controls
+            actionControls.appendChild(jackButton);
+
+            // Add message about the jack
+            if (currentFloor === 1) {
+                this.addMessage('Network egress detected! Jack out to return to town.', 'system');
+            } else {
+                this.addMessage(`Network jack detected! Jack up to return to Node ${currentFloor - 1}.`, 'system');
+            }
+        }
+    }
+
+    /**
+     * Hide jack entry button when player leaves jack entry tile
+     */
+    hideJackEntryButton() {
+        const jackButton = document.getElementById('jack-entry-btn');
+        if (jackButton) {
+            jackButton.remove();
+        }
+    }
+
+    /**
+     * Handle jacking out/up - either return to town (floor 1) or previous floor
+     */
+    async handleJackEntry(data) {
+        console.log('Handling jack entry...', data);
+
+        if (window.engine && window.engine.dungeon) {
+            const currentFloor = window.engine.dungeon.currentFloor;
+
+            if (currentFloor === 1) {
+                // Floor 1 - exit to town
+                this.hideJackEntryButton();
+                await this.handleDungeonExit();
+            } else {
+                // Floor 2+ - go up one floor
+                const result = window.engine.dungeon.changeFloor('up');
+
+                if (result === true) {
+                    // Successfully moved to previous floor
+                    this.hideJackEntryButton();
+
+                    // Update the view
+                    window.engine.updateDungeonView();
+
+                    // Show message
+                    const newFloor = window.engine.dungeon.currentFloor;
+                    this.addMessage(`Jacking up... Now on Node ${newFloor}`, 'success');
+
+                    // Play sound
+                    if (window.engine.audioManager) {
+                        window.engine.audioManager.playSoundEffect('floorChange');
+                    }
+                } else if (result === 'town') {
+                    // Signal to return to town (shouldn't happen on floor 2+ but handle it)
+                    this.hideJackEntryButton();
+                    await this.handleDungeonExit();
+                } else {
+                    this.addMessage('Cannot jack up from this location.', 'error');
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle jacking in deeper - descend to next floor
+     */
+    async handleJackDeep() {
+        console.log('Handling jack deep...');
+
+        if (window.engine && window.engine.dungeon) {
+            // Attempt to change floor
+            const result = window.engine.dungeon.changeFloor('down');
+
+            if (result === true) {
+                // Successfully moved to next floor
+                this.hideJackDeepButton();
+
+                // Update the view
+                window.engine.updateDungeonView();
+
+                // Show message
+                const floor = window.engine.dungeon.currentFloor;
+                this.addMessage(`Jacking deeper into the system... Now on Node ${floor}`, 'success');
+
+                // Play sound
+                if (window.engine.audioManager) {
+                    window.engine.audioManager.playSoundEffect('floorChange');
+                }
+            } else {
+                this.addMessage('Cannot jack in deeper from this location.', 'error');
+            }
+        }
+    }
+
+    /**
      * Show treasure button when player is on treasure tile
      */
     showTreasureButton(data) {

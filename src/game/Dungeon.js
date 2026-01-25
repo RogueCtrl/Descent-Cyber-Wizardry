@@ -33,16 +33,23 @@ class Dungeon {
     initializeFloor(floorNumber) {
         console.log(`Generating floor ${floorNumber}...`);
 
+        // Generate tiles first so jacks and encounters can modify them
+        const width = this.testMode ? 9 : 20;
+        const height = this.testMode ? 5 : 20;
+        const tiles = this.testMode ? this.generateTestMap() : this.generateWizardryMaze(width, height, floorNumber);
+
         const floor = {
             number: floorNumber,
-            width: this.testMode ? 9 : 20,
-            height: this.testMode ? 5 : 20,
-            tiles: this.testMode ? this.generateTestMap() : this.generateWizardryMaze(20, 20, floorNumber),
+            width: width,
+            height: height,
+            tiles: tiles,
             monsters: [],
             treasures: [],
-            encounters: this.testMode ? this.generateTrainingGroundsEncounters() : this.generateEncounters(floorNumber),
+            encounters: this.testMode ? this.generateTrainingGroundsEncounters() : this.generateEncounters(floorNumber, tiles),
             specialSquares: this.testMode ? [] : this.generateSpecialSquares(floorNumber),
-            stairs: this.testMode ? {} : this.generateStairs(floorNumber)
+            // Jacks are edge egress points (renamed from stairs)
+            jacks: this.testMode ? {} : this.generateJacks(floorNumber, tiles),
+            stairs: this.testMode ? {} : {} // Legacy compatibility - use jacks instead
         };
 
         this.floors.set(floorNumber, floor);
@@ -415,19 +422,66 @@ class Dungeon {
     }
 
     /**
-     * Generate encounters for the floor
+     * Generate encounters for the floor with monster assignments
      */
-    generateEncounters(floorNumber) {
+    generateEncounters(floorNumber, tiles) {
         const encounterCount = Random.integer(5, 12);
         const encounters = [];
+        const width = tiles[0].length;
+        const height = tiles.length;
+
+        // Monster pools by level tier
+        const monstersByLevel = {
+            1: ['Kobold', 'Giant Rat', 'Skeleton'],
+            2: ['Kobold', 'Skeleton', 'Orc', 'Wolf'],
+            3: ['Orc', 'Wolf', 'Hobgoblin'],
+            4: ['Hobgoblin', 'Ogre'],
+            5: ['Ogre', 'Owlbear'],
+            6: ['Owlbear', 'Orc Chief'],
+            7: ['Orc Chief', 'Young Dragon'],
+            8: ['Young Dragon']
+        };
+
+        // Get appropriate monster pool for this floor
+        const tierLevel = Math.min(8, Math.max(1, floorNumber));
+        const pool = monstersByLevel[tierLevel] || monstersByLevel[1];
+
+        // Find valid floor positions for encounters
+        const findValidPosition = (excludePositions) => {
+            for (let attempts = 0; attempts < 100; attempts++) {
+                const x = Random.integer(1, width - 2);
+                const y = Random.integer(1, height - 2);
+
+                if (tiles[y][x] === 'floor') {
+                    const key = `${x},${y}`;
+                    if (!excludePositions.has(key)) {
+                        return { x, y };
+                    }
+                }
+            }
+            return null;
+        };
+
+        const usedPositions = new Set();
 
         for (let i = 0; i < encounterCount; i++) {
+            const pos = findValidPosition(usedPositions);
+            if (!pos) continue;
+
+            usedPositions.add(`${pos.x},${pos.y}`);
+
+            const isBoss = Random.chance(0.1);
+            const monsterName = isBoss
+                ? pool[pool.length - 1]  // Boss = strongest in pool
+                : Random.choice(pool);
+
             encounters.push({
-                x: Random.integer(1, 19),
-                y: Random.integer(1, 19),
+                x: pos.x,
+                y: pos.y,
                 level: floorNumber + Random.integer(-1, 2),
                 triggered: false,
-                type: Random.chance(0.1) ? 'boss' : 'normal'
+                type: isBoss ? 'boss' : 'normal',
+                monsterId: monsterName  // Now assigned for hydration!
             });
         }
 
@@ -497,28 +551,66 @@ class Dungeon {
     }
 
     /**
-     * Generate stairs for multi-level navigation
+     * Generate jacks (edge egress points) for node navigation
+     * Jacks are connection points between dungeon nodes
+     * - jack_entry: Return to previous node (town on floor 1)
+     * - jack_deep: Go to next node (deeper into dungeon)
      */
-    generateStairs(floorNumber) {
-        const stairs = {};
+    generateJacks(floorNumber, tiles) {
+        const jacks = {};
+        const width = tiles[0].length;
+        const height = tiles.length;
+        const usedPositions = new Set();
 
-        // Stairs up (except on floor 1)
-        if (floorNumber > 1) {
-            stairs.up = {
-                x: Random.integer(1, 19),
-                y: Random.integer(1, 19)
-            };
+        /**
+         * Find a valid floor tile for jack placement
+         */
+        const findValidJackPosition = () => {
+            for (let attempts = 0; attempts < 100; attempts++) {
+                const x = Random.integer(1, width - 2);
+                const y = Random.integer(1, height - 2);
+                const key = `${x},${y}`;
+
+                // Only place on floor tiles (not traps, doors, etc.)
+                if (tiles[y][x] === 'floor' && !usedPositions.has(key)) {
+                    usedPositions.add(key);
+                    return { x, y };
+                }
+            }
+            // Fallback: find any floor tile
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const key = `${x},${y}`;
+                    if (tiles[y][x] === 'floor' && !usedPositions.has(key)) {
+                        usedPositions.add(key);
+                        return { x, y };
+                    }
+                }
+            }
+            return null;
+        };
+
+        // Entry jack (return to previous node / town) - every floor has one
+        const entryPos = findValidJackPosition();
+        if (entryPos) {
+            jacks.entry = entryPos;
+            tiles[entryPos.y][entryPos.x] = 'jack_entry';
         }
 
-        // Stairs down (except on max floor)
+        // Deep jack (go to next node) - except on max floor
         if (floorNumber < this.maxFloors) {
-            stairs.down = {
-                x: Random.integer(1, 19),
-                y: Random.integer(1, 19)
-            };
+            const deepPos = findValidJackPosition();
+            if (deepPos) {
+                jacks.deep = deepPos;
+                tiles[deepPos.y][deepPos.x] = 'jack_deep';
+            }
         }
 
-        return stairs;
+        // Legacy compatibility - populate stairs object for existing code
+        jacks.up = jacks.entry;  // Entry goes "up" / out
+        jacks.down = jacks.deep; // Deep goes "down" / in
+
+        return jacks;
     }
 
     /**
@@ -578,7 +670,45 @@ class Dungeon {
             return;
         }
 
-        // Find a suitable starting position for random maps
+        // For procedural maps, player should start at the entry jack
+        const jacks = floor.jacks || floor.stairs || {};
+
+        // Try to position at entry jack first
+        if (jacks.entry) {
+            this.playerX = jacks.entry.x;
+            this.playerY = jacks.entry.y;
+            this.playerDirection = 0; // Start facing north
+            this.markExplored(this.playerX, this.playerY, 4);
+            console.log(`Player started at entry jack: (${this.playerX}, ${this.playerY})`);
+
+            // Check for position events at start position
+            setTimeout(() => {
+                this.checkPositionEvents();
+            }, 100);
+            return;
+        }
+
+        // Fallback: scan tiles for jack_entry tile
+        const tiles = floor.tiles;
+        for (let y = 0; y < tiles.length; y++) {
+            for (let x = 0; x < tiles[y].length; x++) {
+                if (tiles[y][x] === 'jack_entry') {
+                    this.playerX = x;
+                    this.playerY = y;
+                    this.playerDirection = 0;
+                    this.markExplored(this.playerX, this.playerY, 4);
+                    console.log(`Player started at entry jack (tile scan): (${x}, ${y})`);
+
+                    setTimeout(() => {
+                        this.checkPositionEvents();
+                    }, 100);
+                    return;
+                }
+            }
+        }
+
+        // Final fallback: find any walkable position
+        console.warn('No entry jack found, using random start position');
         for (let attempts = 0; attempts < 100; attempts++) {
             const x = Random.integer(1, floor.width - 2);
             const y = Random.integer(1, floor.height - 2);
@@ -642,6 +772,8 @@ class Dungeon {
         const tile = this.getTile(x, y, floor);
         const walkableTiles = [
             'floor', 'hidden_door', 'secret_passage', 'exit', 'treasure', 'open_door',
+            'jack_entry', 'jack_deep',  // Jack egress points (nodes/edges)
+            'stairs_up', 'stairs_down',  // Legacy compatibility
             'trap_pit_trap', 'trap_poison_dart', 'trap_teleport_trap', 'trap_alarm_trap'
         ];
         return walkableTiles.includes(tile);
@@ -679,15 +811,22 @@ class Dungeon {
         newY = ((newY % this.currentFloorData.height) + this.currentFloorData.height) % this.currentFloorData.height;
 
         if (this.isWalkable(newX, newY)) {
-            // Check if player is leaving exit tile
+            // Check if player is leaving a special tile
             const previousTile = this.getTile(this.playerX, this.playerY);
+            const newTile = this.getTile(newX, newY);
 
             this.playerX = newX;
             this.playerY = newY;
 
             // Check if player left exit tile
-            if (previousTile === 'exit' && this.getTile(newX, newY) !== 'exit') {
+            if (previousTile === 'exit' && newTile !== 'exit') {
                 this.triggerExitTileLeft();
+            }
+
+            // Check if player left jack tile
+            const jackTiles = ['jack_entry', 'jack_deep'];
+            if (jackTiles.includes(previousTile) && !jackTiles.includes(newTile)) {
+                this.triggerJackTileLeft();
             }
 
             // Check for events at new position
@@ -775,9 +914,19 @@ class Dungeon {
     checkPositionEvents() {
         const tile = this.getTile(this.playerX, this.playerY);
 
-        // Handle exit tile
+        // Handle exit tile (test mode exit)
         if (tile === 'exit') {
             this.triggerExitTile();
+        }
+
+        // Handle jack entry tile (procedural map exit to previous node/town)
+        if (tile === 'jack_entry') {
+            this.triggerJackEntryTile();
+        }
+
+        // Handle jack deep tile (procedural map descent to next node)
+        if (tile === 'jack_deep') {
+            this.triggerJackDeepTile();
         }
 
         // Handle treasure tile
@@ -817,6 +966,44 @@ class Dungeon {
     triggerExitTileLeft() {
         // Emit event to notify UI that player left exit tile
         if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('exit-tile-left');
+        }
+    }
+
+    /**
+     * Trigger jack entry tile - notify UI to show jack out button
+     */
+    triggerJackEntryTile() {
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('jack-entry-tile-entered', {
+                x: this.playerX,
+                y: this.playerY,
+                floor: this.currentFloor,
+                goesToTown: this.currentFloor === 1
+            });
+        }
+    }
+
+    /**
+     * Trigger jack deep tile - notify UI to show jack in deeper button
+     */
+    triggerJackDeepTile() {
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('jack-deep-tile-entered', {
+                x: this.playerX,
+                y: this.playerY,
+                floor: this.currentFloor
+            });
+        }
+    }
+
+    /**
+     * Trigger jack tile left - notify UI to hide jack button
+     */
+    triggerJackTileLeft() {
+        if (window.engine && window.engine.eventSystem) {
+            window.engine.eventSystem.emit('jack-tile-left');
+            // Also emit exit-tile-left for UI compatibility
             window.engine.eventSystem.emit('exit-tile-left');
         }
     }
@@ -1074,13 +1261,19 @@ class Dungeon {
     }
 
     /**
-     * Change floor level
+     * Change floor level via jack egress points
+     * direction: 'up' = jack out (return to previous node), 'down' = jack in deeper
      */
     changeFloor(direction) {
-        const stairs = this.currentFloorData.stairs;
+        const currentTile = this.getTile(this.playerX, this.playerY);
+        const jacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
 
-        if (direction === 'up' && stairs.up &&
-            stairs.up.x === this.playerX && stairs.up.y === this.playerY) {
+        // Jack Out (return to previous node)
+        if (direction === 'up' && (currentTile === 'jack_entry' || currentTile === 'stairs_up')) {
+            // On floor 1, jacking out returns to town (handled by caller)
+            if (this.currentFloor === 1) {
+                return 'town';  // Signal to return to town
+            }
 
             this.currentFloor--;
             if (!this.floors.has(this.currentFloor)) {
@@ -1088,29 +1281,67 @@ class Dungeon {
             }
             this.currentFloorData = this.floors.get(this.currentFloor);
 
-            // Position at stairs down on new floor
-            const newStairs = this.currentFloorData.stairs;
-            if (newStairs.down) {
-                this.playerX = newStairs.down.x;
-                this.playerY = newStairs.down.y;
+            // Position at deep jack on previous floor (since we came from there)
+            const prevJacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
+            if (prevJacks.deep || prevJacks.down) {
+                const pos = prevJacks.deep || prevJacks.down;
+                this.playerX = pos.x;
+                this.playerY = pos.y;
+                console.log(`Positioned at deep jack: (${pos.x}, ${pos.y})`);
+            } else {
+                // Fallback: scan tiles for jack_deep position
+                const tiles = this.currentFloorData.tiles;
+                let found = false;
+                for (let y = 0; y < tiles.length && !found; y++) {
+                    for (let x = 0; x < tiles[y].length && !found; x++) {
+                        if (tiles[y][x] === 'jack_deep' || tiles[y][x] === 'stairs_down') {
+                            this.playerX = x;
+                            this.playerY = y;
+                            found = true;
+                            console.log(`Positioned at deep jack (fallback scan): (${x}, ${y})`);
+                        }
+                    }
+                }
+                if (!found) {
+                    console.warn('Could not find deep jack on floor', this.currentFloor);
+                }
             }
 
             return true;
+        }
 
-        } else if (direction === 'down' && stairs.down &&
-            stairs.down.x === this.playerX && stairs.down.y === this.playerY) {
-
+        // Jack In Deeper (go to next node)
+        if (direction === 'down' && (currentTile === 'jack_deep' || currentTile === 'stairs_down')) {
             this.currentFloor++;
             if (!this.floors.has(this.currentFloor)) {
                 this.initializeFloor(this.currentFloor);
             }
             this.currentFloorData = this.floors.get(this.currentFloor);
 
-            // Position at stairs up on new floor
-            const newStairs = this.currentFloorData.stairs;
-            if (newStairs.up) {
-                this.playerX = newStairs.up.x;
-                this.playerY = newStairs.up.y;
+            // Position at entry jack on new floor (since we're entering)
+            const newJacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
+            if (newJacks.entry || newJacks.up) {
+                const pos = newJacks.entry || newJacks.up;
+                this.playerX = pos.x;
+                this.playerY = pos.y;
+                console.log(`Positioned at entry jack: (${pos.x}, ${pos.y})`);
+            } else {
+                // Fallback: scan tiles for jack_entry position
+                const tiles = this.currentFloorData.tiles;
+                let found = false;
+                for (let y = 0; y < tiles.length && !found; y++) {
+                    for (let x = 0; x < tiles[y].length && !found; x++) {
+                        if (tiles[y][x] === 'jack_entry' || tiles[y][x] === 'stairs_up') {
+                            this.playerX = x;
+                            this.playerY = y;
+                            found = true;
+                            console.log(`Positioned at entry jack (fallback scan): (${x}, ${y})`);
+                        }
+                    }
+                }
+                if (!found) {
+                    console.warn('Could not find entry jack on floor', this.currentFloor);
+                }
             }
 
             return true;

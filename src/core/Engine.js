@@ -635,6 +635,21 @@ class Engine {
         this.eventSystem.on('treasure-tile-left', () => {
             this.ui.hideTreasureButton();
         });
+
+        // Listen for jack deep tile events
+        this.eventSystem.on('jack-deep-tile-entered', (data) => {
+            this.ui.showJackDeepButton(data);
+        });
+
+        // Listen for jack entry tile events
+        this.eventSystem.on('jack-entry-tile-entered', (data) => {
+            this.ui.showJackEntryButton(data);
+        });
+
+        this.eventSystem.on('jack-tile-left', () => {
+            this.ui.hideJackDeepButton();
+            this.ui.hideJackEntryButton();
+        });
     }
 
     /**
