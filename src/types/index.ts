@@ -8,12 +8,12 @@
 // ─── Attributes ──────────────────────────────────────────────
 
 export interface Attributes {
-    strength: number;
-    intelligence: number;
-    piety: number;
-    vitality: number;
-    agility: number;
-    luck: number;
+  strength: number;
+  intelligence: number;
+  piety: number;
+  vitality: number;
+  agility: number;
+  luck: number;
 }
 
 // ─── Character ───────────────────────────────────────────────
@@ -21,192 +21,192 @@ export interface Attributes {
 export type DeathState = 'alive' | 'dead' | 'ashes' | 'lost';
 
 export type CharacterStatus =
-    | 'OK'
-    | 'DEAD'
-    | 'ASHES'
-    | 'LOST'
-    | 'POISONED'
-    | 'PARALYZED'
-    | 'STONED'
-    | 'SILENCED'
-    | 'ASLEEP'
-    | 'AFRAID';
+  | 'OK'
+  | 'DEAD'
+  | 'ASHES'
+  | 'LOST'
+  | 'POISONED'
+  | 'PARALYZED'
+  | 'STONED'
+  | 'SILENCED'
+  | 'ASLEEP'
+  | 'AFRAID';
 
 export interface MemorizedSpells {
-    arcane: string[];
-    divine: string[];
+  arcane: string[];
+  divine: string[];
 }
 
 export interface CharacterData {
-    id: string;
-    name: string;
-    race: string;
-    class: string;
-    level: number;
-    experience: number;
-    attributes: Attributes;
-    currentHP: number;
-    maxHP: number;
-    currentSP: number;
-    maxSP: number;
-    isAlive: boolean;
-    status: CharacterStatus;
-    age: number;
-    alignment: string;
-    equipment: Record<string, string | null>;
-    inventory: string[];
-    memorizedSpells: MemorizedSpells;
-    conditions: ConditionInstance[];
-    temporaryEffects: TemporaryEffect[];
-    classHistory: string[];
-    deathState?: DeathState;
-    deathCount?: number;
-    /** Cyber name variant */
-    cyberName?: string;
+  id: string;
+  name: string;
+  race: string;
+  class: string;
+  level: number;
+  experience: number;
+  attributes: Attributes;
+  currentHP: number;
+  maxHP: number;
+  currentSP: number;
+  maxSP: number;
+  isAlive: boolean;
+  status: CharacterStatus;
+  age: number;
+  alignment: string;
+  equipment: Record<string, string | null>;
+  inventory: string[];
+  memorizedSpells: MemorizedSpells;
+  conditions: ConditionInstance[];
+  temporaryEffects: TemporaryEffect[];
+  classHistory: string[];
+  deathState?: DeathState;
+  deathCount?: number;
+  /** Cyber name variant */
+  cyberName?: string;
 }
 
 // ─── Party ───────────────────────────────────────────────────
 
 export interface PartyData {
-    id: string;
-    name: string;
-    members: CharacterData[];
-    gold: number;
-    food: number;
-    torches: number;
-    lightRemaining: number;
-    formation: FormationData;
+  id: string;
+  name: string;
+  members: CharacterData[];
+  gold: number;
+  food: number;
+  torches: number;
+  lightRemaining: number;
+  formation: FormationData;
 }
 
 export interface FormationData {
-    frontRow: string[];
-    backRow: string[];
+  frontRow: string[];
+  backRow: string[];
 }
 
 // ─── Combat ──────────────────────────────────────────────────
 
 export interface CombatAction {
-    type: 'attack' | 'spell' | 'item' | 'defend' | 'flee' | 'parry';
-    actorId: string;
-    targetId?: string;
-    spellId?: string;
-    itemId?: string;
+  type: 'attack' | 'spell' | 'item' | 'defend' | 'flee' | 'parry';
+  actorId: string;
+  targetId?: string;
+  spellId?: string;
+  itemId?: string;
 }
 
 export interface CombatResult {
-    hit: boolean;
-    damage: number;
-    critical: boolean;
-    message: string;
+  hit: boolean;
+  damage: number;
+  critical: boolean;
+  message: string;
 }
 
 export interface MonsterGroup {
-    monsterId: string;
-    count: number;
-    monsters: MonsterInstance[];
+  monsterId: string;
+  count: number;
+  monsters: MonsterInstance[];
 }
 
 export interface MonsterInstance {
-    id: string;
-    templateId: string;
-    currentHP: number;
-    maxHP: number;
-    isAlive: boolean;
-    conditions: ConditionInstance[];
+  id: string;
+  templateId: string;
+  currentHP: number;
+  maxHP: number;
+  isAlive: boolean;
+  conditions: ConditionInstance[];
 }
 
 // ─── Dungeon ─────────────────────────────────────────────────
 
-export type Direction = 0 | 1 | 2 | 3;  // N=0, E=1, S=2, W=3
+export type Direction = 0 | 1 | 2 | 3; // N=0, E=1, S=2, W=3
 
 export interface Position {
-    x: number;
-    y: number;
-    floor: number;
-    direction: Direction;
+  x: number;
+  y: number;
+  floor: number;
+  direction: Direction;
 }
 
 export interface DungeonTile {
-    type: 'wall' | 'floor' | 'door' | 'stairs_up' | 'stairs_down' | 'special';
-    walls: { north: boolean; east: boolean; south: boolean; west: boolean };
-    explored: boolean;
-    encounter?: EncounterData;
-    special?: string;
-    treasure?: TreasureData;
-    event?: string;
+  type: 'wall' | 'floor' | 'door' | 'stairs_up' | 'stairs_down' | 'special';
+  walls: { north: boolean; east: boolean; south: boolean; west: boolean };
+  explored: boolean;
+  encounter?: EncounterData;
+  special?: string;
+  treasure?: TreasureData;
+  event?: string;
 }
 
 export interface DungeonFloor {
-    width: number;
-    height: number;
-    tiles: DungeonTile[][];
-    rooms: RoomData[];
-    encounters: EncounterData[];
+  width: number;
+  height: number;
+  tiles: DungeonTile[][];
+  rooms: RoomData[];
+  encounters: EncounterData[];
 }
 
 export interface RoomData {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: string;
 }
 
 export interface EncounterData {
-    id: string;
-    type: 'monster' | 'trap' | 'event' | 'treasure' | 'npc';
-    monsterGroups?: MonsterGroup[];
-    defeated?: boolean;
-    x: number;
-    y: number;
+  id: string;
+  type: 'monster' | 'trap' | 'event' | 'treasure' | 'npc';
+  monsterGroups?: MonsterGroup[];
+  defeated?: boolean;
+  x: number;
+  y: number;
 }
 
 export interface TreasureData {
-    gold?: number;
-    items?: string[];
-    opened?: boolean;
+  gold?: number;
+  items?: string[];
+  opened?: boolean;
 }
 
 // ─── Equipment ───────────────────────────────────────────────
 
 export type EquipmentSlot =
-    | 'weapon'
-    | 'shield'
-    | 'head'
-    | 'body'
-    | 'hands'
-    | 'feet'
-    | 'accessory'
-    | 'accessory2';
+  | 'weapon'
+  | 'shield'
+  | 'head'
+  | 'body'
+  | 'hands'
+  | 'feet'
+  | 'accessory'
+  | 'accessory2';
 
 export interface EquipmentItem {
-    id: string;
-    name: string;
-    cyberName: string;
-    type: string;
-    slot: EquipmentSlot;
-    damage?: DiceRoll;
-    armorClass?: number;
-    price: number;
-    weight: number;
-    classRestrictions?: string[];
-    raceRestrictions?: string[];
-    alignment?: string;
-    cursed?: boolean;
-    identified?: boolean;
-    effects?: ItemEffect[];
+  id: string;
+  name: string;
+  cyberName: string;
+  type: string;
+  slot: EquipmentSlot;
+  damage?: DiceRoll;
+  armorClass?: number;
+  price: number;
+  weight: number;
+  classRestrictions?: string[];
+  raceRestrictions?: string[];
+  alignment?: string;
+  cursed?: boolean;
+  identified?: boolean;
+  effects?: ItemEffect[];
 }
 
 export interface DiceRoll {
-    dice: number;
-    sides: number;
-    modifier?: number;
+  dice: number;
+  sides: number;
+  modifier?: number;
 }
 
 export interface ItemEffect {
-    type: string;
-    value: number;
-    stat?: string;
+  type: string;
+  value: number;
+  stat?: string;
 }
 
 // ─── Spells ──────────────────────────────────────────────────
@@ -214,24 +214,24 @@ export interface ItemEffect {
 export type SpellType = 'arcane' | 'divine';
 
 export interface SpellData {
-    id: string;
-    name: string;
-    cyberName: string;
-    type: SpellType;
-    level: number;
-    mpCost: number;
-    target: 'single' | 'group' | 'all' | 'self' | 'party';
-    effect: SpellEffect;
-    description: string;
-    cyberDescription?: string;
+  id: string;
+  name: string;
+  cyberName: string;
+  type: SpellType;
+  level: number;
+  mpCost: number;
+  target: 'single' | 'group' | 'all' | 'self' | 'party';
+  effect: SpellEffect;
+  description: string;
+  cyberDescription?: string;
 }
 
 export interface SpellEffect {
-    type: string;
-    value?: number;
-    dice?: DiceRoll;
-    duration?: number;
-    element?: string;
+  type: string;
+  value?: number;
+  dice?: DiceRoll;
+  duration?: number;
+  element?: string;
 }
 
 // ─── Monsters ────────────────────────────────────────────────
@@ -239,167 +239,167 @@ export interface SpellEffect {
 export type AIType = 'aggressive' | 'defensive' | 'caster' | 'support' | 'random';
 
 export interface MonsterData {
-    id: string;
-    name: string;
-    cyberName: string;
-    level: number;
-    hitDie: number;
-    armorClass: number;
-    attacks: MonsterAttack[];
-    aiType: AIType;
-    experience: number;
-    gold?: DiceRoll;
-    resistances?: string[];
-    weaknesses?: string[];
-    immunities?: string[];
-    spells?: string[];
-    abilities?: string[];
-    portraitModel?: PortraitModel;
-    loot?: LootTable[];
+  id: string;
+  name: string;
+  cyberName: string;
+  level: number;
+  hitDie: number;
+  armorClass: number;
+  attacks: MonsterAttack[];
+  aiType: AIType;
+  experience: number;
+  gold?: DiceRoll;
+  resistances?: string[];
+  weaknesses?: string[];
+  immunities?: string[];
+  spells?: string[];
+  abilities?: string[];
+  portraitModel?: PortraitModel;
+  loot?: LootTable[];
 }
 
 export interface MonsterAttack {
-    name: string;
-    damage: DiceRoll;
-    element?: string;
-    special?: string;
+  name: string;
+  damage: DiceRoll;
+  element?: string;
+  special?: string;
 }
 
 export interface PortraitModel {
-    vertices: number[][];
-    edges: number[][];
-    color?: string;
+  vertices: number[][];
+  edges: number[][];
+  color?: string;
 }
 
 export interface LootTable {
-    itemId: string;
-    chance: number;
+  itemId: string;
+  chance: number;
 }
 
 // ─── Conditions & Effects ────────────────────────────────────
 
 export interface ConditionInstance {
-    id: string;
-    type: string;
-    duration?: number;
-    stacks?: number;
-    source?: string;
+  id: string;
+  type: string;
+  duration?: number;
+  stacks?: number;
+  source?: string;
 }
 
 export interface TemporaryEffect {
-    id: string;
-    type: string;
-    value: number;
-    duration: number;
-    stat?: string;
-    source?: string;
+  id: string;
+  type: string;
+  value: number;
+  duration: number;
+  stat?: string;
+  source?: string;
 }
 
 // ─── Events ──────────────────────────────────────────────────
 
 export interface GameEventMap {
-    'game-state-change': { from: string; to: string; data?: any };
-    'player-action': { action: string; data?: any };
-    'encounter-triggered': { encounter: EncounterData; position: Position };
-    'combat-started': { enemies: MonsterGroup[] };
-    'combat-ended': { victory: boolean; rewards?: any };
-    'combat-action-ready': {};
-    'character-updated': { character: CharacterData };
-    'party-update': { party: PartyData };
-    'autosave-requested': {};
-    'textModeChanged': { newMode: string; oldMode: string };
-    'dungeon-floor-change': { floor: number; direction: 'up' | 'down' };
-    'character-death': { characterId: string; deathState: DeathState };
-    'rest-complete': { partyId: string; healed: boolean };
-    [key: string]: any;  // Allow additional events during migration
+  'game-state-change': { from: string; to: string; data?: any };
+  'player-action': { action: string; data?: any };
+  'encounter-triggered': { encounter: EncounterData; position: Position };
+  'combat-started': { enemies: MonsterGroup[] };
+  'combat-ended': { victory: boolean; rewards?: any };
+  'combat-action-ready': {};
+  'character-updated': { character: CharacterData };
+  'party-update': { party: PartyData };
+  'autosave-requested': {};
+  textModeChanged: { newMode: string; oldMode: string };
+  'dungeon-floor-change': { floor: number; direction: 'up' | 'down' };
+  'character-death': { characterId: string; deathState: DeathState };
+  'rest-complete': { partyId: string; healed: boolean };
+  [key: string]: any; // Allow additional events during migration
 }
 
 // ─── Game State ──────────────────────────────────────────────
 
 export type GameStateName =
-    | 'loading'
-    | 'title'
-    | 'town'
-    | 'playing'
-    | 'combat'
-    | 'game-over'
-    | 'character-creation'
-    | 'party-management'
-    | 'shopping'
-    | 'temple'
-    | 'rest'
-    | 'inventory';
+  | 'loading'
+  | 'title'
+  | 'town'
+  | 'playing'
+  | 'combat'
+  | 'game-over'
+  | 'character-creation'
+  | 'party-management'
+  | 'shopping'
+  | 'temple'
+  | 'rest'
+  | 'inventory';
 
 // ─── Audio ───────────────────────────────────────────────────
 
 export interface SoundEffect {
-    freq: number;
-    duration: number;
-    wave?: OscillatorType;
-    volume?: number;
-    sweep?: { start: number; end: number };
+  freq: number;
+  duration: number;
+  wave?: OscillatorType;
+  volume?: number;
+  sweep?: { start: number; end: number };
 }
 
 export interface MusicNote {
-    freq: number;
-    duration: number;
-    wave?: OscillatorType;
-    volume?: number;
+  freq: number;
+  duration: number;
+  wave?: OscillatorType;
+  volume?: number;
 }
 
 // ─── Storage ─────────────────────────────────────────────────
 
 export interface SaveData {
-    timestamp: number;
-    version: string;
-    party?: PartyData;
-    dungeon?: any;
-    gameState?: string;
-    settings?: GameSettings;
+  timestamp: number;
+  version: string;
+  party?: PartyData;
+  dungeon?: any;
+  gameState?: string;
+  settings?: GameSettings;
 }
 
 export interface GameSettings {
-    mode: 'classic' | 'cyber';
-    musicVolume: number;
-    sfxVolume: number;
-    autoSave: boolean;
+  mode: 'classic' | 'cyber';
+  musicVolume: number;
+  sfxVolume: number;
+  autoSave: boolean;
 }
 
 export interface CampData {
-    campId: string;
-    partyId: string;
-    partyName: string;
-    members: CharacterData[];
-    location: Position;
-    campTime: number;
-    resources: {
-        gold: number;
-        food: number;
-        torches: number;
-        lightRemaining: number;
-    };
-    dungeonProgress: {
-        floorsExplored: number[];
-        encountersDefeated: number;
-        treasuresFound: number;
-        secretsDiscovered: number;
-    };
-    gameVersion: string;
-    saveType: string;
+  campId: string;
+  partyId: string;
+  partyName: string;
+  members: CharacterData[];
+  location: Position;
+  campTime: number;
+  resources: {
+    gold: number;
+    food: number;
+    torches: number;
+    lightRemaining: number;
+  };
+  dungeonProgress: {
+    floorsExplored: number[];
+    encountersDefeated: number;
+    treasuresFound: number;
+    secretsDiscovered: number;
+  };
+  gameVersion: string;
+  saveType: string;
 }
 
 // ─── Rendering ───────────────────────────────────────────────
 
 export interface ViewportConfig {
-    width: number;
-    height: number;
-    fov: number;
-    nearPlane: number;
-    farPlane: number;
+  width: number;
+  height: number;
+  fov: number;
+  nearPlane: number;
+  farPlane: number;
 }
 
 export interface RenderContext {
-    ctx: CanvasRenderingContext2D;
-    width: number;
-    height: number;
+  ctx: CanvasRenderingContext2D;
+  width: number;
+  height: number;
 }
