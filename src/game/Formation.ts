@@ -199,7 +199,7 @@ export class Formation {
      * Get targeting priority for enemies
      */
     getTargetPriority(enemyFormation) {
-        const targets = [];
+        const targets: any[] = [];
 
         // Front row gets targeted first
         this.frontRow.forEach((character, index) => {
@@ -262,7 +262,7 @@ export class Formation {
      * Check if formation is valid
      */
     validateFormation() {
-        const issues = [];
+        const issues: string[] = [];
 
         if (this.frontRow.length + this.backRow.length === 0) {
             issues.push('Formation cannot be empty');
@@ -361,7 +361,7 @@ export class Formation {
      * Suggest formation improvements
      */
     suggestFormationImprovements() {
-        const suggestions = [];
+        const suggestions: string[] = [];
         const stats = this.getFormationStats();
 
         if (stats.frontRow.count === 0) {

@@ -678,7 +678,7 @@ export class AdvancedCharacterSheet {
     renderItemStats(item) {
         if (typeof item === 'string') return '';
         
-        const stats = [];
+        const stats: any[] = [];
         if (item.damage) {
             stats.push(`Damage: ${item.damage.dice}d${item.damage.sides}${item.damage.bonus ? `+${item.damage.bonus}` : ''}`);
         }

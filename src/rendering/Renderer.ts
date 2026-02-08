@@ -152,7 +152,7 @@ export class Renderer {
     /**
      * Render text on the canvas
      */
-    renderText(text, x, y, font = null) {
+    renderText(text, x, y, font: string | null = null) {
         this.ctx.fillStyle = this.textColor;
         this.ctx.font = font || this.font;
         this.ctx.fillText(text, x, y);

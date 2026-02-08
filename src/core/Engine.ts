@@ -121,7 +121,7 @@ export class Engine {
 
             console.log('Game initialized successfully');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to initialize game:', error);
             this.showErrorMessage('Failed to initialize game: ' + error.message);
         }
@@ -150,7 +150,7 @@ export class Engine {
             } else {
                 console.log('Returning player detected, skipping party setup...');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking first-time play:', error);
         }
     }
@@ -190,7 +190,7 @@ export class Engine {
             // Emit event for any listeners
             this.eventSystem.emit('party-setup-complete', { partyName });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error handling party setup completion:', error);
         }
     }
@@ -229,7 +229,7 @@ export class Engine {
                 // Continue with dungeon entry
                 await this.enterDungeon();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error handling temporary party setup completion:', error);
         }
     }
@@ -243,7 +243,7 @@ export class Engine {
 
             // Try to load the existing active party
             const activePartyId = Storage.getActivePartyId();
-            let party = null;
+            let party: any = null;
 
             if (activePartyId) {
                 party = await Party.load(activePartyId);
@@ -271,7 +271,7 @@ export class Engine {
 
             console.log(`Party initialized: ${this.party.id} (${this.party.members.length} members)`);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to initialize party system:', error);
             this.party = new Party(); // Fallback
         }
@@ -317,7 +317,7 @@ export class Engine {
 
             return party;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create new party:', error);
             return null;
         }
@@ -351,7 +351,7 @@ export class Engine {
 
             return newParty;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to handle party camp:', error);
             return null;
         }
@@ -384,7 +384,7 @@ export class Engine {
 
             return newParty;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to handle party wipe:', error);
             return null;
         }
@@ -409,7 +409,7 @@ export class Engine {
 
             // Check if this party has a camp (dungeon camping) or is just in town
             let isInTownCamp = true;
-            let resumeResult = null;
+            let resumeResult: any = null;
 
             if (party.campId) {
                 // Party has an actual camp - load the camp data
@@ -453,7 +453,7 @@ export class Engine {
                         try {
                             await Storage.deleteParty(this.party.id);
                             console.log(`Deleted temporary party: ${this.party.id} (name: "${this.party.name}", members: ${this.party.members.length})`);
-                        } catch (error) {
+                        } catch (error: any) {
                             console.warn(`Failed to delete temporary party: ${error.message}`);
                         }
                     }
@@ -467,7 +467,7 @@ export class Engine {
                         try {
                             await Storage.deleteParty(this.party.id);
                             console.log(`Deleted legacy orphaned party: ${this.party.id} (name: "${this.party.name}")`);
-                        } catch (error) {
+                        } catch (error: any) {
                             console.warn(`Failed to delete legacy orphaned party: ${error.message}`);
                         }
                     } else {
@@ -525,7 +525,7 @@ export class Engine {
 
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to resume camped party:', error);
             this.ui.addMessage('An error occurred while resuming the party.', 'error');
             return false;
@@ -560,7 +560,7 @@ export class Engine {
 
             console.log('✓ All entity systems initialized successfully');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to initialize entity systems:', error);
             throw error;
         }
@@ -1090,7 +1090,7 @@ export class Engine {
             Storage.saveGame(saveData);
             this.ui.addMessage('Game saved successfully.');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save game:', error);
             this.ui.addMessage('Failed to save game: ' + error.message);
         }
@@ -1312,7 +1312,7 @@ export class Engine {
                 this.ui.addMessage('Failed to establish camp. Please try again.');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to handle camp action:', error);
             this.ui.addMessage('An error occurred while trying to camp.');
         }
@@ -1365,7 +1365,7 @@ export class Engine {
             this.gameState.setState('town');
             this.ui.addMessage('Party returned to town.');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to return to town:', error);
             this.ui.addMessage('An error occurred while returning to town.');
         }
@@ -1717,7 +1717,7 @@ export class Engine {
                 try {
                     await this.party.save();
                     console.log(`Party ${this.party.id} saved with updated member list`);
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Failed to save party:', error);
                 }
 
@@ -1731,7 +1731,7 @@ export class Engine {
                 this.gameState.setState('training-grounds');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to assign character to Strike Team:', error);
             this.ui.addMessage('Failed to assign character to Strike Team. Please try again.');
             this.gameState.setState('training-grounds');
@@ -1900,7 +1900,7 @@ export class Engine {
                         await this.party.save();
                         console.log('Party status saved: left town');
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Failed to save party dungeon status:', error);
                 }
             }
@@ -1943,7 +1943,7 @@ export class Engine {
             try {
                 await this.dungeon.saveToDatabase(this.party.id);
                 console.log('Dungeon state saved before combat');
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to save dungeon state before combat:', error);
                 // Continue with combat even if save fails
             }

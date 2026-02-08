@@ -6,10 +6,10 @@ import { Character } from './Character.ts';
  * Handles the player's party of characters
  */
 export class Party {
-    _isTemporary: boolean;
-    isRescueMission: boolean;
+    _isTemporary: boolean = false;
+    isRescueMission: boolean = false;
     targetLocation: any;
-    isInTown: boolean;
+    isInTown: boolean = true;
     id: string;
     name: any;
     members: any[];
@@ -222,7 +222,7 @@ export class Party {
 
             // Load members from character storage
             if ((partyData as any).memberIds && (partyData as any).memberIds.length > 0) {
-                const members = [];
+                const members: any[] = [];
                 for (const memberId of (partyData as any).memberIds) {
                     const characterData = await Storage.loadCharacter(memberId);
                     if (characterData) {
@@ -254,7 +254,7 @@ export class Party {
     static async loadAll() {
         try {
             const partiesData = await Storage.loadAllParties();
-            const parties = [];
+            const parties: any[] = [];
 
             for (const partyData of (partiesData as any)) {
                 const party = await Party.load(partyData.id);

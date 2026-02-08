@@ -56,7 +56,7 @@ export class Dungeon {
         const height = this.testMode ? 5 : 20;
 
         // generateWizardryMaze now returns { tiles, rooms } for room-aware features
-        let tiles, rooms = [];
+        let tiles: any, rooms: any[] = [];
         if (this.testMode) {
             tiles = this.generateTestMap();
             rooms = []; // Test mode has no formal rooms
@@ -211,7 +211,7 @@ export class Dungeon {
      * Generate rooms for the maze
      */
     generateRooms(width, height, roomChance) {
-        const rooms = [];
+        const rooms: any[] = [];
         const maxRooms = Math.floor((width * height * roomChance) / 20);
 
         for (let attempts = 0; attempts < maxRooms * 3; attempts++) {
@@ -304,10 +304,10 @@ export class Dungeon {
         const width = tiles[0].length;
         const height = tiles.length;
         const visited = new Set();
-        const queue = [{ x: startX, y: startY, path: [] }];
+        const queue = [{ x: startX, y: startY, path: [] as any[] }];
 
         while (queue.length > 0) {
-            const { x, y, path } = queue.shift();
+            const { x, y, path } = queue.shift()!;
             const key = `${x},${y}`;
 
             if (visited.has(key)) continue;
@@ -398,7 +398,7 @@ export class Dungeon {
      * @param {number} height - Grid height
      * @param {Array} rooms - Array of room objects {x, y, width, height}
      */
-    generateDoors(tiles, width, height, rooms = []) {
+    generateDoors(tiles: any, width: any, height: any, rooms: any[] = []) {
         if (!rooms || rooms.length === 0) {
             console.log('No rooms defined - skipping door generation');
             return;
@@ -423,7 +423,7 @@ export class Dungeon {
             return this.isFloorTile(tile) && !isRoomTile(x, y);
         };
 
-        const potentialDoors = [];
+        const potentialDoors: any[] = [];
 
         // Find wall tiles that separate rooms from corridors
         for (let y = 1; y < height - 1; y++) {
@@ -614,7 +614,7 @@ export class Dungeon {
      */
     generateEncounters(floorNumber, tiles) {
         const encounterCount = Random.integer(5, 12);
-        const encounters = [];
+        const encounters: any[] = [];
         const width = tiles[0].length;
         const height = tiles.length;
 
@@ -707,7 +707,7 @@ export class Dungeon {
         ];
 
         const specialCount = Random.integer(2, 5);
-        const specials = [];
+        const specials: any[] = [];
 
         for (let i = 0; i < specialCount; i++) {
             specials.push({
@@ -1344,7 +1344,7 @@ export class Dungeon {
      */
     searchArea() {
         const searchRadius = 1;
-        const discoveries = [];
+        const discoveries: any[] = [];
 
         for (let dx = -searchRadius; dx <= searchRadius; dx++) {
             for (let dy = -searchRadius; dy <= searchRadius; dy++) {
@@ -1592,11 +1592,11 @@ export class Dungeon {
      */
     getViewingInfo() {
         const viewDistance = 5; // How far ahead to check
-        const walls = [];
-        const doors = [];
-        const passages = [];
-        const monsters = [];
-        const objects = [];
+        const walls: any[] = [];
+        const doors: any[] = [];
+        const passages: any[] = [];
+        const monsters: any[] = [];
+        const objects: any[] = [];
 
         // Check front tiles until we hit a wall or reach max distance
         let frontWallDistance = viewDistance + 1; // Default to beyond max distance
@@ -1952,7 +1952,7 @@ export class Dungeon {
     /**
      * Open a door at the specified coordinates (or in front if not specified)
      */
-    openDoor(startX = null, startY = null) {
+    openDoor(startX: number | null = null, startY: number | null = null) {
         let targetX = startX;
         let targetY = startY;
 
@@ -1972,7 +1972,7 @@ export class Dungeon {
         const tile = this.getTile(targetX, targetY);
 
         // Determine the open state for different door types
-        let openState = null;
+        let openState: string | null = null;
         if (tile === 'door') {
             openState = 'open_door';
         } else if (tile === 'hidden_door') {
@@ -1996,7 +1996,7 @@ export class Dungeon {
     /**
      * Close a door at the specified coordinates (or in front if not specified)
      */
-    closeDoor(startX = null, startY = null) {
+    closeDoor(startX: number | null = null, startY: number | null = null) {
         let targetX = startX;
         let targetY = startY;
 
@@ -2016,7 +2016,7 @@ export class Dungeon {
         const tile = this.getTile(targetX, targetY);
 
         // Determine the closed state for different door types
-        let closedState = null;
+        let closedState: string | null = null;
         if (tile === 'open_door') {
             closedState = 'door';
         } else if (tile === 'open_hidden_door') {
@@ -2042,7 +2042,7 @@ export class Dungeon {
      * Returns array of discovered secrets
      */
     searchForSecrets() {
-        const discovered = [];
+        const discovered: any[] = [];
         const directions = [
             { dx: 0, dy: -1, name: 'north' },  // North
             { dx: 1, dy: 0, name: 'east' },    // East

@@ -109,7 +109,7 @@ export class SpellMemorization {
             divine: Class.getSpellSlots(character, 'divine')
         };
 
-        const recommendations = { arcane: [], divine: [] };
+        const recommendations = { arcane: [] as any[], divine: [] as any[] };
 
         // Recommend spells based on class and situation
         for (const school of ['arcane', 'divine']) {

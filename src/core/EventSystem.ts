@@ -10,7 +10,7 @@ export class EventSystem {
     maxQueueSize: number;
     debugMode: boolean;
 
-    static _instance = null;
+    static _instance: EventSystem | null = null;
 
     static getInstance() {
         if (!EventSystem._instance) {
@@ -80,7 +80,7 @@ export class EventSystem {
     /**
      * Remove an event listener
      */
-    off(eventName, callback = null) {
+    off(eventName, callback: ((...args: any[]) => void) | null = null) {
         if (callback) {
             // Remove specific callback
             const listeners = this.listeners.get(eventName);
@@ -302,7 +302,7 @@ export class EventSystem {
      */
     waitFor(eventName, timeout = 0) {
         return new Promise((resolve, reject) => {
-            let timeoutId = null;
+            let timeoutId: any = null;
 
             const handler = (...args) => {
                 if (timeoutId) {

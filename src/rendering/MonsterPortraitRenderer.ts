@@ -5,7 +5,7 @@ import { Viewport3D } from './Viewport3D.ts';
  * Extends Viewport3D to render 3D wireframe monster portraits in combat interface
  */
 export class MonsterPortraitRenderer extends Viewport3D {
-    recentDamage: number;
+    recentDamage: number = 0;
     portraitMode: boolean;
     portraitScale: number;
     portraitOffset: Record<string, any>;

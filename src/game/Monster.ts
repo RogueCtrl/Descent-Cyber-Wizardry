@@ -209,7 +209,7 @@ export class Monster {
         const monster = new Monster();
         await monster.initializeEntities();
 
-        const monsters = await Storage.queryEntities(Storage.MONSTER_STORE, { name: monsterName });
+        const monsters: any = await Storage.queryEntities(Storage.MONSTER_STORE, { name: monsterName });
         if ((monsters as any).length > 0) {
             const data = monsters[0];
             if (Monster.prototype.entityCache) {
@@ -629,7 +629,7 @@ export class Monster {
      * Apply special attack effects
      */
     applySpecialEffects(attack, target) {
-        const effects = [];
+        const effects: string[] = [];
 
         if (attack.special) {
             attack.special.forEach(effect => {
@@ -822,7 +822,7 @@ export class Monster {
         const breathAttack = this.attacks.find(attack => attack.special?.includes('fire'));
         if (!breathAttack) return { success: false };
 
-        const results = [];
+        const results: any[] = [];
         targets.forEach(target => {
             if (target.isAlive) {
                 const damage = Random.dice(breathAttack.damage.dice, breathAttack.damage.sides);
@@ -846,7 +846,7 @@ export class Monster {
      * Use frightful presence
      */
     useFrightfulPresence(targets) {
-        const affected = [];
+        const affected: any[] = [];
         targets.forEach(target => {
             if (target.level < this.level && Random.percent(50)) {
                 target.addTemporaryEffect?.({
@@ -869,7 +869,7 @@ export class Monster {
      * Use multiattack
      */
     useMultiattack(targets) {
-        const results = [];
+        const results: any[] = [];
         const attackCount = this.level >= 5 ? 2 : 1;
 
         for (let i = 0; i < attackCount; i++) {
@@ -993,7 +993,7 @@ export class EncounterGenerator {
         const roll = Random.integer(1, totalWeight);
 
         let currentWeight = 0;
-        let chosenEncounter = null;
+        let chosenEncounter: any = null;
 
         for (const entry of table) {
             currentWeight += entry.weight;
@@ -1008,7 +1008,7 @@ export class EncounterGenerator {
         }
 
         // Generate enemy party using async entity loading
-        const enemyParty = [];
+        const enemyParty: any[] = [];
 
         for (const monsterType of chosenEncounter.monsters) {
             const count = Array.isArray(chosenEncounter.count) ?
@@ -1052,7 +1052,7 @@ export class EncounterGenerator {
         const bossType = Random.choice(possibleBosses);
 
         // Create boss party
-        const bossParty = [];
+        const bossParty: any[] = [];
 
         // Create boss monster
         const boss = new Monster();
@@ -1119,8 +1119,8 @@ export class EncounterGenerator {
      * Get random monsters by type
      */
     async getMonstersByType(type) {
-        const monsters = await Storage.getAllMonsters();
-        return Object.entries(monsters).filter(([id, data]) => {
+        const monsters: any = await Storage.getAllMonsters();
+        return (Object.entries(monsters) as [string, any][]).filter(([id, data]) => {
             return data.type === type;
         }).map(([id, data]) => ({ id, ...data }));
     }
@@ -1145,14 +1145,14 @@ export class EncounterGenerator {
         };
 
         const availableMonsters = themeTypes[theme];
-        const encounter = { monsters: [], isEmpty: false, theme: theme };
+        const encounter = { monsters: [] as any[], isEmpty: false, theme: theme };
 
         if (!availableMonsters) {
             return { monsters: [], isEmpty: true };
         }
 
         // Filter by appropriate level using async methods
-        const levelAppropriate = [];
+        const levelAppropriate: any[] = [];
         for (const monsterType of availableMonsters) {
             const data = await Monster.getMonsterData(monsterType);
             if (data && data.level <= dungeonLevel + 1) {

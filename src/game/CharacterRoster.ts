@@ -109,7 +109,7 @@ export class CharacterRoster {
      * Get characters by level range
      */
     getCharactersByLevel(minLevel, maxLevel = null) {
-        const characters = [];
+        const characters: any[] = [];
         const endLevel = maxLevel || minLevel;
 
         for (let level = minLevel; level <= endLevel; level++) {
@@ -268,8 +268,8 @@ export class CharacterRoster {
         const rescueParty = this.createParty('Rescue Mission', rescuerIds);
         if (!rescueParty.success) return rescueParty;
 
-        rescueParty.party.isRescueMission = true;
-        rescueParty.party.targetLocation = targetLocation;
+        rescueParty.party!.isRescueMission = true;
+        rescueParty.party!.targetLocation = targetLocation;
 
         return rescueParty;
     }

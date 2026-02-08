@@ -61,7 +61,7 @@ class ResourceManagementTest {
             console.log('✓ Test environment initialized successfully');
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Failed to initialize test environment:', error);
             return false;
         }
@@ -215,7 +215,7 @@ class ResourceManagementTest {
 
             console.log('✓ Rest System tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Rest System test error:', error);
             this.recordTestResult('Rest System - Error', false, error.message);
         }
@@ -277,7 +277,7 @@ class ResourceManagementTest {
 
             console.log('✓ Death System tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Death System test error:', error);
             this.recordTestResult('Death System - Error', false, error.message);
         }
@@ -332,7 +332,7 @@ class ResourceManagementTest {
 
             console.log('✓ Equipment System tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Equipment System test error:', error);
             this.recordTestResult('Equipment System - Error', false, error.message);
         }
@@ -393,7 +393,7 @@ class ResourceManagementTest {
 
             console.log('✓ Durability System tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Durability System test error:', error);
             this.recordTestResult('Durability System - Error', false, error.message);
         }
@@ -445,7 +445,7 @@ class ResourceManagementTest {
 
             console.log('✓ Item Identification tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Item Identification test error:', error);
             this.recordTestResult('Item Identification - Error', false, error.message);
         }
@@ -504,7 +504,7 @@ class ResourceManagementTest {
 
             console.log('✓ Camp/Resume System tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ Camp/Resume System test error:', error);
             this.recordTestResult('Camp/Resume System - Error', false, error.message);
         }
@@ -570,7 +570,7 @@ class ResourceManagementTest {
 
             console.log('✓ System Integration tests completed\n');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('✗ System Integration test error:', error);
             this.recordTestResult('System Integration - Error', false, error.message);
         }

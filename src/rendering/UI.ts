@@ -108,7 +108,7 @@ export class UI {
 
             console.log('UI initialized successfully');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to initialize UI:', error);
         }
     }
@@ -429,7 +429,7 @@ export class UI {
         let campingPartiesCount = 0;
         let activePartiesCount = 0;
         let lostPartiesCount = 0;
-        let charStats = null;
+        let charStats: any = null;
         let hasCamps = false;
 
         try {
@@ -446,7 +446,7 @@ export class UI {
                 hasCamps = (allParties as any).length > 1 || partiesWithMembers.length > 0;
             }
             charStats = await Storage.getCharacterStatistics();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking for camps:', error);
         }
 
@@ -856,7 +856,7 @@ export class UI {
             // Set up event listeners
             this.setupStrikeTeamEventListeners(this.strikeTeamModal.getBody());
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to show Strike Team Management:', error);
             this.addMessage('Failed to load Strike Team Management', 'error');
         }
@@ -1080,7 +1080,7 @@ export class UI {
                 });
                 this.addMessage('Failed to resume party - engine not available', 'error');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to resume party:', error);
             this.addMessage('Failed to resume party', 'error');
         }
@@ -1226,7 +1226,7 @@ export class UI {
                 });
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error showing delete confirmation:', error);
             this.addMessage('Failed to show delete confirmation', 'error');
         }
@@ -1249,7 +1249,7 @@ export class UI {
             let party;
             try {
                 party = await Storage.loadParty(partyId);
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to load full party, using basic info:', error);
                 party = basicPartyInfo;
             }
@@ -1260,7 +1260,7 @@ export class UI {
             const memberList = party.members || party.memberIds || [];
 
             // Load the actual character objects
-            let actualMembers = [];
+            let actualMembers: any[] = [];
             if (memberList && memberList.length > 0) {
                 for (const member of memberList) {
                     // Check if this is just an ID string or a full character object
@@ -1329,7 +1329,7 @@ export class UI {
                                 console.log(`Successfully set ${member.name} to lost state (${(reloadedChar as any).status})`);
                             }
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         console.error(`Error saving character ${member.name}:`, error);
                     }
                 }
@@ -1358,7 +1358,7 @@ export class UI {
                 try {
                     await window.engine.party.refreshFromStorage();
                     console.log('Engine party refreshed from storage');
-                } catch (error) {
+                } catch (error: any) {
                     console.log('Engine party refresh not available:', error.message);
                 }
             }
@@ -1376,7 +1376,7 @@ export class UI {
             console.log(`Successfully deleted party: ${party.name}`);
             this.addMessage('Party deleted successfully', 'info');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting party:', error);
             this.addMessage('Failed to delete party', 'error');
         }
@@ -1428,7 +1428,7 @@ export class UI {
                     });
                 }
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error refreshing Strike Team Management:', error);
             }
         }
@@ -1724,7 +1724,7 @@ export class UI {
             // Add event listeners after modal is created
             this.setupRosterEventListeners();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to show character roster:', error);
             this.addMessage('Failed to load character roster', 'error');
         }
@@ -1778,7 +1778,7 @@ export class UI {
             // Reattach event listeners
             this.setupRosterEventListeners();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to refresh character roster content:', error);
         }
     }
@@ -1864,7 +1864,7 @@ export class UI {
             // Add event listeners for character detail modal
             this.setupCharacterDetailEventListeners();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to show character details:', error);
             this.addMessage('Failed to load character details', 'error');
         }
@@ -2180,7 +2180,7 @@ export class UI {
                         if (character && !this.isCharacterPermanentlyLost(character)) {
                             aliveCount++;
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         // Ignore loading errors for counting
                     }
                 }
@@ -2199,13 +2199,13 @@ export class UI {
 
 
         // Build strike team data by loading each team's members
-        const strikeTeamData = [];
+        const strikeTeamData: any[] = [];
         let totalActiveCharacters = 0;
 
         for (const party of sortedParties) {
 
             // Load all characters for this party
-            const partyMembers = [];
+            const partyMembers: any[] = [];
 
             if (party.memberIds && party.memberIds.length > 0) {
                 for (const memberId of party.memberIds) {
@@ -2214,7 +2214,7 @@ export class UI {
                         if (character && !this.isCharacterPermanentlyLost(character)) {
                             partyMembers.push(character);
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         console.warn(`Failed to load character ${memberId}:`, error);
                     }
                 }
@@ -2501,7 +2501,7 @@ export class UI {
             // Add event listeners after modal is created
             this.setupLostAgentsEventListeners();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to show lost agents modal:', error);
             this.addMessage('Failed to load lost agents memorial', 'error');
         }
@@ -2706,7 +2706,7 @@ export class UI {
             // Show delete character confirmation modal
             this.showDeleteCharacterConfirmation(characterId);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to forget lost character:', error);
             this.addMessage('Failed to remove character from memorial', 'error');
         }
@@ -2744,7 +2744,7 @@ export class UI {
             // Reattach event listeners
             this.setupLostAgentsEventListeners();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to refresh lost agents content:', error);
         }
     }
@@ -2862,7 +2862,7 @@ export class UI {
                 });
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error showing delete character confirmation:', error);
             this.addMessage('Failed to show delete confirmation', 'error');
         }
@@ -2903,7 +2903,7 @@ export class UI {
                 }
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete character:', error);
             this.addMessage('Failed to delete character', 'error');
         }
@@ -3089,7 +3089,7 @@ export class UI {
         document.addEventListener('keydown', async (e) => {
             if (this.gameState && this.gameState.currentState === 'combat') {
                 const key = e.key;
-                let action = null;
+                let action: string | null = null;
 
                 switch (key) {
                     case '1': action = 'attack'; break;
@@ -3201,7 +3201,7 @@ export class UI {
                         waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ?
                             TextManager.getText('no_enemies', 'No Enemies') : 'No Enemies';
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.log('Error updating wave indicator:', error);
                     waveDisplayDiv.textContent = typeof TextManager !== 'undefined' ?
                         TextManager.getText('combat_active', 'Combat Active') : 'Combat Active';
@@ -3303,7 +3303,7 @@ export class UI {
                         monsterStatusDiv.textContent = typeof TextManager !== 'undefined' ?
                             TextManager.getText('wave_clear', 'Wave Clear') : 'Wave Clear';
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.log('Error updating monster visual:', error);
                     // Error state - show ASCII fallback
                     if (monsterCanvas) monsterCanvas.style.display = 'none';
@@ -3352,14 +3352,14 @@ export class UI {
                 // Player turn - show action buttons
                 actionButtons.style.display = 'flex';
                 enemyTurnDiv.style.display = 'none';
-                actionHeader.querySelector('h3').textContent = `${currentActor.combatant.name}'s Options`;
+                actionHeader.querySelector('h3')!.textContent = `${currentActor.combatant.name}'s Options`;
             } else {
                 // Enemy turn - show enemy turn info
                 actionButtons.style.display = 'none';
                 enemyTurnDiv.style.display = 'block';
-                actionHeader.querySelector('h3').textContent = 'Enemy Turn';
+                actionHeader.querySelector('h3')!.textContent = 'Enemy Turn';
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log('Error updating action context:', error);
             // Default to showing player actions
             actionButtons.style.display = 'flex';
@@ -3517,7 +3517,7 @@ export class UI {
                     this.addMessage('Monster AI failed to act!', 'error');
                     this.showEnemyActionResult(monster, { action: 'failed', result: 'Monster AI failed to act!' });
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error processing monster turn:', error);
                 this.addMessage('Monster AI failed to act!', 'error');
                 this.showEnemyActionResult(monster, { action: 'failed', result: 'Monster AI failed to act!' });
@@ -3539,7 +3539,7 @@ export class UI {
             // Hide player actions, show enemy turn
             actionButtons.style.display = 'none';
             enemyTurnDiv.style.display = 'block';
-            actionHeader.querySelector('h3').textContent = 'Enemy Turn';
+            actionHeader.querySelector('h3')!.textContent = 'Enemy Turn';
 
             // Show "processing" message
             if (enemyActionResult) {
@@ -3834,7 +3834,7 @@ export class UI {
     /**
      * Show post-combat results screen
      */
-    showPostCombatResults(rewards, disconnectedCharacters = []) {
+    showPostCombatResults(rewards, disconnectedCharacters: any[] = []) {
         console.log('Showing post-combat results:', rewards);
 
         // Hide combat interface first
@@ -4049,7 +4049,7 @@ export class UI {
                 // Save the updated character state
                 try {
                     await Storage.saveCharacter(member);
-                } catch (error) {
+                } catch (error: any) {
                     console.error(`Failed to save character ${member.name}:`, error);
                 }
 
@@ -4061,7 +4061,7 @@ export class UI {
     /**
      * Show party death screen
      */
-    async showPartyDeathScreen(casualties, disconnectedCharacters = []) {
+    async showPartyDeathScreen(casualties, disconnectedCharacters: any[] = []) {
         console.log('Showing party death screen:', casualties);
 
         // Check if entire party is defeated (no alive members)
@@ -4291,7 +4291,7 @@ export class UI {
     /**
      * Show victory with casualties screen
      */
-    showVictoryWithCasualtiesScreen(casualties, survivors, rewards, disconnectedCharacters = []) {
+    showVictoryWithCasualtiesScreen(casualties, survivors, rewards, disconnectedCharacters: any[] = []) {
         console.log('Showing victory with casualties:', {
             casualties: casualties.map(c => ({ name: c.name, status: c.status, isAlive: c.isAlive, hp: c.currentHP })),
             survivors: survivors.map(s => ({ name: s.name, status: s.status, isAlive: s.isAlive, hp: s.currentHP })),
@@ -4342,7 +4342,7 @@ export class UI {
             this.postCombatModal.create(content, '⚔️ Victory with Casualties');
             this.postCombatModal.show();
             console.log('Victory with casualties modal created and shown successfully');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating/showing victory modal:', error);
             // Fallback: show a simple alert if modal creation fails
             alert('Victory! The battle is won, but some companions were lost. Click OK to continue.');
@@ -4357,7 +4357,7 @@ export class UI {
     /**
      * Create victory with casualties content
      */
-    createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters = []) {
+    createVictoryWithCasualtiesContent(casualties, survivors, rewards, disconnectedCharacters: any[] = []) {
         let content = '<div class="victory-with-casualties">';
 
         // Victory message
@@ -4990,7 +4990,7 @@ export class UI {
                 try {
                     await window.engine.dungeon.saveToDatabase(window.engine.party.id);
                     console.log('Dungeon saved before exiting to town');
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Failed to save dungeon before town exit:', error);
                 }
 
@@ -4999,7 +4999,7 @@ export class UI {
                     for (const member of window.engine.party.members) {
                         try {
                             await Storage.saveCharacter(member);
-                        } catch (error) {
+                        } catch (error: any) {
                             console.error(`Failed to save character ${member.name}:`, error);
                         }
                     }
@@ -5089,7 +5089,7 @@ export class UI {
                         try {
                             await window.engine.party.save();
                             console.log('Party status updated after death handling');
-                        } catch (error) {
+                        } catch (error: any) {
                             console.error('Failed to save party status after death:', error);
                         }
                     }
@@ -5169,17 +5169,17 @@ export class UI {
         document.body.appendChild(modal);
 
         // Add event listeners
-        modal.querySelector('#resume-game').addEventListener('click', () => {
+        modal.querySelector('#resume-game')!.addEventListener('click', () => {
             this.hideGameMenu();
             this.eventSystem.emit('game-state-change', 'playing');
         });
 
-        modal.querySelector('#save-game').addEventListener('click', () => {
+        modal.querySelector('#save-game')!.addEventListener('click', () => {
             this.eventSystem.emit('save-game');
             this.addMessage('Game saved!');
         });
 
-        modal.querySelector('#new-game').addEventListener('click', () => {
+        modal.querySelector('#new-game')!.addEventListener('click', () => {
             // Use the game's modal system instead of browser confirm
             this.showNewGameConfirmation();
         });
@@ -5217,11 +5217,11 @@ export class UI {
         document.body.appendChild(modal);
 
         // Add event listeners
-        modal.querySelector('#cancel-new-game').addEventListener('click', () => {
+        modal.querySelector('#cancel-new-game')!.addEventListener('click', () => {
             modal.remove();
         });
 
-        modal.querySelector('#confirm-new-game').addEventListener('click', () => {
+        modal.querySelector('#confirm-new-game')!.addEventListener('click', () => {
             modal.remove();
             this.hideGameMenu();
             this.eventSystem.emit('game-state-change', 'character-creation');
@@ -5784,7 +5784,7 @@ export class UI {
      * Generate random loot from migration files
      */
     generateTreasureLoot() {
-        const loot = [];
+        const loot: any[] = [];
         const lootCount = Math.floor(Math.random() * 3) + 1; // 1-3 items
 
         // Define loot pools from migration files
@@ -5946,7 +5946,7 @@ export class UI {
                     await window.engine.dungeon.saveToDatabase(window.engine.party.id);
                     console.log('Dungeon saved before exiting to town');
                     this.addMessage('Dungeon progress saved.', 'system');
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Failed to save dungeon before town exit:', error);
                     this.addMessage('Warning: Failed to save dungeon progress.', 'error');
                 }
@@ -5956,7 +5956,7 @@ export class UI {
                     for (const member of window.engine.party.members) {
                         try {
                             await Storage.saveCharacter(member);
-                        } catch (error) {
+                        } catch (error: any) {
                             console.error(`Failed to save character ${member.name}:`, error);
                         }
                     }
@@ -5988,7 +5988,7 @@ export class UI {
                 try {
                     await window.engine.party.save();
                     console.log('Party status updated to in town');
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Failed to save party town status:', error);
                 }
             }

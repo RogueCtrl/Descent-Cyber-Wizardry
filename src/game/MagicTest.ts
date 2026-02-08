@@ -51,7 +51,7 @@ export class MagicTest {
             
             this.printTestResults();
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Test failed with error:', error);
             this.testResults.push({
                 test: 'Critical Error',
@@ -110,7 +110,7 @@ export class MagicTest {
                 details: `Arcane: ${spellCount.arcane} spells, Divine: ${spellCount.divine} spells, All levels: ${hasAllLevels}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Spell Database',
                 passed: false,
@@ -126,7 +126,7 @@ export class MagicTest {
         console.log('Testing spell slot calculation...');
         
         try {
-            const testResults = [];
+            const testResults: any[] = [];
             
             // Test all spellcasting classes
             const spellcastingClasses = ['Mage', 'Priest', 'Bishop', 'Samurai', 'Lord', 'Ninja'];
@@ -157,7 +157,7 @@ export class MagicTest {
                 details: `Tested ${spellcastingClasses.length} classes, all have spell slots: ${allClassesHaveSlots}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Spell Slot Calculation',
                 passed: false,
@@ -209,7 +209,7 @@ export class MagicTest {
                 details: `Memorized ${memorizedCount} spells successfully`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Spell Memorization',
                 passed: false,
@@ -253,7 +253,7 @@ export class MagicTest {
                 details: `Spell cast successfully, target healed: ${spellWorked}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Spell Casting',
                 passed: false,
@@ -288,7 +288,7 @@ export class MagicTest {
                 details: `Bishop dual access: ${bishopHasBoth}, Samurai limited arcane: ${samuraiCorrect}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Elite Class Spells',
                 passed: false,
@@ -324,7 +324,7 @@ export class MagicTest {
                 details: `Level 7 spells exist and are accessible to high-level characters`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'High-Level Spells',
                 passed: false,
@@ -361,7 +361,7 @@ export class MagicTest {
                 details: `Heal restored to full HP: ${healWorked}, Fireball dealt damage: ${damageWorked}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Spell Effects',
                 passed: false,

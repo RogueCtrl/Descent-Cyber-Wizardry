@@ -296,7 +296,7 @@ export class DeathSystem {
      * @returns {Array} Available temple services
      */
     getAvailableServices(character) {
-        const available = [];
+        const available: any[] = [];
 
         for (const [serviceKey, service] of Object.entries(this.templeServices)) {
             if (service.requirements.includes(character.status) || 

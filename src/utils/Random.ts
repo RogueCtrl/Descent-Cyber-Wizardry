@@ -88,7 +88,7 @@ export class Random {
     static choices(array, count) {
         if (count >= array.length) return [...array];
 
-        const result = [];
+        const result: any[] = [];
         const remaining = [...array];
 
         for (let i = 0; i < count; i++) {
@@ -217,6 +217,6 @@ export class Random {
      * Reset random number generator to default
      */
     static reset() {
-        delete Math.random;
+        delete (Math as any).random;
     }
 }

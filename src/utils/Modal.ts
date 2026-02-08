@@ -7,9 +7,9 @@ export class Modal {
     element: HTMLElement | null;
     isVisible: boolean;
     onClose: (() => void) | null;
-    contentArea: HTMLElement | null;
-    overlay: HTMLElement | null;
-    container: HTMLElement | null;
+    contentArea: HTMLElement | null = null;
+    overlay: HTMLElement | null = null;
+    container: HTMLElement | null = null;
 
     constructor(options: any = {}) {
         this.options = {

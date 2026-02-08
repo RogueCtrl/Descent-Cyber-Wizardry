@@ -543,7 +543,7 @@ export class Spells {
     /**
      * Get spell data
      */
-    static getSpellData(spellName, school = null) {
+    static getSpellData(spellName, school: string | null = null) {
         const spells = new Spells();
         return spells.getSpell(spellName, school);
     }
@@ -578,7 +578,7 @@ export class Spells {
      * @param {string} school - Optional school filter
      * @returns {Promise<Object|null>} Spell data or null
      */
-    async getSpellByName(spellName, school = null) {
+    async getSpellByName(spellName, school: string | null = null) {
         await this.initializeEntities();
 
         const criteria: any = { name: spellName };
@@ -586,7 +586,7 @@ export class Spells {
             criteria.school = school;
         }
 
-        const spells = await Storage.queryEntities(Storage.SPELL_STORE, criteria);
+        const spells: any = await Storage.queryEntities(Storage.SPELL_STORE, criteria);
         if ((spells as any).length > 0) {
             const spell = spells[0];
             this.spellCache.set(spell.id, spell);
@@ -600,13 +600,13 @@ export class Spells {
      * DEPRECATED: Legacy getSpell method (kept for compatibility)
      * Use getSpellByName() or getSpellFromStorage() instead
      */
-    getSpell(spellName, school = null) {
+    getSpell(spellName, school: string | null = null) {
         // For backward compatibility, use synchronous fallback
         const spellDatabase = this.initializeSpellDatabase();
 
         // Search in specified school first
         if (school && spellDatabase[school]) {
-            for (const level of Object.values(spellDatabase[school])) {
+            for (const level of Object.values(spellDatabase[school]) as any[]) {
                 if (level[spellName]) {
                     return level[spellName];
                 }
@@ -615,7 +615,7 @@ export class Spells {
 
         // Search all schools if not found or no school specified
         for (const schoolName of Object.keys(spellDatabase)) {
-            for (const level of Object.values(spellDatabase[schoolName])) {
+            for (const level of Object.values(spellDatabase[schoolName]) as any[]) {
                 if (level[spellName]) {
                     return level[spellName];
                 }
@@ -644,10 +644,10 @@ export class Spells {
     async getAvailableSpells(character) {
         const classData = Class.getClassData(character.class);
         if (!classData || !classData.spells) {
-            return { arcane: [], divine: [] };
+            return { arcane: [] as any[], divine: [] as any[] };
         }
 
-        const availableSpells = { arcane: [], divine: [] };
+        const availableSpells = { arcane: [] as any[], divine: [] as any[] };
 
         // Determine which schools the character can access
         const canCastArcane = classData.spells === 'arcane' || classData.spells === 'both' || classData.spells === 'limited_arcane';
@@ -685,7 +685,7 @@ export class Spells {
      * @param {Object} target - Target of the spell
      * @returns {Promise<Object>} Casting result
      */
-    async castSpell(caster, spellNameOrId, target = null) {
+    async castSpell(caster, spellNameOrId, target: any = null) {
         let spell = await this.getSpellFromStorage(spellNameOrId);
         if (!spell) {
             spell = await this.getSpellByName(spellNameOrId);

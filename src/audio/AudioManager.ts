@@ -341,7 +341,7 @@ export class AudioManager {
      * Atmospheric style inspired by dungeon exploration: sparse pings, low drones, minimal melody
      */
     createTownThemeCyber() {
-        const theme = [];
+        const theme: any[] = [];
 
         // --- SECTION 1: Deep Atmospheric Foundation ---
         // Low sub-bass drone (like dungeon stealth mode)
@@ -404,7 +404,7 @@ export class AudioManager {
         };
 
         return () => {
-            const pattern = [];
+            const pattern: any[] = [];
             state.measureCount++;
 
             // Randomly switch modes occasionally
@@ -468,7 +468,7 @@ export class AudioManager {
      * Generate active cyber segment (driving beat)
      */
     generateCyberActiveSegment(state) {
-        const segment = [];
+        const segment: any[] = [];
         const baseFreq = 110; // A2
 
         // 16-step bassline (driving)
@@ -499,7 +499,7 @@ export class AudioManager {
         }
 
         // Since playPattern is sequential, let's construct a cool mono-synth riff
-        const riff = [];
+        const riff: any[] = [];
         const scale = [220, 261, 293, 311, 329, 392, 440]; // Minor/Cyber scale (A C D D# E G A)
 
         for (let beat = 0; beat < 4; beat++) {
@@ -532,7 +532,7 @@ export class AudioManager {
      * Generate stealth cyber segment (atmospheric)
      */
     generateCyberStealthSegment(state) {
-        const segment = [];
+        const segment: any[] = [];
 
         // Sparse, echoey pings
         // 4 beats total duration

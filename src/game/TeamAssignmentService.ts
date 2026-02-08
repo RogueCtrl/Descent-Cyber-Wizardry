@@ -58,7 +58,7 @@ export class TeamAssignmentService {
             console.log(`Character ${character.name} assigned to Strike Team: ${(activeParty as any).name}`);
             return activeParty;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to assign character ${character.name} to team:`, error);
             throw error;
         }
@@ -78,8 +78,8 @@ export class TeamAssignmentService {
 
             // Assign all characters to the new team
             for (const character of characters) {
-                character.partyId = newParty.id;
-                character.originalTeamAssignment = newParty.id;
+                character.partyId = newParty!.id;
+                character.originalTeamAssignment = newParty!.id;
                 character.teamAssignmentDate = new Date().toISOString();
                 character.availability = 'in_party';
 
@@ -101,7 +101,7 @@ export class TeamAssignmentService {
             console.log(`Strike Team ${teamName} created with ${characters.length} members`);
             return newParty;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to create team for characters:`, error);
             throw error;
         }
@@ -119,11 +119,11 @@ export class TeamAssignmentService {
             const allCharacters = await Storage.loadAllCharacters();
             const report = {
                 totalCharacters: (allCharacters as any).length,
-                orphanedCharacters: [],
-                memorialCharacters: [],
-                assignedCharacters: [],
-                warnings: [],
-                errors: []
+                orphanedCharacters: [] as any[],
+                memorialCharacters: [] as any[],
+                assignedCharacters: [] as any[],
+                warnings: [] as string[],
+                errors: [] as string[]
             };
 
             for (const character of (allCharacters as any)) {
@@ -146,7 +146,7 @@ export class TeamAssignmentService {
                         report.assignedCharacters.push(character.id);
                     }
 
-                } catch (validationError) {
+                } catch (validationError: any) {
                     report.errors.push(`Validation error for ${character.name}: ${validationError.message}`);
                 }
             }
@@ -154,7 +154,7 @@ export class TeamAssignmentService {
             console.log('Team membership validation complete:', report);
             return report;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to validate character team membership:', error);
             throw error;
         }
@@ -172,9 +172,9 @@ export class TeamAssignmentService {
             const validation = await this.validateAllCharacterTeamMembership();
             const fixReport = {
                 orphanedCount: validation.orphanedCharacters.length,
-                fixedCharacters: [],
-                createdTeams: [],
-                errors: []
+                fixedCharacters: [] as any[],
+                createdTeams: [] as any[],
+                errors: [] as string[]
             };
 
             for (const orphanedInfo of validation.orphanedCharacters) {
@@ -189,7 +189,7 @@ export class TeamAssignmentService {
                             const newTeam = await this.createTeamForCharacters([character], teamName);
 
                             fixReport.fixedCharacters.push((character as any).id);
-                            fixReport.createdTeams.push(newTeam.id);
+                            fixReport.createdTeams.push(newTeam!.id);
                         } else {
                             // Assign to existing active party or create one
                             const assignedTeam = await this.assignCharacterToTeam(character);
@@ -197,7 +197,7 @@ export class TeamAssignmentService {
                         }
                     }
 
-                } catch (fixError) {
+                } catch (fixError: any) {
                     fixReport.errors.push(`Failed to fix ${orphanedInfo.name}: ${fixError.message}`);
                 }
             }
@@ -205,7 +205,7 @@ export class TeamAssignmentService {
             console.log('Orphaned character fix complete:', fixReport);
             return fixReport;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fix orphaned characters:', error);
             throw error;
         }
@@ -224,8 +224,8 @@ export class TeamAssignmentService {
                 totalCharacters: 0,
                 migratedCharacters: 0,
                 skippedCharacters: 0,
-                errors: [],
-                details: []
+                errors: [] as string[],
+                details: [] as string[]
             };
 
             const allCharacters = await Storage.loadAllCharacters();
@@ -234,7 +234,7 @@ export class TeamAssignmentService {
             for (const character of (allCharacters as any)) {
                 try {
                     let needsMigration = false;
-                    const changes = [];
+                    const changes: string[] = [];
 
                     // Skip memorial characters
                     if (Storage.isCharacterPermanentlyLost(character)) {
@@ -316,7 +316,7 @@ export class TeamAssignmentService {
                         migrationReport.details.push(`No migration needed: ${character.name}`);
                     }
 
-                } catch (characterError) {
+                } catch (characterError: any) {
                     migrationReport.errors.push(`Failed to migrate ${character.name}: ${characterError.message}`);
                 }
             }
@@ -324,7 +324,7 @@ export class TeamAssignmentService {
             console.log('Character migration complete:', migrationReport);
             return migrationReport;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to migrate characters to team system:', error);
             throw error;
         }
@@ -378,7 +378,7 @@ export class TeamAssignmentService {
 
             return stats;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get team membership stats:', error);
             throw error;
         }

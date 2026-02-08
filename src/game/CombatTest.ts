@@ -36,7 +36,7 @@ export class CombatTest {
             
             this.printTestResults();
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Test failed with error:', error);
             this.testResults.push({
                 test: 'Critical Error',
@@ -89,7 +89,7 @@ export class CombatTest {
             
             return { fighter, mage };
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Character Creation',
                 passed: false,
@@ -136,7 +136,7 @@ export class CombatTest {
                 details: `Equipment loaded, attack bonus: ${attackBonus}, AC bonus: ${acBonus}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Equipment System',
                 passed: false,
@@ -185,7 +185,7 @@ export class CombatTest {
                 details: `Formation setup: ${formationData.frontRow.length} front, ${formationData.backRow.length} back`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Formation System',
                 passed: false,
@@ -211,7 +211,7 @@ export class CombatTest {
             }
             
             // Test monster AI
-            const testTargets = this.createTestParty().aliveMembers;
+            const testTargets = this.createTestParty()!.aliveMembers;
             const aiDecision = orc.chooseAction(testTargets);
             
             if (!aiDecision.action) {
@@ -224,7 +224,7 @@ export class CombatTest {
                 details: `Created ${kobold.name}, ${orc.name}, ${dragon.name}. AI decision: ${aiDecision.action}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Monster Creation',
                 passed: false,
@@ -274,7 +274,7 @@ export class CombatTest {
             // Clean up
             combat.endCombat();
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Combat Initiation',
                 passed: false,
@@ -299,7 +299,7 @@ export class CombatTest {
             combat.startCombat(party, enemyParties);
             
             // Test attack action
-            const attacker = party.aliveMembers[0];
+            const attacker = party!.aliveMembers[0];
             const target = enemies[0];
             
             const attackAction = {
@@ -334,7 +334,7 @@ export class CombatTest {
             
             combat.endCombat();
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Combat Actions',
                 passed: false,
@@ -366,7 +366,7 @@ export class CombatTest {
             
             // Test difficulty calculation
             const party = this.createTestParty();
-            const difficulty = generator.calculateDifficulty(encounter2, 3, party.size);
+            const difficulty = generator.calculateDifficulty(encounter2, 3, party!.size);
             
             // Check if encounter has enemyParties or monsters for backward compatibility
             const enemyCount = (bossEncounter as any).enemyParties ? 
@@ -379,7 +379,7 @@ export class CombatTest {
                 details: `Generated encounters for levels 1,3,5. Boss encounter: ${enemyCount} monsters. Difficulty: ${difficulty}`
             });
             
-        } catch (error) {
+        } catch (error: any) {
             this.testResults.push({
                 test: 'Encounter Generation',
                 passed: false,
@@ -422,7 +422,7 @@ export class CombatTest {
             
             return party;
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create test party:', error);
             return null;
         }

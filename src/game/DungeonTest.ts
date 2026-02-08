@@ -37,7 +37,7 @@ export class DungeonTest {
 
             this.generateTestReport();
 
-        } catch (error) {
+        } catch (error: any) {
             this.logResult(false, `Critical test failure: ${error.message}`);
             console.error('Dungeon test suite failed:', error);
         }
@@ -112,7 +112,7 @@ export class DungeonTest {
         const queue = [{ x: this.dungeon.playerX, y: this.dungeon.playerY }];
 
         while (queue.length > 0 && reachableTiles < 200) {
-            const { x, y } = queue.shift();
+            const { x, y } = queue.shift()!;
             const key = `${x},${y}`;
 
             if (visited.has(key)) continue;

@@ -386,7 +386,7 @@ export class CombatInterface {
 
         const treasure = {
             gold: 0,
-            items: []
+            items: [] as any[]
         };
 
         defeatedEnemies.forEach(enemy => {
@@ -480,7 +480,7 @@ export class CombatInterface {
             return [];
         }
 
-        const actions = [];
+        const actions: any[] = [];
 
         // Attack action
         const enemies = this.combat.combatants.filter(c =>
@@ -499,7 +499,7 @@ export class CombatInterface {
 
         // Spell actions
         if (actor.memorizedSpells) {
-            const availableSpells = [];
+            const availableSpells: any[] = [];
 
             ['arcane', 'divine'].forEach(school => {
                 const schoolSpells = actor.memorizedSpells[school] || [];

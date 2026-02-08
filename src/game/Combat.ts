@@ -326,7 +326,7 @@ export class Combat {
         };
         
         // Calculate total experience from all defeated enemies
-        const defeatedEnemies = [];
+        const defeatedEnemies: any[] = [];
         this.enemyParties.forEach(party => {
             const enemies = Array.isArray(party) ? party : [party];
             enemies.forEach(enemy => {
@@ -1252,7 +1252,7 @@ export class Combat {
     /**
      * Log combat message
      */
-    logMessage(message, type = 'combat', emoji = null) {
+    logMessage(message, type = 'combat', emoji: string | null = null) {
         const logEntry = {
             message,
             type,

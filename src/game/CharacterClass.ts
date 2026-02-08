@@ -96,7 +96,7 @@ export class CharacterClass {
         const classData = this.getClassData(className);
         if (!classData) return false;
 
-        for (const [attr, minValue] of Object.entries(classData.requirements)) {
+        for (const [attr, minValue] of Object.entries(classData.requirements) as [string, any][]) {
             if (attributes[attr] < minValue) {
                 return false;
             }
@@ -133,7 +133,7 @@ export class CharacterClass {
             }
 
             // Check attribute requirements
-            for (const [attr, minValue] of Object.entries(classData.requirements)) {
+            for (const [attr, minValue] of Object.entries(classData.requirements) as [string, any][]) {
                 if (character.attributes[attr] < minValue) {
                     return { canChange: false, reason: `Insufficient ${attr} (need ${minValue})` };
                 }

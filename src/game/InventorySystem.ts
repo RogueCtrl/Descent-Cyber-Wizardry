@@ -380,7 +380,7 @@ export class InventorySystem {
         // Digital information
         let digitalInfo = '';
         if (isCyberMode && typeof item === 'object') {
-            const infoFields = [];
+            const infoFields: string[] = [];
             if (item.digitalClassification) infoFields.push(`Class: ${item.digitalClassification}`);
             if (item.encryptionLevel) infoFields.push(`Encryption: ${item.encryptionLevel}`);
             if (item.algorithmClass) infoFields.push(`Algorithm: ${item.algorithmClass}`);
@@ -392,7 +392,7 @@ export class InventorySystem {
         // Item stats
         let statsInfo = '';
         if (typeof item === 'object') {
-            const stats = [];
+            const stats: string[] = [];
             if (item.damage) stats.push(`Damage: ${item.damage.dice}d${item.damage.sides}${item.damage.bonus ? `+${item.damage.bonus}` : ''}`);
             if (item.acBonus) stats.push(`AC: +${item.acBonus}`);
             if (item.attackBonus) stats.push(`Attack: +${item.attackBonus}`);

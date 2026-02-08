@@ -144,7 +144,7 @@ export class Helpers {
      */
     static debounce(func, wait) {
         let timeout;
-        return function executedFunction(...args) {
+        return function executedFunction(this: any, ...args: any[]) {
             const later = () => {
                 clearTimeout(timeout);
                 func(...args);
@@ -159,7 +159,7 @@ export class Helpers {
      */
     static throttle(func, limit) {
         let inThrottle;
-        return function executedFunction(...args) {
+        return function executedFunction(this: any, ...args: any[]) {
             if (!inThrottle) {
                 func.apply(this, args);
                 inThrottle = true;
@@ -381,8 +381,8 @@ export class Helpers {
             return { casualties: [], survivors: [] };
         }
 
-        const casualties = [];
-        const survivors = [];
+        const casualties: any[] = [];
+        const survivors: any[] = [];
 
         // Separate casualties from survivors using death system helpers
         party.members.forEach(member => {

@@ -461,7 +461,7 @@ export class Equipment {
         const stores = ['weapons', 'armor', 'shields', 'accessories'];
 
         for (const store of (stores as any)) {
-            const entities = await Storage.queryEntities(Storage[store.toUpperCase() + '_STORE'], { name: itemName });
+            const entities: any = await Storage.queryEntities((Storage as any)[store.toUpperCase() + '_STORE'], { name: itemName });
             if ((entities as any).length > 0) {
                 const item = entities[0];
                 this.entityCache.set(item.id, item);
@@ -517,7 +517,7 @@ export class Equipment {
     async getAvailableItems(characterClass, category = null) {
         await this.initializeEntities();
 
-        const availableItems = [];
+        const availableItems: any[] = [];
         const categories = category ? [category] : ['weapons', 'armor', 'shields', 'accessories'];
 
         for (const cat of (categories as any)) {
@@ -805,8 +805,8 @@ export class Equipment {
      * @returns {Promise<Array>} Array of loot items
      */
     async generateRandomLoot(level = 1, quantity = 1) {
-        const loot = [];
-        const allItems = [];
+        const loot: any[] = [];
+        const allItems: any[] = [];
 
         await this.initializeEntities();
 
@@ -1215,7 +1215,7 @@ export class Equipment {
 
         await this.initializeEntities();
 
-        let itemPool = [];
+        let itemPool: any[] = [];
 
         // Add normal magical items
         const weapons = await Storage.getAllWeapons();
@@ -1550,7 +1550,7 @@ export class Equipment {
      * @returns {Array} Items needing repair
      */
     getItemsNeedingRepair(character) {
-        const itemsNeedingRepair = [];
+        const itemsNeedingRepair: any[] = [];
 
         if (character.equipment) {
             Object.values(character.equipment).forEach(item => {
@@ -1578,7 +1578,7 @@ export class Equipment {
      * @returns {Array} Results for each damaged item
      */
     processEnvironmentalDamage(character, damageType, severity = 2) {
-        const results = [];
+        const results: any[] = [];
 
         if (!character.equipment) return results;
 

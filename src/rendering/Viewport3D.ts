@@ -119,9 +119,9 @@ export class Viewport3D {
         this.ctx.strokeStyle = this.colors.wall;
 
         // Separate walls by type for proper depth sorting
-        const frontWalls = [];
-        const leftWalls = [];
-        const rightWalls = [];
+        const frontWalls: any[] = [];
+        const leftWalls: any[] = [];
+        const rightWalls: any[] = [];
 
         viewInfo.walls.forEach(wall => {
             if (wall.distance === distance) {

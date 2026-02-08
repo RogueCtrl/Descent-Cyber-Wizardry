@@ -33,7 +33,7 @@ export class Storage {
     static DUNGEON_STORE = 'dungeons';
     static PARTY_POSITION_STORE = 'party_positions';
 
-    static _db = null;
+    static _db: IDBDatabase | null = null;
     static _dbInitialized = false;
 
     // Entity version tracking
@@ -66,7 +66,7 @@ export class Storage {
             console.log('Game saved successfully');
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save game:', error);
             throw new Error('Failed to save game: ' + error.message);
         }
@@ -94,7 +94,7 @@ export class Storage {
             console.log('Game loaded successfully');
             return saveData;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load game:', error);
             return null;
         }
@@ -116,7 +116,7 @@ export class Storage {
             localStorage.removeItem(this.SAVE_KEY);
             console.log('Saved game deleted');
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete saved game:', error);
             return false;
         }
@@ -137,7 +137,7 @@ export class Storage {
 
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save settings:', error);
             return false;
         }
@@ -159,7 +159,7 @@ export class Storage {
             // Merge with defaults to ensure all settings exist
             return { ...this.getDefaultSettings(), ...settings };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load settings:', error);
             return this.getDefaultSettings();
         }
@@ -445,7 +445,7 @@ export class Storage {
             if (character.validateTeamMembership) {
                 try {
                     character.validateTeamMembership();
-                } catch (validationError) {
+                } catch (validationError: any) {
                     console.warn(`Team membership validation warning for ${character.name}:`, validationError.message);
                     // Don't throw - just warn for now to avoid breaking existing saves
                 }
@@ -455,7 +455,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.CHARACTER_STORE], 'readwrite');
             const store = transaction.objectStore(this.CHARACTER_STORE);
 
             // Prepare character data for storage
@@ -511,7 +511,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save character:', error);
             return false;
         }
@@ -528,7 +528,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
 
             return new Promise((resolve, reject) => {
@@ -548,7 +548,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load character:', error);
             return null;
         }
@@ -564,7 +564,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
 
             return new Promise((resolve, reject) => {
@@ -582,7 +582,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load characters:', error);
             return [];
         }
@@ -599,7 +599,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.CHARACTER_STORE], 'readwrite');
             const store = transaction.objectStore(this.CHARACTER_STORE);
 
             return new Promise((resolve, reject) => {
@@ -616,7 +616,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete character:', error);
             return false;
         }
@@ -633,7 +633,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CHARACTER_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.CHARACTER_STORE], 'readonly');
             const store = transaction.objectStore(this.CHARACTER_STORE);
 
             // If no criteria, return all characters
@@ -678,7 +678,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to query characters:', error);
             return [];
         }
@@ -735,7 +735,7 @@ export class Storage {
 
             return stats;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get character statistics:', error);
             return null;
         }
@@ -754,7 +754,7 @@ export class Storage {
                 !char.isPhasedOut &&
                 !this.isCharacterPermanentlyLost(char)
             );
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get active team members:', error);
             return [];
         }
@@ -772,7 +772,7 @@ export class Storage {
                 char.partyId === partyId &&
                 char.isPhasedOut
             );
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get phased out team members:', error);
             return [];
         }
@@ -807,7 +807,7 @@ export class Storage {
 
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save character templates:', error);
             return false;
         }
@@ -827,7 +827,7 @@ export class Storage {
             const data = JSON.parse(serialized);
             return data.templates || [];
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load character templates:', error);
             return [];
         }
@@ -884,7 +884,7 @@ export class Storage {
             this.saveGame(saveData);
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to import save:', error);
             throw new Error('Failed to import save: ' + error.message);
         }
@@ -909,7 +909,7 @@ export class Storage {
                 hasCharacters: charactersSize > 0
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get storage info:', error);
             return null;
         }
@@ -927,7 +927,7 @@ export class Storage {
             console.log('All stored data cleared');
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to clear storage:', error);
             return false;
         }
@@ -942,7 +942,7 @@ export class Storage {
             localStorage.setItem(test, test);
             localStorage.removeItem(test);
             return true;
-        } catch (error) {
+        } catch (error: any) {
             return false;
         }
     }
@@ -968,7 +968,7 @@ export class Storage {
                 percentage: Math.round((usedSize / totalSize) * 100)
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get storage info:', error);
             return null;
         }
@@ -1030,7 +1030,7 @@ export class Storage {
                 message: `${party.name} has made camp on floor ${dungeon.currentFloor}.`
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save party camp:', error);
             return {
                 success: false,
@@ -1096,7 +1096,7 @@ export class Storage {
             console.log(`Party ${party.name} resumed from camp`);
             return resumeResult;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to resume party from camp:', error);
             return {
                 success: false,
@@ -1111,7 +1111,7 @@ export class Storage {
      * @returns {Array} List of camp saves
      */
     static getSavedCamps() {
-        const camps = [];
+        const camps: any[] = [];
 
         try {
             for (let i = 0; i < localStorage.length; i++) {
@@ -1137,7 +1137,7 @@ export class Storage {
             // Sort by most recent first
             camps.sort((a, b) => b.campTime - a.campTime);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get saved camps:', error);
         }
 
@@ -1154,7 +1154,7 @@ export class Storage {
             localStorage.removeItem(campId);
             console.log(`Deleted camp: ${campId}`);
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete camp:', error);
             return false;
         }
@@ -1187,7 +1187,7 @@ export class Storage {
             localStorage.setItem(this.DUNGEON_STATE_KEY, serialized);
 
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save dungeon state:', error);
             return false;
         }
@@ -1202,7 +1202,7 @@ export class Storage {
         try {
             const dungeonStates = this.loadDungeonStates();
             return dungeonStates ? dungeonStates[dungeonId] : null;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load dungeon state:', error);
             return null;
         }
@@ -1216,7 +1216,7 @@ export class Storage {
         try {
             const serialized = localStorage.getItem(this.DUNGEON_STATE_KEY);
             return serialized ? JSON.parse(serialized) : null;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load dungeon states:', error);
             return null;
         }
@@ -1353,7 +1353,7 @@ export class Storage {
                 message: `Cleaned up ${deletedCount} old camp saves.`
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to cleanup old camps:', error);
             return {
                 success: false,
@@ -1376,7 +1376,7 @@ export class Storage {
             const campData = JSON.parse(serialized);
             return JSON.stringify(campData, null, 2);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to export camp:', error);
             return null;
         }
@@ -1412,7 +1412,7 @@ export class Storage {
                 message: `Imported camp for ${campData.partyName}.`
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to import camp:', error);
             return {
                 success: false,
@@ -1437,7 +1437,7 @@ export class Storage {
                 return true; // If DB fails, assume we need to load
             }
 
-            const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.VERSION_STORE], 'readonly');
             const store = transaction.objectStore(this.VERSION_STORE);
 
             return new Promise((resolve, reject) => {
@@ -1460,7 +1460,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking entity version:', error);
             return true; // If error, assume we need to load
         }
@@ -1472,7 +1472,7 @@ export class Storage {
      */
     static async updateEntityVersion() {
         try {
-            const transaction = this._db.transaction([this.VERSION_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.VERSION_STORE], 'readwrite');
             const store = transaction.objectStore(this.VERSION_STORE);
 
             const versionRecord = {
@@ -1496,7 +1496,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating entity version:', error);
             return false;
         }
@@ -1552,7 +1552,7 @@ export class Storage {
             console.log('All entities loaded successfully from migration files');
             return true;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load entities from migrations:', error);
             return false;
         }
@@ -1566,7 +1566,7 @@ export class Storage {
      */
     static async bulkSaveEntities(storeName, entities) {
         try {
-            const transaction = this._db.transaction([storeName], 'readwrite');
+            const transaction = this._db!.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
 
             for (const [id, entity] of Object.entries(entities)) {
@@ -1586,7 +1586,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to bulk save entities to ${storeName}:`, error);
             return false;
         }
@@ -1604,7 +1604,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([storeName], 'readonly');
+            const transaction = this._db!.transaction([storeName], 'readonly');
             const store = transaction.objectStore(storeName);
 
             return new Promise((resolve, reject) => {
@@ -1620,7 +1620,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to get entity ${entityId} from ${storeName}:`, error);
             return null;
         }
@@ -1709,7 +1709,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([storeName], 'readonly');
+            const transaction = this._db!.transaction([storeName], 'readonly');
             const store = transaction.objectStore(storeName);
 
             return new Promise((resolve, reject) => {
@@ -1725,7 +1725,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to get all entities from ${storeName}:`, error);
             return [];
         }
@@ -1807,7 +1807,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([storeName], 'readonly');
+            const transaction = this._db!.transaction([storeName], 'readonly');
             const store = transaction.objectStore(storeName);
 
             // If no criteria, return all entities
@@ -1851,7 +1851,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to query entities from ${storeName}:`, error);
             return [];
         }
@@ -1927,7 +1927,7 @@ export class Storage {
             };
 
             // Save to IndexedDB camps store
-            const transaction = this._db.transaction([this.CAMP_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.CAMP_STORE], 'readwrite');
             const store = transaction.objectStore(this.CAMP_STORE);
 
             return new Promise((resolve, reject) => {
@@ -1946,13 +1946,13 @@ export class Storage {
                     console.error('Failed to save camp with entity references:', request.error);
                     reject({
                         success: false,
-                        error: request.error.message,
+                        error: request.error!.message,
                         message: 'Failed to save camp state.'
                     });
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save camp with entity references:', error);
             return {
                 success: false,
@@ -1974,7 +1974,7 @@ export class Storage {
             }
 
             // Get camp data
-            const transaction = this._db.transaction([this.CAMP_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.CAMP_STORE], 'readonly');
             const store = transaction.objectStore(this.CAMP_STORE);
 
             const campData = await new Promise((resolve, reject) => {
@@ -1998,7 +1998,7 @@ export class Storage {
             }
 
             // Load characters by entity references
-            const members = [];
+            const members: any[] = [];
             for (const memberId of (campData as any).memberIds) {
                 const character = await this.loadCharacter(memberId);
                 if (character) {
@@ -2026,7 +2026,7 @@ export class Storage {
                 message: `${party.name} resumed exploration from floor ${(campData as any).location.currentFloor}.`
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to resume camp with entity references:', error);
             return {
                 success: false,
@@ -2049,7 +2049,7 @@ export class Storage {
 
             return this.queryEntities(this.CAMP_STORE, criteria);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get all camps:', error);
             return [];
         }
@@ -2066,7 +2066,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.CAMP_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.CAMP_STORE], 'readwrite');
             const store = transaction.objectStore(this.CAMP_STORE);
 
             return new Promise((resolve, reject) => {
@@ -2083,7 +2083,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to delete camp from IndexedDB: ${campId}`, error);
             return false;
         }
@@ -2101,7 +2101,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.DUNGEON_STORE], 'readwrite');
             const store = transaction.objectStore(this.DUNGEON_STORE);
 
             const record = {
@@ -2125,7 +2125,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save dungeon state:', error);
             return false;
         }
@@ -2142,7 +2142,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.DUNGEON_STORE], 'readonly');
             const store = transaction.objectStore(this.DUNGEON_STORE);
 
             return new Promise((resolve, reject) => {
@@ -2158,7 +2158,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load dungeon state:', error);
             return null;
         }
@@ -2195,7 +2195,7 @@ export class Storage {
                 this.VERSION_STORE
             ];
 
-            const transaction = this._db.transaction(stores, 'readwrite');
+            const transaction = this._db!.transaction(stores, 'readwrite');
 
             return new Promise((resolve, reject) => {
                 let completedStores = 0;
@@ -2221,7 +2221,7 @@ export class Storage {
                 });
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to clear entity stores:', error);
             return false;
         }
@@ -2237,7 +2237,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.VERSION_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.VERSION_STORE], 'readonly');
             const store = transaction.objectStore(this.VERSION_STORE);
 
             return new Promise((resolve, reject) => {
@@ -2260,7 +2260,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error getting version info:', error);
             return null;
         }
@@ -2331,7 +2331,7 @@ export class Storage {
 
             return data;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Failed to load ${entityType} migration:`, error);
             throw error;
         }
@@ -3412,7 +3412,7 @@ export class Storage {
                 }
             }
 
-            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.DUNGEON_STORE], 'readwrite');
             const store = transaction.objectStore(this.DUNGEON_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3429,7 +3429,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save dungeon:', error);
             throw error;
         }
@@ -3446,7 +3446,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.DUNGEON_STORE], 'readonly');
             const store = transaction.objectStore(this.DUNGEON_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3499,7 +3499,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load dungeon:', error);
             throw error;
         }
@@ -3514,7 +3514,7 @@ export class Storage {
         try {
             const partyPosition = await this.loadPartyPosition(partyId);
             return partyPosition ? [partyPosition] : [];
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get saved dungeons for party:', error);
             return [];
         }
@@ -3531,7 +3531,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.DUNGEON_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.DUNGEON_STORE], 'readwrite');
             const store = transaction.objectStore(this.DUNGEON_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3548,7 +3548,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete dungeon:', error);
             return false;
         }
@@ -3587,7 +3587,7 @@ export class Storage {
                 lastSaved: now
             };
 
-            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.PARTY_POSITION_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3604,7 +3604,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save party position:', error);
             return false;
         }
@@ -3621,7 +3621,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.PARTY_POSITION_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3662,7 +3662,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load party position:', error);
             return null;
         }
@@ -3679,7 +3679,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.PARTY_POSITION_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
             const index = store.index('dungeonId');
 
@@ -3696,7 +3696,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get parties in dungeon:', error);
             return [];
         }
@@ -3713,7 +3713,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_POSITION_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.PARTY_POSITION_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_POSITION_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3730,7 +3730,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete party position:', error);
             return false;
         }
@@ -3770,7 +3770,7 @@ export class Storage {
                 lastModified: now
             };
 
-            const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.PARTY_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3787,7 +3787,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save party:', error);
             return false;
         }
@@ -3804,7 +3804,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3824,7 +3824,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load party:', error);
             return null;
         }
@@ -3840,7 +3840,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3858,7 +3858,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load parties:', error);
             return [];
         }
@@ -3875,7 +3875,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_STORE], 'readonly');
+            const transaction = this._db!.transaction([this.PARTY_STORE], 'readonly');
             const store = transaction.objectStore(this.PARTY_STORE);
 
             // If no criteria, return all parties
@@ -3920,7 +3920,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to query parties:', error);
             return [];
         }
@@ -3937,7 +3937,7 @@ export class Storage {
                 throw new Error('Failed to initialize database');
             }
 
-            const transaction = this._db.transaction([this.PARTY_STORE], 'readwrite');
+            const transaction = this._db!.transaction([this.PARTY_STORE], 'readwrite');
             const store = transaction.objectStore(this.PARTY_STORE);
 
             return new Promise((resolve, reject) => {
@@ -3954,7 +3954,7 @@ export class Storage {
                 };
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to delete party:', error);
             return false;
         }
@@ -3975,7 +3975,7 @@ export class Storage {
                 console.log('Active party cleared');
             }
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to set active party:', error);
             return false;
         }
@@ -3988,7 +3988,7 @@ export class Storage {
     static getActivePartyId() {
         try {
             return localStorage.getItem(this.ACTIVE_PARTY_KEY);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get active party:', error);
             return null;
         }
@@ -4013,7 +4013,7 @@ export class Storage {
             }
 
             return party;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load active party:', error);
             return null;
         }
@@ -4024,7 +4024,7 @@ export class Storage {
      * @param {string} name - Optional party name
      * @returns {Promise<Object|null>} New party object or null if creation failed
      */
-    static async createNewActiveParty(name = null) {
+    static async createNewActiveParty(name: string | null = null) {
         try {
             // Import Party class dynamically
             const party = new Party();
@@ -4044,7 +4044,7 @@ export class Storage {
 
             console.log(`Created new active party: ${party.id}`);
             return party;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create new active party:', error);
             return null;
         }
@@ -4059,7 +4059,7 @@ export class Storage {
             // Get all parties and filter for those with campId
             const allParties = await this.loadAllParties();
             return (allParties as any).filter(party => party.campId != null);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get camping parties:', error);
             return [];
         }
@@ -4075,7 +4075,7 @@ export class Storage {
 
             // Filter for parties that are marked as lost
             return (allParties as any).filter(party => party.isLost === true);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get lost parties:', error);
             return [];
         }

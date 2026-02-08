@@ -75,19 +75,19 @@ export class CharacterUI {
         `;
         
         // Add event listeners
-        modal.querySelector('#prev-step').addEventListener('click', () => {
+        modal.querySelector('#prev-step')!.addEventListener('click', () => {
             if (window.engine && window.engine.audioManager) {
                 window.engine.audioManager.playSoundEffect('buttonClick');
             }
             this.previousStep();
         });
-        modal.querySelector('#next-step').addEventListener('click', () => {
+        modal.querySelector('#next-step')!.addEventListener('click', () => {
             if (window.engine && window.engine.audioManager) {
                 window.engine.audioManager.playSoundEffect('buttonClick');
             }
             this.nextStep();
         });
-        modal.querySelector('#cancel-creation').addEventListener('click', () => {
+        modal.querySelector('#cancel-creation')!.addEventListener('click', () => {
             if (window.engine && window.engine.audioManager) {
                 window.engine.audioManager.playSoundEffect('buttonClick');
             }
@@ -308,7 +308,7 @@ export class CharacterUI {
      */
     getAttributeTotal() {
         if (!this.characterData.attributes) return 0;
-        return Object.values(this.characterData.attributes).reduce((sum: number, value: number) => sum + value, 0);
+        return (Object.values(this.characterData.attributes) as number[]).reduce((sum: number, value: number) => sum + value, 0);
     }
     
     /**
@@ -392,7 +392,7 @@ export class CharacterUI {
      * Render class requirements
      */
     renderClassRequirements(requirements, meetsRequirements) {
-        return Object.entries(requirements).map(([stat, minValue]) => {
+        return (Object.entries(requirements) as [string, any][]).map(([stat, minValue]) => {
             const currentValue = this.characterData.attributes[stat];
             const meets = currentValue >= minValue;
             const className = meets ? 'requirement-met' : 'requirement-failed';
@@ -621,7 +621,7 @@ export class CharacterUI {
             // Reset for next character
             this.characterData = {};
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating character:', error);
             // Use the game's messaging system instead of browser alert
             this.eventSystem.emit('show-message', {
