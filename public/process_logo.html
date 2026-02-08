@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <img id="source" src="temp_logo.png" onload="process()">
+    <canvas id="canvas"></canvas>
+    <img id="result">
+    <div id="output"></div>
+
+    <script>
+        function process() {
+            const img = document.getElementById('source');
+            const canvas = document.getElementById('canvas');
+            const output = document.getElementById('output');
+            const result = document.getElementById('result');
+
+            // Resize to target dimensions to reduce file size (and base64 string length)
+            canvas.width = 500;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            // Draw scaled image
+            ctx.drawImage(img, 0, 0, 500, 200);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Strict threshold for pure black and very dark pixels
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                if (r < 40 && g < 40 && b < 40) {
+                    data[i + 3] = 0; // Alpha = 0
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            const dataURL = canvas.toDataURL('image/png');
+            result.src = dataURL;
+            output.innerText = "Processing Complete. Downloading...";
+
+            // Console log for fallback extraction
+            console.log("BASE64_START");
+            // Log in chunks to avoid truncation if possible (though console usually truncates too)
+            const chunkSize = 200;
+            for (let i = 0; i < dataURL.length; i += chunkSize) {
+                console.log("CHUNK:" + dataURL.substring(i, i + chunkSize));
+            }
+            console.log("BASE64_END");
+
+            // Trigger download
+            const link = document.createElement('a');
+            link.download = 'game_logo_transparent.png';
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+        }
+    </script>
+</body>
+
+</html>

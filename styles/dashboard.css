@@ -71,9 +71,27 @@
 /* ========================================= */
 /* Logo Header                               */
 /* ========================================= */
-/* Logo is baked into the background image — header hidden */
+/* Logo Header - Restored and Positioned Over Background */
 .dashboard-logo {
-    display: none;
+    display: flex;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Move logo to the top area of the 1024px background */
+    /* Half of 1024 is 512. We want it near top. */
+    /* -410px offset roughly centers the 200px (140px visual) logo in the top 220px space */
+    margin-top: -410px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.dashboard-logo img {
+    /* Fixed size as requested earlier */
+    width: 500px;
+    height: 200px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(255, 60, 60, 0.4));
 }
 
 
@@ -88,12 +106,15 @@
     display: grid;
     grid-template-columns: 300px 1fr 300px;
     gap: var(--space-4);
-    /* 220px top padding pushes content below the logo area of the 1024px bg */
+    /* 220px top padding provides space for the logo */
     padding: 220px var(--space-4) var(--space-4);
+
+    /* Strict constraint to match 1024x1024 background art */
     max-width: 1024px;
+    height: 1024px;
+
     margin: 0 auto;
     width: 100%;
-    min-height: 0;
 }
 
 
