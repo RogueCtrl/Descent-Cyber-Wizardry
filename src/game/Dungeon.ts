@@ -2300,7 +2300,7 @@ export class Dungeon {
    * @param {string} dungeonId - ID of the dungeon to delete
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteSavedDungeon(dungeonId) {
+  static async deleteSavedDungeon(dungeonId: string): Promise<boolean> {
     try {
       return await Storage.deleteDungeon(dungeonId);
     } catch (error) {

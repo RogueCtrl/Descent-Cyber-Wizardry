@@ -194,8 +194,8 @@ export class Engine {
         this.party!.name = partyName;
 
         // If this was a temporary party, convert it to permanent
-        if (this.party._isTemporary) {
-          this.party._isTemporary = false;
+        if (this.party!._isTemporary) {
+          this.party!._isTemporary = false;
           console.log(
             `Converting temporary party to permanent: ${this.party!.id} (name: "${partyName}")`
           );
@@ -244,10 +244,10 @@ export class Engine {
    */
   async handleTemporaryPartySetupComplete(partyName: string) {
     try {
-      if (this.party && this.party._isTemporary) {
+      if (this.party && this.party!._isTemporary) {
         // Set the party name and clear temporary flag
         this.party!.name = partyName;
-        this.party._isTemporary = false; // No longer temporary
+        this.party!._isTemporary = false; // No longer temporary
 
         // Save as a permanent party
         await this.party!.save(true); // true = set as active party
@@ -477,7 +477,7 @@ export class Engine {
       // Handle the current active party before switching
       if (this.party) {
         // Check if current party is temporary (marked with _isTemporary flag)
-        const isTemporaryParty = this.party._isTemporary;
+        const isTemporaryParty = this.party!._isTemporary;
 
         if (isTemporaryParty) {
           // Actively delete the temporary party from database if it was saved
@@ -511,7 +511,7 @@ export class Engine {
             }
           } else {
             // Set non-temporary active party as camped (in town) so it can be resumed later
-            this.party.returnToTown();
+            this.party!.returnToTown();
             await this.party!.save(false); // Save without setting as active
             console.log(
               `Set previous active party as camped in town: ${this.party!.id} (name: "${this.party!.name}", members: ${this.party!.members.length})`
@@ -781,7 +781,7 @@ export class Engine {
    */
   handleStateChange(newState) {
     console.log('Game state changed to:', newState);
-    console.log('Party size:', this.party ? this.party.size : 'no party');
+    console.log('Party size:', this.party ? this.party!.size : 'no party');
 
     // Update body class for state-specific styling
     document.body.className = `game-state-${newState}`;
@@ -791,7 +791,7 @@ export class Engine {
 
     switch (newState) {
       case 'town':
-        this.ui!.showTown(this.party || null);
+        this.ui!.showTown(this.party as any);
         this.ui!.updatePartyDisplay(this.party);
         break;
 
@@ -875,7 +875,7 @@ export class Engine {
     this.ui!.showDungeonInterface();
 
     // Initialize player position if not already set
-    if (!this.player || !this.player.position) {
+    if (!this.player || !this.player!.position) {
       this.player = {
         position: { x: 10, y: 10, facing: 'north' },
         currentFloor: 1,
@@ -922,7 +922,7 @@ export class Engine {
     console.log('Player position exists:', !!this.player?.position);
     console.log('Renderer exists:', !!this.renderer);
 
-    if (this.dungeon && this.player && this.player.position) {
+    if (this.dungeon && this.player && this.player!.position) {
       // Use the renderer's dungeon rendering method
       console.log('Calling renderer.renderDungeon()...');
       this.renderer!.renderDungeon(this.dungeon, this.party);
@@ -941,7 +941,7 @@ export class Engine {
     this.setupMovementEventListeners();
 
     // Enable movement buttons
-    this.ui.enableMovementControls();
+    this.ui!.enableMovementControls();
   }
 
   /**
@@ -985,7 +985,7 @@ export class Engine {
 
     // Keyboard event listeners
     document.addEventListener('keydown', (event) => {
-      if (this.gameState.isState('playing')) {
+      if (this.gameState!.isState('playing')) {
         switch (event.key) {
           case 'ArrowUp':
           case 'w':
@@ -1075,13 +1075,13 @@ export class Engine {
   /**
    * Update game logic
    */
-  update(deltaTime) {
+  update(deltaTime: number) {
     // Update game state
-    this.gameState.update(deltaTime);
+    this.gameState!.update(deltaTime);
 
     // Update party
     if (this.party) {
-      this.party.update(deltaTime);
+      this.party!.update(deltaTime);
     }
 
     // Update dungeon
@@ -1127,8 +1127,8 @@ export class Engine {
   saveGame() {
     try {
       const saveData = {
-        gameState: this.gameState.getSaveData(),
-        party: this.party.getSaveData(),
+        gameState: this.gameState!.getSaveData(),
+        party: this.party!.getSaveData(),
         dungeon: this.dungeon!.getSaveData(),
         timestamp: Date.now(),
       };
@@ -1170,7 +1170,7 @@ export class Engine {
    * Handle player actions
    */
   async handlePlayerAction(action) {
-    if (!this.gameState.isState('playing')) {
+    if (!this.gameState!.isState('playing')) {
       return;
     }
 
@@ -1190,7 +1190,7 @@ export class Engine {
     // Handle legacy string format actions
     switch (action) {
       case 'move-forward':
-        if (this.dungeon.movePlayer('forward')) {
+        if (this.dungeon!.movePlayer('forward')) {
           this.ui!.addMessage('You move forward.');
         } else {
           this.ui!.addMessage('You cannot move forward - there is a wall in the way.');
@@ -1198,7 +1198,7 @@ export class Engine {
         break;
 
       case 'move-backward':
-        if (this.dungeon.movePlayer('backward')) {
+        if (this.dungeon!.movePlayer('backward')) {
           this.ui!.addMessage('You move backward.');
         } else {
           this.ui!.addMessage('You cannot move backward - there is a wall in the way.');
@@ -1206,12 +1206,12 @@ export class Engine {
         break;
 
       case 'turn-left':
-        this.dungeon.turnPlayer('left');
+        this.dungeon!.turnPlayer('left');
         this.ui!.addMessage(`You turn left. Now facing ${this.dungeon!.getDirectionName()}.`);
         break;
 
       case 'turn-right':
-        this.dungeon.turnPlayer('right');
+        this.dungeon!.turnPlayer('right');
         this.ui!.addMessage(`You turn right. Now facing ${this.dungeon!.getDirectionName()}.`);
         break;
 
@@ -1249,7 +1249,7 @@ export class Engine {
         break;
 
       case 'open-door':
-        if (this.dungeon.openDoor()) {
+        if (this.dungeon!.openDoor()) {
           this.ui!.addMessage('You open the door.');
 
           // Immediately check context to update button state
@@ -1262,7 +1262,7 @@ export class Engine {
         break;
 
       case 'close-door':
-        if (this.dungeon.closeDoor()) {
+        if (this.dungeon!.closeDoor()) {
           this.ui!.addMessage('You close the door.');
 
           // Immediately check context to update button state
@@ -1285,19 +1285,19 @@ export class Engine {
   async handleCampAction() {
     try {
       // Check if party is in dungeon
-      if (!this.party || this.party.inTown) {
+      if (!this.party || this.party!.inTown) {
         this.ui!.addMessage('You can only camp in a dungeon.');
         return;
       }
 
       // Check if party has any alive members
-      if (!this.party.aliveMembers || this.party.aliveMembers.length === 0) {
+      if (!this.party!.aliveMembers || this.party!.aliveMembers.length === 0) {
         this.ui!.addMessage('No alive party members to make camp.');
         return;
       }
 
       // Check if already camping
-      if (this.party.campId) {
+      if (this.party!.campId) {
         this.ui!.addMessage('Your party is already camping.');
         return;
       }
@@ -1332,7 +1332,7 @@ export class Engine {
 
       if ((campResult as any).success) {
         // Update party with camp reference
-        this.party.setCamp((campResult as any).campId);
+        this.party!.setCamp((campResult as any).campId);
         await this.party!.save(false); // Don't set as active since they're camping
 
         this.ui!.addMessage(`Camp established! ${(campResult as any).message}`);
@@ -1391,7 +1391,7 @@ export class Engine {
           });
         }
 
-        this.party.returnToTown();
+        this.party!.returnToTown();
         await this.party!.save();
       }
 
@@ -1411,13 +1411,13 @@ export class Engine {
     console.log('Handling movement action:', direction);
 
     if (direction === 'forward') {
-      if (this.dungeon.movePlayer && this.dungeon.movePlayer('forward')) {
+      if (this.dungeon!.movePlayer && this.dungeon!.movePlayer('forward')) {
         this.ui!.addMessage('You move forward.');
       } else {
         this.ui!.addMessage('You cannot move forward - there is a wall in the way.');
       }
     } else if (direction === 'backward') {
-      if (this.dungeon.movePlayer && this.dungeon.movePlayer('backward')) {
+      if (this.dungeon!.movePlayer && this.dungeon!.movePlayer('backward')) {
         this.ui!.addMessage('You move backward.');
       } else {
         this.ui!.addMessage('You cannot move backward - there is a wall in the way.');
@@ -1435,9 +1435,9 @@ export class Engine {
     console.log('Handling turn action:', direction);
 
     if (direction === 'left') {
-      if (this.dungeon.turnPlayer) {
+      if (typeof this.dungeon!.turnPlayer === 'function') {
         console.log('Calling dungeon.turnPlayer(left), before:', this.dungeon!.playerDirection);
-        this.dungeon.turnPlayer('left');
+        this.dungeon!.turnPlayer('left');
         console.log('After dungeon.turnPlayer(left):', this.dungeon!.playerDirection);
         // Sync the player object with dungeon direction
         this.syncPlayerDirectionWithDungeon();
@@ -1449,9 +1449,9 @@ export class Engine {
         this.ui!.addMessage('You turn left.');
       }
     } else if (direction === 'right') {
-      if (this.dungeon.turnPlayer) {
+      if (typeof this.dungeon!.turnPlayer === 'function') {
         console.log('Calling dungeon.turnPlayer(right), before:', this.dungeon!.playerDirection);
-        this.dungeon.turnPlayer('right');
+        this.dungeon!.turnPlayer('right');
         console.log('After dungeon.turnPlayer(right):', this.dungeon!.playerDirection);
         // Sync the player object with dungeon direction
         this.syncPlayerDirectionWithDungeon();
@@ -1472,14 +1472,14 @@ export class Engine {
    * Sync player object direction with dungeon direction
    */
   syncPlayerDirectionWithDungeon() {
-    if (!this.player || !this.player.position || !this.dungeon) return;
+    if (!this.player || !this.player!.position || !this.dungeon) return;
 
     const directions = ['north', 'east', 'south', 'west'];
-    this.player.position.facing = directions[this.dungeon!.playerDirection];
+    this.player!.position.facing = directions[this.dungeon!.playerDirection];
 
     console.log(
       'Synced player direction:',
-      this.player.position.facing,
+      this.player!.position.facing,
       'from dungeon direction:',
       this.dungeon!.playerDirection
     );
@@ -1489,15 +1489,15 @@ export class Engine {
    * Update player facing direction
    */
   updatePlayerFacing(turn) {
-    if (!this.player || !this.player.position) return;
+    if (!this.player || !this.player!.position) return;
 
     const directions = ['north', 'east', 'south', 'west'];
-    const currentIndex = directions.indexOf(this.player.position.facing);
+    const currentIndex = directions.indexOf(this.player!.position.facing);
 
     if (turn === 'left') {
-      this.player.position.facing = directions[(currentIndex - 1 + 4) % 4];
+      this.player!.position.facing = directions[(currentIndex - 1 + 4) % 4];
     } else if (turn === 'right') {
-      this.player.position.facing = directions[(currentIndex + 1) % 4];
+      this.player!.position.facing = directions[(currentIndex + 1) % 4];
     }
   }
 
@@ -1505,13 +1505,13 @@ export class Engine {
    * Handle search action in dungeon
    */
   handleSearchAction() {
-    if (!this.gameState.isState('playing')) {
+    if (!this.gameState!.isState('playing')) {
       return;
     }
 
     this.ui!.addMessage('You search the area carefully...');
 
-    const discoveries = this.dungeon.searchArea();
+    const discoveries = this.dungeon!.searchArea();
 
     if (discoveries.length > 0) {
       discoveries.forEach((discovery) => {
@@ -1526,7 +1526,7 @@ export class Engine {
    * Handle interaction with special squares
    */
   handleInteractAction() {
-    if (!this.gameState.isState('playing')) {
+    if (!this.gameState!.isState('playing')) {
       return;
     }
 
@@ -1576,11 +1576,11 @@ export class Engine {
    * Handle stairs movement
    */
   handleStairsAction(direction) {
-    if (!this.gameState.isState('playing')) {
+    if (!this.gameState!.isState('playing')) {
       return;
     }
 
-    if (this.dungeon.changeFloor(direction)) {
+    if (this.dungeon!.changeFloor(direction)) {
       const floorNumber = this.dungeon!.currentFloor;
       this.ui!.addMessage(
         `You ${direction === 'up' ? 'ascend' : 'descend'} to floor ${floorNumber}.`
@@ -1736,7 +1736,7 @@ export class Engine {
       const assignedTeam = await TeamAssignmentService.assignCharacterToTeam(character);
 
       // Add character to current active party for immediate gameplay
-      if (this.party.addMember(character)) {
+      if (this.party!.addMember(character)) {
         // Ensure character is linked to the assigned team
         character.partyId = (assignedTeam as any).id;
 
@@ -1751,7 +1751,7 @@ export class Engine {
             // Create a proper Party instance from the loaded data
             this.party = new Party();
             this.party!.loadFromSave(partyData);
-            if (!this.party.addMember(character)) {
+            if (!this.party!.addMember(character)) {
               console.warn('Character was already in the assigned team');
             }
           }
@@ -1790,7 +1790,7 @@ export class Engine {
     console.log('Character creation cancelled');
 
     // Return to training grounds only if not already there
-    if (!this.gameState.isState('training-grounds')) {
+    if (!this.gameState!.isState('training-grounds')) {
       this.gameState!.setState('training-grounds');
     }
     this.ui!.addMessage('Character creation cancelled.');
@@ -1802,7 +1802,7 @@ export class Engine {
   handlePartyLeaderChange(characterId) {
     const character = this.party!.members.find((c) => c.id === characterId);
     if (character) {
-      this.party.currentLeader = character;
+      this.party!.currentLeader = character;
       console.log('Party leader changed to:', character.name);
     }
   }
@@ -1865,10 +1865,10 @@ export class Engine {
     console.log('From AgentOps:', fromAgentOps);
     console.log('Post-combat return:', postCombatReturn);
     console.log('Party exists:', !!this.party);
-    console.log('Party size:', this.party ? this.party.size : 'N/A');
+    console.log('Party size:', this.party ? this.party!.size : 'N/A');
 
     // Check if party exists and has members
-    if (!this.party || this.party.size === 0) {
+    if (!this.party || this.party!.size === 0) {
       console.log('Validation failed: No party or empty party');
       return { valid: false, reason: 'No party exists. Create characters first.' };
     }
@@ -1937,11 +1937,11 @@ export class Engine {
 
       // Mark party as leaving town and save to database
       if (this.party) {
-        this.party.leaveTown();
+        this.party!.leaveTown();
 
         try {
           // Check if this is a temporary party that needs to be named first
-          if (this.party._isTemporary) {
+          if (this.party!._isTemporary) {
             // Show party setup modal to let player name the party before entering dungeon
             console.log('Temporary party detected, showing party setup modal...');
             await this.showPartySetupForTemporaryParty();
@@ -2010,13 +2010,13 @@ export class Engine {
 
     // Start combat through combat interface with specific monster ID if provided
     if (encounter.monsterId) {
-      this.combatInterface.initiateSpecificCombat(
+      this.combatInterface!.initiateSpecificCombat(
         this.party,
         encounter.monsterId,
         encounter.message
       );
     } else {
-      this.combatInterface.initiateCombat(this.party, encounterType, dungeonLevel);
+      this.combatInterface!.initiateCombat(this.party, encounterType, dungeonLevel);
     }
 
     // Change game state to combat
@@ -2065,8 +2065,8 @@ export class Engine {
         const maxAttempts = 100;
 
         do {
-          newX = Random.integer(1, this.dungeon!.currentFloorData.width - 2);
-          newY = Random.integer(1, this.dungeon!.currentFloorData.height - 2);
+          newX = Random.integer(1, (this.dungeon!.currentFloorData as any).width - 2);
+          newY = Random.integer(1, (this.dungeon!.currentFloorData as any).height - 2);
           attempts++;
         } while (!this.dungeon!.isWalkable(newX, newY) && attempts < maxAttempts);
 
@@ -2329,7 +2329,7 @@ export class Engine {
         this.dungeon!.currentFloor = 1;
 
         // Use the dungeon's setStartPosition method to find a valid spawn point
-        const currentFloor = this.dungeon.floors.get(this.dungeon!.currentFloor);
+        const currentFloor = this.dungeon!.floors.get(this.dungeon!.currentFloor);
         if (currentFloor) {
           this.dungeon!.setStartPosition(currentFloor);
         }
