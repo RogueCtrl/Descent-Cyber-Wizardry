@@ -1,0 +1,7 @@
+dist
+node_modules
+coverage
+*.md
+package-lock.json
+CHANGELOG.md
+src/audio/cyber_theme_snippet.ts

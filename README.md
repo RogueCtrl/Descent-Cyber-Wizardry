@@ -1,8 +1,9 @@
 # Descent: Cyber Wizardry
 
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
 **A modern browser-based homage to the classic dungeon crawler Wizardry, featuring a unique dual-mode system that transforms the game between classic fantasy and cyberpunk aesthetics.**
@@ -125,6 +126,16 @@ Robust IndexedDB storage saves every step. Characters, parties, dungeon progress
 
 ## Recent Changes
 
+### TypeScript Migration & Architecture Overhaul
+The entire codebase has been migrated from vanilla JavaScript to **strict TypeScript** with **Vite** as the dev server and bundler. Key improvements:
+
+- **55 modules** converted to TypeScript with full ES module imports/exports
+- **`strict: true`** enabled — zero `tsc` errors across ~37,000 lines
+- **Dependency injection** replaces all `window.engine` global references
+- **Clean module boundaries** — no legacy `window.*` global assignments remain
+- **Type definitions** for all game entities (400+ lines in `src/types/index.ts`)
+- **IndexedDB entity migrations** imported directly via ES modules instead of window globals
+
 ### Mini-Map Navigation
 Real-time 2D mini-map with fog of war rendering. Explored tiles persist across sessions and are shared between all parties in the same dungeon. The player arrow rotates to indicate facing direction.
 
@@ -146,35 +157,89 @@ Monsters now appear in both the 3D dungeon viewport and on the mini-map. Encount
 git clone https://github.com/RogueCtrl/Descent-Cyber-Wizardry.git
 cd Descent-Cyber-Wizardry
 
-# Launch (recommended for audio)
-python -m http.server 8000
-# Then open http://localhost:8000
+# Install dev dependencies
+npm install
 
-# Or just open index.html directly in any modern browser
+# Start development server
+npm run dev
+# Then open http://localhost:5173
 ```
 
-No build steps. No npm install. No dependencies. Just pure vanilla web technologies.
+**No runtime dependencies** — TypeScript and Vite are dev-only. The game runs entirely on browser APIs (Canvas, IndexedDB, Web Audio).
+
+---
+
+## Development Workflow
+
+### Quality Automation
+
+The project uses GitHub Actions for automated testing and releases:
+
+```bash
+# Run CI checks locally before pushing
+npm run build         # TypeScript compile check
+npm run lint          # ESLint validation
+npm run format:check  # Prettier formatting check
+npm test             # Vitest unit tests
+```
+
+### Automated Releases
+
+This project uses **semantic versioning** with automated releases based on conventional commits. When you merge a PR to `main`, the version is automatically bumped and a changelog is generated.
+
+#### Conventional Commit Format
+
+Use these prefixes in your **PR titles** (not individual commit messages):
+
+| PR Title Prefix | Version Bump | Example |
+|-----------------|--------------|---------|
+| `major:` or `BREAKING CHANGE` | **Major** (1.0.0 → 2.0.0) | `major: redesign combat system` |
+| `feat:` or `refactor:` | **Minor** (1.0.0 → 1.1.0) | `feat: add spell memorization` |
+| `fix:`, `docs:`, `chore:` | **Patch** (1.0.0 → 1.0.1) | `fix: repair broken portraits` |
+
+**Examples:**
+- `feat: add multi-party dungeon sharing`
+- `fix: resolve IndexedDB migration error`
+- `docs: update architecture diagrams`
+- `refactor: improve combat initiative system`
+
+#### Release Workflow
+
+1. **Open a PR** with a conventional commit prefix in the title
+2. **Merge to main** (after CI passes and review)
+3. **Automatic release PR** is created with:
+   - Updated version in `package.json`
+   - Generated `CHANGELOG.md` entry
+   - Git tag `vX.Y.Z`
+4. **Review and merge** the release PR to complete the release
+
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
 ## Technical Architecture
 
-The project demonstrates modern capability using only vanilla standards:
+Zero runtime dependencies — all game logic uses only browser-native APIs:
 
 | Component | Technology |
 |-----------|------------|
-| **Core** | Pure Vanilla JavaScript (ES2024+) |
+| **Language** | TypeScript (strict mode) |
+| **Tooling** | Vite (dev server & bundler) |
 | **Rendering** | HTML5 Canvas (2D Context for 3D projection) |
 | **Audio** | Web Audio API (Oscillator synthesis) |
 | **Storage** | IndexedDB v7 with migration system |
 | **Styling** | Modern CSS3 (Variables, Grid, Flexbox) |
 
-**~32,000 lines of JavaScript** across 51 files, organized into:
-- `src/core/` - Engine, events, state machine
-- `src/game/` - Combat, dungeon, characters, parties
-- `src/rendering/` - 3D viewport, portraits, UI
-- `src/audio/` - Procedural music and sound
-- `src/data/` - Terminology, entity migrations
+**~37,000 lines of TypeScript** across 55 modules, organized into:
+- `src/core/` — Engine, events, state machine
+- `src/game/` — Combat, dungeon, characters, parties
+- `src/rendering/` — 3D viewport, portraits, UI
+- `src/audio/` — Procedural music and sound
+- `src/data/` — Terminology, entity migrations
+- `src/types/` — Shared interfaces and union types
+- `src/utils/` — Storage, text manager, helpers
+
+Type checking: `npx tsc --noEmit` (strict mode, zero errors)
 
 Detailed system documentation: [`docs/systems/`](docs/systems/)
 
