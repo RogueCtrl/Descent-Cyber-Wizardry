@@ -1177,12 +1177,12 @@ export class Dungeon {
     }
 
     // Handle jack entry tile (procedural map exit to previous node/town)
-    if (tile === 'jack_entry') {
+    if (tile === 'jack_entry' || tile === 'stairs_up') {
       this.triggerJackEntryTile();
     }
 
     // Handle jack deep tile (procedural map descent to next node)
-    if (tile === 'jack_deep') {
+    if (tile === 'jack_deep' || tile === 'stairs_down') {
       this.triggerJackDeepTile();
     }
 
