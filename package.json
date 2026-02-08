@@ -1,0 +1,21 @@
+{
+  "name": "descent-cyber-wizardry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A browser-based Wizardry homage with dual-mode fantasy/cyberpunk aesthetics",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RogueCtrl/Descent-Cyber-Wizardry.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}
