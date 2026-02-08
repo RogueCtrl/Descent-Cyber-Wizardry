@@ -1,5 +1,6 @@
 /* ========================================= */
-/* DASHBOARD LAYOUT (Main Menu Redesign)     */
+/* DASHBOARD LAYOUT (Town Menu Redesign v2)  */
+/* Two-column layout with center pane        */
 /* ========================================= */
 
 .town-modal .modal-content {
@@ -20,25 +21,38 @@
     width: 100vw;
     height: 100vh;
     background-color: var(--bg-primary);
-    background-image: url('../assets/gui/circuit_board.jpg');
-    background-size: cover;
+    background-image: url('../assets/gui/circuit_board.png');
+    background-size: 1024px 1024px;
     background-position: center;
     background-repeat: no-repeat;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Semi-transparent overlay to darken background for readability */
+/* Subtle overlay — background image already has good contrast */
 .town-menu::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    /* Darker for better contrast */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1024px;
+    height: 1024px;
+    background: rgba(0, 0, 0, 0.1);
     z-index: 1;
+    pointer-events: none;
 }
+
+/* ... existing code ... */
+
+/* ========================================= */
+/* Main Dashboard Body — 3-column grid       */
+/* Left panels | Center (empty) | Right      */
+/* ========================================= */
+
 
 /* Digital Noise Overlay */
 .noise-overlay {
@@ -53,45 +67,86 @@
     pointer-events: none;
 }
 
-/* Dashboard Grid Container */
-.dashboard-grid {
-    position: relative;
-    z-index: 2;
-    /* Check Z-index against potential overlays */
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 55% 45%;
-    /* Top row slightly larger for main components */
-    gap: var(--space-4);
-    padding: var(--space-4);
-    width: 100%;
-    height: 100%;
-    max-width: 1800px;
-    /* Prevent stretching on ultrawide */
-    margin: 0 auto;
+
+/* ========================================= */
+/* Logo Header                               */
+/* ========================================= */
+/* Logo is baked into the background image — header hidden */
+.dashboard-logo {
+    display: none;
 }
 
-/* Dashboard Panel Base Style */
+
+/* ========================================= */
+/* Main Dashboard Body — 3-column grid       */
+/* Left panels | Center (empty) | Right      */
+/* ========================================= */
+.dashboard-body {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    gap: var(--space-4);
+    /* 220px top padding pushes content below the logo area of the 1024px bg */
+    padding: 220px var(--space-4) var(--space-4);
+    max-width: 1024px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+}
+
+
+/* ========================================= */
+/* Dashboard Columns (Left / Right)          */
+/* ========================================= */
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 0;
+}
+
+
+/* ========================================= */
+/* Center Pane (Reserved for future content) */
+/* ========================================= */
+.dashboard-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
+
+/* ========================================= */
+/* Dashboard Panel Base Style                */
+/* Cyber panels with neon glow borders       */
+/* ========================================= */
 .dashboard-panel {
-    background: var(--bg-glass);
-    border: 1px solid rgba(100, 116, 139, 0.2);
-    /* Subtle slate border */
+    background: rgba(0, 20, 25, 0.75);
+    border: 1px solid rgba(0, 242, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.08), inset 0 0 4px rgba(0, 242, 255, 0.04);
     backdrop-filter: blur(8px);
     border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
     position: relative;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    flex: 1;
+    min-height: 0;
 }
 
 .dashboard-panel:hover {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
+    border-color: rgba(0, 242, 255, 0.5);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.15), inset 0 0 8px rgba(0, 242, 255, 0.06);
 }
 
-/* Panel Header */
+
+/* ========================================= */
+/* Panel Header                              */
+/* ========================================= */
 .panel-header {
     display: flex;
     justify-content: space-between;
@@ -99,6 +154,7 @@
     padding: var(--space-3) var(--space-4);
     background: rgba(0, 0, 0, 0.4);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
 }
 
 .panel-title {
@@ -107,7 +163,8 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: var(--text-primary);
+    color: #00f2ff;
+    text-shadow: 0 0 5px rgba(0, 242, 255, 0.5), 0 0 10px rgba(0, 242, 255, 0.25);
     display: flex;
     align-items: center;
     gap: var(--space-2);
@@ -118,7 +175,10 @@
     filter: drop-shadow(0 0 5px currentColor);
 }
 
-/* Panel Top Right Controls */
+
+/* ========================================= */
+/* Panel Top Right Controls                  */
+/* ========================================= */
 .panel-controls {
     display: flex;
     gap: var(--space-2);
@@ -146,18 +206,25 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Panel Content Area */
+
+/* ========================================= */
+/* Panel Content Area                        */
+/* ========================================= */
 .panel-content {
     flex: 1;
     padding: var(--space-4);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
     position: relative;
+    min-height: 0;
 }
 
-/* Panel Footer/Status Area */
+
+/* ========================================= */
+/* Panel Footer / Status Area                */
+/* ========================================= */
 .panel-footer {
     padding: var(--space-2) var(--space-4);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -169,6 +236,7 @@
     align-items: center;
     text-transform: uppercase;
     letter-spacing: 1px;
+    flex-shrink: 0;
 }
 
 .panel-footer .status {
@@ -184,6 +252,7 @@
     height: 6px;
     border-radius: 50%;
     background: currentColor;
+    box-shadow: 0 0 4px currentColor;
 }
 
 .status-active {
@@ -203,7 +272,11 @@
 }
 
 
-/* Specific Panel Accents */
+/* ========================================= */
+/* Specific Panel Accent Colors              */
+/* ========================================= */
+
+/* AgentOps — green accent */
 .panel-agentops {
     border-top: 3px solid var(--accent-success);
 }
@@ -212,6 +285,7 @@
     color: var(--accent-success);
 }
 
+/* Link Status — red/alert accent */
 .panel-network {
     border-top: 3px solid var(--accent-alert);
 }
@@ -220,12 +294,12 @@
     color: var(--accent-alert);
 }
 
+/* Data Vault — primary cyan accent */
 .panel-data {
     border-top: 3px solid var(--accent-primary);
 }
 
-/* No icon color override for data, keep neutral or primary */
-
+/* Med-Bay — warning amber accent */
 .panel-restoration {
     border-top: 3px solid var(--accent-warning);
 }
@@ -234,6 +308,7 @@
     color: var(--accent-warning);
 }
 
+/* Strike Team — primary cyan accent */
 .panel-manifest {
     border-top: 3px solid var(--accent-primary);
 }
@@ -242,49 +317,19 @@
     color: var(--accent-primary);
 }
 
-
-/* Layout Positioning */
-.dash-pos-1 {
-    grid-column: 1;
-    grid-row: 1;
+/* Signal Feed — success green accent */
+.panel-news {
+    border-top: 3px solid var(--accent-success);
 }
 
-/* AgentOps */
-/* .dash-pos-2 defined below for center panel */
-.dash-pos-3 {
-    grid-column: 3;
-    grid-row: 1;
-}
-
-/* Data Exchange */
-.dash-pos-4 {
-    grid-column: 1;
-    grid-row: 2;
-}
-
-/* Restoration */
-.dash-pos-5 {
-    grid-column: 2;
-    grid-row: 2;
-}
-
-/* New Panel: News/Lore (Bottom Right) */
-.dash-pos-6 {
-    grid-column: 3;
-    grid-row: 2;
-}
-
-/* Center Panel (Corrupted Network) Specifics */
-.dash-pos-2 {
-    grid-column: 2;
-    grid-row: 1;
-    /* Make it pop out a bit more? */
-    background: rgba(10, 10, 10, 0.9);
-    border-color: var(--accent-alert);
+.panel-news .panel-title .icon {
+    color: var(--accent-success);
 }
 
 
-/* Inner Content Components */
+/* ========================================= */
+/* Inner Content Components                  */
+/* ========================================= */
 .data-table-row {
     display: flex;
     justify-content: space-between;
@@ -332,10 +377,63 @@
 }
 
 
-/* Action Button Group in Panels */
+/* ========================================= */
+/* Panel Info Row (Horizontal icon + text)   */
+/* ========================================= */
+.panel-info-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.panel-info-icon {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15));
+}
+
+.panel-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+
+/* ========================================= */
+/* Status Badge (bordered inline badge)      */
+/* ========================================= */
+.panel-status-badge {
+    margin-top: auto;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-primary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.panel-status-badge.status-critical {
+    color: var(--accent-alert);
+    border-color: rgba(150, 12, 25, 0.4);
+}
+
+.panel-status-badge.status-alert {
+    color: var(--accent-primary);
+    border-color: rgba(34, 211, 238, 0.3);
+}
+
+
+/* ========================================= */
+/* Action Buttons in Panels                  */
+/* ========================================= */
 .panel-actions {
     margin-top: auto;
-    /* Push to bottom of content if using flex col */
     display: flex;
     gap: var(--space-2);
 }
@@ -343,9 +441,10 @@
 .panel-action-btn {
     flex: 1;
     padding: var(--space-2) var(--space-3);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-primary);
-    color: var(--text-secondary);
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: #00f2ff;
+    font-family: var(--font-primary);
     font-size: var(--font-size-xs);
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -353,18 +452,20 @@
     transition: all 0.2s;
     text-align: center;
     border-radius: var(--radius-sm);
+    text-shadow: 0 0 4px rgba(0, 242, 255, 0.3);
 }
 
 .panel-action-btn:hover:not(:disabled) {
-    background: var(--accent-primary);
-    color: #000;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 10px var(--glow-primary);
+    background: rgba(0, 242, 255, 0.15);
+    color: #fff;
+    border-color: #00f2ff;
+    box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
+    text-shadow: 0 0 6px rgba(0, 242, 255, 0.5);
 }
 
 .panel-action-btn.primary {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
+    border-color: rgba(0, 242, 255, 0.5);
+    color: #00f2ff;
 }
 
 .panel-action-btn:disabled {
@@ -372,7 +473,35 @@
     cursor: not-allowed;
 }
 
-/* Scanlines Effect */
+/* Alert-styled action button */
+.panel-action-btn.alert {
+    border-color: rgba(255, 60, 60, 0.4);
+    color: var(--accent-alert);
+    background: rgba(255, 60, 60, 0.05);
+}
+
+.panel-action-btn.alert:hover:not(:disabled) {
+    background: rgba(255, 60, 60, 0.15);
+    border-color: var(--accent-alert);
+    box-shadow: 0 0 12px rgba(255, 60, 60, 0.3);
+}
+
+
+/* ========================================= */
+/* Status Indicator in Panel Header          */
+/* ========================================= */
+.status-indicator {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-success);
+    text-shadow: 0 0 4px var(--accent-success);
+}
+
+
+/* ========================================= */
+/* Scanlines / CRT Effect                    */
+/* ========================================= */
 .crt-overlay {
     background: linear-gradient(rgba(18, 16, 16, 0) 50%,
             rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg,
@@ -408,7 +537,10 @@
     pointer-events: none;
 }
 
-/* Animations */
+
+/* ========================================= */
+/* Animations                                */
+/* ========================================= */
 @keyframes flicker {
     0% {
         opacity: 0.55;
@@ -457,15 +589,34 @@
     }
 }
 
-/* Enhanced Panel Hover */
-.dashboard-panel:hover {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.2), inset 0 0 10px rgba(34, 211, 238, 0.1);
-    transform: scale(1.005);
-    z-index: 5;
+
+/* ========================================= */
+/* Enhanced Panel Hover                      */
+/* ========================================= */
+.dashboard-panel:hover .panel-title {
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.6), 2px 0 var(--accent-alert), -2px 0 rgba(0, 242, 255, 0.8);
 }
 
-/* Glitch effect on hover for titles */
-.dashboard-panel:hover .panel-title {
-    text-shadow: 2px 0 var(--accent-alert), -2px 0 var(--accent-primary);
+
+/* ========================================= */
+/* Responsive                                */
+/* ========================================= */
+@media (max-width: 1200px) {
+    .dashboard-body {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dashboard-center {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-body {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-logo img {
+        max-height: 80px;
+    }
 }

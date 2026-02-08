@@ -462,173 +462,161 @@ export class UI {
       console.error('Error checking for camps:', error);
     }
 
-    // Render the Dashboard Grid
+    // Render the Dashboard — Logo + Two-Column Layout
     const townContent = `
             <div class="town-menu">
                 <div class="noise-overlay"></div>
                 <div class="crt-overlay"></div>
                 
-                <!-- Dashboard Grid -->
-                <div class="dashboard-grid">
+                <!-- Logo Header -->
+                <div class="dashboard-logo">
+                    <img src="/assets/gui/game_logo.png" alt="Descent: Cyber Wizardry">
+                </div>
+
+                <!-- Dashboard Body: Left Column | Center (empty) | Right Column -->
+                <div class="dashboard-body">
                     
-                    <!-- 1. AgentOps (Top Left) -->
-                    <div class="dashboard-panel panel-agentops dash-pos-1">
-                        <header class="panel-header">
-                            <div class="panel-title"><span class="icon">👤</span> AGENTOPS</div>
-                            <div class="panel-controls">
-                                <span class="status-indicator">ONLINE</span>
-                            </div>
-                        </header>
-                        <div class="panel-content">
-                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                <span>ACTIVE AGENTS:</span>
-                                <span style="color: var(--accent-success);">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
-                             </div>
-                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                <span>INJURED:</span>
-                                <span style="color: var(--accent-warning);">0</span> <!-- Placeholder for injury tracking -->
-                             </div>
-                             <div class="stat-row" style="display: flex; justify-content: space-between;">
-                                <span>M.I.A.:</span>
-                                <span style="color: var(--accent-alert);">${charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Lost'] || 0) : 0}</span>
-                             </div>
+                    <!-- LEFT COLUMN -->
+                    <div class="dashboard-column">
 
-                             <div class="recruitment-status" style="margin-top: auto; font-size: 0.8em; color: var(--text-muted);">
-                                RECRUITMENT POOL: <span style="color: var(--text-primary);">OPEN</span>
-                             </div>
-
-                            <div class="panel-actions">
-                                <button id="training-grounds-btn" class="panel-action-btn primary">ACCESS REGISTRY</button> 
-                            </div>
-                        </div>
-                        <footer class="panel-footer">
-                            <span class="status status-active">OPERATIONAL</span>
-                        </footer>
-                    </div>
-
-                    <!-- 2. Corrupted Network (Top Center) -->
-                    <div class="dashboard-panel panel-network dash-pos-2">
-                        <header class="panel-header">
-                            <div class="panel-title"><span class="icon">🌐</span> LINK STATUS</div>
-                            <div class="panel-controls">
-                                <button class="panel-btn-icon" id="dashboard-exit-btn" title="Exit Grid" style="border: 1px solid var(--accent-alert); color: var(--accent-alert);">X</button>
-                            </div>
-                        </header>
-                        <div class="panel-content">
-                             <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8; line-height: 1.4;">
-                                > ESTABLISHING CONNECTION...<br>
-                                > ERROR: SECTOR 7 UNSTABLE<br>
-                                > MANA FLUX: 89% CRITICAL<br>
-                                > ENEMY SIGNATURES DETECTED
-                             </div>
-                             
-                             <div class="network-viz" style="flex: 1; display: flex; align-items: center; justify-content: center;">
-                                <div style="width: 80%; height: 2px; background: #333; position: relative;">
-                                    <div style="position: absolute; top: -4px; left: ${Math.random() * 80}%; width: 10px; height: 10px; background: var(--accent-alert); box-shadow: 0 0 10px var(--accent-alert);"></div>
+                        <!-- AgentOps Status -->
+                        <div class="dashboard-panel panel-agentops">
+                            <header class="panel-header">
+                                <div class="panel-title"><span class="icon">👤</span> AGENTOPS STATUS</div>
+                                <div class="panel-controls">
+                                    <span class="status-indicator">ONLINE</span>
                                 </div>
-                             </div>
+                            </header>
+                            <div class="panel-content">
+                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                    <span>ACTIVE AGENTS:</span>
+                                    <span style="color: var(--accent-success);">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
+                                 </div>
+                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                    <span>INJURED:</span>
+                                    <span style="color: var(--accent-warning);">0</span>
+                                 </div>
+                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                    <span>M.I.A.:</span>
+                                    <span style="color: var(--accent-alert);">${charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Lost'] || 0) : 0}</span>
+                                 </div>
 
-                            <div class="panel-actions">
-                                <button id="dungeon-entrance-btn" class="panel-action-btn primary" ${hasActiveParty ? '' : 'disabled'}>
-                                    ${hasActiveParty ? 'INITIATE DIVE' : 'NO ACTIVE TEAM'}
-                                </button>
-                            </div>
-                        </div>
-                        <footer class="panel-footer">
-                            <span class="status status-critical">INTEGRITY: UNSTABLE</span>
-                        </footer>
-                    </div>
+                                 <div class="recruitment-status" style="margin-top: auto; font-size: 0.8em; color: var(--text-muted);">
+                                    RECRUITMENT POOL: <span style="color: var(--text-primary);">OPEN</span>
+                                 </div>
 
-                    <!-- 3. Data Exchange (Top Right) -->
-                    <div class="dashboard-panel panel-data dash-pos-3">
-                        <header class="panel-header">
-                            <div class="panel-title"><span class="icon">💾</span> DATA VAULT</div>
-                            <div class="panel-controls">
-                                <button class="panel-btn-icon">🔒</button>
-                            </div>
-                        </header>
-                        <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.6;">
-                            <div style="font-size: 3rem; color: var(--text-muted); text-shadow: 0 0 5px rgba(255,255,255,0.2);">🔒</div>
-                            <p style="text-align: center; color: var(--accent-alert); font-family: monospace;">
-                                ENCRYPTION LEVEL: 5<br>
-                                <span style="font-size: 0.8em; color: var(--text-muted);">ACCESS DENIED</span>
-                            </p>
-                        </div>
-                        <footer class="panel-footer">
-                            <span class="status status-neutral">LOCKED</span>
-                        </footer>
-                    </div>
-
-                    <!-- 4. Restoration Center (Bottom Left) -->
-                    <div class="dashboard-panel panel-restoration dash-pos-4">
-                        <header class="panel-header">
-                             <div class="panel-title"><span class="icon">⚕️</span> MED-BAY</div>
-                        </header>
-                         <div class="panel-content" style="align-items: center; justify-content: center; opacity: 0.6;">
-                            <div style="font-size: 3rem; color: var(--text-muted);">⚡</div>
-                             <p style="text-align: center; color: var(--accent-warning); font-family: monospace;">
-                                BIOMASS DEPLETED<br>
-                                <span style="font-size: 0.8em; color: var(--text-muted);">OFFLINE FOR MAINTENANCE</span>
-                             </p>
-                        </div>
-                         <footer class="panel-footer">
-                             <span class="status status-neutral">OFFLINE</span>
-                        </footer>
-                    </div>
-
-                    <!-- 5. Strike Team Manifest (Bottom Center) -->
-                    <div class="dashboard-panel panel-manifest dash-pos-5">
-                       <header class="panel-header">
-                            <div class="panel-title"><span class="icon">📋</span> STRIKE TEAM</div>
-                        </header>
-                        <div class="panel-content">
-                             <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                <span>SQUAD CAPACITY:</span>
-                                <span style="color: var(--text-primary);">${activePartiesCount}/5</span>
-                             </div>
-                             
-                             <div class="deployment-status" style="margin-top: 10px;">
-                                <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 5px;">READY FOR DEPLOYMENT</div>
-                                <div style="display: flex; gap: 5px;">
-                                    ${Array(5)
-                                      .fill(0)
-                                      .map(
-                                        (_, i) =>
-                                          `<div style="width: 20px; height: 10px; background: ${i < activePartiesCount ? 'var(--accent-primary)' : '#333'}; border: 1px solid #555;"></div>`
-                                      )
-                                      .join('')}
+                                <div class="panel-actions">
+                                    <button id="training-grounds-btn" class="panel-action-btn primary">[ACCESS REGISTRY]</button> 
                                 </div>
-                             </div>
-
-                             <div class="panel-actions">
-                                <button id="strike-team-management-btn" class="panel-action-btn primary" ${hasCamps ? '' : 'disabled'}>
-                                    ${hasCamps ? 'MANAGE' : 'CREATE'}
-                                </button>
                             </div>
                         </div>
-                        <footer class="panel-footer">
-                            <span class="status status-active">READY</span>
-                        </footer>
+
+                        <!-- Med-Bay -->
+                        <div class="dashboard-panel panel-restoration">
+                            <header class="panel-header">
+                                 <div class="panel-title"><span class="icon">☣️</span> MED-BAY</div>
+                            </header>
+                            <div class="panel-content">
+                                <div class="panel-info-row">
+                                    <div class="panel-info-icon">☣️</div>
+                                    <div class="panel-info-text">
+                                        <div style="color: var(--accent-warning); font-family: monospace; text-transform: uppercase;">BIOMASS DEPLETED</div>
+                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">OFFLINE FOR MAINTENANCE</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strike Team -->
+                        <div class="dashboard-panel panel-manifest">
+                           <header class="panel-header">
+                                <div class="panel-title"><span class="icon">⚡</span> STRIKE TEAM</div>
+                            </header>
+                            <div class="panel-content">
+                                <div class="panel-info-row">
+                                    <div class="panel-info-icon">🛡️</div>
+                                    <div class="panel-info-text">
+                                        <div style="text-transform: uppercase;">SQUAD CAPACITY: <span style="color: var(--text-primary);">${activePartiesCount}/5</span></div>
+                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">READY FOR DEPLOYMENT</div>
+                                    </div>
+                                </div>
+                                <div class="panel-actions">
+                                    <button id="strike-team-management-btn" class="panel-action-btn primary" ${hasCamps ? '' : 'disabled'}>
+                                        [CREATE]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- 6. Global News / Lore (Bottom Right) -->
-                    <div class="dashboard-panel panel-news dash-pos-6">
-                        <header class="panel-header">
-                            <div class="panel-title"><span class="icon">📡</span> SIGNAL FEED</div>
-                        </header>
-                        <div class="panel-content" style="overflow: hidden;">
-                            <div class="news-feed" style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
-                                <div style="margin-bottom: 10px; color: var(--accent-primary);">>> LATEST INTERCEPTS:</div>
-                                <ul style="list-style: none; padding: 0;">
-                                    <li style="margin-bottom: 8px;">* CorpSec increasing patrols in Sector 7 due to mana spikes.</li>
-                                    <li style="margin-bottom: 8px;">* "Project Ascension" rumors verified by dark mesh agents.</li>
-                                    <li style="margin-bottom: 8px;">* Bioware upgrades now available at black market nodes.</li>
-                                </ul>
+                    <!-- CENTER PANE (Reserved for future content) -->
+                    <div class="dashboard-center"></div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div class="dashboard-column">
+
+                        <!-- Link Status -->
+                        <div class="dashboard-panel panel-network">
+                            <header class="panel-header">
+                                <div class="panel-title"><span class="icon">🌐</span> LINK STATUS</div>
+                                <div class="panel-controls">
+                                    <button class="panel-btn-icon" id="dashboard-exit-btn" title="Exit Grid" style="border: 1px solid var(--accent-alert); color: var(--accent-alert);">X</button>
+                                </div>
+                            </header>
+                            <div class="panel-content">
+                                 <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8; line-height: 1.4;">
+                                    > ESTABLISHING CONNECTION...<br>
+                                    > ERROR: SECTOR 7 UNSTABLE<br>
+                                    > MANA FLUX: 89% CRITICAL<br>
+                                    > ENEMY SIGNATURES DETECTED
+                                 </div>
+
+                                <div class="panel-actions">
+                                    <button id="dungeon-entrance-btn" class="panel-action-btn alert" ${hasActiveParty ? '' : 'disabled'}>
+                                        ${hasActiveParty ? '[INITIATE DIVE]' : 'NO ACTIVE TEAM'}
+                                    </button>
+                                </div>
+
+                                <div class="panel-status-badge status-critical">INTEGRITY: UNSTABLE</div>
                             </div>
                         </div>
-                        <footer class="panel-footer">
-                            <span class="status status-active">RECEIVING</span>
-                        </footer>
+
+                        <!-- Data Vault -->
+                        <div class="dashboard-panel panel-data">
+                            <header class="panel-header">
+                                <div class="panel-title"><span class="icon">🔒</span> DATA VAULT</div>
+                            </header>
+                            <div class="panel-content">
+                                <div class="panel-info-row">
+                                    <div class="panel-info-icon">🔒</div>
+                                    <div class="panel-info-text">
+                                        <div style="color: var(--accent-primary); font-family: monospace; text-transform: uppercase;">ENCRYPTION LEVEL 5</div>
+                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">ACCESS DENIED</div>
+                                    </div>
+                                </div>
+
+                                <div class="panel-status-badge status-alert">LOCKED</div>
+                            </div>
+                        </div>
+
+                        <!-- Signal Feed -->
+                        <div class="dashboard-panel panel-news">
+                            <header class="panel-header">
+                                <div class="panel-title"><span class="icon">📡</span> SIGNAL FEED</div>
+                            </header>
+                            <div class="panel-content" style="overflow: hidden;">
+                                <div class="news-feed" style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                                    <div style="margin-bottom: 10px; color: var(--accent-primary);">>> LATEST INTERCEPTS:</div>
+                                    <ul style="list-style: none; padding: 0;">
+                                        <li style="margin-bottom: 8px;">- * CorpSec increasing patrols...</li>
+                                        <li style="margin-bottom: 8px;">- "Project Ascension" rumors...</li>
+                                        <li style="margin-bottom: 8px;">- Bioware upgrades now available...</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -922,13 +910,12 @@ export class UI {
                             (${campingParties.length})
                         </h3>
                         <div class="camping-teams-grid">
-                            ${
-                              campingParties.length > 0
-                                ? campingParties
-                                    .map((party) => this.buildPartyCard(party, false, true))
-                                    .join('')
-                                : '<p class="no-parties">No camping parties</p>'
-                            }
+                            ${campingParties.length > 0
+        ? campingParties
+          .map((party) => this.buildPartyCard(party, false, true))
+          .join('')
+        : '<p class="no-parties">No camping parties</p>'
+      }
                         </div>
                     </div>
                     
@@ -939,13 +926,12 @@ export class UI {
                             (${inTownParties.length})
                         </h3>
                         <div class="in-town-teams-grid">
-                            ${
-                              inTownParties.length > 0
-                                ? inTownParties
-                                    .map((party) => this.buildPartyCard(party, false))
-                                    .join('')
-                                : '<p class="no-parties">No inactive parties</p>'
-                            }
+                            ${inTownParties.length > 0
+        ? inTownParties
+          .map((party) => this.buildPartyCard(party, false))
+          .join('')
+        : '<p class="no-parties">No inactive parties</p>'
+      }
                         </div>
                     </div>
                     
@@ -956,13 +942,12 @@ export class UI {
                             (${lostParties.length})
                         </h3>
                         <div class="lost-teams-grid">
-                            ${
-                              lostParties.length > 0
-                                ? lostParties
-                                    .map((party) => this.buildPartyCard(party, false, false, true))
-                                    .join('')
-                                : '<p class="no-parties">No lost parties</p>'
-                            }
+                            ${lostParties.length > 0
+        ? lostParties
+          .map((party) => this.buildPartyCard(party, false, false, true))
+          .join('')
+        : '<p class="no-parties">No lost parties</p>'
+      }
                         </div>
                     </div>
                 </div>
@@ -1027,16 +1012,15 @@ export class UI {
                     <p><strong data-text-key="members">Members:</strong> ${party.aliveCount}/${party.memberCount}</p>
                     <p><strong>Gold:</strong> ${party.gold || 0}</p>
                     <p><strong>Created:</strong> ${new Date(party.dateCreated).toLocaleDateString()}</p>
-                    ${
-                      locationDisplay
-                        ? `
+                    ${locationDisplay
+        ? `
                         <div class="party-location">
                             <span class="location-label">Location:</span>
                             <span class="location-value">${locationDisplay}</span>
                         </div>
                     `
-                        : ''
-                    }
+        : ''
+      }
                 </div>
                 <div class="party-actions">
                     ${!isActive && !isLost ? `<button class="action-btn small resume-party-btn" data-party-id="${party.id}">Resume</button>` : ''}
@@ -1574,16 +1558,15 @@ export class UI {
                     <div class="party-status-section">
                         <h3><span data-text-key="current_party">Current Party</span> (${party ? party.size : 0}/${party ? party.maxSize : 4})</h3>
                         <div class="party-status-info">
-                            ${
-                              hasActiveParty
-                                ? `
+                            ${hasActiveParty
+        ? `
                                 <p class="status-ready">✅ <span data-text-key="strike_team_ready">Your party is ready for adventure!</span></p>
                                 <button id="strike-team-status-btn" class="action-btn compact enabled">
                                     <span data-text-key="view_party_stats">View Party Stats</span>
                                 </button>
                             `
-                                : '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'
-                            }
+        : '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'
+      }
                         </div>
                     </div>
                 </div>
@@ -2002,15 +1985,15 @@ export class UI {
                         <h3>Attributes</h3>
                         <div class="attributes-grid">
                             ${attributes
-                              .map(
-                                (attr) => `
+        .map(
+          (attr) => `
                                 <div class="attribute-item">
                                     <div class="attribute-name">${attr.abbr}</div>
                                     <div class="attribute-value">${attr.value}</div>
                                 </div>
                             `
-                              )
-                              .join('')}
+        )
+        .join('')}
                         </div>
                     </div>
                     
@@ -2030,16 +2013,15 @@ export class UI {
                                 <div class="exp-label">Experience</div>
                                 <div class="exp-value">${character.experience || 0}</div>
                             </div>
-                            ${
-                              character.spellPoints !== undefined
-                                ? `
+                            ${character.spellPoints !== undefined
+        ? `
                                 <div class="sp-section">
                                     <div class="sp-label">Spell Points</div>
                                     <div class="sp-value">${character.currentSP || 0}/${character.spellPoints || 0}</div>
                                 </div>
                             `
-                                : ''
-                            }
+        : ''
+      }
                         </div>
                     </div>
                     
@@ -2050,9 +2032,8 @@ export class UI {
                         </div>
                     </div>
                     
-                    ${
-                      spells
-                        ? `
+                    ${spells
+        ? `
                         <div class="character-detail-section">
                             <h3>Memorized Spells</h3>
                             <div class="spells-section">
@@ -2060,8 +2041,8 @@ export class UI {
                             </div>
                         </div>
                     `
-                        : ''
-                    }
+        : ''
+      }
                 </div>
                 
                 <div class="character-detail-footer">
@@ -2191,38 +2172,38 @@ export class UI {
                     </h4>
                     <div class="spell-list program-suite">
                         ${(spells as any)
-                          .map((spell) => {
-                            // Get contextual spell name
-                            let spellName = 'Unknown';
-                            let digitalInfo = '';
+            .map((spell) => {
+              // Get contextual spell name
+              let spellName = 'Unknown';
+              let digitalInfo = '';
 
-                            if (typeof spell === 'string') {
-                              spellName = spell;
-                            } else if (typeof TerminologyUtils !== 'undefined') {
-                              spellName = TerminologyUtils.getContextualName(spell);
-                            } else {
-                              spellName = spell.name || 'Unknown Spell';
-                            }
+              if (typeof spell === 'string') {
+                spellName = spell;
+              } else if (typeof TerminologyUtils !== 'undefined') {
+                spellName = TerminologyUtils.getContextualName(spell);
+              } else {
+                spellName = spell.name || 'Unknown Spell';
+              }
 
-                            // Add program type information in cyber mode
-                            if (isCyberMode && typeof spell === 'object') {
-                              if (spell.programType) {
-                                digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
-                              } else if (spell.executionMethod) {
-                                digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
-                              } else if (spell.algorithmClass) {
-                                digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
-                              }
-                            }
+              // Add program type information in cyber mode
+              if (isCyberMode && typeof spell === 'object') {
+                if (spell.programType) {
+                  digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
+                } else if (spell.executionMethod) {
+                  digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
+                } else if (spell.algorithmClass) {
+                  digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
+                }
+              }
 
-                            return `
+              return `
                                 <div class="spell-item cyber-enhanced" data-cyber-enhanced="${isCyberMode}">
                                     <div class="spell-name">${spellName}</div>
                                     ${digitalInfo}
                                 </div>
                             `;
-                          })
-                          .join('')}
+            })
+            .join('')}
                     </div>
                 </div>
             `;
@@ -2336,26 +2317,24 @@ export class UI {
                 </div>
                 
                 <div class="roster-content">
-                    ${
-                      hasActiveCharacters
-                        ? `
+                    ${hasActiveCharacters
+        ? `
                         <div class="strike-teams-container">
                             ${strikeTeamContent}
                         </div>
                     `
-                        : `
+        : `
                         <div class="no-characters">
                             <div class="no-characters-icon">⚔️</div>
                             <h3 data-text-key="no_characters_created">No Characters Created</h3>
                             <p data-text-key="visit_training_grounds">Visit the Training Grounds to create your first adventurer!</p>
                         </div>
                     `
-                    }
+      }
                 </div>
                 
-                ${
-                  hasLostCharacters
-                    ? `
+                ${hasLostCharacters
+        ? `
                     <div class="roster-memorial-section">
                         <button id="view-lost-characters-btn" class="action-btn memorial">
                             <div class="btn-icon">💀</div>
@@ -2368,8 +2347,8 @@ export class UI {
                         </button>
                     </div>
                 `
-                    : ''
-                }
+        : ''
+      }
                 
                 <div class="roster-footer">
                     <button id="close-roster-btn" class="action-btn secondary">
@@ -2660,21 +2639,20 @@ export class UI {
                 </div>
                 
                 <div class="roster-content memorial-content">
-                    ${
-                      hasLostCharacters
-                        ? `
+                    ${hasLostCharacters
+        ? `
                         <div class="character-grid memorial-character-grid">
                             ${lostCharacterCards.join('')}
                         </div>
                     `
-                        : `
+        : `
                         <div class="no-characters no-lost-characters">
                             <div class="no-characters-icon">🕊️</div>
                             <h3 data-text-key="no_lost_characters">No Fallen Heroes</h3>
                             <p data-text-key="no_lost_characters_message">No heroes have been lost to the dungeon.</p>
                         </div>
                     `
-                    }
+      }
                 </div>
                 
                 <div class="roster-footer memorial-footer">
@@ -2908,9 +2886,9 @@ export class UI {
       const characterDetail =
         typeof TextManager !== 'undefined'
           ? TextManager.getText('forget_character_detail')
-              .replace('{name}', (character as any).name)
-              .replace('{race}', raceName)
-              .replace('{class}', className)
+            .replace('{name}', (character as any).name)
+            .replace('{race}', raceName)
+            .replace('{class}', className)
           : `Forgetting ${(character as any).name} (${raceName} ${className}) will remove all records permanently.`;
 
       const locationDetail =
