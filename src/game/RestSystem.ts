@@ -224,7 +224,7 @@ export class RestSystem {
     const encounter = Random.choice(locationEncounters);
 
     return {
-      ...encounter,
+      ...(encounter as any),
       partyLevel: this.calculatePartyLevel(party),
       timestamp: Date.now(),
     };

@@ -38,7 +38,7 @@ export class Character {
   teamLoyalty: number;
   isLost: any;
 
-  constructor(name = '', race = '', characterClass = '') {
+  constructor(name: any = '', race: any = '', characterClass: any = '') {
     this.id = Helpers.generateId('char');
     this.name = name;
     this.race = race;
@@ -106,7 +106,7 @@ export class Character {
   /**
    * Update character (called each frame)
    */
-  update(deltaTime) {
+  update(deltaTime: any) {
     // Handle any character-specific updates
     // For now, this is a placeholder
   }
@@ -131,7 +131,7 @@ export class Character {
   /**
    * Age the character by specified months
    */
-  ageCharacter(months) {
+  ageCharacter(months: any) {
     this.age += months / 12;
     this.applyAgingEffects();
   }
@@ -153,7 +153,7 @@ export class Character {
   /**
    * Change character class
    */
-  changeClass(newClass) {
+  changeClass(newClass: any) {
     const changeCheck = Class.checkClassChangeRequirements(this, newClass);
     if (!changeCheck.canChange) {
       return { success: false, reason: changeCheck.reason };
@@ -273,7 +273,7 @@ export class Character {
   /**
    * Add temporary effect (curse, buff, etc.)
    */
-  addTemporaryEffect(effect) {
+  addTemporaryEffect(effect: any) {
     this.temporaryEffects.push({
       ...effect,
       id: Helpers.generateId('effect'),
@@ -284,7 +284,7 @@ export class Character {
   /**
    * Remove temporary effect
    */
-  removeTemporaryEffect(effectId) {
+  removeTemporaryEffect(effectId: any) {
     this.temporaryEffects = this.temporaryEffects.filter((e) => e.id !== effectId);
   }
 
@@ -371,7 +371,7 @@ export class Character {
   /**
    * Load from save data
    */
-  loadFromSave(saveData) {
+  loadFromSave(saveData: any) {
     if (!saveData) return;
 
     this.id = saveData.id || this.id;

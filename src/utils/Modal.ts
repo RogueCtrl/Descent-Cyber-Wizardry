@@ -31,7 +31,7 @@ export class Modal {
   /**
    * Create the modal DOM structure
    */
-  create(content, title = null) {
+  create(content: string, title: string | null = null): HTMLElement {
     // Remove existing modal if present
     this.destroy();
 
@@ -73,7 +73,7 @@ export class Modal {
   /**
    * Show the modal
    */
-  show() {
+  show(): void {
     if (!this.element) {
       console.warn('Modal element not created. Call create() first.');
       return;
@@ -107,7 +107,7 @@ export class Modal {
   /**
    * Hide the modal
    */
-  hide() {
+  hide(): void {
     if (!this.isVisible || !this.element) {
       return;
     }
@@ -133,7 +133,7 @@ export class Modal {
   /**
    * Destroy the modal and clean up
    */
-  destroy() {
+  destroy(): void {
     if (this.element && this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
     }
@@ -148,7 +148,7 @@ export class Modal {
   /**
    * Update modal content
    */
-  updateContent(content) {
+  updateContent(content: string): void {
     if (!this.element) {
       return;
     }
@@ -162,14 +162,14 @@ export class Modal {
   /**
    * Set close callback
    */
-  setOnClose(callback) {
+  setOnClose(callback: () => void): void {
     this.onClose = callback;
   }
 
   /**
    * Handle keyboard events
    */
-  handleKeyDown(event) {
+  handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.preventDefault();
       this.close();
@@ -179,7 +179,7 @@ export class Modal {
   /**
    * Handle backdrop clicks
    */
-  handleBackdropClick(event) {
+  handleBackdropClick(event: MouseEvent): void {
     if (event.target === this.element) {
       this.close();
     }
@@ -188,7 +188,7 @@ export class Modal {
   /**
    * Close the modal (calls onClose callback if set)
    */
-  close() {
+  close(): void {
     if (this.onClose) {
       this.onClose();
     } else {
@@ -199,7 +199,7 @@ export class Modal {
   /**
    * Simple event emitter
    */
-  emit(eventName) {
+  emit(eventName: string): void {
     // Basic event system - can be enhanced later
     console.log(`Modal event: ${eventName}`);
   }
@@ -207,21 +207,21 @@ export class Modal {
   /**
    * Get modal body element for custom manipulation
    */
-  getBody() {
+  getBody(): Element | null {
     return this.element ? this.element.querySelector('.modal-body') : null;
   }
 
   /**
    * Get modal header element for custom manipulation
    */
-  getHeader() {
+  getHeader(): Element | null {
     return this.element ? this.element.querySelector('.modal-header') : null;
   }
 
   /**
    * Check if modal is currently visible
    */
-  isOpen() {
+  isOpen(): boolean {
     return this.isVisible;
   }
 }

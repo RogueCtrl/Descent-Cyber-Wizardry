@@ -1,18 +1,26 @@
 import { EventSystem } from './EventSystem.ts';
+import type { GameStateName } from '../types/index.ts';
+
+interface StateHistoryItem {
+  from: string;
+  to: string;
+  timestamp: number;
+  data: Record<string, any>;
+}
 
 /**
  * Game State Management
  * Handles game state transitions and state-specific logic
  */
 export class GameState {
-  eventSystem: any;
+  eventSystem: EventSystem | null;
   currentState: string;
-  previousState: any;
+  previousState: string | null;
   stateData: Record<string, any>;
-  stateHistory: any[];
-  validTransitions: Record<string, any>;
+  stateHistory: StateHistoryItem[];
+  validTransitions: Record<string, string[]>;
 
-  constructor(eventSystem = null) {
+  constructor(eventSystem: EventSystem | null = null) {
     this.eventSystem = eventSystem;
     this.currentState = 'loading';
     this.previousState = null;
@@ -37,7 +45,7 @@ export class GameState {
   /**
    * Set the current game state
    */
-  setState(newState, data = {}) {
+  setState(newState: string, data: Record<string, any> = {}): boolean {
     if (!this.isValidTransition(newState)) {
       console.warn(`Invalid state transition from ${this.currentState} to ${newState}`);
       return false;
@@ -74,43 +82,43 @@ export class GameState {
   /**
    * Check if a state transition is valid
    */
-  isValidTransition(newState) {
+  isValidTransition(newState: string): boolean {
     const validStates = this.validTransitions[this.currentState];
-    return validStates && validStates.includes(newState);
+    return Boolean(validStates && validStates.includes(newState));
   }
 
   /**
    * Get the current state
    */
-  getState() {
+  getState(): string {
     return this.currentState;
   }
 
   /**
    * Get the previous state
    */
-  getPreviousState() {
+  getPreviousState(): string | null {
     return this.previousState;
   }
 
   /**
    * Get state data
    */
-  getStateData() {
+  getStateData(): Record<string, any> {
     return this.stateData;
   }
 
   /**
    * Update state data
    */
-  updateStateData(newData) {
+  updateStateData(newData: Record<string, any>): void {
     this.stateData = { ...this.stateData, ...newData };
   }
 
   /**
    * Go back to previous state
    */
-  goToPreviousState() {
+  goToPreviousState(): boolean {
     if (this.previousState && this.isValidTransition(this.previousState)) {
       this.setState(this.previousState);
       return true;
@@ -121,21 +129,21 @@ export class GameState {
   /**
    * Check if currently in a specific state
    */
-  isState(state) {
+  isState(state: string): boolean {
     return this.currentState === state;
   }
 
   /**
    * Check if in any of the provided states
    */
-  isAnyState(states) {
+  isAnyState(states: string[]): boolean {
     return states.includes(this.currentState);
   }
 
   /**
    * Update method called each frame
    */
-  update(deltaTime) {
+  update(deltaTime: number): void {
     // State-specific update logic
     switch (this.currentState) {
       case 'playing':
@@ -159,7 +167,7 @@ export class GameState {
   /**
    * Update logic for playing state
    */
-  updatePlaying(deltaTime) {
+  updatePlaying(deltaTime: number): void {
     // Update any playing-specific timers or logic
     if (this.stateData.autoSaveTimer) {
       this.stateData.autoSaveTimer -= deltaTime;
@@ -176,7 +184,7 @@ export class GameState {
   /**
    * Update logic for combat state
    */
-  updateCombat(deltaTime) {
+  updateCombat(deltaTime: number): void {
     // Handle combat-specific timing
     if (this.stateData.combatTimer) {
       this.stateData.combatTimer -= deltaTime;
@@ -197,7 +205,7 @@ export class GameState {
   /**
    * Update logic for character creation state
    */
-  updateCharacterCreation(deltaTime) {
+  updateCharacterCreation(deltaTime: number): void {
     // Handle character creation timing (if any)
     // This could include auto-save of character creation progress
   }
@@ -205,7 +213,12 @@ export class GameState {
   /**
    * Get save data for this state manager
    */
-  getSaveData() {
+  getSaveData(): {
+    currentState: string;
+    previousState: string | null;
+    stateData: Record<string, any>;
+    stateHistory: StateHistoryItem[];
+  } {
     return {
       currentState: this.currentState,
       previousState: this.previousState,
@@ -217,7 +230,7 @@ export class GameState {
   /**
    * Load state from save data
    */
-  loadFromSave(saveData) {
+  loadFromSave(saveData: any): void {
     if (!saveData) return;
 
     this.currentState = saveData.currentState || 'loading';
@@ -231,7 +244,7 @@ export class GameState {
   /**
    * Reset state to initial values
    */
-  reset() {
+  reset(): void {
     this.currentState = 'loading';
     this.previousState = null;
     this.stateData = {};
@@ -243,14 +256,14 @@ export class GameState {
   /**
    * Get state history
    */
-  getStateHistory() {
+  getStateHistory(): StateHistoryItem[] {
     return [...this.stateHistory];
   }
 
   /**
    * Get debug information
    */
-  getDebugInfo() {
+  getDebugInfo(): object {
     return {
       currentState: this.currentState,
       previousState: this.previousState,

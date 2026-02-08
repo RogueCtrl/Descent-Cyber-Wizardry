@@ -133,7 +133,7 @@ export class UI {
     textElements.forEach((element) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
-        TextManager.applyToElement(element, textKey);
+        TextManager.applyToElement(element as HTMLElement, textKey);
       }
     });
 
@@ -376,7 +376,7 @@ export class UI {
       if (typeof TextManager !== 'undefined') {
         const textElement = partyNameDisplay.querySelector('[data-text-key="party"]');
         if (textElement) {
-          TextManager.applyToElement(textElement, 'party');
+          TextManager.applyToElement(textElement as HTMLElement, 'party');
         }
       }
     }
@@ -3176,7 +3176,7 @@ export class UI {
     textElements.forEach((element) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey && typeof TextManager !== 'undefined') {
-        TextManager.applyToElement(element, textKey);
+        TextManager.applyToElement(element as HTMLElement, textKey);
       }
     });
   }
@@ -3387,8 +3387,8 @@ export class UI {
 
               // Initialize portrait renderer if needed
               if (!this.portraitRenderer) {
-                const ctx = (monsterCanvas as any).getContext('2d');
-                this.portraitRenderer = new MonsterPortraitRenderer(monsterCanvas, ctx);
+                const ctx = (monsterCanvas as HTMLCanvasElement).getContext('2d')!;
+                this.portraitRenderer = new MonsterPortraitRenderer(monsterCanvas as HTMLCanvasElement, ctx);
               }
 
               // Render the portrait
@@ -5715,7 +5715,10 @@ export class UI {
 
       // Apply TextManager if available
       if (typeof TextManager !== 'undefined') {
-        TextManager.applyToElement(exitButton.querySelector('[data-text-key]'), 'exit_dungeon');
+        const textEl = exitButton.querySelector('[data-text-key]');
+        if (textEl) {
+          TextManager.applyToElement(textEl as HTMLElement, 'exit_dungeon');
+        }
       }
 
       // Add click handler
@@ -5972,7 +5975,7 @@ export class UI {
       if (typeof TextManager !== 'undefined') {
         const span = treasureButton.querySelector('[data-text-key]');
         if (span) {
-          TextManager.applyToElement(span, 'open_treasure');
+          TextManager.applyToElement(span as HTMLElement, 'open_treasure');
         }
       }
 

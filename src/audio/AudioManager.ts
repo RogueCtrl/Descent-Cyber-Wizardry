@@ -1,4 +1,5 @@
 import { TextManager } from '../utils/TextManager.ts';
+import type { MusicNote } from '../types/index.ts';
 
 /**
  * Audio Manager
@@ -68,7 +69,7 @@ export class AudioManager {
   /**
    * Initialize Web Audio API
    */
-  initializeAudio() {
+  initializeAudio(): void {
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.gainNode = this.audioContext.createGain();
@@ -85,7 +86,7 @@ export class AudioManager {
   /**
    * Set up listener for first user interaction to enable audio
    */
-  setupUserInteractionListener() {
+  setupUserInteractionListener(): void {
     const resumeAudio = () => {
       this.resumeContext();
       // Remove listeners after first interaction
@@ -100,7 +101,7 @@ export class AudioManager {
   /**
    * Set up sound effect definitions
    */
-  setupSoundEffects() {
+  setupSoundEffects(): void {
     this.soundEffects = {
       // UI Sounds
       buttonClick: {
@@ -272,7 +273,7 @@ export class AudioManager {
   /**
    * Get the appropriate Town Theme based on Game Mode
    */
-  getTownPattern() {
+  getTownPattern(): MusicNote[] {
     // Fallback to fantasy if TextManager isn't ready
     if (typeof TextManager === 'undefined') {
       return this.createTownThemeFantasy();
@@ -286,7 +287,7 @@ export class AudioManager {
   /**
    * Create Fantasy Town Theme (Original)
    */
-  createTownThemeFantasy() {
+  createTownThemeFantasy(): MusicNote[] {
     return [
       // Part A - Main melancholy melody (lower register, slower tempo)
       { freq: 349, duration: 1.5, wave: 'sine' }, // F4 (somber start)
@@ -340,7 +341,7 @@ export class AudioManager {
    * Create Cyber Town Theme (Dashboard)
    * Atmospheric style inspired by dungeon exploration: sparse pings, low drones, minimal melody
    */
-  createTownThemeCyber() {
+  createTownThemeCyber(): MusicNote[] {
     const theme: any[] = [];
 
     // --- SECTION 1: Deep Atmospheric Foundation ---
@@ -394,7 +395,7 @@ export class AudioManager {
   /**
    * Create dungeon theme - Dynamic Cyber Generator
    */
-  createDungeonTheme() {
+  createDungeonTheme(): (() => MusicNote[]) {
     // Return a generator function that maintains state
     let state = {
       mode: 'stealth', // 'stealth', 'active', 'transition'
@@ -453,7 +454,7 @@ export class AudioManager {
   /**
    * Generate a jump scare segment
    */
-  generateJumpScare() {
+  generateJumpScare(): MusicNote[] {
     // Burst of dissonance and noise
     return [
       { freq: 523, duration: 0.1, wave: 'sawtooth', volume: 0.8 }, // C5
@@ -467,7 +468,7 @@ export class AudioManager {
   /**
    * Generate active cyber segment (driving beat)
    */
-  generateCyberActiveSegment(state) {
+  generateCyberActiveSegment(state: any): MusicNote[] {
     const segment: any[] = [];
     const baseFreq = 110; // A2
 
@@ -536,7 +537,7 @@ export class AudioManager {
   /**
    * Generate stealth cyber segment (atmospheric)
    */
-  generateCyberStealthSegment(state) {
+  generateCyberStealthSegment(state: any): MusicNote[] {
     const segment: any[] = [];
 
     // Sparse, echoey pings
@@ -573,7 +574,7 @@ export class AudioManager {
   /**
    * Create combat theme - strategic and subtle, mid-range focused
    */
-  createCombatTheme() {
+  createCombatTheme(): MusicNote[] {
     return [
       // Part A - Main combat theme (mid-range, not piercing)
       { freq: 294, duration: 0.75, wave: 'sine' }, // D4 (lowered from G4)
@@ -601,7 +602,7 @@ export class AudioManager {
   /**
    * Create victory theme - somber and reflective, acknowledging the cost of victory
    */
-  createVictoryTheme() {
+  createVictoryTheme(): MusicNote[] {
     return [
       // Part A - Somber opening (minor key, reflective)
       { freq: 330, duration: 1.5, wave: 'sine' }, // E4 (minor third)
@@ -635,7 +636,7 @@ export class AudioManager {
   /**
    * Create death theme - somber and final
    */
-  createDeathTheme() {
+  createDeathTheme(): MusicNote[] {
     return [
       { freq: 523, duration: 1.0, wave: 'sine' }, // C5
       { freq: 494, duration: 1.0, wave: 'sine' }, // B4
@@ -649,7 +650,7 @@ export class AudioManager {
   /**
    * Play a musical note
    */
-  playNote(frequency, duration, waveType = 'square', startTime = 0) {
+  playNote(frequency: number, duration: number, waveType: OscillatorType = 'square', startTime: number = 0): void {
     if (!this.isEnabled || !this.audioContext) return;
 
     if (frequency === 0) return; // Rest
@@ -702,7 +703,7 @@ export class AudioManager {
   /**
    * Play a track pattern
    */
-  playTrack(trackName) {
+  playTrack(trackName: string): void {
     if (!this.isEnabled || !this.tracks[trackName] || !this.audioContext) return;
 
     // Check if audio context is suspended (needs user interaction)
@@ -739,16 +740,18 @@ export class AudioManager {
   /**
    * Play a pattern of notes
    */
-  playPattern(pattern, beatDuration) {
+  playPattern(pattern: MusicNote[] | (() => MusicNote[]), beatDuration: number): void {
     if (!this.isPlaying) return;
 
-    let sequence = pattern;
+    let sequence: MusicNote[];
     let isDynamic = false;
 
     // Handle dynamic patterns (generators)
     if (typeof pattern === 'function') {
       sequence = pattern();
       isDynamic = true;
+    } else {
+      sequence = pattern;
     }
 
     let currentTime = 0;
@@ -788,7 +791,7 @@ export class AudioManager {
   /**
    * Stop current track
    */
-  stopCurrentTrack() {
+  stopCurrentTrack(): void {
     this.isPlaying = false;
 
     // Stop all current oscillators
@@ -816,7 +819,7 @@ export class AudioManager {
   /**
    * Fade to a new track
    */
-  fadeToTrack(trackName, fadeTime = 1000) {
+  fadeToTrack(trackName: string, fadeTime: number = 1000): void {
     if (!this.isEnabled) return;
 
     if (this.currentTrack === trackName && this.isPlaying) return; // Already playing this track
@@ -849,7 +852,7 @@ export class AudioManager {
   /**
    * Fade in current track
    */
-  fadeIn(targetVolume, fadeTime = 1000) {
+  fadeIn(targetVolume: number, fadeTime: number = 1000): void {
     if (!this.isEnabled) return;
 
     const steps = 20;
@@ -872,7 +875,7 @@ export class AudioManager {
   /**
    * Set volume
    */
-  setVolume(volume) {
+  setVolume(volume: number): void {
     this.volume = Math.max(0, Math.min(1, volume));
     if (this.gainNode) {
       this.gainNode.gain.value = this.volume;
@@ -882,7 +885,7 @@ export class AudioManager {
   /**
    * Toggle audio on/off
    */
-  toggle() {
+  toggle(): boolean {
     this.isEnabled = !this.isEnabled;
 
     if (!this.isEnabled) {
@@ -896,7 +899,7 @@ export class AudioManager {
   /**
    * Play a sound effect
    */
-  playSoundEffect(effectName) {
+  playSoundEffect(effectName: string): void {
     if (!this.isEnabled || !this.audioContext || !this.soundEffects[effectName]) return;
 
     // Don't play sound effects if audio context is suspended
@@ -948,7 +951,7 @@ export class AudioManager {
   /**
    * Resume audio context (required for user interaction)
    */
-  async resumeContext() {
+  async resumeContext(): Promise<void> {
     if (this.audioContext && this.audioContext.state === 'suspended') {
       await this.audioContext.resume();
       console.log('🎵 Audio context resumed');
@@ -965,7 +968,7 @@ export class AudioManager {
   /**
    * Refresh track patterns (useful after updating compositions)
    */
-  refreshTracks() {
+  refreshTracks(): void {
     const wasPlaying = this.currentTrack;
     const wasEnabled = this.isEnabled;
 
@@ -1015,7 +1018,7 @@ export class AudioManager {
   /**
    * Get current track info
    */
-  getCurrentTrackInfo() {
+  getCurrentTrackInfo(): { name: string; title: string; isPlaying: boolean; volume: number; enabled: boolean } | null {
     if (!this.currentTrack) return null;
 
     return {

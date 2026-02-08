@@ -297,21 +297,80 @@ export interface TemporaryEffect {
 
 // ─── Events ──────────────────────────────────────────────────
 
+/**
+ * Event payload types for the EventSystem.
+ *
+ * NOTE: EventSystem.emit() uses variadic args, NOT object payloads.
+ * Example: emit('game-state-change', newState, oldState, data)
+ * NOT: emit('game-state-change', { from: newState, to: oldState })
+ *
+ * This interface documents the ACTUAL arguments passed to emit().
+ * Each value is a tuple type representing the arguments after the event name.
+ */
 export interface GameEventMap {
-  'game-state-change': { from: string; to: string; data?: any };
-  'player-action': { action: string; data?: any };
-  'encounter-triggered': { encounter: EncounterData; position: Position };
-  'combat-started': { enemies: MonsterGroup[] };
-  'combat-ended': { victory: boolean; rewards?: any };
-  'combat-action-ready': {};
-  'character-updated': { character: CharacterData };
-  'party-update': { party: PartyData };
-  'autosave-requested': {};
-  textModeChanged: { newMode: string; oldMode: string };
-  'dungeon-floor-change': { floor: number; direction: 'up' | 'down' };
-  'character-death': { characterId: string; deathState: DeathState };
-  'rest-complete': { partyId: string; healed: boolean };
-  [key: string]: any; // Allow additional events during migration
+  // ─── Core State & Flow ───────────────────────────────────
+  'game-state-change': [newState: string, oldState: string, data?: any];
+  'autosave-requested': [];
+  'party-setup-complete': [data: { partyName: string }];
+
+  // ─── Input Events ────────────────────────────────────────
+  'keydown': [event: KeyboardEvent];
+  'keyup': [event: KeyboardEvent];
+  'canvas-click': [event: MouseEvent];
+  'window-resize': [];
+
+  // ─── Player Actions ──────────────────────────────────────
+  'player-action': [action: string] | [data: { type: string; direction: string }];
+  'game-menu-toggle': [];
+  'save-game': [];
+
+  // ─── Party & Character ───────────────────────────────────
+  'party-update': [] | [party?: PartyData];
+  'party-returned-to-town': [data: { partyId: string; partyName: string }];
+  'party-deleted': [data: { partyId: string; partyName: string }];
+  'party-roster-changed': [];
+  'party-rested': [data: { partyId: string; location: string; healing: any }];
+  'party-defeated': [data: { reason?: string }];
+  'party-leader-change': [characterId: string];
+  'character-updated': [data: { character: CharacterData }];
+  'character-created': [character: CharacterData];
+  'character-death': [data: { characterId: string; deathState: DeathState }];
+  'character-resurrection': [data: { characterId: string; newState: DeathState }];
+  'character-state-changed': [];
+  'character-disconnected': [data: { characterId: string; reason: string }];
+  'character-creation-cancelled': [];
+
+  // ─── Combat ──────────────────────────────────────────────
+  'combat-started': [data: { enemies: MonsterGroup[]; encounter?: EncounterData }];
+  'combat-ended': [data: { victory: boolean; rewards?: any; defeatedMonsters?: any[] }];
+  'combat-action-ready': [];
+  'combat-action-selected': [data: { action: CombatAction }];
+  'combat-action-processed': [data: { action: CombatAction; result: any }];
+  'formation-changed': [data: { partyId: string; formation: FormationData }];
+  'formation-optimized': [data: { formation: FormationData; reason: string }];
+  'ai-action-taken': [data: { monsterId: string; action: string; targetId?: string }];
+
+  // ─── Dungeon & Exploration ───────────────────────────────
+  'dungeon-entered': [];
+  'encounter-triggered': [data: { encounter: EncounterData; x: number; y: number; floor: number } | { encounter: EncounterData; position: Position }];
+  'exit-tile-entered': [data: { x: number; y: number; floor: number }];
+  'exit-tile-left': [];
+  'jack-entry-tile-entered': [data: { x: number; y: number; floor: number }];
+  'jack-deep-tile-entered': [data: { x: number; y: number; floor: number }];
+  'jack-tile-left': [];
+  'treasure-tile-entered': [data: { treasure: TreasureData; x: number; y: number; floor: number }];
+  'treasure-tile-left': [];
+  'trap-triggered': [data: { trap: any; x: number; y: number; floor: number }];
+  'special-square-found': [data: { special: any; x: number; y: number; floor: number }];
+  'dungeon-floor-change': [data: { floor: number; direction: 'up' | 'down' }];
+
+  // ─── Town & UI ───────────────────────────────────────────
+  'town-location-selected': [location: string];
+  'training-action': [action: string];
+  'show-message': [data: { message: string; type?: string }];
+
+  // ─── Text & Audio ────────────────────────────────────────
+  textModeChanged: [data: { newMode: string; oldMode: string }];
 }
 
 // ─── Game State ──────────────────────────────────────────────

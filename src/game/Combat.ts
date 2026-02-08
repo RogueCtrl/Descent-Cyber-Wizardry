@@ -1,6 +1,7 @@
 import { Spells } from './Spells.ts';
 import { Random } from '../utils/Random.ts';
 import { TextManager } from '../utils/TextManager.ts';
+import type { CharacterData, MonsterInstance } from '../types/index.ts';
 
 /**
  * Combat System
@@ -15,9 +16,9 @@ export class Combat {
   turnOrder: any[];
   currentTurnIndex: number;
   combatPhase: string;
-  pendingActions: Map<any, any>;
+  pendingActions: Map<string, any>;
   combatLog: any[];
-  surpriseRound: any;
+  surpriseRound: 'party' | 'enemies' | null;
   playerParty: any;
   enemyParties: any[];
   currentEnemyPartyIndex: number;
@@ -27,27 +28,27 @@ export class Combat {
   spellSystemInitialized: boolean;
   lastCombatRewards: any;
 
-  constructor(engine = null) {
+  constructor(engine: any = null) {
     this.engine = engine;
     this.isActive = false;
     this.currentTurn = 0;
-    this.combatants = [];
-    this.actionQueue = [];
-    this.turnOrder = [];
+    this.combatants = [] as any[];
+    this.actionQueue = [] as any[];
+    this.turnOrder = [] as any[];
     this.currentTurnIndex = 0;
     this.combatPhase = 'initiative'; // initiative, action_selection, resolution, cleanup
-    this.pendingActions = new Map();
-    this.combatLog = [];
-    this.surpriseRound = null; // 'party', 'enemies', or null
+    this.pendingActions = new Map<string, any>();
+    this.combatLog = [] as any[];
+    this.surpriseRound = null;
 
     // Party-based combat system
     this.playerParty = null;
-    this.enemyParties = [];
+    this.enemyParties = [] as any[];
     this.currentEnemyPartyIndex = 0;
     this.currentEnemyParty = null;
 
     // Track disconnected characters for post-combat display
-    this.disconnectedCharacters = [];
+    this.disconnectedCharacters = [] as any[];
 
     // Initialize spell system
     this.spellSystem = new Spells();
@@ -67,7 +68,7 @@ export class Combat {
   /**
    * Start combat with party vs enemy parties
    */
-  async startCombat(playerParty, enemyParties, surpriseType = null) {
+  async startCombat(playerParty: any, enemyParties: any, surpriseType: 'party' | 'enemies' | null = null) {
     // Initialize spell system if not done
     await this.initializeCombat();
 
@@ -340,7 +341,7 @@ export class Combat {
     };
 
     // Calculate total experience from all defeated enemies
-    const defeatedEnemies: any[] = [];
+    const defeatedEnemies = [] as any[];
     this.enemyParties.forEach((party) => {
       const enemies = Array.isArray(party) ? party : [party];
       enemies.forEach((enemy) => {
@@ -361,7 +362,7 @@ export class Combat {
   /**
    * Generate loot from defeated enemies
    */
-  async generateLootFromEnemies(defeatedEnemies, rewards) {
+  async generateLootFromEnemies(defeatedEnemies: any[], rewards: any) {
     if (defeatedEnemies.length === 0) return;
 
     // Calculate average enemy level for loot generation
@@ -410,7 +411,7 @@ export class Combat {
   /**
    * Check for surprise round
    */
-  checkSurprise(party, enemies) {
+  checkSurprise(party: any, enemies: any) {
     const partyAverageAgility =
       party.aliveMembers.reduce((sum, member) => sum + member.attributes.agility, 0) /
       party.aliveMembers.length;
@@ -442,7 +443,7 @@ export class Combat {
   /**
    * Get initiative value for a combatant
    */
-  getInitiative(combatant) {
+  getInitiative(combatant: any) {
     const baseAgility = combatant.attributes
       ? combatant.attributes.agility
       : combatant.agility || 10;
@@ -455,7 +456,7 @@ export class Combat {
   /**
    * Get class-specific initiative bonus
    */
-  getClassInitiativeBonus(combatant) {
+  getClassInitiativeBonus(combatant: any) {
     if (!combatant.class) return 0;
 
     const bonuses = {
@@ -523,7 +524,7 @@ export class Combat {
   /**
    * Process a combat action
    */
-  async processAction(action) {
+  async processAction(action: any) {
     const result = await this.resolveAction(action);
     this.logMessage(result.message);
 
@@ -544,7 +545,7 @@ export class Combat {
   /**
    * Resolve a combat action
    */
-  async resolveAction(action) {
+  async resolveAction(action: any) {
     switch (action.type) {
       case 'attack':
         return await this.resolveAttack(action);
@@ -566,7 +567,7 @@ export class Combat {
   /**
    * Resolve attack action
    */
-  async resolveAttack(action) {
+  async resolveAttack(action: any) {
     const { attacker, target } = action;
 
     if (!target || !target.isAlive) {
@@ -754,7 +755,7 @@ export class Combat {
   /**
    * Resolve spell action
    */
-  resolveSpell(action) {
+  resolveSpell(action: any) {
     const { caster, spell, target } = action;
 
     // Check if caster can cast spell
@@ -817,7 +818,7 @@ export class Combat {
   /**
    * Resolve defend action
    */
-  resolveDefend(action) {
+  resolveDefend(action: any) {
     const { defender } = action;
 
     // Add defensive bonus (implemented in getArmorClass)
@@ -844,7 +845,7 @@ export class Combat {
   /**
    * Resolve item use action
    */
-  resolveItem(action) {
+  resolveItem(action: any) {
     const { user, item, target } = action;
 
     // Simple item use - would be expanded based on item type
@@ -857,7 +858,7 @@ export class Combat {
   /**
    * Resolve flee action (unified with disconnect - same logic, different terminology)
    */
-  async resolveFlee(action) {
+  async resolveFlee(action: any) {
     // Unified flee system - redirect to disconnect logic
     const character = action.fleer || action.attacker || action.character;
     if (!character) {
@@ -874,7 +875,7 @@ export class Combat {
   /**
    * Resolve individual character disconnect action
    */
-  async resolveDisconnect(action) {
+  async resolveDisconnect(action: any) {
     const character = action.character || action.attacker;
     if (!character) {
       return { success: false, message: 'No character to disconnect!' };
@@ -931,14 +932,14 @@ export class Combat {
   /**
    * Calculate disconnect chance (50% base - no modifiers)
    */
-  calculateDisconnectChance(character) {
+  calculateDisconnectChance(character: any) {
     return 50; // Fixed 50% - no formation or other calculations
   }
 
   /**
    * Handle successful disconnect - return character to town
    */
-  async handleSuccessfulDisconnect(character) {
+  async handleSuccessfulDisconnect(character: any) {
     const successTerm = TextManager.getText('combat_disconnect', 'Run');
     const townTerm = TextManager.getText('town', 'Town');
 
@@ -1012,7 +1013,7 @@ export class Combat {
   /**
    * Handle failed disconnect - character knocked unconscious by random monster attack
    */
-  async handleFailedDisconnect(character) {
+  async handleFailedDisconnect(character: any) {
     const failTerm = TextManager.getText('combat_disconnect', 'Run');
 
     this.logMessage(`❌ ${character.name} fails to ${failTerm.toLowerCase()}!`, 'disconnect', '❌');
@@ -1078,9 +1079,9 @@ export class Combat {
   /**
    * Remove character from combat arrays (for disconnects)
    */
-  removeCharacterFromCombat(character) {
+  removeCharacterFromCombat(character: any) {
     // Add to disconnected characters list for post-combat display
-    this.disconnectedCharacters.push({
+    (this.disconnectedCharacters as any).push({
       character: character,
       reason: 'successful_disconnect',
       timestamp: Date.now(),
@@ -1105,7 +1106,7 @@ export class Combat {
   /**
    * Get attack bonus for combatant
    */
-  getAttackBonus(combatant) {
+  getAttackBonus(combatant: any) {
     let bonus = 0;
 
     if (combatant.attributes) {
@@ -1126,7 +1127,7 @@ export class Combat {
   /**
    * Get unarmed combat attack bonus
    */
-  getUnarmedAttackBonus(combatant) {
+  getUnarmedAttackBonus(combatant: any) {
     let bonus = 0;
 
     if (combatant.attributes) {
@@ -1146,7 +1147,7 @@ export class Combat {
   /**
    * Get armor class for combatant
    */
-  getArmorClass(combatant) {
+  getArmorClass(combatant: any) {
     let ac = 10; // Base AC
 
     if (combatant.attributes) {
@@ -1174,7 +1175,7 @@ export class Combat {
   /**
    * Roll damage for attacker
    */
-  rollDamage(attacker) {
+  rollDamage(attacker: any) {
     let damage = Random.die(6); // Base damage
 
     if (attacker.attributes) {
@@ -1194,7 +1195,7 @@ export class Combat {
   /**
    * Calculate unarmed combat damage
    */
-  getUnarmedDamage(attacker) {
+  getUnarmedDamage(attacker: any) {
     let damage = 1; // Base unarmed damage
 
     if (attacker.attributes) {
@@ -1214,7 +1215,7 @@ export class Combat {
   /**
    * Get unarmed combat bonus based on class
    */
-  getUnarmedClassBonus(characterClass) {
+  getUnarmedClassBonus(characterClass: any) {
     const unarmedBonuses = {
       Fighter: 2, // Fighters are skilled in combat
       Thief: 1, // Thieves are scrappy
@@ -1232,7 +1233,7 @@ export class Combat {
   /**
    * Check for critical hit
    */
-  checkCriticalHit(attacker, target, attackRoll) {
+  checkCriticalHit(attacker: any, target: any, attackRoll: any) {
     const result = { multiplier: 1, instant: false };
 
     // Natural 20 always threatens critical
@@ -1281,7 +1282,7 @@ export class Combat {
   /**
    * Check if combatant can cast spell
    */
-  canCastSpell(caster, spell) {
+  canCastSpell(caster: any, spell: any) {
     if (!caster.memorizedSpells) return false;
 
     const schoolSpells = caster.memorizedSpells[spell.school] || [];
@@ -1291,7 +1292,7 @@ export class Combat {
   /**
    * Roll for spell success
    */
-  rollSpellSuccess(caster, spell) {
+  rollSpellSuccess(caster: any, spell: any) {
     const baseChance = 85;
     const levelDifference = (caster.level || 1) - spell.level;
     const attributeBonus = caster.attributes
@@ -1306,7 +1307,7 @@ export class Combat {
   /**
    * Execute spell effect
    */
-  async executeSpellEffect(spell, caster, target) {
+  async executeSpellEffect(spell: any, caster: any, target: any) {
     // Use the initialized spell system for full spell effects
     await this.initializeCombat();
     return this.spellSystem.executeSpellEffect(spell, caster, target);
@@ -1315,7 +1316,7 @@ export class Combat {
   /**
    * Remove memorized spell from caster
    */
-  async removeMemorizedSpell(caster, spell) {
+  async removeMemorizedSpell(caster: any, spell: any) {
     await this.initializeCombat();
     this.spellSystem.removeMemorizedSpell(caster, spell);
   }

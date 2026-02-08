@@ -8,15 +8,15 @@ export class MonsterPortraitRenderer extends Viewport3D {
   recentDamage: number = 0;
   portraitMode: boolean;
   portraitScale: number;
-  portraitOffset: Record<string, any>;
-  portraitRotation: Record<string, any>;
+  portraitOffset: { x: number; y: number };
+  portraitRotation: { x: number; y: number; z: number };
   animationTime: number;
   animationSpeed: number;
   breathingAmount: number;
-  portraitColors: Record<string, any>;
-  animationFrame: any;
+  portraitColors: Record<string, string>;
+  animationFrame: number | null = null;
 
-  constructor(canvas, context) {
+  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
     super(canvas, context);
 
     // Portrait-specific rendering parameters
@@ -43,7 +43,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render a monster portrait using wireframe model data
    */
-  renderMonsterPortrait(monster, options = {}) {
+  renderMonsterPortrait(monster: any, options: any = {}) {
     if (!monster || !monster.portraitModel) {
       this.renderFallbackPortrait();
       return;
@@ -78,7 +78,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render the 3D wireframe model for the portrait
    */
-  renderPortraitModel(portraitModel, options = {}) {
+  renderPortraitModel(portraitModel: any, options: any = {}) {
     if (!portraitModel.vertices || !portraitModel.edges) return;
 
     const centerX = this.width / 2;
@@ -115,7 +115,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Transform 3D vertices for portrait display
    */
-  transformPortraitVertices(vertices, scale, rotation, options = {}) {
+  transformPortraitVertices(vertices: number[][], scale: number, rotation: number[], options: any = {}) {
     const [rotX, rotY, rotZ] = rotation;
     const combinedScale = scale * this.portraitScale;
 
@@ -156,7 +156,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Project 3D coordinates to 2D portrait space
    */
-  projectToPortraitSpace(vertex, centerX, centerY) {
+  projectToPortraitSpace(vertex: number[], centerX: number, centerY: number) {
     const [x, y, z] = vertex;
 
     // Simple orthographic projection for portrait (no perspective distortion)
@@ -171,7 +171,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render additional portrait effects based on monster status
    */
-  renderPortraitEffects(monster, options = {}) {
+  renderPortraitEffects(monster: any, options: any = {}) {
     // Enhanced cyberpunk visual effects
     this.renderGridLines(monster, options);
     this.renderDataCorruption(monster, options);
@@ -199,7 +199,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render grid lines overlay for cyberpunk aesthetic
    */
-  renderGridLines(monster, options = {}) {
+  renderGridLines(monster: any, options: any = {}) {
     const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
     const gridAlpha = Math.max(0.1, healthRatio * 0.3);
 
@@ -231,7 +231,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render data corruption effects for damaged entities
    */
-  renderDataCorruption(monster, options = {}) {
+  renderDataCorruption(monster: any, options: any = {}) {
     const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
     const corruptionLevel = 1 - healthRatio;
 
@@ -269,7 +269,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render system pulse animation
    */
-  renderSystemPulse(monster, options = {}) {
+  renderSystemPulse(monster: any, options: any = {}) {
     if (monster.isDead) return; // No pulse when dead
 
     const pulseIntensity = Math.sin(this.animationTime * 150) * 0.5 + 0.5;
@@ -302,7 +302,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render circuit trace patterns
    */
-  renderCircuitTrace(monster, pathway) {
+  renderCircuitTrace(monster: any, pathway: string) {
     if (monster.isDead) return;
 
     const traceAlpha = 0.4;
@@ -331,7 +331,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render data stream particles for active programs
    */
-  renderDataStreamParticles(monster, options = {}) {
+  renderDataStreamParticles(monster: any, options: any = {}) {
     if (monster.isDead) return;
 
     const particleCount = monster.isActive ? 12 : 6;
@@ -355,7 +355,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render threat level indicator
    */
-  renderThreatLevelIndicator(monster, options = {}) {
+  renderThreatLevelIndicator(monster: any, options: any = {}) {
     if (!monster.threatLevel) return;
 
     const threatColors = {
@@ -397,7 +397,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Render system status overlay
    */
-  renderSystemStatusOverlay(monster, options = {}) {
+  renderSystemStatusOverlay(monster: any, options: any = {}) {
     const healthRatio = (monster.currentHP || 0) / (monster.maxHP || 1);
 
     // Status bar at bottom
@@ -431,7 +431,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Enhanced circuit trace patterns with different modes
    */
-  renderEnhancedCircuitTrace(monster, mode = 'active') {
+  renderEnhancedCircuitTrace(monster: any, mode: string = 'active') {
     if (monster.isDead && mode !== 'dead') return;
 
     const traceAlpha = mode === 'dead' ? 0.1 : 0.4;
@@ -512,7 +512,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Get health-based color for portrait
    */
-  getHealthColor(healthRatio, monster) {
+  getHealthColor(healthRatio: number, monster: any) {
     if (monster.isDead) return this.portraitColors.dead;
     if (monster.isUnconscious) return this.portraitColors.dead;
 

@@ -36,7 +36,7 @@ export class Monster {
   asciiArt: any;
   portraitModel: any;
 
-  constructor(monsterTypeOrId = 'Kobold') {
+  constructor(monsterTypeOrId: any = 'Kobold') {
     this.entityCache = new Map(); // Cache for monster entities
     this.entitiesLoaded = false;
 
@@ -88,7 +88,7 @@ export class Monster {
    * Initialize monster from entity data
    * @param {string} monsterTypeOrId - Monster type name or entity ID
    */
-  async initializeFromData(monsterTypeOrId) {
+  async initializeFromData(monsterTypeOrId: any) {
     try {
       const data = await Monster.getMonsterData(monsterTypeOrId);
       if (data) {
@@ -110,7 +110,7 @@ export class Monster {
    * Apply monster data to this instance
    * @param {Object} data - Monster data to apply
    */
-  applyMonsterData(data) {
+  applyMonsterData(data: any) {
     this.name = data.name;
     this.type = data.type;
     this.level = data.level;
@@ -560,7 +560,7 @@ export class Monster {
   /**
    * Perform monster attack
    */
-  performAttack(attackIndex, target) {
+  async performAttack(attackIndex: any, target: any) {
     if (attackIndex >= this.attacks.length) {
       return { success: false, message: 'Invalid attack' };
     }
@@ -569,7 +569,7 @@ export class Monster {
 
     // Calculate attack roll
     const attackRoll = Random.die(20) + this.attackBonus;
-    const targetAC = this.calculateTargetAC(target);
+    const targetAC = (await this.calculateTargetAC(target)) as number;
 
     if (attackRoll >= targetAC) {
       // Hit! Calculate damage
@@ -610,7 +610,7 @@ export class Monster {
   /**
    * Calculate target AC (simplified)
    */
-  async calculateTargetAC(target) {
+  async calculateTargetAC(target: any) {
     let ac = 10; // Base AC
 
     if (target.attributes) {
@@ -797,7 +797,7 @@ export class Monster {
   /**
    * Check if monster has specific ability
    */
-  hasAbility(abilityName) {
+  hasAbility(abilityName: any) {
     return this.abilities.includes(abilityName);
   }
 
@@ -820,7 +820,7 @@ export class Monster {
   /**
    * Use breath weapon (dragons)
    */
-  useBreathWeapon(targets) {
+  useBreathWeapon(targets: any) {
     const breathAttack = this.attacks.find((attack) => attack.special?.includes('fire'));
     if (!breathAttack) return { success: false };
 
@@ -847,7 +847,7 @@ export class Monster {
   /**
    * Use frightful presence
    */
-  useFrightfulPresence(targets) {
+  useFrightfulPresence(targets: any) {
     const affected: any[] = [];
     targets.forEach((target) => {
       if (target.level < this.level && Random.percent(50)) {
@@ -870,7 +870,7 @@ export class Monster {
   /**
    * Use multiattack
    */
-  useMultiattack(targets) {
+  useMultiattack(targets: any) {
     const results: any[] = [];
     const attackCount = this.level >= 5 ? 2 : 1;
 
@@ -912,7 +912,7 @@ export class Monster {
   /**
    * Load from save data
    */
-  loadFromSave(saveData) {
+  loadFromSave(saveData: any) {
     if (!saveData) return;
 
     Object.keys(saveData).forEach((key) => {
@@ -1039,7 +1039,7 @@ export class EncounterGenerator {
    * @param {number} dungeonLevel - Dungeon level
    * @returns {Promise<Object>} Boss encounter data
    */
-  async generateBossEncounter(dungeonLevel) {
+  async generateBossEncounter(dungeonLevel: any) {
     const bossTypes = {
       1: ['Orc Chief'],
       2: ['Orc Chief'],
@@ -1115,7 +1115,7 @@ export class EncounterGenerator {
   /**
    * Get random monsters by type
    */
-  async getMonstersByType(type) {
+  async getMonstersByType(type: any) {
     const monsters: any = await Storage.getAllMonsters();
     return (Object.entries(monsters) as [string, any][])
       .filter(([id, data]) => {
@@ -1178,7 +1178,7 @@ export class EncounterGenerator {
   /**
    * Get encounter summary
    */
-  getEncounterSummary(encounter) {
+  getEncounterSummary(encounter: any) {
     if (encounter.isEmpty) {
       return { empty: true, message: 'The area is quiet...' };
     }

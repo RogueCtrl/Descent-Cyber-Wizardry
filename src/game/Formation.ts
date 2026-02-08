@@ -9,8 +9,8 @@ export class Formation {
   maxBackRow: number;
 
   constructor() {
-    this.frontRow = []; // positions 0-2
-    this.backRow = []; // positions 3-5
+    this.frontRow = [] as any[];
+    this.backRow = [] as any[];
     this.maxFrontRow = 3;
     this.maxBackRow = 3;
   }
@@ -18,7 +18,7 @@ export class Formation {
   /**
    * Set up formation from party
    */
-  setupFromParty(party) {
+  setupFromParty(party: any) {
     this.frontRow = [];
     this.backRow = [];
 
@@ -41,7 +41,7 @@ export class Formation {
   /**
    * Determine if character should default to front row
    */
-  shouldBeInFrontRow(character) {
+  shouldBeInFrontRow(character: any) {
     const frontRowClasses = ['Fighter', 'Lord', 'Samurai', 'Thief', 'Ninja'];
     return frontRowClasses.includes(character.class);
   }
@@ -49,7 +49,7 @@ export class Formation {
   /**
    * Set custom formation
    */
-  setFormation(frontRowMembers, backRowMembers) {
+  setFormation(frontRowMembers: any[], backRowMembers: any[]) {
     if (frontRowMembers.length > this.maxFrontRow || backRowMembers.length > this.maxBackRow) {
       return { success: false, reason: 'Too many members in row' };
     }
@@ -63,7 +63,7 @@ export class Formation {
   /**
    * Move character between rows
    */
-  moveCharacter(character, targetRow) {
+  moveCharacter(character: any, targetRow: any) {
     // Remove from current position
     this.frontRow = this.frontRow.filter((member) => member.id !== character.id);
     this.backRow = this.backRow.filter((member) => member.id !== character.id);
@@ -100,7 +100,7 @@ export class Formation {
   /**
    * Check if character can attack from their position
    */
-  canAttackFromPosition(attacker, target, attackType = 'melee') {
+  canAttackFromPosition(attacker: any, target: any, attackType: any = 'melee') {
     const attackerPosition = this.getCharacterPosition(attacker);
     const targetPosition = this.getCharacterPosition(target, true); // true for enemy
 
@@ -123,7 +123,7 @@ export class Formation {
   /**
    * Get character's position in formation
    */
-  getCharacterPosition(character, isEnemy = false) {
+  getCharacterPosition(character: any, isEnemy: any = false) {
     if (isEnemy) {
       // Simplified enemy positioning
       return { row: 'front', index: 0 };
@@ -145,7 +145,7 @@ export class Formation {
   /**
    * Check if melee attack is possible
    */
-  canMeleeAttack(attackerPos, targetPos) {
+  canMeleeAttack(attackerPos: any, targetPos: any) {
     // Front row can melee attack front row
     if (attackerPos.row === 'front') {
       return true;
@@ -162,7 +162,7 @@ export class Formation {
   /**
    * Check if ranged attack is possible
    */
-  canRangedAttack(attackerPos, targetPos) {
+  canRangedAttack(attackerPos: any, targetPos: any) {
     // Ranged attacks can be made from any position
     // But may have penalties based on position and line of sight
     return true;
@@ -198,8 +198,8 @@ export class Formation {
   /**
    * Get targeting priority for enemies
    */
-  getTargetPriority(enemyFormation) {
-    const targets: any[] = [];
+  getTargetPriority(enemyFormation: any) {
+    const targets = [] as any[];
 
     // Front row gets targeted first
     this.frontRow.forEach((character, index) => {

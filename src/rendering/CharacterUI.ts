@@ -13,14 +13,14 @@ import { Character } from '../game/Character.ts';
 export class CharacterUI {
   eventSystem: any;
   engine: any;
-  currentModal: any;
+  currentModal: HTMLElement | null;
   currentStep: string;
   characterData: Record<string, any>;
   characterCreator: CharacterCreator;
-  steps: any[];
+  steps: string[];
   stepIndex: number;
 
-  constructor(eventSystem, engine = null) {
+  constructor(eventSystem: any, engine: any = null) {
     this.eventSystem = eventSystem;
     this.engine = engine;
     this.currentModal = null;
@@ -108,11 +108,13 @@ export class CharacterUI {
   renderCurrentStep() {
     if (!this.currentModal) return;
 
-    const modalBody = this.currentModal.querySelector('.modal-body');
-    const stepText = this.currentModal.querySelector('.step-text');
-    const progressBar = this.currentModal.querySelector('.progress-bar');
-    const prevBtn = this.currentModal.querySelector('#prev-step');
-    const nextBtn = this.currentModal.querySelector('#next-step');
+    const modalBody = this.currentModal.querySelector('.modal-body') as HTMLElement;
+    const stepText = this.currentModal.querySelector('.step-text') as HTMLElement;
+    const progressBar = this.currentModal.querySelector('.progress-bar') as HTMLElement;
+    const prevBtn = this.currentModal.querySelector('#prev-step') as HTMLButtonElement;
+    const nextBtn = this.currentModal.querySelector('#next-step') as HTMLButtonElement;
+
+    if (!modalBody || !stepText || !progressBar || !prevBtn || !nextBtn) return;
 
     // Update progress
     const progress = ((this.stepIndex + 1) / this.steps.length) * 100;
@@ -166,7 +168,7 @@ export class CharacterUI {
   /**
    * Render race selection step
    */
-  renderRaceSelection(container) {
+  renderRaceSelection(container: HTMLElement) {
     const races = Race.getAllRaces();
 
     container.innerHTML = `
@@ -220,7 +222,7 @@ export class CharacterUI {
 
         // Select this race
         option.classList.add('selected');
-        this.characterData.selectedRace = option.dataset.race;
+        this.characterData.selectedRace = (option as HTMLElement).dataset.race;
 
         // Update next button
         this.updateNextButton();
@@ -234,7 +236,7 @@ export class CharacterUI {
   /**
    * Render race stat modifiers
    */
-  renderRaceModifiers(modifiers) {
+  renderRaceModifiers(modifiers: any) {
     if (!modifiers || Object.keys(modifiers).length === 0) {
       return '<span class="no-modifiers">No stat modifiers</span>';
     }
@@ -251,7 +253,7 @@ export class CharacterUI {
   /**
    * Render attribute generation step
    */
-  renderAttributeGeneration(container) {
+  renderAttributeGeneration(container: HTMLElement) {
     if (!this.characterData.attributes) {
       this.characterData.attributes = AttributeRoller.rollAllAttributes();
       this.applyRacialModifiers();
@@ -278,7 +280,7 @@ export class CharacterUI {
         `;
 
     // Add reroll handler
-    container.querySelector('#reroll-attributes').addEventListener('click', () => {
+    container.querySelector('#reroll-attributes')!.addEventListener('click', () => {
       if (this.engine?.audioManager) {
         this.engine.audioManager.playSoundEffect('buttonClick');
       }
@@ -350,7 +352,7 @@ export class CharacterUI {
   /**
    * Render class selection step
    */
-  renderClassSelection(container) {
+  renderClassSelection(container: HTMLElement) {
     const availableClasses = this.getAvailableClasses();
     const allClasses = Class.getAllClasses();
 
@@ -402,7 +404,7 @@ export class CharacterUI {
 
         // Select this class
         option.classList.add('selected');
-        this.characterData.selectedClass = option.dataset.class;
+        this.characterData.selectedClass = (option as HTMLElement).dataset.class;
 
         // Update next button
         this.updateNextButton();
@@ -434,7 +436,7 @@ export class CharacterUI {
   /**
    * Render class requirements
    */
-  renderClassRequirements(requirements, meetsRequirements) {
+  renderClassRequirements(requirements: any, meetsRequirements: any) {
     return (Object.entries(requirements) as [string, any][])
       .map(([stat, minValue]) => {
         const currentValue = this.characterData.attributes[stat];
@@ -450,7 +452,7 @@ export class CharacterUI {
   /**
    * Render character details step
    */
-  renderCharacterDetails(container) {
+  renderCharacterDetails(container: HTMLElement) {
     container.innerHTML = `
             <div class="step-content">
                 <h3 data-text-key="character_details">Character Details</h3>
@@ -481,9 +483,9 @@ export class CharacterUI {
         `;
 
     // Add input handler
-    const nameInput = container.querySelector('#character-name');
-    nameInput.addEventListener('input', (e) => {
-      this.characterData.name = e.target.value.trim();
+    const nameInput = container.querySelector('#character-name') as HTMLInputElement;
+    nameInput.addEventListener('input', (e: Event) => {
+      this.characterData.name = (e.target as HTMLInputElement).value.trim();
       this.updateNextButton();
     });
 
@@ -501,7 +503,7 @@ export class CharacterUI {
   /**
    * Render confirmation step
    */
-  renderConfirmation(container) {
+  renderConfirmation(container: HTMLElement) {
     const raceData = Race.getRaceData(this.characterData.selectedRace);
     const classData = Class.getClassData(this.characterData.selectedClass);
 
@@ -538,7 +540,7 @@ export class CharacterUI {
         `;
 
     // Update button text for final step based on current mode
-    const nextBtn = this.currentModal.querySelector('#next-step');
+    const nextBtn = this.currentModal!.querySelector('#next-step') as HTMLButtonElement;
     const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
     nextBtn.textContent = isCyberMode ? 'Initialize Agent' : 'Create Character';
     nextBtn.setAttribute('data-text-key', 'initialize_agent');
@@ -567,7 +569,7 @@ export class CharacterUI {
   /**
    * Get specialization icon for the selected class
    */
-  getSpecializationIcon(className) {
+  getSpecializationIcon(className: string) {
     const icons = {
       Fighter: '⚔️',
       Mage: '🔮',
@@ -608,7 +610,7 @@ export class CharacterUI {
   updateNextButton() {
     if (!this.currentModal) return;
 
-    const nextBtn = this.currentModal.querySelector('#next-step');
+    const nextBtn = this.currentModal.querySelector('#next-step') as HTMLButtonElement;
     nextBtn.disabled = !this.canProceedToNextStep();
   }
 
@@ -697,7 +699,7 @@ export class CharacterUI {
   /**
    * Update character display
    */
-  updateCharacterDisplay(character) {
+  updateCharacterDisplay(character: any) {
     // This would update character sheets, party displays, etc.
     console.log('Character display update:', character);
   }
@@ -705,14 +707,14 @@ export class CharacterUI {
   /**
    * Apply TextManager to modal elements with data-text-key attributes
    */
-  applyTextManagerToModal(container) {
+  applyTextManagerToModal(container: HTMLElement | Document) {
     if (typeof TextManager === 'undefined') return;
 
     const textElements = container.querySelectorAll('[data-text-key]');
     textElements.forEach((element) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
-        TextManager.applyToElement(element, textKey);
+        TextManager.applyToElement(element as HTMLElement, textKey);
       }
     });
   }

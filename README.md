@@ -108,7 +108,7 @@ Create characters from 5 races and 8 classes. Manage multiple parties in a persi
       <i>Character Creation</i>
     </td>
     <td align="center">
-      <img src="assets/readme/tg-step5.jpg" alt="Party Management" width="400"/><br/>
+      <img src="assets/readme/tg-step5.jpg" alt="Party Formation" width="400"/><br/>
       <i>Party Formation</i>
     </td>
   </tr>
@@ -255,6 +255,35 @@ Detailed system documentation: [`docs/systems/`](docs/systems/)
 | **Equipment** | 75+ items with dual terminology |
 | **Monsters** | 12+ types with 3D wireframe portraits |
 | **Audio** | 5 tracks, 19+ sound effects |
+
+---
+
+## Outstanding Tasks
+
+The following features and integrations are planned for future releases:
+
+### Inventory System Integration
+- Implement party inventory system for treasure distribution (`UI.ts:4192`, `UI.ts:6029`)
+- Add gold collection to party treasury (`Engine.ts:1686`, `Engine.ts:2189`)
+- Generate and add magical items to party inventory (`Engine.ts:1691`, `Engine.ts:2195`)
+
+### Dungeon Mechanics
+- Implement poison tile effect system (`Engine.ts:2031`)
+- Add alarm tile encounter triggering (`Engine.ts:2059`)
+- Implement interactive fountain mechanics (stamina, poison, teleport) (`Engine.ts:2101`, `Engine.ts:2106`, `Engine.ts:2111`)
+- Add teleporter tile mechanics (`Engine.ts:2116`)
+- Implement chest interaction with trap/treasure chances (`Engine.ts:2134`)
+
+### Combat & Progression
+- Distribute experience points to party members after combat (`Engine.ts:2184`)
+
+### Spell System
+- Restore spell points after rest when spell system is fully integrated (`Engine.ts:1606`)
+
+### UI Features
+- Add character sheet modal for viewing detailed stats (`UI.ts:414`)
+- Implement party management modal for roster changes (`UI.ts:422`)
+- Integrate save system modal with actual persistence (`UI.ts:1506`)
 
 ---
 
