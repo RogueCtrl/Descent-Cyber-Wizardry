@@ -115,7 +115,7 @@ export class Character {
    * Calculate maximum age based on race and constitution
    */
   calculateMaxAge() {
-    const baseAge = {
+    const baseAge: Record<string, number> = {
       Human: 80,
       Elf: 400,
       Dwarf: 300,

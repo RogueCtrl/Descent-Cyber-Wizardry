@@ -25,7 +25,7 @@ export class Formation {
     const aliveMembers = party.aliveMembers;
 
     // Default formation assignment based on class
-    aliveMembers.forEach((member, index) => {
+    aliveMembers.forEach((member: any, index: any) => {
       if (this.shouldBeInFrontRow(member) && this.frontRow.length < this.maxFrontRow) {
         this.frontRow.push(member);
       } else if (this.backRow.length < this.maxBackRow) {
@@ -171,7 +171,7 @@ export class Formation {
   /**
    * Check if reach attack is possible
    */
-  canReachAttack(attackerPos, targetPos) {
+  canReachAttack(attackerPos: any, targetPos: any) {
     // Reach weapons can attack from back row
     return true;
   }
@@ -179,7 +179,7 @@ export class Formation {
   /**
    * Check if spell can be cast
    */
-  canCastSpell(attackerPos, targetPos) {
+  canCastSpell(attackerPos: any, targetPos: any) {
     // Most spells can be cast from any position
     // Some may require line of sight
     return true;
@@ -188,7 +188,7 @@ export class Formation {
   /**
    * Check if character has reach weapon
    */
-  hasReachWeapon(character) {
+  hasReachWeapon(character: any) {
     if (!character.equipment || !character.equipment.weapon) return false;
 
     const reachWeapons = ['Spear', 'Halberd', 'Pike', 'Poleaxe'];
@@ -233,7 +233,7 @@ export class Formation {
   /**
    * Apply formation effects to combat
    */
-  applyFormationEffects(character, actionType = 'attack') {
+  applyFormationEffects(character: any, actionType: any = 'attack') {
     const position = this.getCharacterPosition(character);
     if (!position) return {};
 
@@ -328,7 +328,7 @@ export class Formation {
   /**
    * Calculate character AC (simplified)
    */
-  calculateAC(character) {
+  calculateAC(character: any) {
     let ac = 10; // Base AC
 
     // Dexterity modifier
@@ -436,7 +436,7 @@ export class Formation {
   /**
    * Get front row priority score for character
    */
-  getFrontRowPriority(character) {
+  getFrontRowPriority(character: any) {
     const classPriorities = {
       Fighter: 10,
       Lord: 9,
@@ -448,7 +448,7 @@ export class Formation {
       Bishop: 1,
     };
 
-    let priority = classPriorities[character.class] || 5;
+    let priority = (classPriorities as Record<string, number>)[character.class] || 5;
 
     // Adjust for HP
     const hpRatio = character.currentHP / character.maxHP;

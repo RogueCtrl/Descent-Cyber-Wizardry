@@ -244,7 +244,7 @@ export class MiniMapRenderer {
     const playerX = dungeon.playerX;
     const playerY = dungeon.playerY;
 
-    encounters.forEach((encounter) => {
+    encounters.forEach((encounter: any) => {
       // Only render if not triggered/defeated
       if (!encounter.triggered) {
         // Check if tile is explored

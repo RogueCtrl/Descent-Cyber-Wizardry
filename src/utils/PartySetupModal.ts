@@ -10,7 +10,7 @@ export class PartySetupModal {
   modal: any;
   onComplete: any;
 
-  constructor(eventSystem) {
+  constructor(eventSystem: any) {
     this.eventSystem = eventSystem;
     this.modal = null;
     this.onComplete = null;
@@ -20,7 +20,7 @@ export class PartySetupModal {
    * Show the party setup modal
    * @param {Function} onComplete - Callback when setup is complete
    */
-  show(onComplete) {
+  show(onComplete: any) {
     this.onComplete = onComplete;
     this.createModal();
   }
@@ -104,7 +104,7 @@ export class PartySetupModal {
     // Party name input handler
     const partyNameInput = modalElement.querySelector('#party-name');
     if (partyNameInput) {
-      partyNameInput.addEventListener('input', (e) => {
+      partyNameInput.addEventListener('input', (e: any) => {
         this.updatePartyNamePlaceholder();
       });
 
@@ -121,7 +121,7 @@ export class PartySetupModal {
     }
 
     // Enter key handler for party name input
-    modalElement.addEventListener('keydown', (e) => {
+    modalElement.addEventListener('keydown', (e: any) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         this.handleBeginAdventure();
@@ -162,7 +162,7 @@ export class PartySetupModal {
   /**
    * Update mode toggle button display (matches UI.js implementation)
    */
-  updateModeToggleDisplay(toggleBtn) {
+  updateModeToggleDisplay(toggleBtn: any) {
     if (!toggleBtn || typeof TextManager === 'undefined') return;
 
     const currentMode = TextManager.getMode();
@@ -218,7 +218,7 @@ export class PartySetupModal {
     if (typeof TextManager === 'undefined' || !this.modal.element) return;
 
     const textElements = this.modal.element.querySelectorAll('[data-text-key]');
-    textElements.forEach((element) => {
+    textElements.forEach((element: any) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
         TextManager.applyToElement(element, textKey);

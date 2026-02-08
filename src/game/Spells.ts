@@ -544,7 +544,7 @@ export class Spells {
   /**
    * Get spell data
    */
-  static getSpellData(spellName, school: string | null = null) {
+  static getSpellData(spellName: any, school: string | null = null) {
     const spells = new Spells();
     return spells.getSpell(spellName, school);
   }
@@ -559,15 +559,15 @@ export class Spells {
 
     // Check cache first
     if (this.spellCache.has(spellId)) {
-      return { ...this.spellCache.get(spellId) };
+      return { ...this.spellCache.get(spellId) } as SpellData;
     }
 
     await this.initializeEntities();
 
     const spell = await Storage.getSpell(spellId);
     if (spell) {
-      this.spellCache.set(spellId, spell);
-      return { ...(spell as any) };
+      this.spellCache.set(spellId, spell as SpellData);
+      return { ...(spell as any) } as SpellData;
     }
 
     return null;
@@ -601,7 +601,7 @@ export class Spells {
    * DEPRECATED: Legacy getSpell method (kept for compatibility)
    * Use getSpellByName() or getSpellFromStorage() instead
    */
-  getSpell(spellName: string, school: string | null = null): SpellData | undefined {
+  getSpell(spellName: string, school: string | null = null): any {
     // For backward compatibility, use synchronous fallback
     const spellDatabase = this.initializeSpellDatabase();
 
@@ -645,7 +645,7 @@ export class Spells {
   /**
    * Get available spells for character based on class and level
    */
-  async getAvailableSpells(character: CharacterData): Promise<SpellData[]> {
+  async getAvailableSpells(character: CharacterData): Promise<any> {
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) {
       return { arcane: [] as any[], divine: [] as any[] };
@@ -768,12 +768,12 @@ export class Spells {
    * Check if spell is memorized
    */
   isSpellMemorized(caster: CharacterData, spell: SpellData): boolean {
-    if (!caster.memorizedSpells || !caster.memorizedSpells[spell.school]) {
+    if (!caster.memorizedSpells || !spell.school || !caster.memorizedSpells[spell.school]) {
       return false;
     }
 
     return caster.memorizedSpells[spell.school].some(
-      (memorizedSpell) => memorizedSpell.name === spell.name
+      (memorizedSpell: any) => memorizedSpell.name === spell.name
     );
   }
 
@@ -831,7 +831,7 @@ export class Spells {
 
     let damage = 0;
     if (spell.dice) {
-      damage = Random.dice(spell.dice.count, spell.dice.sides) + (spell.dice.bonus || 0);
+      damage = Random.dice(spell.dice.count || 1, spell.dice.sides || 6) + (spell.dice.bonus || 0);
     }
 
     // Apply caster level bonus for some spells
@@ -896,7 +896,7 @@ export class Spells {
       // Remove all negative effects
       if (target.temporaryEffects) {
         target.temporaryEffects = target.temporaryEffects.filter(
-          (effect) => effect.type === 'buff' || effect.type === 'protection'
+          (effect: any) => effect.type === 'buff' || effect.type === 'protection'
         );
       }
 
@@ -913,7 +913,7 @@ export class Spells {
     }
 
     if (spell.dice) {
-      healing = Random.dice(spell.dice.count, spell.dice.sides) + (spell.dice.bonus || 0);
+      healing = Random.dice(spell.dice.count || 1, spell.dice.sides || 6) + (spell.dice.bonus || 0);
     }
 
     const oldHP = target.currentHP;
@@ -1044,13 +1044,13 @@ export class Spells {
   /**
    * Remove memorized spell
    */
-  removeMemorizedSpell(caster: CharacterData, spell: SpellData): boolean {
-    if (!caster.memorizedSpells || !caster.memorizedSpells[spell.school]) {
+  removeMemorizedSpell(caster: CharacterData, spell: SpellData): any {
+    if (!caster.memorizedSpells || !spell.school || !caster.memorizedSpells[spell.school]) {
       return;
     }
 
     const spells = caster.memorizedSpells[spell.school];
-    const index = spells.findIndex((s) => s.name === spell.name);
+    const index = spells.findIndex((s: any) => s.name === spell.name);
     if (index !== -1) {
       spells.splice(index, 1);
     }
@@ -1059,13 +1059,13 @@ export class Spells {
   /**
    * Memorize spells for character
    */
-  memorizeSpells(character: CharacterData, selectedSpells: any): boolean {
-    const availableSlots = {
+  memorizeSpells(character: CharacterData, selectedSpells: any): any {
+    const availableSlots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const memorized = { arcane: [], divine: [] };
+    const memorized: Record<string, any[]> = { arcane: [], divine: [] };
 
     // Process each school
     for (const school of ['arcane', 'divine']) {
@@ -1084,7 +1084,7 @@ export class Spells {
       }
     }
 
-    character.memorizedSpells = memorized;
+    character.memorizedSpells = memorized as any;
     return memorized;
   }
 
@@ -1177,7 +1177,7 @@ export class Spells {
   /**
    * Get spell descriptions for UI
    */
-  getSpellDescriptions(spells: SpellData[]): string[] {
+  getSpellDescriptions(spells: SpellData[]): any[] {
     return spells.map((spell) => ({
       name: spell.name,
       level: spell.level,

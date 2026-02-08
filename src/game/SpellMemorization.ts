@@ -27,7 +27,7 @@ export class SpellMemorization {
   /**
    * Prepare spells for character during rest
    */
-  async prepareSpells(character, spellSelections) {
+  async prepareSpells(character: any, spellSelections: any) {
     await this.initializeSpellSystem();
 
     const result = await this.validateSpellSelections(character, spellSelections);
@@ -51,14 +51,14 @@ export class SpellMemorization {
   /**
    * Validate spell selections against character's capabilities
    */
-  async validateSpellSelections(character, spellSelections) {
+  async validateSpellSelections(character: any, spellSelections: any) {
     await this.initializeSpellSystem();
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) {
       return { valid: false, reason: 'Character cannot cast spells' };
     }
 
-    const availableSlots = {
+    const availableSlots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
@@ -110,14 +110,14 @@ export class SpellMemorization {
   /**
    * Get recommended spell loadout for character
    */
-  async getRecommendedSpells(character) {
+  async getRecommendedSpells(character: any) {
     const availableSpells = await this.spellSystem.getAvailableSpells(character);
-    const slots = {
+    const slots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const recommendations = { arcane: [] as any[], divine: [] as any[] };
+    const recommendations: Record<string, any[]> = { arcane: [], divine: [] };
 
     // Recommend spells based on class and situation
     for (const school of ['arcane', 'divine']) {
@@ -128,7 +128,7 @@ export class SpellMemorization {
         const availableSlots = schoolSlots[level - 1];
         if (availableSlots <= 0) continue;
 
-        const levelSpells = schoolSpells.filter((spell) => spell.level === level);
+        const levelSpells = schoolSpells.filter((spell: any) => spell.level === level);
         const recommended = this.selectRecommendedSpells(levelSpells, availableSlots, character);
 
         recommendations[school].push(...recommended);
@@ -141,11 +141,11 @@ export class SpellMemorization {
   /**
    * Select recommended spells for a specific level
    */
-  selectRecommendedSpells(availableSpells, slotCount, character) {
+  selectRecommendedSpells(availableSpells: any, slotCount: any, character: any) {
     if (availableSpells.length === 0) return [];
 
     // Priority system based on spell utility
-    const spellPriorities = {
+    const spellPriorities: Record<string, number> = {
       // Healing is always high priority
       'Cure Light Wounds': 10,
       'Cure Disease': 9,
@@ -170,7 +170,7 @@ export class SpellMemorization {
     };
 
     // Sort spells by priority
-    const sortedSpells = availableSpells.sort((a, b) => {
+    const sortedSpells = availableSpells.sort((a: any, b: any) => {
       const priorityA = spellPriorities[a.name] || 1;
       const priorityB = spellPriorities[b.name] || 1;
       return priorityB - priorityA;
@@ -183,7 +183,7 @@ export class SpellMemorization {
   /**
    * Get spell preparation interface data
    */
-  async getPreparationData(character) {
+  async getPreparationData(character: any) {
     const availableSpells = await this.spellSystem.getAvailableSpells(character);
     const currentSlots = {
       arcane: Class.getSpellSlots(character, 'arcane'),
@@ -206,12 +206,12 @@ export class SpellMemorization {
   /**
    * Auto-prepare spells based on character level and class
    */
-  async autoPrepareSpells(character) {
+  async autoPrepareSpells(character: any) {
     const recommendations = await this.getRecommendedSpells(character);
 
     const spellSelections = {
-      arcane: recommendations.arcane.map((spell) => ({ name: spell.name })),
-      divine: recommendations.divine.map((spell) => ({ name: spell.name })),
+      arcane: recommendations.arcane.map((spell: any) => ({ name: spell.name })),
+      divine: recommendations.divine.map((spell: any) => ({ name: spell.name })),
     };
 
     return this.prepareSpells(character, spellSelections);
@@ -220,20 +220,20 @@ export class SpellMemorization {
   /**
    * Check if character needs to prepare spells
    */
-  needsSpellPreparation(character) {
+  needsSpellPreparation(character: any) {
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) return false;
 
-    const slots = {
+    const slots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const memorized = character.memorizedSpells || { arcane: [], divine: [] };
+    const memorized: Record<string, any[]> = character.memorizedSpells || { arcane: [], divine: [] };
 
     // Check if there are available slots that aren't filled
     for (const school of ['arcane', 'divine']) {
-      const totalSlots = slots[school].reduce((sum, count) => sum + count, 0);
+      const totalSlots = slots[school].reduce((sum: any, count: any) => sum + count, 0);
       const memorizedCount = memorized[school].length;
 
       if (totalSlots > memorizedCount) {
@@ -247,23 +247,23 @@ export class SpellMemorization {
   /**
    * Get spell casting statistics
    */
-  getSpellStatistics(character) {
-    const memorized = character.memorizedSpells || { arcane: [], divine: [] };
-    const slots = {
+  getSpellStatistics(character: any) {
+    const memorized: Record<string, any[]> = character.memorizedSpells || { arcane: [], divine: [] };
+    const slots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const stats = {
+    const stats: Record<string, any> = {
       arcane: {
         memorized: memorized.arcane.length,
-        totalSlots: slots.arcane.reduce((sum, count) => sum + count, 0),
-        byLevel: {},
+        totalSlots: slots.arcane.reduce((sum: any, count: any) => sum + count, 0),
+        byLevel: {} as Record<string, any>,
       },
       divine: {
         memorized: memorized.divine.length,
-        totalSlots: slots.divine.reduce((sum, count) => sum + count, 0),
-        byLevel: {},
+        totalSlots: slots.divine.reduce((sum: any, count: any) => sum + count, 0),
+        byLevel: {} as Record<string, any>,
       },
     };
 
@@ -272,7 +272,7 @@ export class SpellMemorization {
       const schoolSpells = memorized[school];
 
       for (let level = 1; level <= 7; level++) {
-        const levelSpells = schoolSpells.filter((spell) => spell.level === level);
+        const levelSpells = schoolSpells.filter((spell: any) => spell.level === level);
         const availableSlots = slots[school][level - 1] || 0;
 
         stats[school].byLevel[level] = {
@@ -289,7 +289,7 @@ export class SpellMemorization {
   /**
    * Rest and recover spell slots
    */
-  restAndRecover(character, restType = 'full') {
+  restAndRecover(character: any, restType: any = 'full') {
     const multiplier = restType === 'full' ? 1.0 : 0.5;
 
     // Update spell slots based on current level

@@ -29,7 +29,7 @@ export class CharacterCreator {
   /**
    * Set character race
    */
-  setRace(race) {
+  setRace(race: string) {
     if (this.availableRaces.includes(race)) {
       this.currentCharacter.race = race;
       this.step = 'attributes';
@@ -51,7 +51,7 @@ export class CharacterCreator {
   /**
    * Set character class
    */
-  setClass(characterClass) {
+  setClass(characterClass: string) {
     if (this.availableClasses.includes(characterClass)) {
       this.currentCharacter.class = characterClass;
       this.step = 'finalize';
@@ -63,7 +63,7 @@ export class CharacterCreator {
   /**
    * Finalize character creation
    */
-  finalizeCharacter(name) {
+  finalizeCharacter(name: string) {
     this.currentCharacter.name = name;
     const character = this.currentCharacter;
     this.currentCharacter = null;

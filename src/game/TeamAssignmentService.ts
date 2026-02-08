@@ -13,12 +13,12 @@ export class TeamAssignmentService {
    * @param {Character} character - Character to assign to team
    * @returns {Promise<Object>} The assigned party/team
    */
-  static async assignCharacterToTeam(character) {
+  static async assignCharacterToTeam(character: any) {
     try {
       console.log(`Assigning character ${character.name} to Strike Team...`);
 
       // Get current active party or create one
-      let activeParty = await Storage.loadActiveParty();
+      let activeParty: any = await Storage.loadActiveParty();
 
       if (!activeParty) {
         // Create new default team for character
@@ -71,7 +71,7 @@ export class TeamAssignmentService {
    * @param {string} teamName - Name for the new Strike Team
    * @returns {Promise<Object>} The created party/team
    */
-  static async createTeamForCharacters(characters, teamName) {
+  static async createTeamForCharacters(characters: any[], teamName: string) {
     try {
       console.log(`Creating new Strike Team: ${teamName} for ${characters.length} characters`);
 
@@ -93,9 +93,9 @@ export class TeamAssignmentService {
       }
 
       // Update party with member IDs
-      (newParty as any).memberIds = characters.map((c) => c.id);
+      (newParty as any).memberIds = characters.map((c: any) => c.id);
       (newParty as any).memberCount = characters.length;
-      (newParty as any).aliveCount = characters.filter((c) => c.isAlive).length;
+      (newParty as any).aliveCount = characters.filter((c: any) => c.isAlive).length;
 
       await Storage.saveParty(newParty);
 
@@ -363,7 +363,7 @@ export class TeamAssignmentService {
       // Analyze team sizes
       for (const party of allParties as any) {
         const memberCount = party.memberIds ? party.memberIds.length : 0;
-        stats.teamSizes[party.id] = memberCount;
+        (stats.teamSizes as Record<string, any>)[party.id] = memberCount;
       }
 
       // Calculate average team size

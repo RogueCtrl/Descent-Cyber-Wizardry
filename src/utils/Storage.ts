@@ -711,12 +711,12 @@ export class Storage {
 
       const stats = {
         totalCharacters: (characters as any).length,
-        aliveCharacters: (characters as any).filter((c) => c.isAlive).length,
-        deadCharacters: (characters as any).filter((c) => !c.isAlive).length,
-        byRace: {},
-        byClass: {},
-        byLevel: {},
-        byStatus: {},
+        aliveCharacters: (characters as any).filter((c: any) => c.isAlive).length,
+        deadCharacters: (characters as any).filter((c: any) => !c.isAlive).length,
+        byRace: {} as Record<string, number>,
+        byClass: {} as Record<string, number>,
+        byLevel: {} as Record<string, number>,
+        byStatus: {} as Record<string, number>,
         averageLevel: 0,
         highestLevel: 0,
         oldestCharacter: null,
@@ -725,7 +725,7 @@ export class Storage {
 
       if ((characters as any).length > 0) {
         // Calculate distributions
-        (characters as any).forEach((char) => {
+        (characters as any).forEach((char: any) => {
           // Race distribution
           stats.byRace[char.race] = (stats.byRace[char.race] || 0) + 1;
 
@@ -740,12 +740,12 @@ export class Storage {
         });
 
         // Calculate averages and extremes
-        const levels = (characters as any).map((c) => c.level);
-        stats.averageLevel = Math.round(levels.reduce((a, b) => a + b, 0) / levels.length);
+        const levels = (characters as any).map((c: any) => c.level);
+        stats.averageLevel = Math.round(levels.reduce((a: number, b: number) => a + b, 0) / levels.length);
         stats.highestLevel = Math.max(...levels);
 
         // Find oldest and newest characters
-        const sortedByDate = (characters as any).sort((a, b) => a.dateCreated - b.dateCreated);
+        const sortedByDate = (characters as any).sort((a: any, b: any) => a.dateCreated - b.dateCreated);
         stats.oldestCharacter = sortedByDate[0];
         stats.newestCharacter = sortedByDate[sortedByDate.length - 1];
       }
@@ -766,7 +766,7 @@ export class Storage {
     try {
       const allCharacters = await this.loadAllCharacters();
       return (allCharacters as any).filter(
-        (char) =>
+        (char: any) =>
           char.partyId === partyId && !char.isPhasedOut && !this.isCharacterPermanentlyLost(char)
       );
     } catch (error: any) {
@@ -783,7 +783,7 @@ export class Storage {
   static async getPhasedOutTeamMembers(partyId: string): Promise<CharacterData[]> {
     try {
       const allCharacters = await this.loadAllCharacters();
-      return (allCharacters as any).filter((char) => char.partyId === partyId && char.isPhasedOut);
+      return (allCharacters as any).filter((char: any) => char.partyId === partyId && char.isPhasedOut);
     } catch (error: any) {
       console.error('Failed to get phased out team members:', error);
       return [];
@@ -1134,7 +1134,7 @@ export class Storage {
               campTime: campData.campTime,
               timeCamped: Date.now() - campData.campTime,
               memberCount: campData.members.length,
-              aliveCount: campData.members.filter((m) => m.isAlive).length,
+              aliveCount: campData.members.filter((m: any) => m.isAlive).length,
             });
           }
         }
@@ -1898,11 +1898,11 @@ export class Storage {
         partyName: party.name,
 
         // Store character entity references instead of full data
-        memberIds: party.members.map((member) => member.id),
+        memberIds: party.members.map((member: any) => member.id),
 
         // Quick stats for indexing
         memberCount: party.members.length,
-        aliveCount: party.members.filter((m) => m.isAlive).length,
+        aliveCount: party.members.filter((m: any) => m.isAlive).length,
 
         location: {
           currentFloor: dungeon.currentFloor,
@@ -2311,9 +2311,9 @@ export class Storage {
       );
 
       // Apply any transformations
-      let data = migration.data;
+      let data: any = migration.data;
       if (migration.transform) {
-        data = Object.entries(data).reduce((acc, [key, value]) => {
+        data = Object.entries(data).reduce((acc: Record<string, any>, [key, value]) => {
           acc[key] = migration.transform(value);
           return acc;
         }, {});
@@ -3383,7 +3383,7 @@ export class Storage {
         testMode: dungeon.testMode,
 
         // Convert Map to serializable object
-        floors: {},
+        floors: {} as Record<string, any>,
 
         // Metadata
         dateCreated: now,
@@ -3744,14 +3744,14 @@ export class Storage {
         id: party.id,
         name: party.name || 'Unnamed Party',
         memberIds:
-          party.memberIds || (party.members ? party.members.map((member) => member.id) : []),
+          party.memberIds || (party.members ? party.members.map((member: any) => member.id) : []),
         memberCount:
           party.memberCount ||
           (party.members ? party.members.length : party.memberIds ? party.memberIds.length : 0),
         aliveCount:
           party.aliveCount ||
           (party.members
-            ? party.members.filter((m) => m.isAlive).length
+            ? party.members.filter((m: any) => m.isAlive).length
             : party.memberIds
               ? party.memberIds.length
               : 0),
@@ -4052,7 +4052,7 @@ export class Storage {
     try {
       // Get all parties and filter for those with campId
       const allParties = await this.loadAllParties();
-      return (allParties as any).filter((party) => party.campId != null);
+      return (allParties as any).filter((party: any) => party.campId != null);
     } catch (error: any) {
       console.error('Failed to get camping parties:', error);
       return [];
@@ -4068,7 +4068,7 @@ export class Storage {
       const allParties = await this.loadAllParties();
 
       // Filter for parties that are marked as lost
-      return (allParties as any).filter((party) => party.isLost === true);
+      return (allParties as any).filter((party: any) => party.isLost === true);
     } catch (error: any) {
       console.error('Failed to get lost parties:', error);
       return [];

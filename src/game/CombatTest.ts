@@ -118,14 +118,14 @@ export class CombatTest {
       const fighter = new Character('Equipment Test', 'Human', 'Fighter');
       fighter.attributes = { strength: 16, agility: 12 };
 
-      const equipResult = equipment.equipItem(fighter, longSword);
+      const equipResult = equipment.equipItem(fighter as any, longSword);
       if (!equipResult.success) {
         throw new Error('Failed to equip weapon');
       }
 
       // Test combat calculations
-      const attackBonus = equipment.calculateAttackBonus(fighter);
-      const acBonus = equipment.calculateACBonus(fighter);
+      const attackBonus = equipment.calculateAttackBonus(fighter as any);
+      const acBonus = equipment.calculateACBonus(fighter as any);
 
       this.testResults.push({
         test: 'Equipment System',
@@ -454,7 +454,7 @@ export class CombatTest {
   /**
    * Run a specific test
    */
-  runSpecificTest(testName) {
+  runSpecificTest(testName: string) {
     console.log(`Running specific test: ${testName}`);
 
     switch (testName) {

@@ -413,10 +413,10 @@ export class Combat {
    */
   checkSurprise(party: any, enemies: any) {
     const partyAverageAgility =
-      party.aliveMembers.reduce((sum, member) => sum + member.attributes.agility, 0) /
+      party.aliveMembers.reduce((sum: any, member: any) => sum + member.attributes.agility, 0) /
       party.aliveMembers.length;
     const enemyAverageAgility =
-      enemies.reduce((sum, enemy) => sum + (enemy.agility || 10), 0) / enemies.length;
+      enemies.reduce((sum: any, enemy: any) => sum + (enemy.agility || 10), 0) / enemies.length;
 
     const surpriseChance = Math.abs(partyAverageAgility - enemyAverageAgility) * 2;
 
@@ -459,7 +459,7 @@ export class Combat {
   getClassInitiativeBonus(combatant: any) {
     if (!combatant.class) return 0;
 
-    const bonuses = {
+    const bonuses: Record<string, number> = {
       Thief: 2,
       Ninja: 4,
       Mage: -1,
@@ -884,7 +884,7 @@ export class Combat {
     // Check if character has confused/scrambled condition - prevent escape if so
     if (
       character.conditions &&
-      character.conditions.some((condition) => condition.type === 'confused')
+      character.conditions.some((condition: any) => condition.type === 'confused')
     ) {
       const confusedTerm = TextManager.getText('character_status_confused', 'Confused');
       const actionTerm = TextManager.getText('combat_disconnect', 'Run');
@@ -1216,7 +1216,7 @@ export class Combat {
    * Get unarmed combat bonus based on class
    */
   getUnarmedClassBonus(characterClass: any) {
-    const unarmedBonuses = {
+    const unarmedBonuses: Record<string, number> = {
       Fighter: 2, // Fighters are skilled in combat
       Thief: 1, // Thieves are scrappy
       Samurai: 3, // Samurai are disciplined warriors
@@ -1286,7 +1286,7 @@ export class Combat {
     if (!caster.memorizedSpells) return false;
 
     const schoolSpells = caster.memorizedSpells[spell.school] || [];
-    return schoolSpells.some((memorizedSpell) => memorizedSpell.name === spell.name);
+    return schoolSpells.some((memorizedSpell: any) => memorizedSpell.name === spell.name);
   }
 
   /**
@@ -1324,7 +1324,7 @@ export class Combat {
   /**
    * Log combat message
    */
-  logMessage(message, type = 'combat', emoji: string | null = null) {
+  logMessage(message: any, type = 'combat', emoji: string | null = null) {
     const logEntry = {
       message,
       type,

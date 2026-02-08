@@ -35,6 +35,7 @@ export type CharacterStatus =
 export interface MemorizedSpells {
   arcane: string[];
   divine: string[];
+  [key: string]: any;
 }
 
 export interface CharacterData {
@@ -195,12 +196,48 @@ export interface EquipmentItem {
   cursed?: boolean;
   identified?: boolean;
   effects?: ItemEffect[];
+  /** Extended properties used by Equipment system */
+  allowedClasses?: string[];
+  subtype?: string;
+  acBonus?: number;
+  attackBonus?: number;
+  magical?: boolean;
+  special?: string[];
+  value?: number;
+  quality?: string;
+  durability?: number;
+  maxDurability?: number;
+  broken?: boolean;
+  brokenState?: {
+    originalAttackBonus: number;
+    originalACBonus: number;
+    originalDamageBonus: number;
+    originalSpecial: string[];
+  };
+  state?: string;
+  unidentified?: boolean;
+  charges?: number | null;
+  maxCharges?: number | null;
+  disguisedAs?: string;
+  apparentName?: string;
+  apparentDescription?: string;
+  description?: string;
+  curseName?: string;
+  curseEffect?: string;
+  identificationDC?: number;
+  spellBonus?: number;
+  hpBonus?: number;
+  stealthBonus?: number;
+  blessed?: boolean;
+  [key: string]: any;
 }
 
 export interface DiceRoll {
   dice: number;
   sides: number;
   modifier?: number;
+  bonus?: number;
+  count?: number;
 }
 
 export interface ItemEffect {
@@ -221,9 +258,20 @@ export interface SpellData {
   level: number;
   mpCost: number;
   target: 'single' | 'group' | 'all' | 'self' | 'party';
-  effect: SpellEffect;
+  effect: string | SpellEffect;
   description: string;
   cyberDescription?: string;
+  /** Extended properties used by Spells system */
+  school?: string;
+  dice?: DiceRoll;
+  range?: string;
+  duration?: string;
+  components?: string[];
+  areaEffect?: boolean;
+  special?: string;
+  bonus?: number;
+  acBonus?: number;
+  [key: string]: any;
 }
 
 export interface SpellEffect {

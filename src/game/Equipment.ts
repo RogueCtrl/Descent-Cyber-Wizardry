@@ -383,7 +383,7 @@ export class Equipment {
    * @param {string} itemName - Name of the item
    * @returns {Promise<Object|null>} Item data or null
    */
-  static async getItemData(itemName) {
+  static async getItemData(itemName: any) {
     const equipment = new Equipment();
     return await equipment.getItemByName(itemName);
   }
@@ -393,7 +393,7 @@ export class Equipment {
    * @param {string} entityId - Entity ID of the item
    * @returns {Promise<Object|null>} Item data or null
    */
-  static async getItemById(entityId) {
+  static async getItemById(entityId: any) {
     const equipment = new Equipment();
     return await equipment.getItemFromStorage(entityId);
   }
@@ -417,7 +417,7 @@ export class Equipment {
 
     // Check cache first
     if (this.entityCache.has(entityId)) {
-      return { ...this.entityCache.get(entityId) };
+      return { ...this.entityCache.get(entityId) } as EquipmentItem;
     }
 
     await this.initializeEntities();
@@ -488,7 +488,7 @@ export class Equipment {
         return { ...category[itemName] };
       }
     }
-    return null;
+    return undefined;
   }
 
   /**
@@ -499,7 +499,7 @@ export class Equipment {
   async getItemsByCategory(category: string): Promise<EquipmentItem[]> {
     await this.initializeEntities();
 
-    const storeMap = {
+    const storeMap: Record<string, string> = {
       weapons: Storage.WEAPON_STORE,
       armor: Storage.ARMOR_STORE,
       shields: Storage.SHIELD_STORE,
@@ -526,7 +526,7 @@ export class Equipment {
 
     for (const cat of categories as any) {
       const items = await this.getItemsByCategory(cat);
-      (items as any).forEach((item) => {
+      (items as any).forEach((item: any) => {
         if (this.canUseItem(characterClass, item)) {
           availableItems.push(item);
         }
@@ -554,8 +554,8 @@ export class Equipment {
    * @param {Object} attacker - Attacking character
    * @returns {Promise<number>} Calculated damage
    */
-  async calculateWeaponDamage(weapon: EquipmentItem, attacker: CharacterData): Promise<number> {
-    let weaponData = weapon;
+  async calculateWeaponDamage(weapon: EquipmentItem | string, attacker: CharacterData): Promise<number> {
+    let weaponData: EquipmentItem | null = typeof weapon === 'string' ? null : weapon;
 
     // If weapon is an entity reference, resolve it
     if (typeof weapon === 'string') {
@@ -590,14 +590,15 @@ export class Equipment {
    */
   async calculateACBonus(character: CharacterData): Promise<number> {
     let totalACBonus = 0;
+    const equip = character.equipment as Record<string, any>;
 
-    if (character.equipment) {
+    if (equip) {
       // Armor bonus
-      if (character.equipment.armor) {
+      if (equip.armor) {
         const armorId =
-          typeof character.equipment.armor === 'string'
-            ? character.equipment.armor
-            : character.equipment.armor.name;
+          typeof equip.armor === 'string'
+            ? equip.armor
+            : equip.armor.name;
         const armor =
           (await this.getItemFromStorage(armorId)) || (await this.getItemByName(armorId));
         if (armor && armor.acBonus) {
@@ -606,11 +607,11 @@ export class Equipment {
       }
 
       // Shield bonus
-      if (character.equipment.shield) {
+      if (equip.shield) {
         const shieldId =
-          typeof character.equipment.shield === 'string'
-            ? character.equipment.shield
-            : character.equipment.shield.name;
+          typeof equip.shield === 'string'
+            ? equip.shield
+            : equip.shield.name;
         const shield =
           (await this.getItemFromStorage(shieldId)) || (await this.getItemByName(shieldId));
         if (shield && shield.acBonus) {
@@ -619,11 +620,11 @@ export class Equipment {
       }
 
       // Accessory bonus
-      if (character.equipment.accessory) {
+      if (equip.accessory) {
         const accessoryId =
-          typeof character.equipment.accessory === 'string'
-            ? character.equipment.accessory
-            : character.equipment.accessory.name;
+          typeof equip.accessory === 'string'
+            ? equip.accessory
+            : equip.accessory.name;
         const accessory =
           (await this.getItemFromStorage(accessoryId)) || (await this.getItemByName(accessoryId));
         if (accessory && accessory.acBonus) {
@@ -655,11 +656,12 @@ export class Equipment {
     totalAttackBonus += character.level || 1;
 
     // Weapon bonus
-    if (character.equipment && character.equipment.weapon) {
+    const equip = character.equipment as Record<string, any>;
+    if (equip && equip.weapon) {
       const weaponId =
-        typeof character.equipment.weapon === 'string'
-          ? character.equipment.weapon
-          : character.equipment.weapon.name;
+        typeof equip.weapon === 'string'
+          ? equip.weapon
+          : equip.weapon.name;
       const weapon =
         (await this.getItemFromStorage(weaponId)) || (await this.getItemByName(weaponId));
       if (weapon && weapon.attackBonus) {
@@ -693,7 +695,7 @@ export class Equipment {
   /**
    * Equip item to character
    */
-  equipItem(character: CharacterData, item: EquipmentItem): boolean {
+  equipItem(character: CharacterData, item: EquipmentItem): any {
     if (!this.canUseItem(character.class, item)) {
       return { success: false, reason: `${character.class} cannot use ${item.name}` };
     }
@@ -703,7 +705,7 @@ export class Equipment {
     }
 
     // Determine equipment slot
-    let slot;
+    let slot: string;
     switch (item.type) {
       case 'weapon':
         slot = 'weapon';
@@ -725,11 +727,11 @@ export class Equipment {
     const previousItem = character.equipment[slot];
 
     // Equip new item
-    character.equipment[slot] = item;
+    character.equipment[slot] = item as any;
 
     // Recalculate character stats if needed
-    if (character.recalculateStats) {
-      character.recalculateStats();
+    if ((character as any).recalculateStats) {
+      (character as any).recalculateStats();
     }
 
     return {
@@ -743,8 +745,8 @@ export class Equipment {
   /**
    * Unequip item from character
    */
-  unequipItem(character: CharacterData, slot: string): EquipmentItem | null {
-    if (!character.equipment || !character.equipment[slot]) {
+  unequipItem(character: CharacterData, slot: string | null): any {
+    if (!character.equipment || !slot || !character.equipment[slot]) {
       return { success: false, reason: 'No item equipped in that slot' };
     }
 
@@ -752,8 +754,8 @@ export class Equipment {
     character.equipment[slot] = null;
 
     // Recalculate character stats if needed
-    if (character.recalculateStats) {
-      character.recalculateStats();
+    if ((character as any).recalculateStats) {
+      (character as any).recalculateStats();
     }
 
     return {
@@ -771,7 +773,7 @@ export class Equipment {
    * @param {Object} character - Character to calculate encumbrance for
    * @returns {Promise<number>} Total weight
    */
-  async calculateEncumbrance(character: CharacterData): Promise<{ current: number; max: number; percentage: number }> {
+  async calculateEncumbrance(character: CharacterData): Promise<any> {
     let totalWeight = 0;
 
     if (character.equipment) {
@@ -790,7 +792,7 @@ export class Equipment {
     // Add inventory weight (if implemented)
     if (character.inventory) {
       for (const item of character.inventory) {
-        const itemId = typeof item === 'string' ? item : item.name;
+        const itemId = typeof item === 'string' ? item : (item as any).name;
         const itemData =
           (await this.getItemFromStorage(itemId)) || (await this.getItemByName(itemId));
         if (itemData && itemData.weight) {
@@ -868,7 +870,7 @@ export class Equipment {
    * @returns {Promise<Object>} Equipment summary
    */
   async getEquipmentSummary(character: CharacterData): Promise<any> {
-    const summary = {
+    const summary: Record<string, any> = {
       weapon: null,
       armor: null,
       shield: null,
@@ -901,7 +903,7 @@ export class Equipment {
   /**
    * Add item to inventory
    */
-  addItem(item: EquipmentItem): void {
+  addItem(item: EquipmentItem): any {
     const id = Helpers.generateId('item');
     this.items.set(id, item);
     return id;
@@ -926,7 +928,7 @@ export class Equipment {
    * @param {Object} options - Additional options for item creation
    * @returns {Promise<Object>} Item instance with state
    */
-  async createItemInstance(itemNameOrId: string, options: any = {}): Promise<EquipmentItem | null> {
+  async createItemInstance(itemNameOrId: string, options: any = {}): Promise<any> {
     let itemData = await this.getItemFromStorage(itemNameOrId);
     if (!itemData) {
       itemData = await this.getItemByName(itemNameOrId);
@@ -935,23 +937,23 @@ export class Equipment {
       throw new Error(`Item not found: ${itemNameOrId}`);
     }
 
-    const instance = {
-      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    const instance: any = {
       ...itemData,
+      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       state:
-        (options as any).state ||
+        options.state ||
         (itemData.cursed
           ? this.ITEM_STATES.CURSED
           : itemData.unidentified
             ? this.ITEM_STATES.UNIDENTIFIED
             : this.ITEM_STATES.IDENTIFIED),
       identified:
-        (options as any).identified !== undefined
-          ? (options as any).identified
+        options.identified !== undefined
+          ? options.identified
           : !itemData.unidentified && !itemData.cursed,
       cursed: itemData.cursed || false,
-      blessed: (options as any).blessed || false,
-      durability: (options as any).durability || 100,
+      blessed: options.blessed || false,
+      durability: options.durability || 100,
       maxDurability: 100,
       charges: itemData.charges || null,
       maxCharges: itemData.maxCharges || null,
@@ -976,7 +978,7 @@ export class Equipment {
    * @param {Object} options - Additional options
    * @returns {Object} Identification result
    */
-  identifyItem(item: EquipmentItem, identifier: CharacterData, options: any = {}): { success: boolean; message: string; item: EquipmentItem } {
+  identifyItem(item: EquipmentItem, identifier: CharacterData, options: any = {}): any {
     if (item.identified) {
       return {
         success: true,
@@ -1042,7 +1044,7 @@ export class Equipment {
     let baseChance = 50;
 
     // Intelligence bonus (primary factor)
-    const intelligence = identifier.intelligence || 10;
+    const intelligence = (identifier as any).intelligence || identifier.attributes?.intelligence || 10;
     const intBonus = (intelligence - 10) * 3;
 
     // Class bonuses
@@ -1084,7 +1086,7 @@ export class Equipment {
    * @returns {number} Bonus percentage
    */
   getClassIdentificationBonus(characterClass: string): number {
-    const classBonuses = {
+    const classBonuses: Record<string, number> = {
       Mage: 15,
       Bishop: 20,
       Priest: 5,
@@ -1103,7 +1105,7 @@ export class Equipment {
    * @param {Object} character - Character to curse
    * @returns {Object} Curse effect result
    */
-  applyCurseToCharacter(character: CharacterData): void {
+  applyCurseToCharacter(character: CharacterData): any {
     const curses = [
       {
         type: 'stat_drain',
@@ -1140,10 +1142,11 @@ export class Equipment {
         character.temporaryEffects = [];
       }
       character.temporaryEffects.push({
+        id: `curse_${Date.now()}`,
         type: curse!.type,
-        duration: curse!.duration,
+        value: 0,
+        duration: curse!.duration as number,
         source: 'failed_identification',
-        timestamp: Date.now(),
       });
     }
 
@@ -1307,7 +1310,7 @@ export class Equipment {
    * @param {Object} context - Additional context for wear calculation
    * @returns {Object} Wear result
    */
-  applyItemWear(item: EquipmentItem, useType: string = 'normal', context: any = {}): void {
+  applyItemWear(item: EquipmentItem, useType: string = 'normal', context: any = {}): any {
     if (!item.durability || item.durability <= 0) {
       return { alreadyBroken: true, message: `${item.name} is already broken.` };
     }
@@ -1403,7 +1406,7 @@ export class Equipment {
    */
   getItemQualityMultiplier(item: EquipmentItem): number {
     if (item.quality) {
-      const qualityMultipliers = {
+      const qualityMultipliers: Record<string, number> = {
         poor: 1.5,
         common: 1.0,
         uncommon: 0.8,
@@ -1415,9 +1418,9 @@ export class Equipment {
     }
 
     // Estimate quality from value
-    if (item.value > 2000) return 0.4; // Epic/Legendary
-    if (item.value > 1000) return 0.6; // Rare
-    if (item.value > 500) return 0.8; // Uncommon
+    if ((item.value || 0) > 2000) return 0.4; // Epic/Legendary
+    if ((item.value || 0) > 1000) return 0.6; // Rare
+    if ((item.value || 0) > 500) return 0.8; // Uncommon
     return 1.0; // Common
   }
 
@@ -1426,7 +1429,7 @@ export class Equipment {
    * @param {Object} item - Item to break
    * @returns {Object} Break result
    */
-  breakItem(item: EquipmentItem): void {
+  breakItem(item: EquipmentItem): any {
     item.durability = 0;
     item.broken = true;
 
@@ -1460,7 +1463,7 @@ export class Equipment {
    * @param {Object} options - Repair options
    * @returns {Object} Repair result
    */
-  repairItem(item: EquipmentItem, options: any = {}): { success: boolean; message: string; cost: number } {
+  repairItem(item: EquipmentItem, options: any = {}): any {
     if (!item.broken && item.durability === item.maxDurability) {
       return {
         success: false,
@@ -1469,15 +1472,17 @@ export class Equipment {
     }
 
     const repairCost = this.calculateRepairCost(item, options);
+    const dur = item.durability || 0;
+    const maxDur = item.maxDurability || 100;
     const repairAmount = (options as any).fullRepair
-      ? item.maxDurability - item.durability
-      : Math.min(50, item.maxDurability - item.durability);
+      ? maxDur - dur
+      : Math.min(50, maxDur - dur);
 
     // Restore durability
-    item.durability = Math.min(item.maxDurability, item.durability + repairAmount);
+    item.durability = Math.min(maxDur, dur + repairAmount);
 
     // If fully repaired and was broken, restore functionality
-    if (item.broken && item.durability === item.maxDurability) {
+    if (item.broken && item.durability === maxDur) {
       this.restoreBrokenItem(item);
     }
 
@@ -1520,8 +1525,8 @@ export class Equipment {
    * @returns {number} Repair cost in gold
    */
   calculateRepairCost(item: EquipmentItem, options: any = {}): number {
-    const baseCost = Math.floor(item.value * 0.1); // 10% of item value
-    const damageRatio = (item.maxDurability - item.durability) / item.maxDurability;
+    const baseCost = Math.floor((item.value || 0) * 0.1); // 10% of item value
+    const damageRatio = ((item.maxDurability || 100) - (item.durability || 0)) / (item.maxDurability || 100);
 
     let cost = Math.floor(baseCost * damageRatio);
 
@@ -1541,7 +1546,7 @@ export class Equipment {
     }
 
     // Quality affects cost
-    const qualityMultiplier = {
+    const qualityMultiplier: Record<string, number> = {
       poor: 0.5,
       common: 1.0,
       uncommon: 1.5,
@@ -1562,12 +1567,12 @@ export class Equipment {
    * @param {Object} item - Item to check
    * @returns {Object} Repair status
    */
-  getRepairStatus(item: EquipmentItem): { needsRepair: boolean; condition: string; durabilityPercent: number } {
+  getRepairStatus(item: EquipmentItem): any {
     if (!item.durability) {
       return { needsRepair: false, condition: 'N/A' };
     }
 
-    const durabilityRatio = item.durability / item.maxDurability;
+    const durabilityRatio = item.durability / (item.maxDurability || 100);
     let condition, needsRepair;
 
     if (item.broken || item.durability === 0) {
@@ -1602,18 +1607,18 @@ export class Equipment {
    * @param {Object} character - Character to check
    * @returns {Array} Items needing repair
    */
-  getItemsNeedingRepair(character: CharacterData): EquipmentItem[] {
+  getItemsNeedingRepair(character: CharacterData): any[] {
     const itemsNeedingRepair: any[] = [];
 
     if (character.equipment) {
-      Object.values(character.equipment).forEach((item) => {
-        if (item && (item as any).durability !== undefined) {
-          const status = this.getRepairStatus(item);
+      Object.values(character.equipment).forEach((item: any) => {
+        if (item && item.durability !== undefined) {
+          const status = this.getRepairStatus(item as EquipmentItem);
           if (status.needsRepair) {
             itemsNeedingRepair.push({
               item,
               status,
-              slot: this.getEquippedSlot(character, item),
+              slot: this.getEquippedSlot(character, item as EquipmentItem),
             });
           }
         }
@@ -1630,25 +1635,25 @@ export class Equipment {
    * @param {number} severity - Damage severity (1-5)
    * @returns {Array} Results for each damaged item
    */
-  processEnvironmentalDamage(character: CharacterData, damageType: string, severity: number = 2): void {
+  processEnvironmentalDamage(character: CharacterData, damageType: string, severity: number = 2): any {
     const results: any[] = [];
 
     if (!character.equipment) return results;
 
-    Object.values(character.equipment).forEach((item) => {
-      if (item && (item as any).durability > 0) {
+    Object.values(character.equipment).forEach((item: any) => {
+      if (item && item.durability > 0) {
         // Different damage types affect different items differently
         let affectsItem = false;
 
         switch (damageType) {
           case 'acid':
-            affectsItem = (item as any).type === 'armor' || (item as any).type === 'weapon';
+            affectsItem = item.type === 'armor' || item.type === 'weapon';
             break;
           case 'fire':
-            affectsItem = (item as any).subtype !== 'magical'; // Magic items resist fire
+            affectsItem = item.subtype !== 'magical'; // Magic items resist fire
             break;
           case 'water':
-            affectsItem = (item as any).type === 'weapon' && (item as any).subtype !== 'magical';
+            affectsItem = item.type === 'weapon' && item.subtype !== 'magical';
             break;
           case 'wear':
           default:
@@ -1657,7 +1662,7 @@ export class Equipment {
         }
 
         if (affectsItem) {
-          const wearResult = this.applyItemWear(item, 'environmental', {
+          const wearResult = this.applyItemWear(item as EquipmentItem, 'environmental', {
             damageType,
             severity,
           });

@@ -54,7 +54,7 @@ export const shieldsMigration = {
   /**
    * Validate shield data
    */
-  validate: (shieldData) => {
+  validate: (shieldData: any) => {
     const required = ['name', 'type', 'acBonus'];
     return required.every((field) => shieldData[field] !== undefined);
   },
@@ -62,7 +62,7 @@ export const shieldsMigration = {
   /**
    * Transform shield data if needed (future migrations)
    */
-  transform: (shieldData) => {
+  transform: (shieldData: any) => {
     return shieldData;
   },
 };

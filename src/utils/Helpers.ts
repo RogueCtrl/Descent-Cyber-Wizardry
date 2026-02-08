@@ -6,35 +6,35 @@ export class Helpers {
   /**
    * Clamp a value between min and max
    */
-  static clamp(value, min, max) {
+  static clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
   }
 
   /**
    * Linear interpolation between two values
    */
-  static lerp(start, end, factor) {
+  static lerp(start: number, end: number, factor: number): number {
     return start + (end - start) * factor;
   }
 
   /**
    * Map a value from one range to another
    */
-  static map(value, inMin, inMax, outMin, outMax) {
+  static map(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
     return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
   }
 
   /**
    * Check if a value is between min and max (inclusive)
    */
-  static between(value, min, max) {
+  static between(value: number, min: number, max: number): boolean {
     return value >= min && value <= max;
   }
 
   /**
    * Calculate distance between two points
    */
-  static distance(x1, y1, x2, y2) {
+  static distance(x1: number, y1: number, x2: number, y2: number): number {
     const dx = x2 - x1;
     const dy = y2 - y1;
     return Math.sqrt(dx * dx + dy * dy);
@@ -43,28 +43,28 @@ export class Helpers {
   /**
    * Calculate angle between two points (in radians)
    */
-  static angle(x1, y1, x2, y2) {
+  static angle(x1: number, y1: number, x2: number, y2: number): number {
     return Math.atan2(y2 - y1, x2 - x1);
   }
 
   /**
    * Convert degrees to radians
    */
-  static toRadians(degrees) {
+  static toRadians(degrees: number): number {
     return (degrees * Math.PI) / 180;
   }
 
   /**
    * Convert radians to degrees
    */
-  static toDegrees(radians) {
+  static toDegrees(radians: number): number {
     return (radians * 180) / Math.PI;
   }
 
   /**
    * Normalize an angle to 0-2π range
    */
-  static normalizeAngle(angle) {
+  static normalizeAngle(angle: number): number {
     while (angle < 0) angle += 2 * Math.PI;
     while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
     return angle;
@@ -73,27 +73,27 @@ export class Helpers {
   /**
    * Deep clone an object
    */
-  static deepClone(obj) {
+  static deepClone<T>(obj: T): T {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
 
     if (obj instanceof Date) {
-      return new Date(obj.getTime());
+      return new Date(obj.getTime()) as unknown as T;
     }
 
     if (obj instanceof Array) {
-      return obj.map((item) => this.deepClone(item));
+      return obj.map((item: any) => this.deepClone(item)) as unknown as T;
     }
 
     if (typeof obj === 'object') {
-      const cloned = {};
+      const cloned: Record<string, any> = {};
       for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          cloned[key] = this.deepClone(obj[key]);
+        if ((obj as any).hasOwnProperty(key)) {
+          cloned[key] = this.deepClone((obj as any)[key]);
         }
       }
-      return cloned;
+      return cloned as T;
     }
 
     return obj;
@@ -102,7 +102,7 @@ export class Helpers {
   /**
    * Check if two objects are deeply equal
    */
-  static deepEqual(obj1, obj2) {
+  static deepEqual(obj1: any, obj2: any): boolean {
     if (obj1 === obj2) {
       return true;
     }
@@ -142,8 +142,8 @@ export class Helpers {
   /**
    * Debounce a function
    */
-  static debounce(func, wait) {
-    let timeout;
+  static debounce(func: (...args: any[]) => void, wait: number) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     return function executedFunction(this: any, ...args: any[]) {
       const later = () => {
         clearTimeout(timeout);
@@ -157,8 +157,8 @@ export class Helpers {
   /**
    * Throttle a function
    */
-  static throttle(func, limit) {
-    let inThrottle;
+  static throttle(func: (...args: any[]) => void, limit: number) {
+    let inThrottle: boolean;
     return function executedFunction(this: any, ...args: any[]) {
       if (!inThrottle) {
         func.apply(this, args);
@@ -171,14 +171,14 @@ export class Helpers {
   /**
    * Format a number with thousand separators
    */
-  static formatNumber(num) {
+  static formatNumber(num: number): string {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   /**
    * Format time in MM:SS format
    */
-  static formatTime(seconds) {
+  static formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -187,7 +187,7 @@ export class Helpers {
   /**
    * Format a date as readable string
    */
-  static formatDate(date) {
+  static formatDate(date: Date | number | string): string {
     if (!(date instanceof Date)) {
       date = new Date(date);
     }
@@ -198,7 +198,7 @@ export class Helpers {
   /**
    * Capitalize first letter of a string
    */
-  static capitalize(str) {
+  static capitalize(str: string): string {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
@@ -206,17 +206,17 @@ export class Helpers {
   /**
    * Convert camelCase to Title Case
    */
-  static camelToTitle(str) {
+  static camelToTitle(str: string): string {
     return str
       .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, (str) => str.toUpperCase())
+      .replace(/^./, (str: string) => str.toUpperCase())
       .trim();
   }
 
   /**
    * Generate a hash code for a string
    */
-  static hashCode(str) {
+  static hashCode(str: string): number {
     let hash = 0;
     if (str.length === 0) return hash;
 
@@ -232,14 +232,14 @@ export class Helpers {
   /**
    * Check if a string is empty or whitespace
    */
-  static isEmpty(str) {
+  static isEmpty(str: string): boolean {
     return !str || str.trim().length === 0;
   }
 
   /**
    * Truncate a string to specified length
    */
-  static truncate(str, length, suffix = '...') {
+  static truncate(str: string, length: number, suffix: string = '...'): string {
     if (str.length <= length) {
       return str;
     }
@@ -250,21 +250,21 @@ export class Helpers {
   /**
    * Generate a random ID
    */
-  static generateId(prefix = 'id') {
+  static generateId(prefix: string = 'id'): string {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
    * Wait for a specified amount of time
    */
-  static wait(ms) {
+  static wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * Retry a function with exponential backoff
    */
-  static async retry(func, maxAttempts = 3, delay = 1000) {
+  static async retry<T>(func: () => Promise<T>, maxAttempts: number = 3, delay: number = 1000): Promise<T | undefined> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await func();
@@ -276,12 +276,13 @@ export class Helpers {
         await this.wait(delay * Math.pow(2, attempt - 1));
       }
     }
+    return undefined;
   }
 
   /**
    * Load an image and return a promise
    */
-  static loadImage(src) {
+  static loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
@@ -293,7 +294,7 @@ export class Helpers {
   /**
    * Load an audio file and return a promise
    */
-  static loadAudio(src) {
+  static loadAudio(src: string): Promise<HTMLAudioElement> {
     return new Promise((resolve, reject) => {
       const audio = new Audio();
       audio.oncanplaythrough = () => resolve(audio);
@@ -305,7 +306,7 @@ export class Helpers {
   /**
    * Check if an element is visible in the viewport
    */
-  static isVisible(element) {
+  static isVisible(element: HTMLElement): boolean {
     const rect = element.getBoundingClientRect();
     return (
       rect.top >= 0 &&
@@ -318,28 +319,28 @@ export class Helpers {
   /**
    * Scroll an element into view smoothly
    */
-  static scrollIntoView(element, behavior = 'smooth') {
+  static scrollIntoView(element: HTMLElement, behavior: ScrollBehavior = 'smooth'): void {
     element.scrollIntoView({ behavior, block: 'nearest' });
   }
 
   /**
    * Get the current timestamp in milliseconds
    */
-  static timestamp() {
+  static timestamp(): number {
     return Date.now();
   }
 
   /**
    * Get a high-resolution timestamp for performance measurement
    */
-  static perfTimestamp() {
+  static perfTimestamp(): number {
     return performance.now();
   }
 
   /**
    * Measure execution time of a function
    */
-  static async measureTime(func, label = 'Operation') {
+  static async measureTime<T>(func: () => Promise<T>, label: string = 'Operation'): Promise<T> {
     const start = this.perfTimestamp();
     const result = await func();
     const end = this.perfTimestamp();
@@ -351,20 +352,20 @@ export class Helpers {
   /**
    * Create a simple state machine
    */
-  static createStateMachine(states, initialState) {
+  static createStateMachine(states: Record<string, string[]>, initialState: string) {
     let currentState = initialState;
 
     return {
       getState: () => currentState,
-      setState: (newState) => {
+      setState: (newState: string) => {
         if (states[newState]) {
           currentState = newState;
           return true;
         }
         return false;
       },
-      isState: (state) => currentState === state,
-      canTransition: (toState) => {
+      isState: (state: string) => currentState === state,
+      canTransition: (toState: string) => {
         return states[currentState] && states[currentState].includes(toState);
       },
     };
@@ -376,7 +377,7 @@ export class Helpers {
    * @param {Party} party - The party object to process
    * @returns {Object} Object containing casualties array and survivors array
    */
-  static removeCasualtiesFromParty(party) {
+  static removeCasualtiesFromParty(party: any) {
     if (!party || !party.members) {
       return { casualties: [], survivors: [] };
     }
@@ -385,7 +386,7 @@ export class Helpers {
     const survivors: any[] = [];
 
     // Separate casualties from survivors using death system helpers
-    party.members.forEach((member) => {
+    party.members.forEach((member: any) => {
       if (this.isDead(member)) {
         casualties.push(member);
       } else {
@@ -400,7 +401,7 @@ export class Helpers {
     if (casualties.length > 0) {
       console.log(
         `Removing ${casualties.length} casualties from party:`,
-        casualties.map((c) => ({
+        casualties.map((c: any) => ({
           name: c.name,
           status: c.status || 'dead',
         }))
@@ -429,7 +430,7 @@ export class Helpers {
   /**
    * Death state severity levels (0 = best, 4 = worst)
    */
-  static DEATH_SEVERITY = {
+  static DEATH_SEVERITY: Record<string, number> = {
     [this.DEATH_STATES.OK]: 0,
     [this.DEATH_STATES.UNCONSCIOUS]: 1,
     [this.DEATH_STATES.DEAD]: 2,
@@ -439,10 +440,8 @@ export class Helpers {
 
   /**
    * Normalize a death state to canonical form
-   * @param {string} status - The status to normalize
-   * @returns {string} Canonical death state or original if invalid
    */
-  static normalizeDeathState(status) {
+  static normalizeDeathState(status: string): string {
     if (!status || typeof status !== 'string') {
       return this.DEATH_STATES.OK;
     }
@@ -496,10 +495,8 @@ export class Helpers {
 
   /**
    * Check if a character/monster is alive
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if alive
    */
-  static isAlive(entity) {
+  static isAlive(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);
@@ -508,10 +505,8 @@ export class Helpers {
 
   /**
    * Check if a character/monster is dead (any death state)
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if dead
    */
-  static isDead(entity) {
+  static isDead(entity: any): boolean {
     if (!entity) return true;
 
     const status = this.normalizeDeathState(entity.status);
@@ -520,10 +515,8 @@ export class Helpers {
 
   /**
    * Check if a character/monster is unconscious
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if unconscious
    */
-  static isUnconscious(entity) {
+  static isUnconscious(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);
@@ -532,10 +525,8 @@ export class Helpers {
 
   /**
    * Check if a character/monster is permanently lost
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if permanently lost
    */
-  static isPermanentlyLost(entity) {
+  static isPermanentlyLost(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);
@@ -544,10 +535,8 @@ export class Helpers {
 
   /**
    * Check if a character/monster can be resurrected
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if resurrection is possible
    */
-  static canBeResurrected(entity) {
+  static canBeResurrected(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);
@@ -560,10 +549,8 @@ export class Helpers {
 
   /**
    * Get the next worse death state for failed resurrection
-   * @param {string} currentStatus - Current death state
-   * @returns {string} Next worse death state
    */
-  static getNextWorseDeathState(currentStatus) {
+  static getNextWorseDeathState(currentStatus: string): string {
     const status = this.normalizeDeathState(currentStatus);
 
     switch (status) {
@@ -584,21 +571,16 @@ export class Helpers {
 
   /**
    * Get death state severity level
-   * @param {string} status - Death state to check
-   * @returns {number} Severity level (0-4)
    */
-  static getDeathSeverity(status) {
+  static getDeathSeverity(status: string): number {
     const normalized = this.normalizeDeathState(status);
     return this.DEATH_SEVERITY[normalized] || 0;
   }
 
   /**
    * Compare two death states by severity
-   * @param {string} status1 - First death state
-   * @param {string} status2 - Second death state
-   * @returns {number} -1 if status1 is better, 1 if status2 is better, 0 if equal
    */
-  static compareDeathStates(status1, status2) {
+  static compareDeathStates(status1: string, status2: string): number {
     const severity1 = this.getDeathSeverity(status1);
     const severity2 = this.getDeathSeverity(status2);
 
@@ -609,11 +591,8 @@ export class Helpers {
 
   /**
    * Update entity's death state safely
-   * @param {Object} entity - Character or monster object
-   * @param {string} newStatus - New death state
-   * @returns {boolean} True if update was successful
    */
-  static setDeathState(entity, newStatus) {
+  static setDeathState(entity: any, newStatus: string): boolean {
     if (!entity) return false;
 
     const normalizedStatus = this.normalizeDeathState(newStatus);
@@ -634,43 +613,35 @@ export class Helpers {
 
   /**
    * Get all living members from a party/group
-   * @param {Array} members - Array of character/monster objects
-   * @returns {Array} Array of living members
    */
-  static getLivingMembers(members) {
+  static getLivingMembers(members: any[]): any[] {
     if (!Array.isArray(members)) return [];
 
-    return members.filter((member) => this.isAlive(member));
+    return members.filter((member: any) => this.isAlive(member));
   }
 
   /**
    * Get all dead members from a party/group
-   * @param {Array} members - Array of character/monster objects
-   * @returns {Array} Array of dead members
    */
-  static getDeadMembers(members) {
+  static getDeadMembers(members: any[]): any[] {
     if (!Array.isArray(members)) return [];
 
-    return members.filter((member) => this.isDead(member));
+    return members.filter((member: any) => this.isDead(member));
   }
 
   /**
    * Get all members that can be resurrected
-   * @param {Array} members - Array of character/monster objects
-   * @returns {Array} Array of resurrectable members
    */
-  static getResurrectableMembers(members) {
+  static getResurrectableMembers(members: any[]): any[] {
     if (!Array.isArray(members)) return [];
 
-    return members.filter((member) => this.canBeResurrected(member));
+    return members.filter((member: any) => this.canBeResurrected(member));
   }
 
   /**
    * Validate death state consistency
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if status and isAlive are consistent
    */
-  static validateDeathState(entity) {
+  static validateDeathState(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);
@@ -681,10 +652,8 @@ export class Helpers {
 
   /**
    * Fix inconsistent death state
-   * @param {Object} entity - Character or monster object
-   * @returns {boolean} True if fixes were applied
    */
-  static fixDeathState(entity) {
+  static fixDeathState(entity: any): boolean {
     if (!entity) return false;
 
     const status = this.normalizeDeathState(entity.status);

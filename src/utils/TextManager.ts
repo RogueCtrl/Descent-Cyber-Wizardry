@@ -24,7 +24,7 @@ export class TextManager {
       return fallback;
     }
 
-    const modeData = TERMINOLOGY[this.mode];
+    const modeData = (TERMINOLOGY as Record<string, any>)[this.mode];
     if (!modeData) {
       console.warn(`Unknown text mode: ${this.mode}, using fallback`);
       return fallback;
@@ -91,8 +91,8 @@ export class TextManager {
     }
 
     return {
-      classic: TERMINOLOGY.classic[key] || key,
-      cyber: TERMINOLOGY.cyber[key] || key,
+      classic: (TERMINOLOGY.classic as Record<string, string>)[key] || key,
+      cyber: (TERMINOLOGY.cyber as Record<string, string>)[key] || key,
     };
   }
 

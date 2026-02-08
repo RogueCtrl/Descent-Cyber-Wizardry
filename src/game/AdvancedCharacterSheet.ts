@@ -13,7 +13,7 @@ export class AdvancedCharacterSheet {
   activeTab: string;
   tabs: any[];
 
-  constructor(eventSystem) {
+  constructor(eventSystem: any) {
     this.eventSystem = eventSystem;
     this.characterSheetModal = null;
     this.currentCharacter = null;
@@ -34,7 +34,7 @@ export class AdvancedCharacterSheet {
    * Show advanced character sheet
    * @param {Object} character - Character to display
    */
-  showCharacterSheet(character) {
+  showCharacterSheet(character: any) {
     if (!character) {
       console.error('No character provided to character sheet');
       return;
@@ -110,14 +110,14 @@ export class AdvancedCharacterSheet {
   /**
    * Setup event listeners for character sheet
    */
-  setupCharacterSheetEventListeners(modal) {
+  setupCharacterSheetEventListeners(modal: any) {
     // Close button
     modal.querySelector('#close-character-sheet').addEventListener('click', () => {
       this.hideCharacterSheet();
     });
 
     // Tab navigation
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener('click', (e: any) => {
       if (e.target.classList.contains('nav-tab')) {
         const tabId = e.target.getAttribute('data-tab');
         this.switchTab(tabId);
@@ -125,7 +125,7 @@ export class AdvancedCharacterSheet {
     });
 
     // Close on outside click
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener('click', (e: any) => {
       if (e.target === modal) {
         this.hideCharacterSheet();
       }
@@ -140,7 +140,7 @@ export class AdvancedCharacterSheet {
 
     // Apply TextManager to elements with data-text-key
     const textElements = this.characterSheetModal.querySelectorAll('[data-text-key]');
-    textElements.forEach((element) => {
+    textElements.forEach((element: any) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
         TextManager.applyToElement(element, textKey);
@@ -325,14 +325,14 @@ export class AdvancedCharacterSheet {
   /**
    * Switch to a different tab
    */
-  switchTab(tabId) {
+  switchTab(tabId: any) {
     if (this.activeTab === tabId) return;
 
     this.activeTab = tabId;
 
     // Update tab navigation
     const tabs = this.characterSheetModal.querySelectorAll('.nav-tab');
-    tabs.forEach((tab) => {
+    tabs.forEach((tab: any) => {
       tab.classList.toggle('active', tab.getAttribute('data-tab') === tabId);
     });
 
@@ -346,7 +346,7 @@ export class AdvancedCharacterSheet {
   /**
    * Render content for the active tab
    */
-  renderTabContent(tabId) {
+  renderTabContent(tabId: any) {
     const contentContainer = this.characterSheetModal.querySelector('#character-sheet-tab-content');
     if (!contentContainer) return;
 
@@ -505,7 +505,7 @@ export class AdvancedCharacterSheet {
 
     return activities
       .slice(0, 5)
-      .map((activity) => {
+      .map((activity: any) => {
         const timestamp = new Date(activity.timestamp || Date.now()).toLocaleString();
         return `
                 <div class="activity-item">
@@ -548,7 +548,7 @@ export class AdvancedCharacterSheet {
   /**
    * Render attribute list with proper TextManager integration
    */
-  renderAttributeList(attributes) {
+  renderAttributeList(attributes: any) {
     const attributeKeys = ['strength', 'intelligence', 'piety', 'vitality', 'agility', 'luck'];
     const abbreviationKeys = [
       'attr_str',
@@ -696,7 +696,7 @@ export class AdvancedCharacterSheet {
   /**
    * Render item statistics
    */
-  renderItemStats(item) {
+  renderItemStats(item: any) {
     if (typeof item === 'string') return '';
 
     const stats: any[] = [];
@@ -788,7 +788,7 @@ export class AdvancedCharacterSheet {
                             <div class="spell-level-section">
                                 <h3 class="section-title"><span data-text-key="level">Level</span> ${level}</h3>
                                 <div class="spell-grid">
-                                    ${(levelSpells as any).map((spell) => this.renderSpellDetail(spell)).join('')}
+                                    ${(levelSpells as any).map((spell: any) => this.renderSpellDetail(spell)).join('')}
                                 </div>
                             </div>
                         `;
@@ -802,7 +802,7 @@ export class AdvancedCharacterSheet {
   /**
    * Render spell detail
    */
-  renderSpellDetail(spell) {
+  renderSpellDetail(spell: any) {
     let spellName = typeof spell === 'string' ? spell : spell.name;
 
     return `
@@ -827,7 +827,7 @@ export class AdvancedCharacterSheet {
     return `
             <div class="history-content">
                 <div class="history-timeline">
-                    ${history.map((event) => this.renderHistoryEvent(event)).join('')}
+                    ${history.map((event: any) => this.renderHistoryEvent(event)).join('')}
                 </div>
             </div>
         `;
@@ -836,7 +836,7 @@ export class AdvancedCharacterSheet {
   /**
    * Render history event
    */
-  renderHistoryEvent(event) {
+  renderHistoryEvent(event: any) {
     const timestamp = new Date(event.timestamp || Date.now()).toLocaleString();
 
     return `

@@ -99,7 +99,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
 
     // Draw wireframe edges
     this.ctx.beginPath();
-    portraitModel.edges.forEach((edge) => {
+    portraitModel.edges.forEach((edge: any) => {
       const [startIdx, endIdx] = edge;
       if (startIdx < projectedVertices.length && endIdx < projectedVertices.length) {
         const start = projectedVertices[startIdx];
@@ -365,7 +365,7 @@ export class MonsterPortraitRenderer extends Viewport3D {
       critical: '#ff0040',
     };
 
-    const color = threatColors[monster.threatLevel] || '#ffffff';
+    const color = (threatColors as Record<string, string>)[monster.threatLevel] || '#ffffff';
     const centerX = this.width / 2;
     const centerY = this.height / 2;
 

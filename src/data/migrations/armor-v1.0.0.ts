@@ -76,7 +76,7 @@ export const armorMigration = {
   /**
    * Validate armor data
    */
-  validate: (armorData) => {
+  validate: (armorData: any) => {
     const required = ['name', 'type', 'subtype', 'acBonus'];
     return required.every((field) => armorData[field] !== undefined);
   },
@@ -84,7 +84,7 @@ export const armorMigration = {
   /**
    * Transform armor data if needed (future migrations)
    */
-  transform: (armorData) => {
+  transform: (armorData: any) => {
     return armorData;
   },
 };

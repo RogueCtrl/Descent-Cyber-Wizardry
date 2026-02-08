@@ -117,7 +117,7 @@ export const weaponsMigration = {
   /**
    * Validate weapon data
    */
-  validate: (weaponData) => {
+  validate: (weaponData: any) => {
     const required = ['name', 'type', 'subtype'];
     return required.every((field) => weaponData[field] !== undefined);
   },
@@ -125,7 +125,7 @@ export const weaponsMigration = {
   /**
    * Transform weapon data if needed (future migrations)
    */
-  transform: (weaponData) => {
+  transform: (weaponData: any) => {
     // Add any data transformations here for future versions
     return weaponData;
   },

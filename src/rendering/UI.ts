@@ -44,7 +44,7 @@ export class UI {
   dungeonEntranceModal: any;
   dungeonCasualtyModal: any;
 
-  constructor(eventSystem) {
+  constructor(eventSystem: any) {
     this.eventSystem = eventSystem;
     this.engine = null;
     this.isInitialized = false;
@@ -79,7 +79,7 @@ export class UI {
     this.initialize();
   }
 
-  setEngine(engine) {
+  setEngine(engine: any) {
     this.engine = engine;
     this.characterUI.engine = engine;
   }
@@ -193,22 +193,22 @@ export class UI {
     }
 
     // Keyboard controls
-    this.eventSystem.on('keydown', (event) => {
+    this.eventSystem.on('keydown', (event: any) => {
       this.handleKeydown(event);
     });
 
     // Message system
-    this.eventSystem.on('show-message', (data) => {
+    this.eventSystem.on('show-message', (data: any) => {
       this.addMessage(data.text, data.type);
     });
 
     // Combat ended event
-    this.eventSystem.on('combat-ended', (data) => {
+    this.eventSystem.on('combat-ended', (data: any) => {
       this.showPostCombatResults(data.rewards, data.disconnectedCharacters || []);
     });
 
     // Party defeated event
-    this.eventSystem.on('party-defeated', async (data) => {
+    this.eventSystem.on('party-defeated', async (data: any) => {
       const hasDisconnectedCharacters = (data.disconnectedCharacters || []).length > 0;
       const hasCasualties = (data.casualties || []).length > 0;
 
@@ -225,7 +225,7 @@ export class UI {
     });
 
     // Character updated event (for real-time HP updates)
-    this.eventSystem.on('character-updated', (data) => {
+    this.eventSystem.on('character-updated', (data: any) => {
       this.refreshCombatDisplay();
       // Also update the left-side party display
       if (this.engine?.party) {
@@ -237,7 +237,7 @@ export class UI {
   /**
    * Handle keyboard input
    */
-  handleKeydown(event) {
+  handleKeydown(event: any) {
     switch (event.key) {
       // Movement keys are handled by Engine.js to prevent duplicate handling
 
@@ -256,7 +256,7 @@ export class UI {
   /**
    * Update party display
    */
-  updatePartyDisplay(party) {
+  updatePartyDisplay(party: any) {
     if (!this.partyDisplay) return;
 
     this.partyDisplay.innerHTML = '';
@@ -303,7 +303,7 @@ export class UI {
 
     // Create character list
     if (party.members && Array.isArray(party.members)) {
-      party.members.forEach((character, index) => {
+      party.members.forEach((character: any, index: any) => {
         const characterElement = document.createElement('div');
         characterElement.className = `character-summary ${party.currentLeader === character ? 'leader' : ''}`;
         characterElement.dataset.characterId = character.id;
@@ -365,7 +365,7 @@ export class UI {
   /**
    * Update party name display in the Strike Team Manifest
    */
-  updatePartyNameDisplay(party) {
+  updatePartyNameDisplay(party: any) {
     const partyNameDisplay = document.querySelector('.party-name-display');
     if (partyNameDisplay) {
       const partyName = party ? party.name || 'Unnamed Party' : 'No Active Party';
@@ -385,9 +385,9 @@ export class UI {
   /**
    * Select a character as the current leader
    */
-  selectCharacter(characterId) {
+  selectCharacter(characterId: any) {
     // Remove previous selection
-    this.partyDisplay.querySelectorAll('.character-summary').forEach((el) => {
+    this.partyDisplay.querySelectorAll('.character-summary').forEach((el: any) => {
       el.classList.remove('leader');
     });
 
@@ -409,7 +409,7 @@ export class UI {
   /**
    * View character details
    */
-  viewCharacter(characterId) {
+  viewCharacter(characterId: any) {
     this.addMessage(`Character sheet for ${characterId} would open here.`);
     // TODO: Implement character sheet modal
   }
@@ -446,10 +446,10 @@ export class UI {
       const allParties = await Storage.loadAllParties();
       if (allParties && (allParties as any).length > 0) {
         const partiesWithMembers = (allParties as any).filter(
-          (p) => p.members && p.members.length > 0
+          (p: any) => p.members && p.members.length > 0
         );
         const campingParties = await Storage.getCampingParties();
-        const lostParties = (allParties as any).filter((p) => p.isLost);
+        const lostParties = (allParties as any).filter((p: any) => p.isLost);
 
         activePartiesCount = partiesWithMembers.length;
         campingPartiesCount = campingParties.length;
@@ -647,7 +647,7 @@ export class UI {
   /**
    * Set up event listeners for town center interface
    */
-  setupTownCenterEventListeners(viewport) {
+  setupTownCenterEventListeners(viewport: any) {
     const trainingBtn = viewport.querySelector('#training-grounds-btn');
     const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
     const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
@@ -732,7 +732,7 @@ export class UI {
   /**
    * Update mode toggle button display
    */
-  updateModeToggleDisplay(toggleBtn) {
+  updateModeToggleDisplay(toggleBtn: any) {
     if (!toggleBtn || typeof TextManager === 'undefined') return;
 
     const currentMode = TextManager.getMode();
@@ -754,7 +754,7 @@ export class UI {
   /**
    * Show/Hide contextual actions based on game state
    */
-  updateContextualActions(dungeon) {
+  updateContextualActions(dungeon: any) {
     if (!dungeon || !this.controlButtons.openDoor) return;
 
     // Check for door interaction
@@ -862,7 +862,7 @@ export class UI {
       if (typeof TextManager !== 'undefined') {
         const modalBody = this.strikeTeamModal.getBody();
         const textElements = modalBody.querySelectorAll('[data-text-key]');
-        textElements.forEach((element) => {
+        textElements.forEach((element: any) => {
           const textKey = element.getAttribute('data-text-key');
           if (textKey) {
             TextManager.applyToElement(element, textKey);
@@ -881,11 +881,11 @@ export class UI {
   /**
    * Build content for Strike Team Management
    */
-  buildStrikeTeamManagementContent(allParties, campingParties, activePartyId) {
+  buildStrikeTeamManagementContent(allParties: any, campingParties: any, activePartyId: any) {
     // Filter parties into sections (excluding active party)
-    const inactiveParties = allParties.filter((p) => p.id !== activePartyId);
-    const inTownParties = inactiveParties.filter((p) => !p.campId && !p.isLost);
-    const lostParties = allParties.filter((p) => p.isLost);
+    const inactiveParties = allParties.filter((p: any) => p.id !== activePartyId);
+    const inTownParties = inactiveParties.filter((p: any) => !p.campId && !p.isLost);
+    const lostParties = allParties.filter((p: any) => p.isLost);
 
     console.log('Party filtering:', {
       total: allParties.length,
@@ -913,7 +913,7 @@ export class UI {
                             ${
                               campingParties.length > 0
                                 ? campingParties
-                                    .map((party) => this.buildPartyCard(party, false, true))
+                                    .map((party: any) => this.buildPartyCard(party, false, true))
                                     .join('')
                                 : '<p class="no-parties">No camping parties</p>'
                             }
@@ -930,7 +930,7 @@ export class UI {
                             ${
                               inTownParties.length > 0
                                 ? inTownParties
-                                    .map((party) => this.buildPartyCard(party, false))
+                                    .map((party: any) => this.buildPartyCard(party, false))
                                     .join('')
                                 : '<p class="no-parties">No inactive parties</p>'
                             }
@@ -947,7 +947,7 @@ export class UI {
                             ${
                               lostParties.length > 0
                                 ? lostParties
-                                    .map((party) => this.buildPartyCard(party, false, false, true))
+                                    .map((party: any) => this.buildPartyCard(party, false, false, true))
                                     .join('')
                                 : '<p class="no-parties">No lost parties</p>'
                             }
@@ -965,7 +965,7 @@ export class UI {
   /**
    * Build party card HTML
    */
-  buildPartyCard(party, isActive = false, isCamping = false, isLost = false) {
+  buildPartyCard(party: any, isActive = false, isCamping = false, isLost = false) {
     let status, statusClass, statusIcon;
 
     if (isLost) {
@@ -1037,7 +1037,7 @@ export class UI {
   /**
    * Set up event listeners for Strike Team Management
    */
-  setupStrikeTeamEventListeners(modalBody) {
+  setupStrikeTeamEventListeners(modalBody: any) {
     const closeBtn = modalBody.querySelector('#close-management-btn');
     const resumeButtons = modalBody.querySelectorAll('.resume-party-btn');
     const deleteButtons = modalBody.querySelectorAll('.delete-party-btn');
@@ -1054,7 +1054,7 @@ export class UI {
       });
     }
 
-    resumeButtons.forEach((btn) => {
+    resumeButtons.forEach((btn: any) => {
       btn.addEventListener('click', async () => {
         if (this.engine?.audioManager) {
           this.engine.audioManager.playSoundEffect('buttonClick');
@@ -1064,7 +1064,7 @@ export class UI {
       });
     });
 
-    deleteButtons.forEach((btn) => {
+    deleteButtons.forEach((btn: any) => {
       btn.addEventListener('click', async () => {
         if (this.engine?.audioManager) {
           this.engine.audioManager.playSoundEffect('buttonClick');
@@ -1078,7 +1078,7 @@ export class UI {
   /**
    * Resume a party
    */
-  async resumeParty(partyId) {
+  async resumeParty(partyId: any) {
     console.log('Resuming party:', partyId);
 
     try {
@@ -1119,11 +1119,11 @@ export class UI {
   /**
    * Show delete party confirmation modal
    */
-  async showDeletePartyConfirmation(partyId) {
+  async showDeletePartyConfirmation(partyId: any) {
     try {
       // Load party data to get name
       const allParties = await Storage.loadAllParties();
-      const party = (allParties as any).find((p) => p.id === partyId);
+      const party = (allParties as any).find((p: any) => p.id === partyId);
       const partyName = party ? party.name || 'Unnamed Team' : 'Unknown Party';
 
       // NEW: Check if party is in town and prevent deletion (Agents Always Part of Teams)
@@ -1223,7 +1223,7 @@ export class UI {
       if (typeof TextManager !== 'undefined') {
         const modalBody = this.deleteConfirmModal.getBody();
         const textElements = modalBody.querySelectorAll('[data-text-key]');
-        textElements.forEach((element) => {
+        textElements.forEach((element: any) => {
           const textKey = element.getAttribute('data-text-key');
           if (textKey) {
             TextManager.applyToElement(element, textKey);
@@ -1265,11 +1265,11 @@ export class UI {
   /**
    * Execute party deletion with proper state management
    */
-  async executePartyDeletion(partyId) {
+  async executePartyDeletion(partyId: any) {
     try {
       // Load party data before deletion
       const allParties = await Storage.loadAllParties();
-      const basicPartyInfo = (allParties as any).find((p) => p.id === partyId);
+      const basicPartyInfo = (allParties as any).find((p: any) => p.id === partyId);
       if (!basicPartyInfo) {
         console.error('Party not found for deletion:', partyId);
         return;
@@ -1422,7 +1422,7 @@ export class UI {
   /**
    * Delete a party (legacy method - now calls confirmation modal)
    */
-  async deleteParty(partyId) {
+  async deleteParty(partyId: any) {
     await this.showDeletePartyConfirmation(partyId);
   }
 
@@ -1461,7 +1461,7 @@ export class UI {
         if (typeof TextManager !== 'undefined') {
           const modalBody = this.strikeTeamModal.getBody();
           const textElements = modalBody.querySelectorAll('[data-text-key]');
-          textElements.forEach((element) => {
+          textElements.forEach((element: any) => {
             const textKey = element.getAttribute('data-text-key');
             if (textKey) {
               TextManager.applyToElement(element, textKey);
@@ -1477,7 +1477,7 @@ export class UI {
   /**
    * Get party status information for display
    */
-  getPartyStatusInfo(party) {
+  getPartyStatusInfo(party: any) {
     if (!party || party.size === 0) {
       // Check if this is a temporary party
       if (party && party._isTemporary) {
@@ -1487,7 +1487,7 @@ export class UI {
     }
 
     const livingMembers = party.members.filter(
-      (member) => member.status !== 'dead' && member.status !== 'lost'
+      (member: any) => member.status !== 'dead' && member.status !== 'lost'
     ).length;
 
     if (livingMembers === 0) {
@@ -1610,7 +1610,7 @@ export class UI {
   /**
    * Set up event listeners for training grounds interface
    */
-  setupTrainingGroundsEventListeners(container) {
+  setupTrainingGroundsEventListeners(container: any) {
     const createBtn = container.querySelector('#create-character-btn');
     const backBtn = container.querySelector('#back-to-town-btn');
     const viewRosterBtn = container.querySelector('#view-roster-btn');
@@ -1668,7 +1668,7 @@ export class UI {
   /**
    * Add a message to the message log
    */
-  addMessage(text, type = 'info') {
+  addMessage(text: any, type = 'info') {
     const message = {
       text: text,
       type: type,
@@ -1793,7 +1793,7 @@ export class UI {
   /**
    * Refresh character roster content for mode changes
    */
-  async refreshCharacterRosterContent(characters) {
+  async refreshCharacterRosterContent(characters: any) {
     if (!this.rosterModal) return;
 
     try {
@@ -1849,7 +1849,7 @@ export class UI {
     const characterCards = modalBody.querySelectorAll(
       '.character-roster-card, .summary-character-card'
     );
-    characterCards.forEach((card) => {
+    characterCards.forEach((card: any) => {
       card.addEventListener('click', () => {
         const characterId = card.dataset.characterId;
         if (!characterId) {
@@ -1875,7 +1875,7 @@ export class UI {
   /**
    * Show detailed character sheet
    */
-  async showCharacterDetails(characterId) {
+  async showCharacterDetails(characterId: any) {
     try {
       if (!characterId) {
         this.addMessage('No character ID provided', 'error');
@@ -1929,7 +1929,7 @@ export class UI {
   /**
    * Create character detail modal content
    */
-  async createCharacterDetailContent(character) {
+  async createCharacterDetailContent(character: any) {
     // Calculate derived stats
     const hpPercentage =
       character.maxHP > 0 ? Math.round((character.currentHP / character.maxHP) * 100) : 100;
@@ -2064,7 +2064,7 @@ export class UI {
   /**
    * Format character equipment for display
    */
-  formatCharacterEquipment(character) {
+  formatCharacterEquipment(character: any) {
     const equipment = character.equipment || {};
     const slots = [
       {
@@ -2152,7 +2152,7 @@ export class UI {
   /**
    * Format character spells for display
    */
-  formatCharacterSpells(character) {
+  formatCharacterSpells(character: any) {
     const memorizedSpells = character.memorizedSpells || {};
     const hasSpells = Object.keys(memorizedSpells).length > 0;
     const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
@@ -2179,7 +2179,7 @@ export class UI {
                     </h4>
                     <div class="spell-list program-suite">
                         ${(spells as any)
-                          .map((spell) => {
+                          .map((spell: any) => {
                             // Get contextual spell name
                             let spellName = 'Unknown';
                             let digitalInfo = '';
@@ -2236,9 +2236,9 @@ export class UI {
   /**
    * Create character roster modal content
    */
-  async createCharacterRosterContent(characters) {
+  async createCharacterRosterContent(characters: any) {
     // Filter lost characters for memorial section
-    const lostCharacters = characters.filter((character) =>
+    const lostCharacters = characters.filter((character: any) =>
       this.isCharacterPermanentlyLost(character)
     );
 
@@ -2247,7 +2247,7 @@ export class UI {
 
     // First pass: load member counts for sorting
     const partiesWithCounts = await Promise.all(
-      (allParties as any).map(async (party) => {
+      (allParties as any).map(async (party: any) => {
         let aliveCount = 0;
 
         if (party.memberIds && party.memberIds.length > 0) {
@@ -2371,7 +2371,7 @@ export class UI {
   /**
    * Create a strike team section with header and character cards
    */
-  async createStrikeTeamSection(party, characters) {
+  async createStrikeTeamSection(party: any, characters: any) {
     // Determine the team name and status
     let teamName = 'Uninstalled';
     let teamIcon = '📋'; // Manifest icon for all teams
@@ -2387,7 +2387,7 @@ export class UI {
     let memberContent;
 
     if (characters.length > 0) {
-      const characterCards = characters.map((character) =>
+      const characterCards = characters.map((character: any) =>
         this.createSummaryCharacterCard(character)
       );
       memberContent = characterCards.join('');
@@ -2417,7 +2417,7 @@ export class UI {
   /**
    * Create a character card for the roster
    */
-  async createCharacterCard(character) {
+  async createCharacterCard(character: any) {
     // Determine character location
     const location = this.getCharacterLocation(character);
 
@@ -2509,7 +2509,7 @@ export class UI {
   /**
    * Get character location string
    */
-  getCharacterLocation(character) {
+  getCharacterLocation(character: any) {
     // For now, simple location logic - can be enhanced later
     if (character.location) {
       if (character.location.dungeon) {
@@ -2535,7 +2535,7 @@ export class UI {
   /**
    * Get class icon for character
    */
-  getClassIcon(characterClass) {
+  getClassIcon(characterClass: any) {
     const classIcons = {
       Fighter: '⚔️',
       Mage: '🔮',
@@ -2547,7 +2547,7 @@ export class UI {
       Ninja: '🥷',
     };
 
-    return classIcons[characterClass] || '⚔️';
+    return (classIcons as Record<string, string>)[characterClass] || '⚔️';
   }
 
   /**
@@ -2557,7 +2557,7 @@ export class UI {
     try {
       // Get all characters from storage and filter for lost ones
       const allCharacters = await Storage.loadAllCharacters();
-      const lostCharacters = (allCharacters as any).filter((character) =>
+      const lostCharacters = (allCharacters as any).filter((character: any) =>
         this.isCharacterPermanentlyLost(character)
       );
 
@@ -2629,10 +2629,10 @@ export class UI {
   /**
    * Create lost agents modal content
    */
-  async createLostAgentsContent(lostCharacters) {
+  async createLostAgentsContent(lostCharacters: any) {
     console.log('Creating lost character cards for', lostCharacters.length, 'characters');
     const lostCharacterCards = await Promise.all(
-      lostCharacters.map((character) => this.createLostCharacterCard(character))
+      lostCharacters.map((character: any) => this.createLostCharacterCard(character))
     );
     console.log('Lost character cards created successfully');
 
@@ -2677,7 +2677,7 @@ export class UI {
   /**
    * Create a lost character card for the memorial
    */
-  async createLostCharacterCard(character) {
+  async createLostCharacterCard(character: any) {
     // Determine character location with memorial context
     const lastSeenLocation = this.getLostCharacterLocation(character);
 
@@ -2731,7 +2731,7 @@ export class UI {
   /**
    * Get lost character location with memorial context
    */
-  getLostCharacterLocation(character) {
+  getLostCharacterLocation(character: any) {
     // For memorial display, show where they were lost
     if (character.location) {
       if (character.location.dungeon) {
@@ -2775,8 +2775,8 @@ export class UI {
 
     // Card click handlers for viewing character details
     const characterCards = modalBody.querySelectorAll('.memorial-character-card.clickable-card');
-    characterCards.forEach((card) => {
-      card.addEventListener('click', (e) => {
+    characterCards.forEach((card: any) => {
+      card.addEventListener('click', (e: any) => {
         // Check if the click target is the redact button or its child elements
         if (e.target.closest('.memorial-redact-btn')) {
           return; // Don't open details if clicking redact button
@@ -2792,8 +2792,8 @@ export class UI {
 
     // Integrated Redact buttons
     const redactButtons = modalBody.querySelectorAll('.memorial-redact-btn');
-    redactButtons.forEach((button) => {
-      button.addEventListener('click', async (e) => {
+    redactButtons.forEach((button: any) => {
+      button.addEventListener('click', async (e: any) => {
         e.stopPropagation(); // Prevent card click event
         const characterId = button.dataset.characterId;
         if (this.engine?.audioManager) {
@@ -2807,7 +2807,7 @@ export class UI {
   /**
    * Permanently delete a lost character from memory
    */
-  async forgetLostCharacter(characterId) {
+  async forgetLostCharacter(characterId: any) {
     try {
       // Load character to confirm they are lost
       const character = await Storage.loadCharacter(characterId);
@@ -2832,7 +2832,7 @@ export class UI {
   /**
    * Refresh lost agents content for mode changes
    */
-  async refreshLostAgentsContent(lostCharacters) {
+  async refreshLostAgentsContent(lostCharacters: any) {
     if (!this.lostAgentsModal) return;
 
     try {
@@ -2870,7 +2870,7 @@ export class UI {
   /**
    * Show delete character confirmation modal
    */
-  async showDeleteCharacterConfirmation(characterId) {
+  async showDeleteCharacterConfirmation(characterId: any) {
     try {
       // Load character data
       const character = await Storage.loadCharacter(characterId);
@@ -2951,7 +2951,7 @@ export class UI {
       if (typeof TextManager !== 'undefined') {
         const modalBody = this.deleteCharacterModal.getBody();
         const textElements = modalBody.querySelectorAll('[data-text-key]');
-        textElements.forEach((element) => {
+        textElements.forEach((element: any) => {
           const textKey = element.getAttribute('data-text-key');
           if (textKey) {
             TextManager.applyToElement(element, textKey);
@@ -2993,7 +2993,7 @@ export class UI {
   /**
    * Execute character deletion with proper state management
    */
-  async executeCharacterDeletion(characterId) {
+  async executeCharacterDeletion(characterId: any) {
     try {
       // Load character for final message
       const character = await Storage.loadCharacter(characterId);
@@ -3011,7 +3011,7 @@ export class UI {
 
       // Refresh the lost agents modal
       const allCharacters = await Storage.loadAllCharacters();
-      const lostCharacters = (allCharacters as any).filter((char) =>
+      const lostCharacters = (allCharacters as any).filter((char: any) =>
         this.isCharacterPermanentlyLost(char)
       );
 
@@ -3034,21 +3034,21 @@ export class UI {
   /**
    * Check if character is permanently lost (memorial eligible)
    */
-  isCharacterPermanentlyLost(character) {
+  isCharacterPermanentlyLost(character: any) {
     return Helpers.isPermanentlyLost(character);
   }
 
   /**
    * Check if character is dead (any death state)
    */
-  isCharacterDead(character) {
+  isCharacterDead(character: any) {
     return Helpers.isDead(character);
   }
 
   /**
    * Check if character is alive and functional
    */
-  isCharacterAlive(character) {
+  isCharacterAlive(character: any) {
     return Helpers.isAlive(character);
   }
 
@@ -3293,7 +3293,7 @@ export class UI {
       console.log('Party data:', party, 'Alive members:', party.aliveMembers);
       partyStatusDiv.innerHTML = party.aliveMembers
         .map(
-          (member) => `
+          (member: any) => `
                 <div class="combatant-status">
                     <div class="combatant-name">${member.name} (${member.class})</div>
                     <div class="combatant-hp">HP: ${member.currentHP}/${member.maxHP}</div>
@@ -3325,7 +3325,7 @@ export class UI {
           // Get wave information
           const waveInfo = combat.getCurrentEnemyPartyInfo();
           const allPartyMembers = this.engine.party.members || [];
-          const enemies = combat.combatants.filter((c) => !allPartyMembers.includes(c));
+          const enemies = combat.combatants.filter((c: any) => !allPartyMembers.includes(c));
 
           if (enemies.length > 0) {
             const enemyCount = enemies.length;
@@ -3374,7 +3374,7 @@ export class UI {
         try {
           // Get current enemies
           const allPartyMembers = this.engine.party.members || [];
-          const enemies = combat.combatants.filter((c) => !allPartyMembers.includes(c));
+          const enemies = combat.combatants.filter((c: any) => !allPartyMembers.includes(c));
 
           if (enemies.length > 0) {
             const primaryEnemy = enemies[0]; // Show first enemy as primary
@@ -3525,7 +3525,7 @@ export class UI {
   /**
    * Handle combat action selection
    */
-  async handleCombatAction(action) {
+  async handleCombatAction(action: any) {
     console.log('Combat action selected:', action);
     this.addMessage(`You selected: ${action}`, 'combat');
 
@@ -3554,7 +3554,7 @@ export class UI {
   /**
    * Process combat action
    */
-  async processCombatAction(action) {
+  async processCombatAction(action: any) {
     const combat = this.engine.combatInterface.combat;
     if (!combat || !combat.isActive) {
       this.addMessage('Combat system not ready!', 'error');
@@ -3585,7 +3585,7 @@ export class UI {
       case 'attack':
         // For attack, we need a target - target the first alive enemy
         const enemies = combat.combatants.filter(
-          (c) => !this.engine.party.aliveMembers.includes(c) && c.isAlive
+          (c: any) => !this.engine.party.aliveMembers.includes(c) && c.isAlive
         );
         if (enemies.length > 0) {
           (actionData as any).target = enemies[0];
@@ -3639,7 +3639,7 @@ export class UI {
   /**
    * Process monster AI turn
    */
-  processMonsterTurn(monster) {
+  processMonsterTurn(monster: any) {
     console.log('Processing monster turn for:', monster.name);
 
     if (!this.engine.combatInterface) {
@@ -3687,7 +3687,7 @@ export class UI {
   /**
    * Show enemy turn interface
    */
-  showEnemyTurnInterface(monster) {
+  showEnemyTurnInterface(monster: any) {
     const actionButtons = document.getElementById('action-buttons');
     const enemyTurnDiv = document.getElementById('action-enemy-turn');
     const actionHeader = document.getElementById('action-context-header');
@@ -3716,7 +3716,7 @@ export class UI {
   /**
    * Show enemy action result and enable continue
    */
-  showEnemyActionResult(monster, aiResult) {
+  showEnemyActionResult(monster: any, aiResult: any) {
     const enemyActionResult = document.getElementById('enemy-action-result');
     const continueButton = document.getElementById('combat-continue');
 
@@ -3802,7 +3802,7 @@ export class UI {
         // Check if character has confused condition
         if (
           character.conditions &&
-          character.conditions.some((condition) => condition.type === 'confused')
+          character.conditions.some((condition: any) => condition.type === 'confused')
         ) {
           if (runButton) {
             (runButton as any).disabled = true;
@@ -3826,7 +3826,7 @@ export class UI {
   /**
    * Handle combat end based on winner
    */
-  async handleCombatEnd(winner) {
+  async handleCombatEnd(winner: any) {
     console.log('Combat ended, winner:', winner);
 
     if (winner === 'party') {
@@ -3848,7 +3848,7 @@ export class UI {
     } else {
       // Enemy victory - check if any party members survived or escaped
       const aliveMembers = this.engine.party.aliveMembers || [];
-      const casualties = this.engine.party.members.filter((member) => !member.isAlive);
+      const casualties = this.engine.party.members.filter((member: any) => !member.isAlive);
       const disconnectedCharacters =
         this.engine.combatInterface?.combat?.disconnectedCharacters || [];
 
@@ -3998,7 +3998,7 @@ export class UI {
   /**
    * Show post-combat results screen
    */
-  showPostCombatResults(rewards, disconnectedCharacters: any[] = []) {
+  showPostCombatResults(rewards: any, disconnectedCharacters: any[] = []) {
     console.log('Showing post-combat results:', rewards);
 
     // Hide combat interface first
@@ -4007,19 +4007,19 @@ export class UI {
     // Check for casualties in victory
     const aliveMembers = this.engine?.party?.aliveMembers || [];
     const allMembers = this.engine?.party?.members || [];
-    const casualties = allMembers.filter((member) => !member.isAlive);
+    const casualties = allMembers.filter((member: any) => !member.isAlive);
 
     console.log('Post-combat analysis:', {
       aliveMembers: aliveMembers.length,
       casualties: casualties.length,
-      allMembers: allMembers.map((m) => ({
+      allMembers: allMembers.map((m: any) => ({
         name: m.name,
         isAlive: m.isAlive,
         status: m.status,
         currentHP: m.currentHP,
         maxHP: m.maxHP,
       })),
-      casualtyDetails: casualties.map((c) => ({
+      casualtyDetails: casualties.map((c: any) => ({
         name: c.name,
         isAlive: c.isAlive,
         status: c.status,
@@ -4071,7 +4071,7 @@ export class UI {
   /**
    * Create post-combat results content
    */
-  createPostCombatContent(rewards) {
+  createPostCombatContent(rewards: any) {
     let content = '<div class="post-combat-results">';
 
     // Experience section
@@ -4094,7 +4094,7 @@ export class UI {
       content += '<h3>🎁 Treasure Found</h3>';
       content += '<div class="loot-list">';
 
-      rewards.loot.forEach((item) => {
+      rewards.loot.forEach((item: any) => {
         const rarity = item.magical ? 'magical' : 'normal';
         content += `<div class="loot-item ${rarity}">`;
         content += `<span class="item-name">${item.name}</span>`;
@@ -4123,7 +4123,7 @@ export class UI {
   /**
    * Set up event listeners for post-combat interface
    */
-  setupPostCombatEventListeners(viewport, rewards) {
+  setupPostCombatEventListeners(viewport: any, rewards: any) {
     const continueBtn = viewport.querySelector('#continue-btn');
 
     if (continueBtn) {
@@ -4148,7 +4148,7 @@ export class UI {
   /**
    * Apply rewards to party members
    */
-  async applyRewardsToParty(rewards) {
+  async applyRewardsToParty(rewards: any) {
     if (!this.engine?.party) return;
 
     const party = this.engine.party;
@@ -4160,7 +4160,7 @@ export class UI {
     const expPerMember = Math.floor(rewards.experience / aliveMembers.length);
 
     // Process all members and collect save promises
-    const savePromises = aliveMembers.map(async (member) => {
+    const savePromises = aliveMembers.map(async (member: any) => {
       member.experience = (member.experience || 0) + expPerMember;
 
       // Check for level up
@@ -4187,7 +4187,7 @@ export class UI {
 
     // Add loot to party inventory (if inventory system exists)
     if (rewards.loot && rewards.loot.length > 0) {
-      rewards.loot.forEach((item) => {
+      rewards.loot.forEach((item: any) => {
         this.addMessage(`Found: ${item.name}`, 'loot');
         // TODO: Add to party inventory when inventory system is implemented
       });
@@ -4197,7 +4197,7 @@ export class UI {
   /**
    * Calculate character level based on experience
    */
-  calculateLevel(experience) {
+  calculateLevel(experience: any) {
     // Simple level calculation - every 1000 XP = 1 level
     return Math.floor(experience / 1000) + 1;
   }
@@ -4231,7 +4231,7 @@ export class UI {
   /**
    * Show party death screen
    */
-  async showPartyDeathScreen(casualties, disconnectedCharacters: any[] = []) {
+  async showPartyDeathScreen(casualties: any, disconnectedCharacters: any[] = []) {
     console.log('Showing party death screen:', casualties);
 
     // Check if entire party is defeated (no alive members)
@@ -4272,7 +4272,7 @@ export class UI {
   /**
    * Show total party kill screen (actual defeat)
    */
-  showTotalPartyKillScreen(casualties) {
+  showTotalPartyKillScreen(casualties: any) {
     // Hide combat interface first
     this.hideCombatInterface();
 
@@ -4309,7 +4309,7 @@ export class UI {
   /**
    * Show defeat screen when some characters disconnected but others fell
    */
-  async showDefeatWithDisconnectScreen(casualties, disconnectedCharacters) {
+  async showDefeatWithDisconnectScreen(casualties: any, disconnectedCharacters: any) {
     console.log('Showing defeat with disconnect screen:', { casualties, disconnectedCharacters });
 
     // Hide combat interface first
@@ -4349,7 +4349,7 @@ export class UI {
   /**
    * Create a summary character card for post-combat modals
    */
-  createSummaryCharacterCard(character, cardType = 'survivor') {
+  createSummaryCharacterCard(character: any, cardType = 'survivor') {
     const race = character.race || 'Unknown';
     const characterClass = character.class || 'Unknown';
     const currentHP = character.currentHP || 0;
@@ -4419,7 +4419,7 @@ export class UI {
   /**
    * Create content for defeat with disconnect screen
    */
-  createDefeatWithDisconnectContent(casualties, disconnectedCharacters) {
+  createDefeatWithDisconnectContent(casualties: any, disconnectedCharacters: any) {
     let content = '<div class="defeat-with-disconnect">';
 
     // Defeat message
@@ -4438,7 +4438,7 @@ export class UI {
       content += `<h3>🏃 ${disconnectTerm}</h3>`;
       content += '<div class="escaped-list">';
 
-      disconnectedCharacters.forEach((disconnected) => {
+      disconnectedCharacters.forEach((disconnected: any) => {
         const character = disconnected.character;
         content += this.createSummaryCharacterCard(character, 'escaped');
       });
@@ -4453,7 +4453,7 @@ export class UI {
       content += '<h3>💀 Fallen in Battle</h3>';
       content += '<div class="casualty-list">';
 
-      casualties.forEach((casualty) => {
+      casualties.forEach((casualty: any) => {
         content += this.createSummaryCharacterCard(casualty, 'casualty');
       });
 
@@ -4472,19 +4472,19 @@ export class UI {
    * Show victory with casualties screen
    */
   showVictoryWithCasualtiesScreen(
-    casualties,
-    survivors,
-    rewards,
+    casualties: any,
+    survivors: any,
+    rewards: any,
     disconnectedCharacters: any[] = []
   ) {
     console.log('Showing victory with casualties:', {
-      casualties: casualties.map((c) => ({
+      casualties: casualties.map((c: any) => ({
         name: c.name,
         status: c.status,
         isAlive: c.isAlive,
         hp: c.currentHP,
       })),
-      survivors: survivors.map((s) => ({
+      survivors: survivors.map((s: any) => ({
         name: s.name,
         status: s.status,
         isAlive: s.isAlive,
@@ -4563,9 +4563,9 @@ export class UI {
    * Create victory with casualties content
    */
   createVictoryWithCasualtiesContent(
-    casualties,
-    survivors,
-    rewards,
+    casualties: any,
+    survivors: any,
+    rewards: any,
     disconnectedCharacters: any[] = []
   ) {
     let content = '<div class="victory-with-casualties">';
@@ -4584,7 +4584,7 @@ export class UI {
       content += '<h3>🛡️ Survivors</h3>';
       content += '<div class="survivor-list">';
 
-      survivors.forEach((survivor) => {
+      survivors.forEach((survivor: any) => {
         content += this.createSummaryCharacterCard(survivor, 'survivor');
       });
 
@@ -4598,7 +4598,7 @@ export class UI {
       content += '<h3>💔 Fallen Companions</h3>';
       content += '<div class="casualty-list">';
 
-      casualties.forEach((casualty) => {
+      casualties.forEach((casualty: any) => {
         content += this.createSummaryCharacterCard(casualty, 'casualty');
       });
 
@@ -4636,7 +4636,7 @@ export class UI {
   /**
    * Create total party kill content
    */
-  createTotalPartyKillContent(casualties) {
+  createTotalPartyKillContent(casualties: any) {
     let content = '<div class="total-party-kill">';
 
     // Death message
@@ -4650,7 +4650,7 @@ export class UI {
       content += '<h3>💀 Fallen Heroes</h3>';
       content += '<div class="casualty-list">';
 
-      casualties.forEach((casualty) => {
+      casualties.forEach((casualty: any) => {
         content += '<div class="casualty-item">';
         content += `<span class="casualty-name">${casualty.name}</span>`;
         content += `<span class="casualty-status">Killed</span>`;
@@ -4670,7 +4670,7 @@ export class UI {
   /**
    * Create rewards section content
    */
-  createRewardsSection(rewards) {
+  createRewardsSection(rewards: any) {
     let content = '<div class="rewards-section">';
     content += '<h3>🎁 Battle Rewards</h3>';
 
@@ -4690,7 +4690,7 @@ export class UI {
       content += '<h4>🎒 Items Found:</h4>';
       content += '<div class="loot-list">';
 
-      rewards.loot.forEach((item) => {
+      rewards.loot.forEach((item: any) => {
         content += '<div class="loot-item">';
         content += `<span class="loot-name">${item.name}</span>`;
         if (item.value) {
@@ -4710,7 +4710,7 @@ export class UI {
   /**
    * Setup event listeners for victory with casualties screen
    */
-  setupVictoryWithCasualtiesEventListeners(viewport, rewards) {
+  setupVictoryWithCasualtiesEventListeners(viewport: any, rewards: any) {
     const continueBtn = viewport.querySelector('#continue-btn');
     const returnTownBtn = viewport.querySelector('#return-town-btn');
 
@@ -4814,7 +4814,7 @@ export class UI {
   /**
    * Show dungeon entrance casualty modal (when party has casualties)
    */
-  showDungeonEntranceCasualtyModal(validation) {
+  showDungeonEntranceCasualtyModal(validation: any) {
     console.log('Showing dungeon entrance casualty modal');
 
     // Create casualty modal
@@ -4848,7 +4848,7 @@ export class UI {
   /**
    * Create dungeon entrance confirmation content
    */
-  createDungeonEntranceContent(validation) {
+  createDungeonEntranceContent(validation: any) {
     let content = '<div class="dungeon-entrance-confirmation">';
 
     if (validation.valid) {
@@ -4859,7 +4859,7 @@ export class UI {
       content += `<h3 data-text-key="party_composition">${TextManager.getText('party_composition')}</h3>`;
       content += '<div class="party-cards-grid">';
 
-      validation.party.forEach((member) => {
+      validation.party.forEach((member: any) => {
         content += this.createDungeonPartyCard(member);
       });
 
@@ -4879,7 +4879,7 @@ export class UI {
   /**
    * Create a character card for dungeon entrance party display
    */
-  createDungeonPartyCard(character) {
+  createDungeonPartyCard(character: any) {
     // Get class icon
     const classIcon = this.getClassIcon(character.class);
 
@@ -4932,7 +4932,7 @@ export class UI {
   /**
    * Create dungeon casualty content
    */
-  createDungeonCasualtyContent(validation) {
+  createDungeonCasualtyContent(validation: any) {
     let content = '<div class="dungeon-casualty-warning">';
 
     content += '<h2>⚠️ Party Has Casualties</h2>';
@@ -4944,7 +4944,7 @@ export class UI {
       content += '<div class="casualties-list">';
       content += '<h3>💔 Casualties</h3>';
 
-      validation.casualties.forEach((casualty) => {
+      validation.casualties.forEach((casualty: any) => {
         const status = casualty.isDead ? 'Dead' : 'Unconscious';
         content += '<div class="casualty-member">';
         content += `<span class="casualty-name">${casualty.name}</span>`;
@@ -4960,7 +4960,7 @@ export class UI {
       content += '<div class="survivors-list">';
       content += '<h3>🛡️ Survivors</h3>';
 
-      validation.survivors.forEach((survivor) => {
+      validation.survivors.forEach((survivor: any) => {
         content += '<div class="survivor-member">';
         content += `<span class="survivor-name">${survivor.name}</span>`;
         content += `<span class="survivor-hp">${survivor.currentHP}/${survivor.maxHP} HP</span>`;
@@ -4986,7 +4986,7 @@ export class UI {
   /**
    * Setup event listeners for dungeon entrance confirmation
    */
-  setupDungeonEntranceEventListeners(viewport, validation) {
+  setupDungeonEntranceEventListeners(viewport: any, validation: any) {
     console.log('Setting up dungeon entrance event listeners:', {
       viewport: !!viewport,
       validation: validation,
@@ -5002,7 +5002,7 @@ export class UI {
     });
 
     if (confirmBtn) {
-      confirmBtn.addEventListener('click', async (e) => {
+      confirmBtn.addEventListener('click', async (e: any) => {
         e.preventDefault();
         console.log('Confirmed dungeon entry');
         if (validation.valid) {
@@ -5030,7 +5030,7 @@ export class UI {
     }
 
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', (e) => {
+      cancelBtn.addEventListener('click', (e: any) => {
         e.preventDefault();
         console.log('Cancelled dungeon entry');
         this.dungeonEntranceModal.hide();
@@ -5041,10 +5041,10 @@ export class UI {
         } else if (this.dungeonEntranceOrigin === 'post-combat') {
           // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
           if (this.engine.party) {
-            const casualties = this.engine.party.members.filter((member) => Helpers.isDead(member));
+            const casualties = this.engine.party.members.filter((member: any) => Helpers.isDead(member));
 
             // Phase out casualties instead of removing them
-            casualties.forEach((casualty) => {
+            casualties.forEach((casualty: any) => {
               if (casualty.phaseOut) {
                 casualty.phaseOut('combat_casualty');
               }
@@ -5091,7 +5091,7 @@ export class UI {
   /**
    * Setup event listeners for dungeon casualty modal
    */
-  setupDungeonCasualtyEventListeners(viewport, validation) {
+  setupDungeonCasualtyEventListeners(viewport: any, validation: any) {
     const clearPartyBtn = viewport.querySelector('#clear-party-btn');
     const cancelBtn = viewport.querySelector('#cancel-casualty-btn');
 
@@ -5120,7 +5120,7 @@ export class UI {
   /**
    * Set up event listeners for death screen interface
    */
-  setupDeathScreenEventListeners(viewport) {
+  setupDeathScreenEventListeners(viewport: any) {
     const returnBtn = viewport.querySelector('#return-to-town-btn');
     const statusBtn = viewport.querySelector('#view-status-btn');
 
@@ -5142,7 +5142,7 @@ export class UI {
   /**
    * Create death screen content
    */
-  createDeathScreenContent(casualties) {
+  createDeathScreenContent(casualties: any) {
     let content = '<div class="death-screen">';
 
     // Death message
@@ -5167,7 +5167,7 @@ export class UI {
       content += '<h3>🛡️ Survivors</h3>';
       content += '<div class="survivor-list">';
 
-      survivors.forEach((survivor) => {
+      survivors.forEach((survivor: any) => {
         content += '<div class="survivor-item">';
         content += `<span class="survivor-name">${survivor.name}</span>`;
         content += `<span class="survivor-status">Alive (${survivor.currentHP}/${survivor.maxHP} HP)</span>`;
@@ -5184,7 +5184,7 @@ export class UI {
       content += '<h3>💀 Fallen Heroes</h3>';
       content += '<div class="casualty-list">';
 
-      casualties.forEach((casualty) => {
+      casualties.forEach((casualty: any) => {
         content += '<div class="casualty-item">';
         content += `<span class="casualty-name">${casualty.name}</span>`;
         content += `<span class="casualty-status">${casualty.status === 'dead' ? 'Killed' : 'Unconscious'}</span>`;
@@ -5277,7 +5277,7 @@ export class UI {
             // DO NOT call returnToTown() - no survivors exist
 
             // Show wipe message
-            this.engine.party.members.forEach((member) => {
+            this.engine.party.members.forEach((member: any) => {
               const status = member.status || 'dead';
               this.addMessage(`${member.name} was lost with the expedition...`, 'death');
             });
@@ -5298,10 +5298,10 @@ export class UI {
 
             // Count casualties for messaging
             const casualties = this.engine.party.members.filter(
-              (m) => m.status === 'dead' || m.status === 'unconscious'
+              (m: any) => m.status === 'dead' || m.status === 'unconscious'
             );
             const survivors = this.engine.party.members.filter(
-              (m) => m.status !== 'dead' && m.status !== 'unconscious'
+              (m: any) => m.status !== 'dead' && m.status !== 'unconscious'
             );
 
             console.log(
@@ -5309,7 +5309,7 @@ export class UI {
             );
 
             // Show status messages
-            casualties.forEach((casualty) => {
+            casualties.forEach((casualty: any) => {
               const status = casualty.status || 'dead';
               this.addMessage(`${casualty.name} (${status}) needs healing...`, 'warning');
             });
@@ -5380,7 +5380,7 @@ export class UI {
 
           // Save all remaining character states (if party exists)
           if (this.engine.party && this.engine.party.members) {
-            const savePromises = this.engine.party.members.map((member) => {
+            const savePromises = this.engine.party.members.map((member: any) => {
               if (member.saveToStorage) {
                 return member.saveToStorage();
               }
@@ -5485,7 +5485,7 @@ export class UI {
   /**
    * Update UI (called each frame)
    */
-  update(deltaTime) {
+  update(deltaTime: any) {
     // Update any animated UI elements here
     // For now, this is a placeholder
   }
@@ -5493,7 +5493,7 @@ export class UI {
   /**
    * Enable or disable controls
    */
-  setControlsEnabled(enabled) {
+  setControlsEnabled(enabled: any) {
     Object.values(this.controlButtons).forEach((button) => {
       if (button) {
         button.disabled = !enabled;
@@ -5532,7 +5532,7 @@ export class UI {
   /**
    * Show notification
    */
-  showNotification(message, type = 'info', duration = 3000) {
+  showNotification(message: any, type = 'info', duration = 3000) {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
@@ -5671,9 +5671,9 @@ export class UI {
 
     // Destroy modal objects if they exist
     modalProperties.forEach((modalName) => {
-      if (this[modalName]) {
-        this[modalName].destroy();
-        this[modalName] = null;
+      if ((this as any)[modalName]) {
+        (this as any)[modalName].destroy();
+        (this as any)[modalName] = null;
       }
     });
 
@@ -5689,7 +5689,7 @@ export class UI {
   /**
    * Show exit button when player is on exit tile
    */
-  showExitButton(data) {
+  showExitButton(data: any) {
     // Check if button already exists
     const existingButton = document.getElementById('exit-dungeon-btn');
     if (existingButton) {
@@ -5750,7 +5750,7 @@ export class UI {
   /**
    * Show jack deep button when player is on jack deep tile (go deeper)
    */
-  showJackDeepButton(data) {
+  showJackDeepButton(data: any) {
     // Check if button already exists
     const existingButton = document.getElementById('jack-deep-btn');
     if (existingButton) {
@@ -5801,7 +5801,7 @@ export class UI {
   /**
    * Show jack entry button when player is on jack entry tile (go up / exit)
    */
-  showJackEntryButton(data) {
+  showJackEntryButton(data: any) {
     // Check if button already exists
     const existingButton = document.getElementById('jack-entry-btn');
     if (existingButton) {
@@ -5873,7 +5873,7 @@ export class UI {
   /**
    * Handle jacking out/up - either return to town (floor 1) or previous floor
    */
-  async handleJackEntry(data) {
+  async handleJackEntry(data: any) {
     console.log('Handling jack entry...', data);
 
     if (this.engine?.dungeon) {
@@ -5947,7 +5947,7 @@ export class UI {
   /**
    * Show treasure button when player is on treasure tile
    */
-  showTreasureButton(data) {
+  showTreasureButton(data: any) {
     // Check if button already exists
     const existingButton = document.getElementById('treasure-btn');
     if (existingButton) {
@@ -6002,7 +6002,7 @@ export class UI {
   /**
    * Handle treasure chest opening - generate loot and show rewards
    */
-  async handleTreasureOpen(data) {
+  async handleTreasureOpen(data: any) {
     console.log('Opening treasure chest at', data);
 
     // Play treasure opening sound effect
@@ -6109,7 +6109,7 @@ export class UI {
   /**
    * Get display name for item ID
    */
-  getItemDisplayName(itemId) {
+  getItemDisplayName(itemId: any) {
     // Simple name extraction from ID
     const parts = itemId.split('_');
     let name = parts.slice(1, -1).join(' ');
@@ -6117,7 +6117,7 @@ export class UI {
     // Capitalize words
     name = name
       .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: any) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
 
     return name;
@@ -6126,7 +6126,7 @@ export class UI {
   /**
    * Get item type from ID
    */
-  getItemType(itemId) {
+  getItemType(itemId: any) {
     if (itemId.startsWith('weapon_')) return 'weapon';
     if (itemId.startsWith('armor_')) return 'armor';
     if (itemId.startsWith('shield_')) return 'shield';
@@ -6137,14 +6137,14 @@ export class UI {
   /**
    * Show treasure loot modal with found items
    */
-  showTreasureLootModal(loot) {
+  showTreasureLootModal(loot: any) {
     // Create modal content
     let content = '<div class="treasure-modal-content">';
     content += '<h3>🏆 Treasure Found!</h3>';
 
     if (loot.length > 0) {
       content += '<div class="loot-list">';
-      loot.forEach((item) => {
+      loot.forEach((item: any) => {
         const typeIcon = this.getItemTypeIcon(item.type);
         content += `<div class="loot-item">`;
         content += `<span class="loot-icon">${typeIcon}</span>`;
@@ -6190,7 +6190,7 @@ export class UI {
   /**
    * Get icon for item type
    */
-  getItemTypeIcon(type) {
+  getItemTypeIcon(type: any) {
     switch (type) {
       case 'weapon':
         return '⚔️';
@@ -6251,10 +6251,10 @@ export class UI {
 
       // NEW: Phase out casualties instead of removing from party (Agents Always Part of Teams)
       if (this.engine.party) {
-        const casualties = this.engine.party.members.filter((member) => Helpers.isDead(member));
+        const casualties = this.engine.party.members.filter((member: any) => Helpers.isDead(member));
 
         // Phase out casualties instead of removing them
-        casualties.forEach((casualty) => {
+        casualties.forEach((casualty: any) => {
           if (casualty.phaseOut) {
             casualty.phaseOut('combat_casualty');
           }

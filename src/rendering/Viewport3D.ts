@@ -105,7 +105,7 @@ export class Viewport3D {
    * Check if a wall exists in viewInfo at specific distance and side
    */
   hasWallInViewInfo(viewInfo: any, distance: number, side: string) {
-    return viewInfo.walls.some((wall) => wall.distance === distance && wall.side === side);
+    return viewInfo.walls.some((wall: any) => wall.distance === distance && wall.side === side);
   }
 
   /**
@@ -120,7 +120,7 @@ export class Viewport3D {
     const leftWalls: any[] = [];
     const rightWalls: any[] = [];
 
-    viewInfo.walls.forEach((wall) => {
+    viewInfo.walls.forEach((wall: any) => {
       if (wall.distance === distance) {
         if (wall.side === 'left') {
           leftWalls.push(wall);
@@ -153,7 +153,7 @@ export class Viewport3D {
   renderDoorsAtDistance(viewInfo: any, distance: number, centerX: number) {
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.doors.forEach((door) => {
+    viewInfo.doors.forEach((door: any) => {
       if (door.distance === distance) {
         if (door.type === 'hidden') {
           this.ctx.strokeStyle = this.colors.hiddenDoor;
@@ -172,7 +172,7 @@ export class Viewport3D {
   renderPassagesAtDistance(viewInfo: any, distance: number, centerX: number) {
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.passages.forEach((passage) => {
+    viewInfo.passages.forEach((passage: any) => {
       if (passage.distance === distance) {
         this.ctx.strokeStyle = this.colors.secretPassage;
         this.renderPassage(perspective, centerX, passage.type, passage.offset || 0);
@@ -509,7 +509,7 @@ export class Viewport3D {
 
     // Check for special squares
     const special = dungeon.currentFloorData.specialSquares.find(
-      (spec) => spec.x === dungeon.playerX && spec.y === dungeon.playerY
+      (spec: any) => spec.x === dungeon.playerX && spec.y === dungeon.playerY
     );
 
     if (special) {
@@ -655,7 +655,7 @@ export class Viewport3D {
 
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.monsters.forEach((monsterData) => {
+    viewInfo.monsters.forEach((monsterData: any) => {
       if (monsterData.distance === distance && monsterData.monster.portraitModel) {
         this.renderMonsterWireframe(
           monsterData.monster.portraitModel,
@@ -692,7 +692,7 @@ export class Viewport3D {
     const modelScale = (model.scale || 1.0) * sizeScale;
 
     // Transform vertices
-    const transformedVertices = model.vertices.map((vertex) => {
+    const transformedVertices = model.vertices.map((vertex: any) => {
       // Basic 3D rotation from model data
       const [vx, vy, vz] = vertex;
 
@@ -727,7 +727,7 @@ export class Viewport3D {
     // Thinner lines further away, but minimum width of 1
     this.ctx.lineWidth = Math.max(1, 2 * perspective.scale);
 
-    model.edges.forEach((edge) => {
+    model.edges.forEach((edge: any) => {
       const [startIdx, endIdx] = edge;
 
       if (startIdx < transformedVertices.length && endIdx < transformedVertices.length) {
@@ -759,7 +759,7 @@ export class Viewport3D {
 
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.objects.forEach((obj) => {
+    viewInfo.objects.forEach((obj: any) => {
       if (obj.distance === distance) {
         if (obj.type === 'treasure') {
           this.renderTreasure(perspective, centerX, obj.offset || 0);

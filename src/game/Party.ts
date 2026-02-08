@@ -145,7 +145,7 @@ export class Party {
     this.experience = saveData.experience || 0;
 
     // Rehydrate members
-    this.members = (saveData.members || []).map((memberData) => {
+    this.members = (saveData.members || []).map((memberData: any) => {
       const character = new Character();
       character.loadFromSave(memberData);
       return character;
@@ -203,7 +203,7 @@ export class Party {
   /**
    * Load party from persistent storage
    */
-  static async load(partyId) {
+  static async load(partyId: any) {
     try {
       const partyData = await Storage.loadParty(partyId);
       if (!partyData) {

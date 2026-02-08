@@ -183,7 +183,7 @@ export class Monster {
    * @param {string} monsterId - Monster entity ID
    * @returns {Promise<Object|null>} Monster data or null
    */
-  static async getMonsterFromStorage(monsterId) {
+  static async getMonsterFromStorage(monsterId: any) {
     if (!monsterId) return null;
 
     // Check cache first
@@ -210,7 +210,7 @@ export class Monster {
    * @param {string} monsterName - Name of the monster
    * @returns {Promise<Object|null>} Monster data or null
    */
-  static async getMonsterByName(monsterName) {
+  static async getMonsterByName(monsterName: any) {
     const monster = new Monster();
     await monster.initializeEntities();
 
@@ -231,7 +231,7 @@ export class Monster {
    * @param {string} monsterTypeOrId - Monster type name or entity ID
    * @returns {Promise<Object|null>} Monster data or null
    */
-  static async getMonsterData(monsterTypeOrId) {
+  static async getMonsterData(monsterTypeOrId: any) {
     // Try to get by entity ID first
     let data = await this.getMonsterFromStorage(monsterTypeOrId);
     if (data) return data;
@@ -257,7 +257,7 @@ export class Monster {
    * DEPRECATED: Legacy monster database (kept for compatibility)
    * Use getMonsterFromStorage() or getMonsterByName() instead
    */
-  static getLegacyMonsterData(monsterType) {
+  static getLegacyMonsterData(monsterType: any) {
     const monsters = {
       // Level 1 Monsters
       Kobold: {
@@ -486,7 +486,7 @@ export class Monster {
       },
     };
 
-    return monsters[monsterType] || monsters['Kobold'];
+    return (monsters as Record<string, any>)[monsterType] || monsters['Kobold'];
   }
 
   /**
@@ -495,12 +495,12 @@ export class Monster {
    * @param {number} maxLevel - Maximum level
    * @returns {Promise<Array>} Array of monsters in level range
    */
-  static async getMonstersByLevel(minLevel, maxLevel) {
+  static async getMonstersByLevel(minLevel: any, maxLevel: any) {
     const monster = new Monster();
     await monster.initializeEntities();
 
     const allMonsters = await Storage.getAllMonsters();
-    return (allMonsters as any).filter((m) => m.level >= minLevel && m.level <= maxLevel);
+    return (allMonsters as any).filter((m: any) => m.level >= minLevel && m.level <= maxLevel);
   }
 
   /**
@@ -508,7 +508,7 @@ export class Monster {
    * @param {string} type - Monster type (humanoid, beast, undead, etc.)
    * @returns {Promise<Array>} Array of monsters of the specified type
    */
-  static async getMonstersByType(type) {
+  static async getMonstersByType(type: any) {
     const monster = new Monster();
     await monster.initializeEntities();
 
@@ -530,7 +530,7 @@ export class Monster {
   /**
    * Roll hit points for monster
    */
-  rollHP(hitDie, level) {
+  rollHP(hitDie: any, level: any) {
     let hp = 0;
     for (let i = 0; i < level; i++) {
       hp += Random.die(hitDie);
@@ -629,11 +629,11 @@ export class Monster {
   /**
    * Apply special attack effects
    */
-  applySpecialEffects(attack, target) {
+  applySpecialEffects(attack: any, target: any) {
     const effects: string[] = [];
 
     if (attack.special) {
-      attack.special.forEach((effect) => {
+      attack.special.forEach((effect: any) => {
         switch (effect) {
           case 'disease':
             if (Random.percent(25)) {
@@ -673,8 +673,8 @@ export class Monster {
   /**
    * Monster AI decision making
    */
-  chooseAction(targets, allies = []) {
-    const availableTargets = targets.filter((target) => target.isAlive);
+  chooseAction(targets: any, allies: any = []) {
+    const availableTargets = targets.filter((target: any) => target.isAlive);
     if (availableTargets.length === 0) {
       return { action: 'wait' };
     }
@@ -695,25 +695,25 @@ export class Monster {
   /**
    * Choose target based on AI behavior
    */
-  chooseTarget(targets, allies) {
+  chooseTarget(targets: any, allies: any) {
     switch (this.aiType) {
       case 'cowardly':
         // Target weakest enemy
-        return targets.reduce((weakest, current) =>
+        return targets.reduce((weakest: any, current: any) =>
           current.currentHP < weakest.currentHP ? current : weakest
         );
 
       case 'aggressive':
         // Target closest enemy (simplified to random front row)
         const frontTargets = targets.filter(
-          (target) =>
+          (target: any) =>
             this.preferredTargets.includes('front') || this.preferredTargets.includes('random')
         );
         return frontTargets.length > 0 ? Random.choice(frontTargets) : Random.choice(targets);
 
       case 'tactical':
         // Target spellcasters first
-        const spellcasters = targets.filter((target) =>
+        const spellcasters = targets.filter((target: any) =>
           ['Mage', 'Priest', 'Bishop'].includes(target.class)
         );
         return spellcasters.length > 0 ? Random.choice(spellcasters) : Random.choice(targets);
@@ -735,9 +735,9 @@ export class Monster {
   /**
    * Intelligent targeting for smart monsters
    */
-  intelligentTargeting(targets, allies) {
+  intelligentTargeting(targets: any, allies: any) {
     // Score each target
-    const scoredTargets = targets.map((target) => {
+    const scoredTargets = targets.map((target: any) => {
       let score = 0;
 
       // Prefer injured targets
@@ -761,14 +761,14 @@ export class Monster {
     });
 
     // Sort by score and return best target
-    scoredTargets.sort((a, b) => b.score - a.score);
+    scoredTargets.sort((a: any, b: any) => b.score - a.score);
     return scoredTargets[0].target;
   }
 
   /**
    * Choose best attack for situation
    */
-  chooseAttack(target, allTargets) {
+  chooseAttack(target: any, allTargets: any) {
     // For now, simple logic
     if (this.attacks.length === 1) return 0;
 
@@ -804,7 +804,7 @@ export class Monster {
   /**
    * Use special ability
    */
-  useAbility(abilityName, targets) {
+  useAbility(abilityName: any, targets: any) {
     switch (abilityName) {
       case 'breath_weapon':
         return this.useBreathWeapon(targets);
@@ -825,7 +825,7 @@ export class Monster {
     if (!breathAttack) return { success: false };
 
     const results: any[] = [];
-    targets.forEach((target) => {
+    targets.forEach((target: any) => {
       if (target.isAlive) {
         const damage = Random.dice(breathAttack.damage.dice, breathAttack.damage.sides);
         target.currentHP = Math.max(0, target.currentHP - damage);
@@ -849,7 +849,7 @@ export class Monster {
    */
   useFrightfulPresence(targets: any) {
     const affected: any[] = [];
-    targets.forEach((target) => {
+    targets.forEach((target: any) => {
       if (target.level < this.level && Random.percent(50)) {
         target.addTemporaryEffect?.({
           type: 'fear',
@@ -875,7 +875,7 @@ export class Monster {
     const attackCount = this.level >= 5 ? 2 : 1;
 
     for (let i = 0; i < attackCount; i++) {
-      const target = Random.choice(targets.filter((t) => t.isAlive));
+      const target = Random.choice(targets.filter((t: any) => t.isAlive));
       if (target) {
         const result = this.performAttack(0, target);
         results.push(result);
@@ -917,7 +917,7 @@ export class Monster {
 
     Object.keys(saveData).forEach((key) => {
       if (this.hasOwnProperty(key)) {
-        this[key] = saveData[key];
+        (this as any)[key] = saveData[key];
       }
     });
   }
@@ -985,12 +985,12 @@ export class EncounterGenerator {
   /**
    * Generate random encounter
    */
-  async generateEncounter(partyLevel, dungeonLevel = 1) {
+  async generateEncounter(partyLevel: any, dungeonLevel: any = 1) {
     const effectiveLevel = Math.min(5, Math.max(1, dungeonLevel));
     const table = this.encounterTables[effectiveLevel];
 
     // Choose encounter type based on weights
-    const totalWeight = table.reduce((sum, entry) => sum + entry.weight, 0);
+    const totalWeight = table.reduce((sum: any, entry: any) => sum + entry.weight, 0);
     const roll = Random.integer(1, totalWeight);
 
     let currentWeight = 0;
@@ -1049,7 +1049,7 @@ export class EncounterGenerator {
     };
 
     const level = Math.min(5, Math.max(1, dungeonLevel));
-    const possibleBosses = bossTypes[level];
+    const possibleBosses = (bossTypes as Record<string, any>)[level];
     const bossType = Random.choice(possibleBosses);
 
     // Create boss party
@@ -1086,18 +1086,18 @@ export class EncounterGenerator {
   /**
    * Calculate encounter difficulty
    */
-  calculateDifficulty(encounter, partyLevel, partySize) {
+  calculateDifficulty(encounter: any, partyLevel: any, partySize: any) {
     // Calculate total XP from all enemy parties
     let totalXP = 0;
 
     if (encounter.enemyParties) {
       // New format: sum XP from all parties
       for (const enemyParty of encounter.enemyParties) {
-        totalXP += enemyParty.reduce((sum, monster) => sum + monster.experienceValue, 0);
+        totalXP += enemyParty.reduce((sum: any, monster: any) => sum + monster.experienceValue, 0);
       }
     } else if (encounter.monsters) {
       // Backward compatibility: use monsters array
-      totalXP = encounter.monsters.reduce((sum, monster) => sum + monster.experienceValue, 0);
+      totalXP = encounter.monsters.reduce((sum: any, monster: any) => sum + monster.experienceValue, 0);
     }
 
     const expectedXPPerCharacter = partyLevel * 100;
@@ -1127,14 +1127,14 @@ export class EncounterGenerator {
   /**
    * Get monsters by level range
    */
-  async getMonstersByLevel(minLevel, maxLevel) {
+  async getMonstersByLevel(minLevel: any, maxLevel: any) {
     return await Monster.getMonstersByLevel(minLevel, maxLevel);
   }
 
   /**
    * Generate themed encounter
    */
-  async generateThemedEncounter(theme, partyLevel, dungeonLevel) {
+  async generateThemedEncounter(theme: any, partyLevel: any, dungeonLevel: any) {
     const themeTypes = {
       undead: ['Skeleton'],
       beasts: ['Giant Rat', 'Wolf', 'Owlbear'],
@@ -1143,7 +1143,7 @@ export class EncounterGenerator {
       dragons: ['Young Dragon'],
     };
 
-    const availableMonsters = themeTypes[theme];
+    const availableMonsters = (themeTypes as Record<string, any>)[theme];
     const encounter = { monsters: [] as any[], isEmpty: false, theme: theme };
 
     if (!availableMonsters) {
@@ -1183,8 +1183,8 @@ export class EncounterGenerator {
       return { empty: true, message: 'The area is quiet...' };
     }
 
-    const monsterCounts = {};
-    encounter.monsters.forEach((monster) => {
+    const monsterCounts: Record<string, number> = {};
+    encounter.monsters.forEach((monster: any) => {
       monsterCounts[monster.name] = (monsterCounts[monster.name] || 0) + 1;
     });
 

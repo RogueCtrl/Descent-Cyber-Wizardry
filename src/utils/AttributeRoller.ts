@@ -46,7 +46,7 @@ export class AttributeRoller {
   /**
    * Calculate attribute total
    */
-  static getAttributeTotal(attributes) {
+  static getAttributeTotal(attributes: any) {
     return (
       attributes.strength +
       attributes.intelligence +
@@ -60,7 +60,7 @@ export class AttributeRoller {
   /**
    * Check if attributes meet minimum standards
    */
-  static isAcceptableRoll(attributes, minTotal = 65) {
+  static isAcceptableRoll(attributes: any, minTotal = 65) {
     return this.getAttributeTotal(attributes) >= minTotal;
   }
 }

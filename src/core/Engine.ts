@@ -170,7 +170,7 @@ export class Engine {
         // Show party setup modal
         return new Promise((resolve) => {
           const partySetupModal = new PartySetupModal(this.eventSystem);
-          partySetupModal.show((partyName) => {
+          partySetupModal.show((partyName: string) => {
             console.log(`Party setup completed with name: "${partyName}"`);
             this.handlePartySetupComplete(partyName);
             resolve(undefined as any);
@@ -187,7 +187,7 @@ export class Engine {
   /**
    * Handle completion of party setup modal
    */
-  async handlePartySetupComplete(partyName) {
+  async handlePartySetupComplete(partyName: string) {
     try {
       // Set the party name
       if (this.party) {
@@ -231,7 +231,7 @@ export class Engine {
   async showPartySetupForTemporaryParty() {
     return new Promise((resolve) => {
       const partySetupModal = new PartySetupModal(this.eventSystem!);
-      partySetupModal.show((partyName) => {
+      partySetupModal.show((partyName: string) => {
         console.log(`Temporary party setup completed with name: "${partyName}"`);
         this.handleTemporaryPartySetupComplete(partyName);
         resolve(undefined as any);
@@ -317,7 +317,7 @@ export class Engine {
     }
 
     const aliveMembers = party.members.filter(
-      (member) =>
+      (member: any) =>
         member.isAlive &&
         member.status !== 'dead' &&
         member.status !== 'ashes' &&
@@ -779,7 +779,7 @@ export class Engine {
   /**
    * Handle game state changes
    */
-  handleStateChange(newState) {
+  handleStateChange(newState: string) {
     console.log('Game state changed to:', newState);
     console.log('Party size:', this.party ? this.party!.size : 'no party');
 
@@ -837,7 +837,7 @@ export class Engine {
   /**
    * Handle audio transitions based on game state
    */
-  handleAudioTransition(newState) {
+  handleAudioTransition(newState: string) {
     if (!this.audioManager) return;
 
     // Resume audio context on first user interaction
@@ -1056,7 +1056,7 @@ export class Engine {
   /**
    * Main game loop
    */
-  gameLoop(currentTime) {
+  gameLoop(currentTime: number) {
     if (!this.isRunning) return;
 
     const deltaTime = currentTime - this.lastFrameTime;
@@ -1144,7 +1144,7 @@ export class Engine {
   /**
    * Display error message to user
    */
-  showErrorMessage(message) {
+  showErrorMessage(message: string) {
     const errorDiv = document.createElement('div');
     errorDiv.style.cssText = `
             position: fixed;
@@ -1169,7 +1169,7 @@ export class Engine {
   /**
    * Handle player actions
    */
-  async handlePlayerAction(action) {
+  async handlePlayerAction(action: any) {
     if (!this.gameState!.isState('playing')) {
       return;
     }
@@ -1407,7 +1407,7 @@ export class Engine {
   /**
    * Handle movement actions (forward, backward)
    */
-  handleMovementAction(direction) {
+  handleMovementAction(direction: string) {
     console.log('Handling movement action:', direction);
 
     if (direction === 'forward') {
@@ -1431,7 +1431,7 @@ export class Engine {
   /**
    * Handle turn actions (left, right)
    */
-  handleTurnAction(direction) {
+  handleTurnAction(direction: string) {
     console.log('Handling turn action:', direction);
 
     if (direction === 'left') {
@@ -1488,7 +1488,7 @@ export class Engine {
   /**
    * Update player facing direction
    */
-  updatePlayerFacing(turn) {
+  updatePlayerFacing(turn: string) {
     if (!this.player || !this.player!.position) return;
 
     const directions = ['north', 'east', 'south', 'west'];
@@ -1532,7 +1532,7 @@ export class Engine {
 
     // Check for special square at current position
     const special = (this.dungeon!.currentFloorData as any).specialSquares?.find(
-      (spec) => spec.x === this.dungeon!.playerX && spec.y === this.dungeon!.playerY
+      (spec: any) => spec.x === this.dungeon!.playerX && spec.y === this.dungeon!.playerY
     );
 
     if (!special) {
@@ -1575,7 +1575,7 @@ export class Engine {
   /**
    * Handle stairs movement
    */
-  handleStairsAction(direction) {
+  handleStairsAction(direction: 'up' | 'down') {
     if (!this.gameState!.isState('playing')) {
       return;
     }
@@ -1596,7 +1596,7 @@ export class Engine {
   /**
    * Handle healing fountain interaction
    */
-  handleHealingFountain(special) {
+  handleHealingFountain(special: any) {
     this.ui!.addMessage('You drink from the crystal clear waters...');
 
     let totalHealed = 0;
@@ -1627,7 +1627,7 @@ export class Engine {
   /**
    * Handle stamina fountain interaction
    */
-  handleStaminaFountain(special) {
+  handleStaminaFountain(special: any) {
     this.ui!.addMessage('You drink from the energizing waters...');
 
     // TODO: Restore spell points when spell system is fully integrated
@@ -1639,7 +1639,7 @@ export class Engine {
   /**
    * Handle poison fountain interaction
    */
-  handlePoisonFountain(special) {
+  handlePoisonFountain(special: any) {
     this.ui!.addMessage('You cautiously drink from the tainted waters...');
 
     if (Random.chance(0.3)) {
@@ -1667,7 +1667,7 @@ export class Engine {
   /**
    * Handle teleporter interaction
    */
-  handleTeleporter(special) {
+  handleTeleporter(special: any) {
     this.ui!.addMessage('You step onto the magical portal...');
 
     // Teleport to random location on current floor
@@ -1684,7 +1684,7 @@ export class Engine {
   /**
    * Handle treasure chest interaction
    */
-  handleTreasureChest(special) {
+  handleTreasureChest(special: any) {
     this.ui!.addMessage('You attempt to open the treasure chest...');
 
     // Check for chest trap
@@ -1727,7 +1727,7 @@ export class Engine {
   /**
    * Handle character creation completion
    */
-  async handleCharacterCreated(character) {
+  async handleCharacterCreated(character: any) {
     console.log('Character created:', character);
 
     try {
@@ -1799,7 +1799,7 @@ export class Engine {
   /**
    * Handle party leader change
    */
-  handlePartyLeaderChange(characterId) {
+  handlePartyLeaderChange(characterId: string) {
     const character = this.party!.members.find((c) => c.id === characterId);
     if (character) {
       this.party!.currentLeader = character;
@@ -1810,7 +1810,7 @@ export class Engine {
   /**
    * Handle town location selection
    */
-  handleTownLocationSelection(location) {
+  handleTownLocationSelection(location: string) {
     console.log('Town location selected:', location);
     console.log('Current state before location selection:', this.gameState!.currentState);
 
@@ -1833,7 +1833,7 @@ export class Engine {
   /**
    * Handle training grounds actions
    */
-  handleTrainingAction(action) {
+  handleTrainingAction(action: string) {
     console.log('Training action:', action);
 
     switch (action) {
@@ -1981,7 +1981,7 @@ export class Engine {
   /**
    * Handle encounter triggered in dungeon
    */
-  async handleEncounterTriggered(data) {
+  async handleEncounterTriggered(data: any) {
     console.log('Encounter triggered:', data);
 
     const { encounter, x, y, floor } = data;
@@ -2039,7 +2039,7 @@ export class Engine {
   /**
    * Handle trap triggered in dungeon
    */
-  handleTrapTriggered(data) {
+  handleTrapTriggered(data: any) {
     console.log('Trap triggered:', data);
 
     const { type, x, y, floor } = data;
@@ -2114,7 +2114,7 @@ export class Engine {
   /**
    * Handle special square found in dungeon
    */
-  handleSpecialSquareFound(data) {
+  handleSpecialSquareFound(data: any) {
     console.log('Special square found:', data);
 
     const { special, x, y, floor } = data;
@@ -2169,7 +2169,7 @@ export class Engine {
   /**
    * Handle combat start
    */
-  handleCombatStart(data) {
+  handleCombatStart(data: any) {
     console.log('Combat started:', data);
     this.ui!.addMessage('Combat begins!');
 
@@ -2180,7 +2180,7 @@ export class Engine {
   /**
    * Handle combat end
    */
-  handleCombatEnd(data) {
+  handleCombatEnd(data: any) {
     console.log('Combat ended:', data);
 
     const { victory, fled, casualties } = data;
@@ -2217,7 +2217,7 @@ export class Engine {
         }
 
         if (data.rewards.loot && data.rewards.loot.length > 0) {
-          const lootNames = data.rewards.loot.map((item) => item.name || 'Unknown Item');
+          const lootNames = data.rewards.loot.map((item: any) => item.name || 'Unknown Item');
           this.ui!.addMessage(`You found treasure: ${lootNames.join(', ')}`);
           // TODO: Add loot to party inventory
         }
@@ -2234,7 +2234,7 @@ export class Engine {
     this.currentEncounterLocation = null;
 
     if (casualties && casualties.length > 0) {
-      casualties.forEach((casualty) => {
+      casualties.forEach((casualty: any) => {
         this.ui!.addMessage(`${casualty.name} has fallen in battle.`);
         casualty.status = 'dead';
       });

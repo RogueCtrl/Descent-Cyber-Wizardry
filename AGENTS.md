@@ -365,6 +365,7 @@ await Storage.getEntityVersionInfo();
 6. **Shared World**: Dungeon structure shared; party positions separate
 7. **TypeScript Strict**: `tsc --noEmit` must pass with zero errors before merging
 8. **ES Modules**: All files use `import`/`export`, loaded via `src/main.ts`
+9. **Prompt Files**: Always create actual `.md` files for prompts/instructions to be handed off. Do not rely on chat previews.
 
 ---
 

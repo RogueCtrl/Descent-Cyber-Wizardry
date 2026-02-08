@@ -14,9 +14,9 @@ export class Dungeon {
   maxFloors: number;
   playerX: number;
   playerY: number;
-  playerDirection: Direction;
-  floors: Map<number, DungeonFloor>;
-  currentFloorData: DungeonFloor | null;
+  playerDirection: number;
+  floors: Map<number, any>;
+  currentFloorData: any;
   discoveredSecrets: Set<string>;
   disarmedTraps: Set<string>;
   usedSpecials: Set<string>;
@@ -105,7 +105,7 @@ export class Dungeon {
   /**
    * Hydrate encounters with full monster data (including portraits)
    */
-  async hydrateEncounters(encounters: EncounterData[]): Promise<void> {
+  async hydrateEncounters(encounters: any[]): Promise<void> {
     if (!encounters || encounters.length === 0) return;
 
     console.log('Hydrating encounters with monster data...');
@@ -234,7 +234,7 @@ export class Dungeon {
       const x = Random.integer(1, width - roomWidth - 1);
       const y = Random.integer(1, height - roomHeight - 1);
 
-      const newRoom = { x, y, width: roomWidth, height: roomHeight };
+      const newRoom: RoomData = { x, y, width: roomWidth, height: roomHeight, type: 'standard' };
 
       // Check for overlaps with existing rooms
       const overlaps = rooms.some(
@@ -399,7 +399,7 @@ export class Dungeon {
 
       if (availableDirections.length === 0) break;
 
-      const [dx, dy] = Random.choice(availableDirections);
+      const [dx, dy] = Random.choice(availableDirections)!;
       x += dx;
       y += dy;
 
@@ -442,10 +442,10 @@ export class Dungeon {
     });
 
     // Helper to check if a tile is inside a room
-    const isRoomTile = (x, y) => roomTiles.has(`${x},${y}`);
+    const isRoomTile = (x: number, y: number) => roomTiles.has(`${x},${y}`);
 
     // Helper to check if a tile is a corridor (floor but not in a room)
-    const isCorridorTile = (x, y) => {
+    const isCorridorTile = (x: number, y: number) => {
       const tile = tiles[y] && tiles[y][x];
       return this.isFloorTile(tile) && !isRoomTile(x, y);
     };
@@ -646,14 +646,14 @@ export class Dungeon {
   /**
    * Generate encounters for the floor with monster assignments
    */
-  generateEncounters(floorNumber: number, tiles: any[][]): EncounterData[] {
+  generateEncounters(floorNumber: number, tiles: any[][]): any[] {
     const encounterCount = Random.integer(5, 12);
     const encounters: any[] = [];
     const width = tiles[0].length;
     const height = tiles.length;
 
     // Monster pools by level tier
-    const monstersByLevel = {
+    const monstersByLevel: Record<number, string[]> = {
       1: ['Kobold', 'Giant Rat', 'Skeleton'],
       2: ['Kobold', 'Skeleton', 'Orc', 'Wolf'],
       3: ['Orc', 'Wolf', 'Hobgoblin'],
@@ -669,7 +669,7 @@ export class Dungeon {
     const pool = monstersByLevel[tierLevel] || monstersByLevel[1];
 
     // Find valid floor positions for encounters
-    const findValidPosition = (excludePositions) => {
+    const findValidPosition = (excludePositions: Set<string>) => {
       for (let attempts = 0; attempts < 100; attempts++) {
         const x = Random.integer(1, width - 2);
         const y = Random.integer(1, height - 2);
@@ -684,7 +684,7 @@ export class Dungeon {
       return null;
     };
 
-    const usedPositions = new Set();
+    const usedPositions = new Set<string>();
 
     for (let i = 0; i < encounterCount; i++) {
       const pos = findValidPosition(usedPositions);
@@ -713,7 +713,7 @@ export class Dungeon {
   /**
    * Generate encounters for training grounds (test mode)
    */
-  generateTrainingGroundsEncounters(): EncounterData[] {
+  generateTrainingGroundsEncounters(): any[] {
     // Place the deadly boss encounter in the corridor between rooms A and B
     // Based on the test map: corridor is at (3,2) and (4,2)
     // We'll place the boss at (4,2) - the entrance to the corridor from Room A
@@ -758,7 +758,7 @@ export class Dungeon {
         y: Random.integer(1, 19),
         type: Random.choice(specialTypes),
         used: false,
-        message: this.generateSpecialMessage(Random.choice(specialTypes)),
+        message: this.generateSpecialMessage(Random.choice(specialTypes)!),
       });
     }
 
@@ -796,7 +796,7 @@ export class Dungeon {
       ),
     };
 
-    return messages[type] || TextManager.getText('special_unknown', 'Something unusual is here.');
+    return (messages as Record<string, string>)[type] || TextManager.getText('special_unknown', 'Something unusual is here.');
   }
 
   /**
@@ -979,7 +979,7 @@ export class Dungeon {
   /**
    * Get tile at position
    */
-  getTile(x: number, y: number, floor: number | null = null): string {
+  getTile(x: number, y: number, floor: number | null = null): any {
     const floorData = floor ? this.floors.get(floor) : this.currentFloorData;
 
     if (!floorData) {
@@ -1332,7 +1332,7 @@ export class Dungeon {
 
     // First check for fixed encounters at exact position (training grounds boss)
     const fixedEncounter = this.currentFloorData.encounters.find(
-      (enc) => enc.x === this.playerX && enc.y === this.playerY && !enc.triggered
+      (enc: any) => enc.x === this.playerX && enc.y === this.playerY && !enc.triggered
     );
 
     if (fixedEncounter) {
@@ -1356,7 +1356,7 @@ export class Dungeon {
 
     if (Random.chance(baseChance)) {
       const encounter = this.currentFloorData.encounters.find(
-        (enc) =>
+        (enc: any) =>
           Math.abs(enc.x - this.playerX) <= 1 &&
           Math.abs(enc.y - this.playerY) <= 1 &&
           !enc.triggered
@@ -1396,7 +1396,7 @@ export class Dungeon {
 
     // Find and mark the encounter as triggered/defeated
     const encounter = floorData.encounters.find(
-      (enc) => enc.x === x && enc.y === y && !enc.triggered
+      (enc: any) => enc.x === x && enc.y === y && !enc.triggered
     );
 
     if (encounter) {
@@ -1414,7 +1414,7 @@ export class Dungeon {
    */
   checkSpecialSquare(): void {
     const special = this.currentFloorData.specialSquares.find(
-      (spec) => spec.x === this.playerX && spec.y === this.playerY
+      (spec: any) => spec.x === this.playerX && spec.y === this.playerY
     );
 
     if (special) {
@@ -1501,7 +1501,7 @@ export class Dungeon {
   /**
    * Get current position
    */
-  getPlayerPosition(): { x: number; y: number; direction: Direction; floor: number } {
+  getPlayerPosition(): { x: number; y: number; direction: number; floor: number } {
     return {
       x: this.playerX,
       y: this.playerY,
@@ -1513,7 +1513,7 @@ export class Dungeon {
   /**
    * Get direction name
    */
-  getDirectionName(direction: Direction | null = null): string {
+  getDirectionName(direction: number | null = null): string {
     const dir = direction !== null ? direction : this.playerDirection;
     const directions = ['North', 'East', 'South', 'West'];
     return directions[dir];
@@ -1774,7 +1774,7 @@ export class Dungeon {
         // Only show monsters if there isn't a wall blocking the view or if the monster is in front of the wall
         if (offset === 0 && !centerBlocked) {
           const encounter = this.currentFloorData.encounters.find(
-            (enc) => enc.x === offX && enc.y === offY && !enc.triggered
+            (enc: any) => enc.x === offX && enc.y === offY && !enc.triggered
           );
 
           if (encounter && encounter.monster) {
@@ -1818,7 +1818,7 @@ export class Dungeon {
       }
 
       // Variables to track corridor framing positions (usually at offset 1)
-      let framingLeftX, framingLeftY, framingRightX, framingRightY;
+      let framingLeftX: number = checkX - 1, framingLeftY: number = checkY, framingRightX: number = checkX + 1, framingRightY: number = checkY;
 
       // Initialize framing coordinates to offset 1 (default corridor width)
       switch (this.playerDirection) {
@@ -1850,7 +1850,7 @@ export class Dungeon {
 
       // Scan for Left Wall (Room Boundary)
       for (let offset = 1; offset <= 3; offset++) {
-        let leftX, leftY;
+        let leftX: number = checkX - offset, leftY: number = checkY;
         // Calculate left position at this offset
         switch (this.playerDirection) {
           case 0: // North -> Left is X-
@@ -1882,7 +1882,7 @@ export class Dungeon {
 
       // Scan for Right Wall (Room Boundary)
       for (let offset = 1; offset <= 3; offset++) {
-        let rightX, rightY;
+        let rightX: number = checkX + offset, rightY: number = checkY;
         // Calculate right position at this offset
         switch (this.playerDirection) {
           case 0: // North -> Right is X+

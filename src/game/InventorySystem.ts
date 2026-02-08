@@ -17,7 +17,7 @@ export class InventorySystem {
   filterType: string;
   sortBy: string;
 
-  constructor(eventSystem) {
+  constructor(eventSystem: any) {
     this.eventSystem = eventSystem;
     this.equipment = new Equipment();
     this.inventoryModal = null;
@@ -34,7 +34,7 @@ export class InventorySystem {
    * Show inventory interface for a character
    * @param {Object} character - Character to show inventory for
    */
-  showInventory(character) {
+  showInventory(character: any) {
     if (!character) {
       console.error('No character provided to inventory system');
       return;
@@ -137,19 +137,19 @@ export class InventorySystem {
   /**
    * Setup event listeners for inventory modal
    */
-  setupInventoryEventListeners(modal) {
+  setupInventoryEventListeners(modal: any) {
     // Close button
     modal.querySelector('#close-inventory').addEventListener('click', () => {
       this.hideInventory();
     });
 
     // Filter and sort controls
-    modal.querySelector('#item-filter').addEventListener('change', (e) => {
+    modal.querySelector('#item-filter').addEventListener('change', (e: any) => {
       this.filterType = e.target.value;
       this.renderInventoryItems();
     });
 
-    modal.querySelector('#item-sort').addEventListener('change', (e) => {
+    modal.querySelector('#item-sort').addEventListener('change', (e: any) => {
       this.sortBy = e.target.value;
       this.renderInventoryItems();
     });
@@ -164,7 +164,7 @@ export class InventorySystem {
     });
 
     // Close on outside click
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener('click', (e: any) => {
       if (e.target === modal) {
         this.hideInventory();
       }
@@ -203,7 +203,7 @@ export class InventorySystem {
 
     // Apply TextManager to elements with data-text-key
     const textElements = this.inventoryModal.querySelectorAll('[data-text-key]');
-    textElements.forEach((element) => {
+    textElements.forEach((element: any) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
         TextManager.applyToElement(element, textKey);
@@ -277,7 +277,7 @@ export class InventorySystem {
   /**
    * Render an equipped item
    */
-  renderEquippedItem(item, slot, slotName, slotIcon) {
+  renderEquippedItem(item: any, slot: any, slotName: any, slotIcon: any) {
     const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
     let itemName = typeof item === 'string' ? item : item.name;
     let digitalInfo = '';
@@ -355,7 +355,7 @@ export class InventorySystem {
     inventoryContainer.className = this.viewMode === 'grid' ? 'inventory-grid' : 'inventory-list';
 
     // Render items
-    const itemsHtml = filteredItems.map((item) => this.renderInventoryItem(item)).join('');
+    const itemsHtml = filteredItems.map((item: any) => this.renderInventoryItem(item)).join('');
     inventoryContainer.innerHTML = itemsHtml;
 
     // Add click handlers for items
@@ -365,7 +365,7 @@ export class InventorySystem {
   /**
    * Render a single inventory item
    */
-  renderInventoryItem(item) {
+  renderInventoryItem(item: any) {
     const isCyberMode = typeof TextManager !== 'undefined' && TextManager.isCyberMode();
     let itemName = typeof item === 'string' ? item : item.name;
     let itemType = typeof item === 'object' ? item.type : 'item';
@@ -383,7 +383,7 @@ export class InventorySystem {
       accessory: isCyberMode ? 'Enhancement Chip' : 'Accessory',
       consumable: isCyberMode ? 'Data Package' : 'Consumable',
     };
-    const displayType = typeMap[itemType] || itemType;
+    const displayType = (typeMap as Record<string, string>)[itemType] || itemType;
 
     // Digital information
     let digitalInfo = '';
@@ -464,7 +464,7 @@ export class InventorySystem {
   /**
    * Get item condition information
    */
-  getItemCondition(item) {
+  getItemCondition(item: any) {
     if (!item.durability || !item.maxDurability) {
       return { class: 'unknown', percentage: 100, text: 'Unknown' };
     }
@@ -487,10 +487,10 @@ export class InventorySystem {
   /**
    * Filter items based on current filter
    */
-  filterItems(items) {
+  filterItems(items: any[]) {
     if (this.filterType === 'all') return items;
 
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const itemType = typeof item === 'object' ? item.type : 'unknown';
 
       switch (this.filterType) {
@@ -513,8 +513,8 @@ export class InventorySystem {
   /**
    * Sort items based on current sort setting
    */
-  sortItems(items) {
-    return items.sort((a, b) => {
+  sortItems(items: any[]) {
+    return items.sort((a: any, b: any) => {
       switch (this.sortBy) {
         case 'name':
           const nameA = typeof a === 'string' ? a : a.name || 'Unknown';
@@ -547,9 +547,9 @@ export class InventorySystem {
   /**
    * Setup event listeners for inventory items
    */
-  setupInventoryItemListeners(container) {
+  setupInventoryItemListeners(container: any) {
     // Item selection
-    container.addEventListener('click', (e) => {
+    container.addEventListener('click', (e: any) => {
       if (e.target.closest('.inventory-item')) {
         const item = e.target.closest('.inventory-item');
         this.selectItem(item);
@@ -557,7 +557,7 @@ export class InventorySystem {
     });
 
     // Action buttons
-    container.addEventListener('click', (e) => {
+    container.addEventListener('click', (e: any) => {
       if (e.target.classList.contains('equip-btn')) {
         const itemId = e.target.getAttribute('data-item-id');
         this.equipItem(itemId);
@@ -573,7 +573,7 @@ export class InventorySystem {
     // Unequip buttons in equipped section
     const equippedContainer = this.inventoryModal.querySelector('#equipped-items');
     if (equippedContainer) {
-      equippedContainer.addEventListener('click', (e) => {
+      equippedContainer.addEventListener('click', (e: any) => {
         if (e.target.classList.contains('unequip-btn')) {
           const slot = e.target.getAttribute('data-slot');
           this.unequipItem(slot);
@@ -585,7 +585,7 @@ export class InventorySystem {
   /**
    * Set view mode (grid or list)
    */
-  setViewMode(mode) {
+  setViewMode(mode: string) {
     this.viewMode = mode;
 
     // Update button states
@@ -602,7 +602,7 @@ export class InventorySystem {
   /**
    * Check if item can be equipped
    */
-  canEquipItem(item) {
+  canEquipItem(item: any) {
     if (typeof item === 'string') return false;
     if (!item.type) return false;
 
@@ -613,7 +613,7 @@ export class InventorySystem {
   /**
    * Check if item can be used
    */
-  canUseItem(item) {
+  canUseItem(item: any) {
     if (typeof item === 'string') return false;
     if (!item.type) return false;
 
@@ -635,7 +635,7 @@ export class InventorySystem {
     const maxWeightEl = this.inventoryModal.querySelector('#max-weight');
     const itemCountEl = this.inventoryModal.querySelector('#item-count');
 
-    if (currentWeightEl) currentWeightEl.textContent = currentWeight.toFixed(1);
+    if (currentWeightEl) currentWeightEl.textContent = (currentWeight as any).toFixed ? (currentWeight as any).toFixed(1) : String(currentWeight);
     if (maxWeightEl) maxWeightEl.textContent = maxWeight;
     if (itemCountEl) itemCountEl.textContent = itemCount;
   }
@@ -655,7 +655,7 @@ export class InventorySystem {
   /**
    * Placeholder methods for item actions (implement based on actual game logic)
    */
-  selectItem(itemElement) {
+  selectItem(itemElement: any) {
     // Remove previous selection
     const previousSelected = this.inventoryModal.querySelector('.inventory-item.selected');
     if (previousSelected) {
@@ -667,22 +667,22 @@ export class InventorySystem {
     this.selectedItem = itemElement.getAttribute('data-item-id');
   }
 
-  equipItem(itemId) {
+  equipItem(itemId: any) {
     console.log('Equip item:', itemId);
     // Implement equipment logic
   }
 
-  unequipItem(slot) {
+  unequipItem(slot: any) {
     console.log('Unequip item from slot:', slot);
     // Implement unequip logic
   }
 
-  useItem(itemId) {
+  useItem(itemId: any) {
     console.log('Use item:', itemId);
     // Implement use item logic
   }
 
-  dropItem(itemId) {
+  dropItem(itemId: any) {
     console.log('Drop item:', itemId);
     // Implement drop item logic
   }

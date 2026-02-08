@@ -779,7 +779,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with name and cyberName properties
    * @returns {Object} Object with classic and cyber display names
    */
-  getDualNames(entity) {
+  getDualNames(entity: any) {
     return {
       classic: entity.name || entity.displayName || 'Unknown',
       cyber: entity.cyberName || entity.name || 'Unknown',
@@ -792,7 +792,7 @@ export const TerminologyUtils = {
    * @param {string} separator - Separator between names (default: ' / ')
    * @returns {string} Formatted dual display string
    */
-  formatDualDisplay(entity, separator = ' / ') {
+  formatDualDisplay(entity: any, separator = ' / ') {
     const names = this.getDualNames(entity);
     if (names.classic === names.cyber) {
       return names.classic; // Don't show duplicate names
@@ -805,7 +805,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with name and cyberName properties
    * @returns {string} Name appropriate for current mode
    */
-  getContextualName(entity) {
+  getContextualName(entity: any) {
     if (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) {
       return entity.cyberName || entity.name || 'Unknown';
     }
@@ -817,7 +817,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with classification properties
    * @returns {string} Formatted classification string
    */
-  getClassificationDisplay(entity) {
+  getClassificationDisplay(entity: any) {
     if (entity.digitalClassification && entity.programClass) {
       return `${entity.programClass} (${entity.digitalClassification})`;
     }

@@ -581,7 +581,7 @@ export class CharacterUI {
       Ninja: '🥷',
     };
 
-    return icons[className] || '⚡';
+    return (icons as Record<string, string>)[className] || '⚡';
   }
 
   /**
