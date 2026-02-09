@@ -930,12 +930,13 @@ export class UI {
                             (${campingParties.length})
                         </h3>
                         <div class="camping-teams-grid">
-                            ${campingParties.length > 0
-        ? campingParties
-          .map((party: any) => this.buildPartyCard(party, false, true))
-          .join('')
-        : '<p class="no-parties">No camping parties</p>'
-      }
+                            ${
+                              campingParties.length > 0
+                                ? campingParties
+                                    .map((party: any) => this.buildPartyCard(party, false, true))
+                                    .join('')
+                                : '<p class="no-parties">No camping parties</p>'
+                            }
                         </div>
                     </div>
                     
@@ -946,12 +947,13 @@ export class UI {
                             (${inTownParties.length})
                         </h3>
                         <div class="in-town-teams-grid">
-                            ${inTownParties.length > 0
-        ? inTownParties
-          .map((party: any) => this.buildPartyCard(party, false))
-          .join('')
-        : '<p class="no-parties">No inactive parties</p>'
-      }
+                            ${
+                              inTownParties.length > 0
+                                ? inTownParties
+                                    .map((party: any) => this.buildPartyCard(party, false))
+                                    .join('')
+                                : '<p class="no-parties">No inactive parties</p>'
+                            }
                         </div>
                     </div>
                     
@@ -962,14 +964,15 @@ export class UI {
                             (${lostParties.length})
                         </h3>
                         <div class="lost-teams-grid">
-                            ${lostParties.length > 0
-        ? lostParties
-          .map((party: any) =>
-            this.buildPartyCard(party, false, false, true)
-          )
-          .join('')
-        : '<p class="no-parties">No lost parties</p>'
-      }
+                            ${
+                              lostParties.length > 0
+                                ? lostParties
+                                    .map((party: any) =>
+                                      this.buildPartyCard(party, false, false, true)
+                                    )
+                                    .join('')
+                                : '<p class="no-parties">No lost parties</p>'
+                            }
                         </div>
                     </div>
                 </div>
@@ -1034,15 +1037,16 @@ export class UI {
                     <p><strong data-text-key="members">Members:</strong> ${party.aliveCount}/${party.memberCount}</p>
                     <p><strong>Gold:</strong> ${party.gold || 0}</p>
                     <p><strong>Created:</strong> ${new Date(party.dateCreated).toLocaleDateString()}</p>
-                    ${locationDisplay
-        ? `
+                    ${
+                      locationDisplay
+                        ? `
                         <div class="party-location">
                             <span class="location-label">Location:</span>
                             <span class="location-value">${locationDisplay}</span>
                         </div>
                     `
-        : ''
-      }
+                        : ''
+                    }
                 </div>
                 <div class="party-actions">
                     ${!isActive && !isLost ? `<button class="action-btn small resume-party-btn" data-party-id="${party.id}">Resume</button>` : ''}
@@ -1580,15 +1584,16 @@ export class UI {
                     <div class="party-status-section">
                         <h3><span data-text-key="current_party">Current Party</span> (${party ? party.size : 0}/${party ? party.maxSize : 4})</h3>
                         <div class="party-status-info">
-                            ${hasActiveParty
-        ? `
+                            ${
+                              hasActiveParty
+                                ? `
                                 <p class="status-ready">✅ <span data-text-key="strike_team_ready">Your party is ready for adventure!</span></p>
                                 <button id="strike-team-status-btn" class="action-btn compact enabled">
                                     <span data-text-key="view_party_stats">View Party Stats</span>
                                 </button>
                             `
-        : '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'
-      }
+                                : '<p class="status-empty">⚠️ <span data-text-key="strike_team_required">Create at least one character to enter the dungeon.</span></p>'
+                            }
                         </div>
                     </div>
                 </div>
@@ -2007,15 +2012,15 @@ export class UI {
                         <h3>Attributes</h3>
                         <div class="attributes-grid">
                             ${attributes
-        .map(
-          (attr) => `
+                              .map(
+                                (attr) => `
                                 <div class="attribute-item">
                                     <div class="attribute-name">${attr.abbr}</div>
                                     <div class="attribute-value">${attr.value}</div>
                                 </div>
                             `
-        )
-        .join('')}
+                              )
+                              .join('')}
                         </div>
                     </div>
                     
@@ -2035,15 +2040,16 @@ export class UI {
                                 <div class="exp-label">Experience</div>
                                 <div class="exp-value">${character.experience || 0}</div>
                             </div>
-                            ${character.spellPoints !== undefined
-        ? `
+                            ${
+                              character.spellPoints !== undefined
+                                ? `
                                 <div class="sp-section">
                                     <div class="sp-label">Spell Points</div>
                                     <div class="sp-value">${character.currentSP || 0}/${character.spellPoints || 0}</div>
                                 </div>
                             `
-        : ''
-      }
+                                : ''
+                            }
                         </div>
                     </div>
                     
@@ -2054,8 +2060,9 @@ export class UI {
                         </div>
                     </div>
                     
-                    ${spells
-        ? `
+                    ${
+                      spells
+                        ? `
                         <div class="character-detail-section">
                             <h3>Memorized Spells</h3>
                             <div class="spells-section">
@@ -2063,8 +2070,8 @@ export class UI {
                             </div>
                         </div>
                     `
-        : ''
-      }
+                        : ''
+                    }
                 </div>
                 
                 <div class="character-detail-footer">
@@ -2194,38 +2201,38 @@ export class UI {
                     </h4>
                     <div class="spell-list program-suite">
                         ${(spells as any)
-            .map((spell: any) => {
-              // Get contextual spell name
-              let spellName = 'Unknown';
-              let digitalInfo = '';
+                          .map((spell: any) => {
+                            // Get contextual spell name
+                            let spellName = 'Unknown';
+                            let digitalInfo = '';
 
-              if (typeof spell === 'string') {
-                spellName = spell;
-              } else if (typeof TerminologyUtils !== 'undefined') {
-                spellName = TerminologyUtils.getContextualName(spell);
-              } else {
-                spellName = spell.name || 'Unknown Spell';
-              }
+                            if (typeof spell === 'string') {
+                              spellName = spell;
+                            } else if (typeof TerminologyUtils !== 'undefined') {
+                              spellName = TerminologyUtils.getContextualName(spell);
+                            } else {
+                              spellName = spell.name || 'Unknown Spell';
+                            }
 
-              // Add program type information in cyber mode
-              if (isCyberMode && typeof spell === 'object') {
-                if (spell.programType) {
-                  digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
-                } else if (spell.executionMethod) {
-                  digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
-                } else if (spell.algorithmClass) {
-                  digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
-                }
-              }
+                            // Add program type information in cyber mode
+                            if (isCyberMode && typeof spell === 'object') {
+                              if (spell.programType) {
+                                digitalInfo = `<span class="program-type">[${spell.programType}]</span>`;
+                              } else if (spell.executionMethod) {
+                                digitalInfo = `<span class="execution-method">[${spell.executionMethod}]</span>`;
+                              } else if (spell.algorithmClass) {
+                                digitalInfo = `<span class="algorithm-class">[${spell.algorithmClass}]</span>`;
+                              }
+                            }
 
-              return `
+                            return `
                                 <div class="spell-item cyber-enhanced" data-cyber-enhanced="${isCyberMode}">
                                     <div class="spell-name">${spellName}</div>
                                     ${digitalInfo}
                                 </div>
                             `;
-            })
-            .join('')}
+                          })
+                          .join('')}
                     </div>
                 </div>
             `;
@@ -2339,24 +2346,26 @@ export class UI {
                 </div>
                 
                 <div class="roster-content">
-                    ${hasActiveCharacters
-        ? `
+                    ${
+                      hasActiveCharacters
+                        ? `
                         <div class="strike-teams-container">
                             ${strikeTeamContent}
                         </div>
                     `
-        : `
+                        : `
                         <div class="no-characters">
                             <div class="no-characters-icon">⚔️</div>
                             <h3 data-text-key="no_characters_created">No Characters Created</h3>
                             <p data-text-key="visit_training_grounds">Visit the Training Grounds to create your first adventurer!</p>
                         </div>
                     `
-      }
+                    }
                 </div>
                 
-                ${hasLostCharacters
-        ? `
+                ${
+                  hasLostCharacters
+                    ? `
                     <div class="roster-memorial-section">
                         <button id="view-lost-characters-btn" class="action-btn memorial">
                             <div class="btn-icon">💀</div>
@@ -2369,8 +2378,8 @@ export class UI {
                         </button>
                     </div>
                 `
-        : ''
-      }
+                    : ''
+                }
                 
                 <div class="roster-footer">
                     <button id="close-roster-btn" class="action-btn secondary">
@@ -2661,20 +2670,21 @@ export class UI {
                 </div>
                 
                 <div class="roster-content memorial-content">
-                    ${hasLostCharacters
-        ? `
+                    ${
+                      hasLostCharacters
+                        ? `
                         <div class="character-grid memorial-character-grid">
                             ${lostCharacterCards.join('')}
                         </div>
                     `
-        : `
+                        : `
                         <div class="no-characters no-lost-characters">
                             <div class="no-characters-icon">🕊️</div>
                             <h3 data-text-key="no_lost_characters">No Fallen Heroes</h3>
                             <p data-text-key="no_lost_characters_message">No heroes have been lost to the dungeon.</p>
                         </div>
                     `
-      }
+                    }
                 </div>
                 
                 <div class="roster-footer memorial-footer">
@@ -2908,9 +2918,9 @@ export class UI {
       const characterDetail =
         typeof TextManager !== 'undefined'
           ? TextManager.getText('forget_character_detail')
-            .replace('{name}', (character as any).name)
-            .replace('{race}', raceName)
-            .replace('{class}', className)
+              .replace('{name}', (character as any).name)
+              .replace('{race}', raceName)
+              .replace('{class}', className)
           : `Forgetting ${(character as any).name} (${raceName} ${className}) will remove all records permanently.`;
 
       const locationDetail =
