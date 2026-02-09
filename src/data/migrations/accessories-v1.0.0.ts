@@ -107,7 +107,7 @@ export const accessoriesMigration = {
   /**
    * Validate accessory data
    */
-  validate: (accessoryData) => {
+  validate: (accessoryData: any) => {
     const required = ['name', 'type'];
     return required.every((field) => accessoryData[field] !== undefined);
   },
@@ -115,7 +115,7 @@ export const accessoriesMigration = {
   /**
    * Transform accessory data if needed (future migrations)
    */
-  transform: (accessoryData) => {
+  transform: (accessoryData: any) => {
     return accessoryData;
   },
 };

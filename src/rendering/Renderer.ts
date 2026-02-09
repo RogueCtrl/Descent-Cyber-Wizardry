@@ -5,10 +5,10 @@ import { Viewport3D } from './Viewport3D.ts';
  * Handles canvas-based rendering for the game
  */
 export class Renderer {
-  canvas: any;
-  ctx: any;
-  width: any;
-  height: any;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  width: number;
+  height: number;
   backgroundColor: string;
   wireframeColor: string;
   textColor: string;
@@ -16,7 +16,7 @@ export class Renderer {
   lineWidth: number;
   viewport3D: Viewport3D;
 
-  constructor(canvas, context) {
+  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
     this.canvas = canvas;
     this.ctx = context;
     this.width = canvas.width;
@@ -44,7 +44,7 @@ export class Renderer {
   /**
    * Render the dungeon view using advanced 3D viewport
    */
-  renderDungeon(dungeon, party) {
+  renderDungeon(dungeon: any, party: any) {
     if (dungeon && dungeon.getViewingInfo) {
       // Use the enhanced 3D viewport for authentic Wizardry rendering
       this.viewport3D.render(dungeon, party);
@@ -156,7 +156,7 @@ export class Renderer {
   /**
    * Render text on the canvas
    */
-  renderText(text, x, y, font: string | null = null) {
+  renderText(text: string, x: number, y: number, font: string | null = null) {
     this.ctx.fillStyle = this.textColor;
     this.ctx.font = font || this.font;
     this.ctx.fillText(text, x, y);
@@ -165,7 +165,7 @@ export class Renderer {
   /**
    * Draw a line
    */
-  drawLine(x1, y1, x2, y2, color = null) {
+  drawLine(x1: number, y1: number, x2: number, y2: number, color: string | null = null) {
     this.ctx.strokeStyle = color || this.wireframeColor;
     this.ctx.beginPath();
     this.ctx.moveTo(x1, y1);
@@ -176,7 +176,14 @@ export class Renderer {
   /**
    * Draw a rectangle
    */
-  drawRect(x, y, width, height, filled = false, color = null) {
+  drawRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    filled: boolean = false,
+    color: string | null = null
+  ) {
     this.ctx.strokeStyle = color || this.wireframeColor;
     this.ctx.fillStyle = color || this.wireframeColor;
 
@@ -190,7 +197,7 @@ export class Renderer {
   /**
    * Set canvas size (also updates 3D viewport)
    */
-  setSize(width, height) {
+  setSize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
     this.width = width;

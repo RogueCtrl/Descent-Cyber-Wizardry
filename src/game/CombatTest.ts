@@ -19,7 +19,7 @@ export class CombatTest {
   /**
    * Run all combat tests
    */
-  runAllTests() {
+  async runAllTests() {
     console.log('Starting Combat System Tests...');
 
     this.testResults = [];
@@ -31,7 +31,7 @@ export class CombatTest {
       this.testMonsterCreation();
       this.testCombatInitiation();
       this.testCombatActions();
-      this.testEncounterGeneration();
+      await this.testEncounterGeneration();
 
       this.printTestResults();
     } catch (error: any) {
@@ -118,14 +118,14 @@ export class CombatTest {
       const fighter = new Character('Equipment Test', 'Human', 'Fighter');
       fighter.attributes = { strength: 16, agility: 12 };
 
-      const equipResult = equipment.equipItem(fighter, longSword);
+      const equipResult = equipment.equipItem(fighter as any, longSword);
       if (!equipResult.success) {
         throw new Error('Failed to equip weapon');
       }
 
       // Test combat calculations
-      const attackBonus = equipment.calculateAttackBonus(fighter);
-      const acBonus = equipment.calculateACBonus(fighter);
+      const attackBonus = equipment.calculateAttackBonus(fighter as any);
+      const acBonus = equipment.calculateACBonus(fighter as any);
 
       this.testResults.push({
         test: 'Equipment System',
@@ -301,7 +301,7 @@ export class CombatTest {
         target: target,
       };
 
-      const attackResult = combat.processAction(attackAction);
+      const attackResult = combat.processAction(attackAction as any);
 
       if (!(attackResult as any).success && (attackResult as any).hit === undefined) {
         throw new Error('Attack action failed to process');
@@ -313,7 +313,7 @@ export class CombatTest {
         defender: attacker,
       };
 
-      const defendResult = combat.processAction(defendAction);
+      const defendResult = combat.processAction(defendAction as any);
 
       if (!(defendResult as any).success) {
         throw new Error('Defend action failed');
@@ -338,7 +338,7 @@ export class CombatTest {
   /**
    * Test encounter generation
    */
-  testEncounterGeneration() {
+  async testEncounterGeneration() {
     console.log('Testing encounter generation...');
 
     try {
@@ -346,7 +346,7 @@ export class CombatTest {
 
       // Test random encounters
       const encounter1 = generator.generateEncounter(1, 1);
-      const encounter2 = generator.generateEncounter(3, 3);
+      const encounter2 = await generator.generateEncounter(3, 3);
       const encounter5 = generator.generateEncounter(5, 5);
 
       // Test boss encounter
@@ -454,7 +454,7 @@ export class CombatTest {
   /**
    * Run a specific test
    */
-  runSpecificTest(testName) {
+  async runSpecificTest(testName: string) {
     console.log(`Running specific test: ${testName}`);
 
     switch (testName) {
@@ -477,7 +477,7 @@ export class CombatTest {
         this.testCombatActions();
         break;
       case 'encounters':
-        this.testEncounterGeneration();
+        await this.testEncounterGeneration();
         break;
       default:
         console.log(

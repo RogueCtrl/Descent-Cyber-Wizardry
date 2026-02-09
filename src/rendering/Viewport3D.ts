@@ -5,20 +5,20 @@ import { MiniMapRenderer } from './MiniMapRenderer.ts';
  * Handles authentic Wizardry-style 3D wireframe rendering for dungeon exploration
  */
 export class Viewport3D {
-  canvas: any;
-  ctx: any;
-  width: any;
-  height: any;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  width: number;
+  height: number;
   fov: number;
   maxViewDistance: number;
   wallHeight: number;
-  floorLevel: any;
-  ceilingLevel: any;
-  colors: Record<string, any>;
-  perspectiveCache: Map<any, any>;
+  floorLevel: number;
+  ceilingLevel: number;
+  colors: Record<string, string>;
+  perspectiveCache: Map<number, any>;
   miniMapRenderer: MiniMapRenderer;
 
-  constructor(canvas, context) {
+  constructor(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D) {
     this.canvas = canvas;
     this.ctx = context;
     this.width = canvas.width;
@@ -63,7 +63,7 @@ export class Viewport3D {
   /**
    * Render 3D dungeon view based on actual dungeon data
    */
-  render(dungeon, party) {
+  render(dungeon: any, _party: any) {
     if (!dungeon || !dungeon.getViewingInfo) {
       this.renderPlaceholder();
       return;
@@ -104,14 +104,14 @@ export class Viewport3D {
   /**
    * Check if a wall exists in viewInfo at specific distance and side
    */
-  hasWallInViewInfo(viewInfo, distance, side) {
-    return viewInfo.walls.some((wall) => wall.distance === distance && wall.side === side);
+  hasWallInViewInfo(viewInfo: any, distance: number, side: string) {
+    return viewInfo.walls.some((wall: any) => wall.distance === distance && wall.side === side);
   }
 
   /**
    * Render walls at a specific distance
    */
-  renderWallsAtDistance(viewInfo, distance, centerX) {
+  renderWallsAtDistance(viewInfo: any, distance: number, centerX: number) {
     const perspective = this.calculatePerspective(distance);
     this.ctx.strokeStyle = this.colors.wall;
 
@@ -120,7 +120,7 @@ export class Viewport3D {
     const leftWalls: any[] = [];
     const rightWalls: any[] = [];
 
-    viewInfo.walls.forEach((wall) => {
+    viewInfo.walls.forEach((wall: any) => {
       if (wall.distance === distance) {
         if (wall.side === 'left') {
           leftWalls.push(wall);
@@ -150,10 +150,10 @@ export class Viewport3D {
   /**
    * Render doors at a specific distance
    */
-  renderDoorsAtDistance(viewInfo, distance, centerX) {
+  renderDoorsAtDistance(viewInfo: any, distance: number, centerX: number) {
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.doors.forEach((door) => {
+    viewInfo.doors.forEach((door: any) => {
       if (door.distance === distance) {
         if (door.type === 'hidden') {
           this.ctx.strokeStyle = this.colors.hiddenDoor;
@@ -169,10 +169,10 @@ export class Viewport3D {
   /**
    * Render passages at a specific distance
    */
-  renderPassagesAtDistance(viewInfo, distance, centerX) {
+  renderPassagesAtDistance(viewInfo: any, distance: number, centerX: number) {
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.passages.forEach((passage) => {
+    viewInfo.passages.forEach((passage: any) => {
       if (passage.distance === distance) {
         this.ctx.strokeStyle = this.colors.secretPassage;
         this.renderPassage(perspective, centerX, passage.type, passage.offset || 0);
@@ -183,7 +183,7 @@ export class Viewport3D {
   /**
    * Calculate perspective scaling for distance
    */
-  calculatePerspective(distance) {
+  calculatePerspective(distance: number) {
     const cacheKey = distance;
     if (this.perspectiveCache.has(cacheKey)) {
       return this.perspectiveCache.get(cacheKey);
@@ -218,7 +218,7 @@ export class Viewport3D {
   /**
    * Render front wall (blocking view)
    */
-  renderFrontWall(perspective, centerX, offset = 0) {
+  renderFrontWall(perspective: any, centerX: number, offset: number = 0) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Calculate horizontal position based on offset from center
@@ -240,7 +240,13 @@ export class Viewport3D {
   /**
    * Render left side wall segment with improved continuity
    */
-  renderLeftWallSegment(perspective, centerX, distance, viewInfo, offset = -1) {
+  renderLeftWallSegment(
+    perspective: any,
+    centerX: number,
+    distance: number,
+    viewInfo: any,
+    offset: number = -1
+  ) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Ensure offset is negative for left side
@@ -312,14 +318,20 @@ export class Viewport3D {
   /**
    * Render left side wall (legacy method - kept for compatibility)
    */
-  renderLeftWall(perspective, centerX) {
+  renderLeftWall(perspective: any, centerX: number) {
     this.renderLeftWallSegment(perspective, centerX, 1, null as any);
   }
 
   /**
    * Render right side wall segment with improved continuity
    */
-  renderRightWallSegment(perspective, centerX, distance, viewInfo, offset = 1) {
+  renderRightWallSegment(
+    perspective: any,
+    centerX: number,
+    distance: number,
+    viewInfo: any,
+    offset: number = 1
+  ) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Ensure offset is positive for right side
@@ -389,7 +401,7 @@ export class Viewport3D {
   /**
    * Render right side wall (legacy method - kept for compatibility)
    */
-  renderRightWall(perspective, centerX) {
+  renderRightWall(perspective: any, centerX: number) {
     this.renderRightWallSegment(perspective, centerX, 1, null as any);
   }
 
@@ -399,7 +411,7 @@ export class Viewport3D {
   /**
    * Render a door opening
    */
-  renderDoor(perspective, centerX, doorType, offset = 0) {
+  renderDoor(perspective: any, centerX: number, doorType: string, offset: number = 0) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Adjust center for offset
@@ -441,7 +453,7 @@ export class Viewport3D {
   /**
    * Render a secret passage
    */
-  renderPassage(perspective, centerX, passageType, offset = 0) {
+  renderPassage(perspective: any, centerX: number, passageType: string, offset: number = 0) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Adjust center for offset
@@ -471,7 +483,7 @@ export class Viewport3D {
   /**
    * Render status information
    */
-  renderStatusInfo(dungeon, viewInfo) {
+  renderStatusInfo(dungeon: any, viewInfo: any) {
     this.ctx.fillStyle = this.colors.text;
     this.ctx.font = '14px "Courier New", monospace';
 
@@ -492,7 +504,7 @@ export class Viewport3D {
   /**
    * Render special indicators for current position
    */
-  renderSpecialIndicators(dungeon) {
+  renderSpecialIndicators(dungeon: any) {
     const tile = dungeon.getTile(dungeon.playerX, dungeon.playerY);
 
     if (tile.startsWith('trap_')) {
@@ -509,7 +521,7 @@ export class Viewport3D {
 
     // Check for special squares
     const special = dungeon.currentFloorData.specialSquares.find(
-      (spec) => spec.x === dungeon.playerX && spec.y === dungeon.playerY
+      (spec: any) => spec.x === dungeon.playerX && spec.y === dungeon.playerY
     );
 
     if (special) {
@@ -520,7 +532,7 @@ export class Viewport3D {
   /**
    * Render trap indicator
    */
-  renderTrapIndicator(trapTile) {
+  renderTrapIndicator(trapTile: string) {
     const trapType = trapTile.replace('trap_', '');
 
     this.ctx.fillStyle = this.colors.trap;
@@ -540,7 +552,7 @@ export class Viewport3D {
   /**
    * Render jack (edge egress point) indicator
    */
-  renderJackIndicator(jackType) {
+  renderJackIndicator(jackType: string) {
     this.ctx.fillStyle = jackType === 'entry' ? '#22c55e' : '#06b6d4';
     this.ctx.font = 'bold 16px "Courier New", monospace';
     this.ctx.textAlign = 'center';
@@ -559,7 +571,7 @@ export class Viewport3D {
   /**
    * Render stairs indicator (legacy - use renderJackIndicator)
    */
-  renderStairsIndicator(direction) {
+  renderStairsIndicator(direction: string) {
     this.ctx.fillStyle = this.colors.stairs;
     this.ctx.font = 'bold 16px "Courier New", monospace';
     this.ctx.textAlign = 'center';
@@ -580,7 +592,7 @@ export class Viewport3D {
   /**
    * Render special square indicator
    */
-  renderSpecialSquareIndicator(special) {
+  renderSpecialSquareIndicator(special: any) {
     this.ctx.fillStyle = this.colors.specialSquare;
     this.ctx.font = 'bold 14px "Courier New", monospace';
     this.ctx.textAlign = 'center';
@@ -616,7 +628,7 @@ export class Viewport3D {
   /**
    * Update viewport size
    */
-  setSize(width, height) {
+  setSize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
     this.width = width;
@@ -650,12 +662,12 @@ export class Viewport3D {
   /**
    * Render monsters at a specific distance
    */
-  renderMonstersAtDistance(viewInfo, distance, centerX) {
+  renderMonstersAtDistance(viewInfo: any, distance: number, centerX: number) {
     if (!viewInfo.monsters) return;
 
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.monsters.forEach((monsterData) => {
+    viewInfo.monsters.forEach((monsterData: any) => {
       if (monsterData.distance === distance && monsterData.monster.portraitModel) {
         this.renderMonsterWireframe(
           monsterData.monster.portraitModel,
@@ -670,10 +682,10 @@ export class Viewport3D {
   /**
    * Render a monster's 3D wireframe in the dungeon view
    */
-  renderMonsterWireframe(model, perspective, centerX, offset) {
+  renderMonsterWireframe(model: any, perspective: any, centerX: number, offset: number) {
     if (!model || !model.vertices || !model.edges) return;
 
-    const { wallWidth, wallHeight, topY, bottomY } = perspective;
+    const { wallWidth, wallHeight } = perspective;
 
     // Calculate center position for the monster
     // Use offset to handle positioning if we ever support side-monsters (though mainly center for now)
@@ -692,7 +704,7 @@ export class Viewport3D {
     const modelScale = (model.scale || 1.0) * sizeScale;
 
     // Transform vertices
-    const transformedVertices = model.vertices.map((vertex) => {
+    const transformedVertices = model.vertices.map((vertex: any) => {
       // Basic 3D rotation from model data
       const [vx, vy, vz] = vertex;
 
@@ -702,7 +714,7 @@ export class Viewport3D {
         z = vz;
 
       if (model.rotation) {
-        const [rotX, rotY, rotZ] = model.rotation;
+        const [, rotY] = model.rotation;
 
         // Apply Y rotation (most common)
         if (rotY !== 0) {
@@ -727,7 +739,7 @@ export class Viewport3D {
     // Thinner lines further away, but minimum width of 1
     this.ctx.lineWidth = Math.max(1, 2 * perspective.scale);
 
-    model.edges.forEach((edge) => {
+    model.edges.forEach((edge: any) => {
       const [startIdx, endIdx] = edge;
 
       if (startIdx < transformedVertices.length && endIdx < transformedVertices.length) {
@@ -754,12 +766,12 @@ export class Viewport3D {
   /**
    * Render objects at a specific distance
    */
-  renderObjectsAtDistance(viewInfo, distance, centerX) {
+  renderObjectsAtDistance(viewInfo: any, distance: number, centerX: number) {
     if (!viewInfo.objects) return;
 
     const perspective = this.calculatePerspective(distance);
 
-    viewInfo.objects.forEach((obj) => {
+    viewInfo.objects.forEach((obj: any) => {
       if (obj.distance === distance) {
         if (obj.type === 'treasure') {
           this.renderTreasure(perspective, centerX, obj.offset || 0);
@@ -771,8 +783,8 @@ export class Viewport3D {
   /**
    * Render a treasure chest / data cache
    */
-  renderTreasure(perspective, centerX, offset) {
-    const { wallWidth, wallHeight, topY, bottomY } = perspective;
+  renderTreasure(perspective: any, centerX: number, offset: number) {
+    const { wallWidth, wallHeight, bottomY } = perspective;
 
     // Calculate center position
     const objCenterX = centerX + offset * wallWidth;
@@ -780,7 +792,7 @@ export class Viewport3D {
     // Chest dimensions relative to wall
     const chestWidth = wallWidth * 0.4;
     const chestHeight = wallHeight * 0.25;
-    const chestDepth = wallWidth * 0.3; // Estimated depth distortion
+    // const chestDepth = wallWidth * 0.3; // Estimated depth distortion
 
     // Position on floor
     const chestBottom = bottomY - wallHeight * 0.05; // Slightly raised or on floor

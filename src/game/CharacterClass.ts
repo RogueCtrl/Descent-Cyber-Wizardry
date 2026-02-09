@@ -3,7 +3,7 @@
  * Handles character class requirements and abilities
  */
 export class CharacterClass {
-  static getClassData(className) {
+  static getClassData(className: string) {
     const classes = {
       // Base Classes (available at creation)
       Fighter: {
@@ -113,10 +113,10 @@ export class CharacterClass {
       },
     };
 
-    return classes[className] || null;
+    return (classes as Record<string, any>)[className] || null;
   }
 
-  static checkRequirements(className, attributes) {
+  static checkRequirements(className: string, attributes: Record<string, number>) {
     const classData = this.getClassData(className);
     if (!classData) return false;
 
@@ -141,11 +141,11 @@ export class CharacterClass {
     return ['Bishop', 'Samurai', 'Lord', 'Ninja'];
   }
 
-  static isEliteClass(className) {
+  static isEliteClass(className: string) {
     return this.getEliteClasses().includes(className);
   }
 
-  static checkClassChangeRequirements(character, newClassName) {
+  static checkClassChangeRequirements(character: any, newClassName: string) {
     const classData = this.getClassData(newClassName);
     if (!classData) return { canChange: false, reason: 'Invalid class' };
 
@@ -165,18 +165,18 @@ export class CharacterClass {
 
       // Check prerequisites (must have been one of the required classes)
       if (classData.prerequisites && classData.prerequisites.length > 0) {
-        const hasPrerequisite = classData.prerequisites.some((prereq) => {
+        const hasPrerequisite = classData.prerequisites.some((prereq: any) => {
           return (
             character.classHistory &&
             character.classHistory.some(
-              (history) => history.class === prereq.class && history.maxLevel >= prereq.level
+              (history: any) => history.class === prereq.class && history.maxLevel >= prereq.level
             )
           );
         });
 
         if (!hasPrerequisite) {
           const prereqText = classData.prerequisites
-            .map((p) => `${p.class} (level ${p.level}+)`)
+            .map((p: any) => `${p.class} (level ${p.level}+)`)
             .join(' or ');
           return { canChange: false, reason: `Must have been: ${prereqText}` };
         }
@@ -186,7 +186,7 @@ export class CharacterClass {
     return { canChange: true };
   }
 
-  static getSpellSlots(character, spellSchool) {
+  static getSpellSlots(character: any, spellSchool: string) {
     const classData = this.getClassData(character.class);
     if (!classData || !classData.spellProgression) return [];
 
@@ -198,7 +198,12 @@ export class CharacterClass {
     return this.calculateSpellSlots(level, primaryStat, classData.spellProgression, spellSchool);
   }
 
-  static calculateSpellSlots(level, primaryStat, progression, school) {
+  static calculateSpellSlots(
+    level: number,
+    primaryStat: number,
+    progression: string,
+    school: string
+  ) {
     const slots = [];
 
     // Base spell progression tables (simplified)
@@ -265,7 +270,7 @@ export class CharacterClass {
       },
     };
 
-    const table = progressionTables[progression];
+    const table = (progressionTables as Record<string, any>)[progression];
     if (!table || !table[level]) return [];
 
     return table[level];

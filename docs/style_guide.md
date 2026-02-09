@@ -1,157 +1,7 @@
 # Descent: Cyber Wizardry - Game Style Guide
 
-> **Scope**: Main Menu System (Phase 2 - Dashboard Redesign)  
-> **Inspired by**: [pizzint.watch](https://www.pizzint.watch/) Pentagon Pizza Index  
-> **Last Updated**: 2026-01-24
-
----
-
-## 1. Design Philosophy
-
-### Core Aesthetic: "Tactical OSINT Dashboard"
-The visual language mimics a **military precision dashboard**. It replaces scrolling lists with a fixed-grid "situational awareness" display. Every element is anchored, data-dense, and purposeful.
-
-### Key Principles
-
-| Principle | Description |
-|-----------|-------------|
-| **Fixed Viewport** | No scrolling. The entire state of the network is visible at a glance. |
-| **Zone-Based Layout** | Information is compartmentalized into specific "monitors" (AgentOps, Network, etc.). |
-| **High Contrast** | Neon accents against deep black/void backgrounds for maximum readability. |
-| **Living Data** | Histograms, pulsing status lights, and live counters replace static text. |
-
----
-
-## 2. Color System
-
-### 2.1 Backgrounds
-
-```css
-:root {
-    /* Base Layers */
-    --bg-primary: #000000;      /* Void black */
-    --bg-secondary: #050505;    /* Panel background */
-    --bg-tertiary: #0a0a0a;     /* Raised elements */
-    
-    /* Overlays */
-    --bg-glass: rgba(0, 0, 0, 0.85); /* Glassmorphism panels */
-    --bg-overlay: rgba(0, 0, 0, 0.5); /* Dimming layers */
-}
-```
-
-### 2.2 Functional Accents (Refined)
-
-| Color | Variable | Hex | Usage |
-|-------|----------|-----|-------|
-| ⚡ **Cyber Blue** | `--accent-primary` | `#22d3ee` | Primary interactions, healthy systems, borders (Cyan-600) |
-| 🚨 **Critical Red** | `--accent-alert` | `#ef4444` | Breaches, combat, critical failures (Red-500) |
-| 🧬 **Bio Green** | `--accent-success` | `#10b981` | Stable biologicals, active agents, success (Emerald-500) |
-| ⚠️ **Warning Amber** | `--accent-warning` | `#f59e0b` | Caution, busy, processing (Amber-500) |
-| 🔮 **Data Purple** | `--accent-data` | `#a855f7` | Arcane data, magical subsystems (Purple-500) |
-
-### 2.3 Status Indicators
-
-| Status | Color | Visual |
-|--------|-------|--------|
-| **ONLINE** | Green | Solid glow + Pulse |
-| **OFFLINE** | Gray | Dimmed + Striped pattern |
-| **ERROR** | Red | Rapid flash + Glitch effect |
-| **PROCESSING** | Amber | Rotating spinner or scanning bar |
-
----
-
-## 3. Typography
-
-**Font**: `JetBrains Mono` (Primary)
-
-### Type Scale
-
-```css
-:root {
-    --text-xs: 0.75rem;   /* Data labels */
-    --text-sm: 0.875rem;  /* Body text */
-    --text-base: 1rem;    /* Standard inputs */
-    --text-lg: 1.125rem;  /* Subheaders */
-    --text-xl: 1.25rem;   /* Panel headers */
-    --text-2xl: 1.5rem;   /* Key metrics */
-    --text-3xl: 2rem;     /* Main titles */
-}
-```
-
----
-
-## 4. Main Menu Layout ("The Dashboard")
-
-The Main Menu is a **full-screen dashboard** (100vw x 100vh) with a 2-row grid structure overlaid on a circuit-board background.
-
-### 4.1 Grid Structure
-
-```css
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 Columns */
-    grid-template-rows: 1.2fr 1fr;         /* Top row slightly taller */
-    gap: var(--space-6);
-    padding: var(--space-6);
-    max-width: 1600px;
-    margin: 0 auto;
-    height: 100vh;
-}
-```
-
-### 4.2 Panel Assignment
-
-#### Top Row (Mission Control)
-1. **AgentOps** (Left): Roster management, health monitoring, recruitment.
-2. **Corrupted Network** (Center): Main dungeon interface, threat levels, connection status.
-3. **Data Exchange** (Right): Market, shop, item storage.
-
-#### Bottom Row (Support Systems)
-4. **Restoration Center** (Left): Healing, resurrection, battery recharge.
-5. **Strike Team Manifest** (Right): Party configuration, active deployment tracking.
-
-### 4.3 Panel Design
-
-Each panel uses a glassmorphism effect to separate it from the background while letting the circuit board texture peek through.
-
-```css
-.dashboard-panel {
-    background: var(--bg-glass);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-}
-
-/* Header with specialized "Cyber Brackets" */
-.panel-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: var(--space-4);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-```
-
----
-
-## 5. Components
-
-### 5.1 Histograms
-Visual bar charts used to show distribution of data (e.g., agent health spread, danger levels).
-
-### 5.2 Status Badges
-Pill-shaped indicators for quick status checks.
-
-### 5.3 Action Buttons
-Square, icon-centric buttons for primary interactions. Hover effects trigger a "holographic projection" glow.
-
-
-> **Scope**: Town Menu System (Phase 1)  
-> **Inspired by**: [pizzint.watch](https://www.pizzint.watch/) Pentagon Pizza Index  
-> **Last Updated**: 2026-01-24
+> **Scope**: Town Menu System  
+> **Last Updated**: 2026-02-08
 
 ---
 
@@ -164,10 +14,11 @@ The visual language combines **military intelligence dashboards** with **retro-c
 
 | Principle | Description |
 |-----------|-------------|
-| **Functional Color** | Colors communicate meaning (alerts, status, actions) not decoration |
-| **Information Density** | Maximize usable space with compact, scannable layouts |
-| **Terminal Aesthetic** | Monospace fonts, recessed containers, glowing accents |
-| **Tactical Feel** | Corner brackets, status indicators, pulsing elements |
+| **Fixed Viewport** | No scrolling. The entire state of the network is visible at a glance. |
+| **Zone-Based Layout** | Information is compartmentalized into specific "monitors" (AgentOps, Network, etc.). |
+| **High Contrast** | Neon accents against deep black/void backgrounds for maximum readability. |
+| **Living Data** | Pulsing status lights, live counters, and terminal text replace static content. |
+| **Neon Glow** | All interactive borders and text use `box-shadow` and `text-shadow` for a glowing, emissive look. |
 
 ---
 
@@ -178,13 +29,11 @@ The visual language combines **military intelligence dashboards** with **retro-c
 ```css
 :root {
     /* Base Backgrounds - Ultra-dark for tactical feel */
-    --bg-primary: #020202;      /* Deepest dark - interactive elements */
+    --bg-primary: #000000;      /* Void black */
     --bg-secondary: #050505;    /* Panel backgrounds */
     --bg-tertiary: #0a0a0a;     /* Raised surfaces */
     --bg-panel: #080808;        /* Standard panels */
-    
-    /* Surface with subtle blue undertone for depth */
-    --bg-tactical: #060918;     /* Alternative gradient endpoint */
+    --bg-glass: rgba(0, 0, 0, 0.85); /* Glassmorphism base */
 }
 ```
 
@@ -192,12 +41,12 @@ The visual language combines **military intelligence dashboards** with **retro-c
 
 | Color | Variable | Hex | Usage |
 |-------|----------|-----|-------|
-| 🔵 **Cyber Blue** | `--accent-primary` | `#3b82f6` | Primary actions, interactive elements, branding |
-| 🔷 **Cyan Blue** | `--accent-secondary` | `#00d4ff` | Secondary highlights, hover states, neon glows |
-| 🔴 **Neon Red** | `--accent-alert` | `#960c19` | Warnings, critical headers, urgent status |
-| 🟢 **Cyber Green** | `--accent-success` | `#00ff88` | Success states, active connections, health |
-| 🟡 **Amber Yellow** | `--accent-warning` | `#ffcc00` | Alerts, high-tension, cautions |
-| 🟣 **Neon Purple** | `--accent-data` | `#cc66ff` | Market/data elements, analysis |
+| ⚡ **Cyber Cyan** | `--accent-primary` | `#22d3ee` | Primary interactions, healthy systems, borders |
+| 🔷 **Neon Cyan** | `--accent-secondary` | `#00d4ff` | Secondary highlights, hover states, neon glows |
+| 🚨 **Alert Red** | `--accent-alert` | `#960c19` | Warnings, critical headers, urgent status |
+| 🧬 **Bio Green** | `--accent-success` | `#00ff88` | Active agents, success states, healthy |
+| ⚠️ **Warning Amber** | `--accent-warning` | `#ffcc00` | Caution, busy, processing |
+| 🔮 **Data Purple** | `--accent-data` | `#cc66ff` | Market/data elements, analysis |
 
 ### 2.3 Text Colors
 
@@ -213,15 +62,44 @@ The visual language combines **military intelligence dashboards** with **retro-c
 
 ```css
 :root {
-    --border-primary: #1f1f1f;  /* Subtle panel borders */
-    --border-accent: #333333;   /* Emphasized borders */
-    --border-glow: #3b82f6;     /* Active/focused elements */
-    
-    --glow-primary: rgba(59, 130, 246, 0.6);  /* Blue glow */
-    --glow-alert: rgba(255, 51, 51, 0.6);     /* Red glow */
-    --glow-success: rgba(0, 255, 136, 0.6);  /* Green glow */
+    --border-primary: #1f1f1f;
+    --border-accent: #333333;
+    --border-glow: #22d3ee;
+
+    --glow-primary: rgba(0, 242, 255, 0.6);
+    --glow-alert: rgba(255, 51, 51, 0.6);
+    --glow-success: rgba(0, 255, 136, 0.6);
 }
 ```
+
+### 2.5 Neon Glow Patterns
+
+Recreate the neon-emissive look with `box-shadow` and `text-shadow`:
+
+```css
+/* Panel neon border glow */
+.panel-border {
+    border: 1px solid rgba(0, 242, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.08),
+                inset 0 0 4px rgba(0, 242, 255, 0.04);
+}
+
+/* Neon text glow */
+.neon-text {
+    color: #00f2ff;
+    text-shadow: 0 0 5px rgba(0, 242, 255, 0.5),
+                 0 0 10px rgba(0, 242, 255, 0.25);
+}
+```
+
+### 2.6 Status Indicators
+
+| Status | Color | Visual |
+|--------|-------|--------|
+| **ONLINE** | Green | Solid glow + Pulse |
+| **OFFLINE** | Gray | Dimmed + Striped pattern |
+| **ERROR** | Red | Rapid flash + Glitch effect |
+| **PROCESSING** | Amber | Rotating spinner or scanning bar |
 
 ---
 
@@ -232,22 +110,18 @@ The visual language combines **military intelligence dashboards** with **retro-c
 | Purpose | Font | Fallback |
 |---------|------|----------|
 | **Primary UI** | `JetBrains Mono` | `'Courier New', monospace` |
-| **Retro Headers** | `VT323` *(Consider adding)* | `monospace` |
-
-> [!TIP]
-> Pizza Watch uses **VT323** for large, impactful headers to evoke 1980s terminals. Consider importing this for main titles and section headers.
 
 ### 3.2 Type Scale
 
 ```css
 :root {
-    --font-size-xs: 0.7rem;    /* 11.2px - Labels, timestamps */
-    --font-size-sm: 0.8rem;    /* 12.8px - Secondary content */
-    --font-size-base: 0.9rem;  /* 14.4px - Body text */
-    --font-size-lg: 1.1rem;    /* 17.6px - Emphasized text */
-    --font-size-xl: 1.25rem;   /* 20px - Section headers */
-    --font-size-2xl: 1.5rem;   /* 24px - Card titles */
-    --font-size-3xl: 2rem;     /* 32px - Page titles */
+    --font-size-xs: 0.7rem;    /* Labels, timestamps */
+    --font-size-sm: 0.8rem;    /* Secondary content */
+    --font-size-base: 0.9rem;  /* Body text */
+    --font-size-lg: 1.1rem;    /* Emphasized text */
+    --font-size-xl: 1.25rem;   /* Section headers */
+    --font-size-2xl: 1.5rem;   /* Card titles */
+    --font-size-3xl: 2rem;     /* Page titles */
 }
 ```
 
@@ -278,259 +152,143 @@ The visual language combines **military intelligence dashboards** with **retro-c
 
 ### 4.2 Town Menu Layout
 
-The Town Menu uses a simplified three-section layout: **Header**, **Card Grid**, and **Footer**.
+The Town Menu is a **full-screen dashboard** (100vw × 100vh) with a centered logo header and a **two-column layout** with an empty center pane, all overlaid on a circuit-board background.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  HEADER ROW                                                             │
-│  🍕 PENTAGON PIZZA INDEX                                                │
-│     Intel by the Slice                                                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  CARD GRID                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                   │
-│  │   TAVERN     │  │   ARMORY     │  │    GUILD     │                   │
-│  │              │  │              │  │              │                   │
-│  └──────────────┘  └──────────────┘  └──────────────┘                   │
-│                                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                   │
-│  │   TEMPLE     │  │  TRAINING    │  │   DUNGEON    │                   │
-│  │              │  │              │  │              │                   │
-│  └──────────────┘  └──────────────┘  └──────────────┘                   │
-│                                                                         │
-├─────────────────────────────────────────────────────────────────────────┤
-│  FOOTER                                                                 │
-│  CLASSIFIED // FOR OFFICIAL USE ONLY // NETWORK OPERATIONS DIVISION     │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│            ╔══════════════════════════════════════╗              │
+│            ║  DESCENT: CYBER WIZARDRY  (Logo)    ║              │
+│            ╚══════════════════════════════════════╝              │
+│                                                                 │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   LEFT COLUMN    │   CENTER PANE   │    RIGHT COLUMN            │
+│                  │   (empty -      │                             │
+│  ┌────────────┐  │    reserved)    │  ┌────────────┐            │
+│  │ AGENTOPS   │  │                 │  │ LINK       │            │
+│  │ STATUS     │  │                 │  │ STATUS     │            │
+│  └────────────┘  │                 │  └────────────┘            │
+│                  │                 │                             │
+│  ┌────────────┐  │                 │  ┌────────────┐            │
+│  │ MED-BAY    │  │                 │  │ DATA VAULT │            │
+│  └────────────┘  │                 │  └────────────┘            │
+│                  │                 │                             │
+│  ┌────────────┐  │                 │  ┌────────────┐            │
+│  │ STRIKE     │  │                 │  │ SIGNAL     │            │
+│  │ TEAM       │  │                 │  │ FEED       │            │
+│  └────────────┘  │                 │  └────────────┘            │
+│                  │                 │                             │
+└──────────────────┴──────────────────┴───────────────────────────┘
+    Circuit Board Background (circuit_board.jpg) + Dark Overlay
 ```
 
 #### 4.2.1 Page Container (`.town-menu`)
 
-The Town Hub is typically served within a **full-bleed modal overlay** that occupies the entire viewport, removing any "outer box" constraints to achieve the immersive tactical dashboard feel of [pizzint.watch](https://www.pizzint.watch/).
+Full-bleed viewport with circuit board background and dark overlay.
 
 ```css
-/* Layout in main.css context */
-.town-modal .modal-content {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    border: none;
-    background: transparent;
-}
-
 .town-menu {
-    display: flex;
-    flex-direction: column;
-    width: 98vw;
-    height: 98vh;
-    margin: 1vh auto;
-    padding: var(--space-4);
-    background: #101828;
-    color: var(--text-primary);
-    font-family: var(--font-primary);
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    background-image: url('../assets/gui/circuit_board.jpg');
+    background-size: cover;
+    background-position: center;
     overflow: hidden;
-}
-```
-
-#### 4.2.2 Header Row (`.town-header`)
-
-The header spans the full width and contains the game logo/icon and title.
-
-| Element | Style |
-|---------|-------|
-| **Logo/Icon** | 2-3rem emoji or SVG, with drop-shadow glow |
-| **Title** | `--font-size-3xl` (2rem), bold, uppercase, letter-spacing 2-4px |
-| **Subtitle** | `--font-size-lg`, italic, muted color |
-| **Background** | Transparent or subtle gradient |
-| **Spacing** | `padding-bottom: var(--space-6)`, `margin-bottom: var(--space-6)` |
-| **Border** | Bottom border `2px solid var(--border-accent)` |
-
-```css
-.town-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    padding-bottom: var(--space-6);
-    margin-bottom: var(--space-6);
-    border-bottom: 2px solid var(--border-accent);
-}
-
-.town-logo {
-    font-size: 3rem;
-    filter: drop-shadow(0 0 10px var(--glow-primary));
-}
-
-.town-title-group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
 }
 
-.town-title {
-    font-size: var(--font-size-3xl);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    color: var(--text-primary);
-    text-shadow: 0 0 20px var(--glow-primary);
-    margin: 0;
-}
-
-.town-subtitle {
-    font-size: var(--font-size-lg);
-    font-style: italic;
-    color: var(--text-secondary);
-    margin: 0;
+/* Dark overlay for contrast */
+.town-menu::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    z-index: 1;
 }
 ```
 
-#### 4.2.3 Card Grid (`.town-grid`)
+#### 4.2.2 Logo Header (`.dashboard-logo`)
 
-Structured grid containing location cards, limited to a maximum of 3 columns for optimal scanning.
-
-| Property | Value |
-|----------|-------|
-| **Columns** | `repeat(3, 1fr)` (Desktop) |
-| **Grid Max** | Max 3 columns per row |
-| **Gap** | `var(--space-6)` (24px) |
-| **Padding** | `var(--space-4)` |
-| **Overflow** | `overflow-y: auto` for scrollable content |
+Centered game logo image spanning the full width.
 
 ```css
-.town-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
-    align-content: start;
-    overflow-y: auto;
-    padding: var(--space-4);
-    padding-bottom: var(--space-6);
-}
-
-@media (max-width: 1200px) {
-    .town-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-```
-
-/* Custom scrollbar for card grid */
-.town-grid::-webkit-scrollbar {
-    width: 8px;
-    background: var(--bg-primary);
-}
-
-.town-grid::-webkit-scrollbar-thumb {
-    background: var(--border-accent);
-    border-radius: var(--radius-sm);
-}
-
-.town-grid::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-primary);
-}
-```
-
-#### 4.2.4 Footer (`.town-footer`)
-
-Tactical footer with classification-style branding.
-
-| Element | Style |
-|---------|-------|
-| **Text** | Uppercase, small, letter-spaced, muted |
-| **Content** | Classification badge / Version / Copyright |
-| **Background** | Solid dark or subtle red accent |
-| **Height** | Fixed, compact |
-
-```css
-.town-footer {
+.dashboard-logo {
+    position: relative;
+    z-index: 2;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-3) var(--space-6);
-    margin-top: auto;
-    border-top: 1px solid var(--border-primary);
-    background: linear-gradient(90deg, 
-        transparent, 
-        rgba(239, 68, 68, 0.1), 
-        transparent
-    );
+    padding: var(--space-4) var(--space-6);
+    flex-shrink: 0;
 }
 
-.footer-text {
-    font-size: var(--font-size-xs);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-muted);
-}
-
-/* Optional: Accent dividers */
-.footer-text::before,
-.footer-text::after {
-    content: '//';
-    margin: 0 var(--space-3);
-    color: var(--accent-alert);
-    opacity: 0.6;
+.dashboard-logo img {
+    max-height: 140px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(255, 60, 60, 0.4));
 }
 ```
 
-#### 4.2.5 Complete Layout Example
+#### 4.2.3 Dashboard Body (`.dashboard-body`)
 
-```html
-<div class="town-menu">
-    <!-- Header -->
-    <header class="town-header">
-        <span class="town-logo">🏰</span>
-        <div class="town-title-group">
-            <h1 class="town-title">Descent: Cyber Wizardry</h1>
-            <p class="town-subtitle">Network Operations Hub</p>
-        </div>
-    </header>
-    
-    <!-- Card Grid -->
-    <main class="town-grid">
-        <article class="location-card">...</article>
-        <article class="location-card">...</article>
-        <article class="location-card">...</article>
-        <!-- More cards -->
-    </main>
-    
-    <!-- Footer -->
-    <footer class="town-footer">
-        <span class="footer-text">CLASSIFIED // FOR OFFICIAL USE ONLY // NETWORK OPERATIONS DIVISION</span>
-    </footer>
-</div>
+Three-column CSS grid: left panels, center (empty), right panels.
+
+```css
+.dashboard-body {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) 1.2fr minmax(280px, 1fr);
+    gap: var(--space-4);
+    padding: 0 var(--space-4) var(--space-4);
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+}
 ```
+
+#### 4.2.4 Panel Columns (`.dashboard-column`)
+
+Panels stack vertically within each column using flexbox.
+
+```css
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: 0;
+}
+```
+
+#### 4.2.5 Panel Assignment
+
+| Column | Panels |
+|--------|--------|
+| **Left** | AgentOps Status, Med-Bay, Strike Team |
+| **Center** | Empty — reserved for future content (mission map, etc.) |
+| **Right** | Link Status, Data Vault, Signal Feed |
 
 #### 4.2.6 Responsive Behavior
 
 ```css
 @media (max-width: 1200px) {
-    .town-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .dashboard-body {
+        grid-template-columns: 1fr 1fr;
     }
+    .dashboard-center { display: none; }
 }
 
 @media (max-width: 768px) {
-    .town-menu {
-        width: 100vw;
-        height: 100vh;
-        padding: var(--space-3);
-    }
-    
-    .town-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .town-title {
-        font-size: var(--font-size-2xl);
-    }
-    
-    .town-grid {
+    .dashboard-body {
         grid-template-columns: 1fr;
-        gap: var(--space-4);
     }
+    .dashboard-logo img { max-height: 80px; }
 }
 ```
 
@@ -553,7 +311,7 @@ Tactical footer with classification-style branding.
 
 | Use Case | Style |
 |----------|-------|
-| **Panels** | `1px solid var(--border-primary)` |
+| **Panels** | `1px solid rgba(0, 242, 255, 0.25)` + neon glow `box-shadow` |
 | **Active Cards** | `2px solid var(--accent-primary)` |
 | **Modals** | `2px solid var(--border-accent)` |
 
@@ -565,795 +323,173 @@ Tactical footer with classification-style branding.
 
 ```css
 :root {
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5),
                    0 2px 4px -1px rgba(0, 0, 0, 0.3);
     --shadow-glow: 0 0 15px var(--glow-primary);
     --shadow-glow-lg: 0 0 25px var(--glow-primary);
 }
 ```
 
-### 6.2 Glassmorphism (New from Pizza Watch)
+### 6.2 Glassmorphism
 
 ```css
 .glass-panel {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 20, 25, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 242, 255, 0.25);
 }
 ```
-
-> [!NOTE]
-> Pizza Watch uses translucent panels with `backdrop-blur` for overlays. Consider this for modal backgrounds and floating elements.
 
 ---
 
-## 7. Card Component Architecture
+## 7. Panel Component Architecture
 
-Cards are the primary navigation and information containers in the Town Menu system. Unlike traditional "clickable card" patterns, Descent cards use **embedded interactive components** within a structured layout.
+Panels are the primary containers in the Town Menu. Each panel has a header, content area, and optional footer.
 
-### 7.1 Card Structure Overview
+### 7.1 Panel Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  HEADER ROW                                                 │
-│  ┌──────┐                                                   │
-│  │ ⚔️   │  THE ARMORY                                       │
-│  └──────┘                                                   │
-├─────────────────────────────────────────────────────────────┤
-│  ACTION ROW                                                 │
-│  ┌─────────┐ ┌─────────┐              ┌────┐ ┌────┐         │
-│  │  OPEN   │ │  BUSY   │              │ 🛒 │ │ ℹ️ │  Lv.3   │
-│  └─────────┘ └─────────┘              └────┘ └────┘         │
-│  ← Status Badges →                    ← Action Buttons →    │
-├─────────────────────────────────────────────────────────────┤
-│  DATA ROW                                                   │
-│  INVENTORY ANALYSIS                                         │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ 🔴 LIVE  Stock levels critical                       │   │
-│  │                                                      │   │
-│  │  ▓▓▓▓▓▓░░░░░░░░░░  Weapons: 12/50                    │   │
-│  │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░  Armor: 38/50                      │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│  HEADER                                 │
+│  ┌──────┐                               │
+│  │ 👤   │  AGENTOPS STATUS    [ONLINE]  │
+│  └──────┘                               │
+├─────────────────────────────────────────┤
+│  CONTENT                                │
+│  ACTIVE AGENTS:           3             │
+│  INJURED:                 0             │
+│  M.I.A.:                  1             │
+│                                         │
+│  RECRUITMENT POOL: OPEN                 │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │     [ACCESS REGISTRY]          │    │
+│  └─────────────────────────────────┘    │
+├─────────────────────────────────────────┤
+│  FOOTER    ● OPERATIONAL                │
+└─────────────────────────────────────────┘
 ```
 
-### 7.2 Header Row (`.card-header`)
-
-The Header Row provides immediate identification of the location.
-
-| Element | Class | Description |
-|---------|-------|-------------|
-| **Location Icon** | `.card-icon` | Large emoji or icon (2-3rem) representing the location |
-| **Location Title** | `.card-title` | Bold, uppercase, letter-spaced name |
-
-**Descent Location Icons:**
-
-| Location | Fantasy Icon | Cyber Icon | Title |
-|----------|--------------|------------|-------|
-| Tavern | 🍺 | 🔌 | `THE TAVERN` / `RECHARGE STATION` |
-| Armory | ⚔️ | 🔧 | `THE ARMORY` / `HARDWARE DEPOT` |
-| Guild | 🏛️ | 🖥️ | `ADVENTURER'S GUILD` / `CONTRACTOR HUB` |
-| Temple | ⛪ | 💾 | `TEMPLE OF HEALING` / `BACKUP SANCTUARY` |
-| Training Grounds | 🎯 | 📡 | `TRAINING GROUNDS` / `BOOT CAMP` |
-| Dungeon Entrance | 🚪 | 🌐 | `DUNGEON GATE` / `NETWORK ACCESS` |
+### 7.2 Panel Base Style
 
 ```css
-.card-header {
+.dashboard-panel {
+    background: rgba(0, 20, 25, 0.75);
+    border: 1px solid rgba(0, 242, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.08),
+                inset 0 0 4px rgba(0, 242, 255, 0.04);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
     display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-6);
-    border-bottom: 1px solid var(--border-primary);
-}
-
-.card-icon {
-    font-size: 2.5rem;
-    filter: drop-shadow(0 0 8px currentColor);
-}
-
-.card-title {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--text-primary);
-}
-```
-
-### 7.3 Action Row (`.card-actions`)
-
-The Action Row contains **status indicators** (left) and **interactive buttons** (right).
-
-#### Status Badges (`.status-badge`)
-
-| Status | Color | Icon | Description |
-|--------|-------|------|-------------|
-| `OPEN` | 🟢 Green | `●` | Location accessible |
-| `CLOSED` | 🔴 Red | `○` | Location currently unavailable |
-| `BUSY` | 🟡 Yellow | `◐` | High activity, possible wait |
-| `LOCKED` | ⚪ Gray | `🔒` | Requires key or quest completion |
-| `UNDER_SIEGE` | 🔴 Red (pulsing) | `⚠` | Combat event active |
-| `NEW_STOCK` | 🔵 Blue | `✦` | Fresh inventory available |
-| `GRID_ACTIVE` | 🔴 Red (pulsing) | `◉` | System online / dungeon connection active |
-
-```css
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-4) var(--space-6);
-    border-bottom: 1px solid var(--border-primary);
-}
-
-.status-group {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: 1px solid currentColor;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.status-badge.open {
-    color: var(--accent-success);
-    border-color: var(--accent-success);
-}
-
-.status-badge.closed {
-    color: var(--accent-alert);
-    border-color: var(--accent-alert);
-}
-
-.status-badge.busy {
-    color: var(--accent-warning);
-    border-color: var(--accent-warning);
-}
-
-.status-badge.locked {
-    color: var(--text-muted);
-    border-color: var(--border-accent);
-}
-
-/* GRID ACTIVE - Pulsing red status for active connections */
-.status-badge.grid-active {
-    color: var(--accent-alert);
-    border-color: var(--accent-alert);
-    animation: status-pulse 2s ease-in-out infinite;
-}
-
-.status-badge.grid-active::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: var(--accent-alert);
-    border-radius: 50%;
-    box-shadow: 0 0 6px var(--accent-alert);
-    animation: dot-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes status-pulse {
-    0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
-    50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-}
-
-@keyframes dot-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.8); }
-}
-```
-
-#### Action Buttons (`.action-btn`)
-
-| Action | Icon | Description |
-|--------|------|-------------|
-| `ENTER` | `🔘` | Navigate into location |
-| `SHOP` | `🛒` | Open trade interface |
-| `INFO` | `ℹ️` | View location details |
-| `HIRE` | `👤+` | Recruit available agents |
-| `REST` | `💤` | Begin rest sequence |
-| `TRAIN` | `⬆️` | Access training menu |
-
-**Metadata Badge** (optional, right-aligned):
-- Level requirement: `Lv.3`
-- Gold cost: `50g`
-- Danger rating: `☠️☠️`
-
-```css
-.action-group {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.action-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.action-btn:hover {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: white;
-    box-shadow: 0 0 10px var(--glow-primary);
-}
-
-/* Primary Action - stronger hover highlight (matches info color) */
-.action-btn.primary:hover {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: white;
-    box-shadow: 0 0 15px var(--glow-primary);
-}
-
-.action-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.metadata-badge {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    margin-left: var(--space-2);
-}
-```
-
-### 7.4 Data Row (`.card-data`)
-
-The Data Row displays **real-time information** about the location.
-
-#### Data Chips (`.data-chip`)
-
-Compact data points with glowing indicator dots. Used to display counts and metrics within cards.
-
-```
-┌─────────────────────────────────┐
-│  ● 1 AGENTS REGISTRY            │  ← Blue glow, count + label
-└─────────────────────────────────┘
-```
-
-| Descent Example | Description |
-|-----------------|-------------|
-| `1 AGENTS REGISTRY` | Number of agents at location |
-| `3 QUESTS AVAILABLE` | Available contracts |
-| `12 ITEMS IN STOCK` | Inventory count |
-| `2 RESTING` | Party members recovering |
-
-```css
-.data-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--accent-primary);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-primary);
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-}
-
-/* Glowing indicator dot */
-.data-chip::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: var(--accent-primary);
-    border-radius: 50%;
-    box-shadow: 0 0 6px var(--accent-primary);
-}
-
-/* Value emphasis */
-.data-chip .chip-value {
-    color: var(--accent-secondary);
-    font-weight: 700;
-}
-
-/* Chip variants */
-.data-chip.success {
-    border-color: var(--accent-success);
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
-}
-
-.data-chip.success::before {
-    background: var(--accent-success);
-    box-shadow: 0 0 6px var(--accent-success);
-}
-
-.data-chip.warning {
-    border-color: var(--accent-warning);
-    box-shadow: 0 0 8px rgba(250, 204, 21, 0.3);
-}
-
-.data-chip.warning::before {
-    background: var(--accent-warning);
-    box-shadow: 0 0 6px var(--accent-warning);
-}
-
-.data-chip.alert {
-    border-color: var(--accent-alert);
-    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
-}
-
-.data-chip.alert::before {
-    background: var(--accent-alert);
-    box-shadow: 0 0 6px var(--accent-alert);
-}
-```
-
-#### Section Label (`.data-label`)
-```css
-.data-label {
-    font-size: var(--font-size-xs);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    margin-bottom: var(--space-3);
-}
-```
-
-#### Live Status Indicator (`.live-indicator`)
-```css
-.live-indicator {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-3);
-}
-
-.live-tag {
-    font-size: var(--font-size-xs);
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    background: var(--accent-alert);
-    color: white;
-    animation: pulse 2s infinite;
-}
-
-.live-text {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-```
-
-#### Data Visualization Types
-
-| Location | Visualization | Description |
-|----------|---------------|-------------|
-| **Tavern** | Agent histogram | Shows resting party members over time |
-| **Armory** | Inventory bars | Stock levels by category |
-| **Guild** | Quest list | Available contracts with rewards |
-| **Temple** | Healing queue | Characters awaiting restoration |
-| **Training** | XP progress | Characters and their training status |
-| **Dungeon** | Threat gauge | Current danger level indicator |
-
-```css
-/* Histogram */
-.histogram {
-    display: flex;
-    align-items: flex-end;
-    gap: 3px;
-    height: 60px;
-    padding: var(--space-2) 0;
-}
-
-.histogram-bar {
-    flex: 1;
-    background: var(--accent-primary);
-    border-radius: 2px 2px 0 0;
-    min-height: 4px;
-    transition: height 0.3s ease;
-}
-
-.histogram-bar.current {
-    background: var(--accent-alert);
-    box-shadow: 0 0 8px var(--glow-alert);
-}
-
-.histogram-bar.closed {
-    background: var(--text-muted);
-    opacity: 0.3;
-}
-
-/* Progress Bars */
-.stat-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    margin-bottom: var(--space-2);
-}
-
-.stat-bar-label {
-    font-size: var(--font-size-xs);
-    color: var(--text-secondary);
-    min-width: 80px;
-}
-
-.stat-bar-track {
-    flex: 1;
-    height: 8px;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-sm);
+    flex-direction: column;
     overflow: hidden;
+    flex: 1;
 }
 
-.stat-bar-fill {
-    height: 100%;
-    background: var(--accent-primary);
-    transition: width 0.3s ease;
-}
-
-.stat-bar-value {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    min-width: 50px;
-    text-align: right;
+.dashboard-panel:hover {
+    border-color: rgba(0, 242, 255, 0.5);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.15),
+                inset 0 0 8px rgba(0, 242, 255, 0.06);
 }
 ```
 
-### 7.5 Complete Card Container
-
-```css
-.location-card {
-    position: relative;
-    background: #1a2d63;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-xl);
-    overflow: visible; /* Required for corner brackets */
-    transition: all var(--transition-normal);
-}
-
-/* Cyber-Bracket: Top-Left Corner */
-.location-card::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: 20px;
-    height: 20px;
-    border-top: 2px solid var(--accent-primary);
-    border-left: 2px solid var(--accent-primary);
-    pointer-events: none;
-    z-index: 10;
-    transition: all var(--transition-fast);
-}
-
-/* Cyber-Bracket: Bottom-Right Corner */
-.location-card::after {
-    content: '';
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
-    border-bottom: 2px solid var(--accent-primary);
-    border-right: 2px solid var(--accent-primary);
-    pointer-events: none;
-    z-index: 10;
-    transition: all var(--transition-fast);
-}
-
-/* Bracket expansion on hover - forms full border */
-.location-card:hover::before {
-    width: calc(100% - 16px);
-    height: calc(100% - 16px);
-    border-color: var(--accent-secondary);
-    box-shadow: -2px -2px 10px var(--glow-primary);
-}
-
-.location-card:hover::after {
-    width: calc(100% - 16px);
-    height: calc(100% - 16px);
-    border-color: var(--accent-secondary);
-    box-shadow: 2px 2px 10px var(--glow-primary);
-}
-
-.location-card:hover {
-    background: rgba(26, 45, 99, 0.4); /* Translucent reveal effect */
-    border-color: rgba(59, 130, 246, 0.5);
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
-}
-
-.location-card.highlighted {
-    border-color: var(--accent-primary);
-    box-shadow: var(--shadow-glow);
-    animation: pulse 2s ease-in-out infinite;
-}
-
-.location-card.disabled {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.location-card.disabled::before,
-.location-card.disabled::after {
-    border-color: var(--text-muted);
-}
-
-.card-data {
-    padding: var(--space-6);
-}
-```
-
-### 7.6 Card Variants
-
-| Variant | Use Case | Visual Treatment |
-|---------|----------|------------------|
-| **Default** | Standard location | Base styling |
-| **Highlighted** | Recommended action | Pulsing border glow |
-| **Disabled** | Locked/unavailable | Reduced opacity, no interactions |
-| **Alert** | Event active | Red border, pulsing status |
-| **New** | Fresh content | Blue "NEW" badge in header |
-
----
-
-## 8. Component Patterns
-
-### 7.1 Tactical Cards (Location Cards)
-
-The primary navigation element in the Town Hub.
-
-```
-┌────────────────────────────────────────┐
-│ ◢                               ◤      │  ← Corner brackets (::after)
-│   🏛️                                   │  ← Icon (4rem, top-aligned)
-│   TAVERN                               │  ← Title (uppercase, 2xl)
-│   Rest and recover...                  │  ← Description (muted)
-│                                        │
-│   ──────────────────────               │  ← Divider
-│   ● LIVE STATUS: 3 Agents              │  ← Status badge
-│   ▓▓▓▓▓▓▓░░░░░ 60%                     │  ← Data visualization
-│                               ◣     ◥  │  ← Corner brackets (span)
-└────────────────────────────────────────┘
-```
-
-**Key Properties:**
-- Fixed height: `350px`
-- Background: `linear-gradient(145deg, var(--bg-primary), var(--bg-secondary))`
-- Border: `2px solid var(--border-primary)`
-- Radius: `var(--radius-xl)`
-- Overflow: `visible` (for corner brackets)
-
-### 7.2 Corner Bracket Accents
-
-Decorative "L-brackets" that reinforce the tactical/industrial aesthetic. **On hover**, these brackets animate to extend across the full width and height of the card, creating a complete border frame. Simultaneously, the card background shifts to a semi-transparent state, creating a "data reveal" effect.
-
-```css
-/* Top-left bracket */
-.card::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 20px;
-    height: 20px;
-    border-top: 2px solid var(--accent-primary);
-    border-left: 2px solid var(--accent-primary);
-    z-index: 10;
-    pointer-events: none;
-    transition: all var(--transition-normal);
-}
-
-/* Bottom-right bracket */
-.card::after {
-    content: '';
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 20px;
-    height: 20px;
-    border-bottom: 2px solid var(--accent-primary);
-    border-right: 2px solid var(--accent-primary);
-    z-index: 10;
-    pointer-events: none;
-}
-```
-
-### 7.3 Status Indicators
-
-#### Pulse Dot
-```css
-.pulse-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background-color: var(--accent-success);
-    border-radius: 50%;
-    margin-right: 8px;
-    animation: pulse-green 2s infinite;
-}
-
-@keyframes pulse-green {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-    }
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    }
-}
-```
-
-#### Live Status Badge
-```css
-.live-status {
-    display: inline-flex;
-    align-items: center;
-    font-size: var(--font-size-xs);
-    font-weight: bold;
-    color: var(--accent-secondary);
-    background: rgba(59, 130, 246, 0.1);
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-}
-```
-
-### 7.4 Panel Headers ("Domino's Pizza" Style)
-
-Section headers with pulsing indicator dots.
+### 7.3 Panel Header
 
 ```css
 .panel-header {
-    font-size: var(--font-size-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--accent-alert);
-    margin-bottom: var(--space-4);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-primary);
-    padding-bottom: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.panel-header::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: currentColor;
-    margin-right: 8px;
-    border-radius: 50%;
-    box-shadow: 0 0 8px currentColor;
+.panel-title {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00f2ff;
+    text-shadow: 0 0 5px rgba(0, 242, 255, 0.5);
 }
 ```
 
-### 7.5 Industrial Buttons
+### 7.4 Panel Accent Colors
 
-Terminal-style buttons with vertical accent lines.
+Each panel has a colored top border accent:
+
+| Panel | CSS Class | Accent Color | Top Border |
+|-------|-----------|-------------|------------|
+| AgentOps | `.panel-agentops` | Green | `var(--accent-success)` |
+| Link Status | `.panel-network` | Red | `var(--accent-alert)` |
+| Data Vault | `.panel-data` | Cyan | `var(--accent-primary)` |
+| Med-Bay | `.panel-restoration` | Amber | `var(--accent-warning)` |
+| Strike Team | `.panel-manifest` | Cyan | `var(--accent-primary)` |
+| Signal Feed | `.panel-news` | Green | `var(--accent-success)` |
+
+### 7.5 Action Buttons
+
+Terminal-style action buttons with neon glow on hover.
 
 ```css
-button {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-primary);
+.panel-action-btn {
     padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-primary);
+    background: rgba(0, 242, 255, 0.05);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: #00f2ff;
     font-size: var(--font-size-xs);
     text-transform: uppercase;
     letter-spacing: 1px;
-    transition: all 0.1s ease;
-    position: relative;
-    overflow: hidden;
+    text-shadow: 0 0 4px rgba(0, 242, 255, 0.3);
 }
 
-/* Vertical accent line on hover */
-button::before {
+.panel-action-btn:hover:not(:disabled) {
+    background: rgba(0, 242, 255, 0.15);
+    border-color: #00f2ff;
+    box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
+}
+```
+
+### 7.6 Status Footer
+
+```css
+.panel-footer .status::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 2px;
-    height: 100%;
-    background: var(--accent-primary);
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-button:hover::before {
-    opacity: 1;
-}
-
-button:hover {
-    background: var(--bg-tertiary);
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 4px currentColor; /* Glowing dot */
 }
 ```
 
 ---
 
-## 8. Data Visualization
+## 8. Decorative Effects
 
-### 8.1 Status Bars (HP/Resource)
-
-Recessed containers with striped gradient fills.
+### 8.1 CRT Scanlines
 
 ```css
-.status-bar-container {
-    height: 8px;
-    background: #222;
-    border: 1px solid #333;
-    overflow: hidden;
-}
-
-.status-bar-fill {
-    height: 100%;
-    background-image: linear-gradient(
-        45deg,
-        rgba(255, 255, 255, 0.15) 25%,
-        transparent 25%,
-        transparent 50%,
-        rgba(255, 255, 255, 0.15) 50%,
-        rgba(255, 255, 255, 0.15) 75%,
-        transparent 75%
-    );
-    background-size: 1rem 1rem;
-    transition: width 0.3s ease;
-}
-
-.status-bar-fill.healthy { background-color: var(--accent-success); }
-.status-bar-fill.wounded { background-color: #f59e0b; }
-.status-bar-fill.critical { background-color: var(--accent-alert); }
-```
-
-### 8.2 Histogram Modules (New from Pizza Watch)
-
-Vertical bar charts for data visualization within cards.
-
-```css
-.histogram {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 40px;
-}
-
-.histogram-bar {
-    flex: 1;
-    background: var(--accent-primary);
-    border-radius: 1px 1px 0 0;
-    transition: height 0.3s ease;
-}
-
-.histogram-bar.active {
-    background: var(--accent-alert);
+.crt-overlay {
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+            rgba(0, 0, 0, 0.25) 50%),
+        linear-gradient(90deg,
+            rgba(255, 0, 0, 0.06),
+            rgba(0, 255, 0, 0.02),
+            rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    animation: flicker 0.15s infinite;
 }
 ```
+
+### 8.2 Digital Noise Overlay
+
+SVG-based fractal noise at very low opacity for texture.
+
+### 8.3 Circuit Board Background
+
+The base background uses `circuit_board.jpg` with a dark overlay (`rgba(0,0,0,0.78)`) to maintain readability while keeping the cyberpunk texture visible.
 
 ---
 
@@ -1371,89 +507,46 @@ Vertical bar charts for data visualization within cards.
 
 ### 9.2 Animation Patterns
 
-| Animation | Use Case | Keyframes |
-|-----------|----------|-----------|
-| `pulse` | Primary action cards | Box-shadow oscillation |
-| `glow` | Active text elements | Text-shadow oscillation |
-| `fadeIn` | Modal entry | Opacity 0→1 |
-| `slideIn` | Modal entry | TranslateY + scale |
+| Animation | Use Case | Effect |
+|-----------|----------|--------|
+| `flicker` | CRT overlay | Subtle opacity oscillation |
+| `scanline` | CRT overlay | Rolling horizontal line |
+| `pulse` | Status indicators | Box-shadow oscillation |
 
-### 9.3 Hover Transforms
+### 9.3 Hover Effects
 
-- **Cards**: `translateY(-5px) scale(1.02)`
-- **Buttons**: `translateY(-2px)`
-- **Interactive Elements**: `scale(1.05)`
-
----
-
-## 10. Decorative Elements
-
-### 10.1 Scanline Overlay (Optional - from Pizza Watch)
-
-Subtle horizontal lines for CRT/terminal feel.
-
-```css
-.scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.1) 2px,
-        rgba(0, 0, 0, 0.1) 4px
-    );
-    pointer-events: none;
-}
-```
-
-### 10.2 Grid Pattern Background (Optional)
-
-```css
-.grid-bg {
-    background-image: 
-        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
-    background-size: 20px 20px;
-}
-```
+- **Panels**: Increased glow intensity + glitch text-shadow on title
+- **Buttons**: Neon glow box-shadow activation
+- **Status dots**: Pulsing animation
 
 ---
 
-## 11. Responsive Considerations
+## 10. Responsive Considerations
 
-### 11.1 Breakpoints
+### 10.1 Breakpoints
 
 ```css
 /* Mobile: < 768px */
-/* Tablet: 768px - 1024px */
-/* Desktop: > 1024px */
+/* Tablet: 768px - 1200px */
+/* Desktop: > 1200px */
 ```
 
-### 11.2 Town Grid Collapse
+### 10.2 Layout Collapse
 
-```css
-.town-grid {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-@media (max-width: 1200px) {
-    .town-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .town-grid {
-        grid-template-columns: 1fr;
-    }
-}
-```
+| Breakpoint | Layout |
+|-----------|--------|
+| **Desktop** (>1200px) | 3-column: Left \| Center \| Right |
+| **Tablet** (768–1200px) | 2-column: Left \| Right (center hidden) |
+| **Mobile** (<768px) | 1-column: all panels stacked |
 
 ---
 
-## 12. Future Considerations
+## 11. Future Considerations
+
+### Center Pane Content
+- Mission map / tactical overview
+- Active dungeon visualization
+- Party deployment tracker
 
 ### Phase 2: Dungeon Interface
 - Viewport HUD elements
@@ -1473,21 +566,19 @@ Subtle horizontal lines for CRT/terminal feel.
 
 | Swatch | Name | Hex | Usage |
 |:------:|------|-----|-------|
-| ⬛ | Primary BG | `#050505` | Main backgrounds |
-| 🔵 | Cyber Blue | `#3b82f6` | Primary accent |
-| 🔴 | Alert Red | `#ef4444` | Warnings |
-| 🟢 | Matrix Green | `#10b981` | Success |
-| 🟡 | Warning Yellow | `#facc15` | Cautions |
-| 🟣 | Data Purple | `#a855f7` | Data elements |
+| ⬛ | Primary BG | `#000000` | Main backgrounds |
+| 🔷 | Cyber Cyan | `#22d3ee` | Primary accent |
+| 🔴 | Alert Red | `#960c19` | Warnings |
+| 🟢 | Bio Green | `#00ff88` | Success |
+| 🟡 | Warning Amber | `#ffcc00` | Cautions |
+| 🟣 | Data Purple | `#cc66ff` | Data elements |
 
-### Component Checklist
+### Asset Files
 
-- [ ] Location Cards with corner brackets
-- [ ] Panel headers with ping indicators
-- [ ] Status bars with striped fills
-- [ ] Pulsing dot animations
-- [ ] Industrial button styling
-- [ ] Glassmorphism overlays
+| Asset | Path | Usage |
+|-------|------|-------|
+| Circuit Board | `assets/gui/circuit_board.jpg` | Town menu background texture |
+| Game Logo | `assets/gui/game_logo.png` | Town menu header logo |
 
 ---
 

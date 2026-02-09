@@ -1,27 +1,41 @@
+import type { GameEventMap } from '../types/index.ts';
+
+interface EventListenerWrapper {
+  callback: (...args: any[]) => void;
+  context: any;
+}
+
+interface QueuedEvent {
+  eventName: string;
+  args: any[];
+  timestamp: number;
+}
+
 /**
  * Event System
  * Manages event-driven communication between game components
  */
 export class EventSystem {
-  listeners: Map<any, any>;
-  oneTimeListeners: Map<any, any>;
-  eventQueue: any[];
+  listeners: Map<string, EventListenerWrapper[]>;
+  oneTimeListeners: Map<string, EventListenerWrapper[]>;
+  eventQueue: QueuedEvent[];
   isProcessing: boolean;
   maxQueueSize: number;
   debugMode: boolean;
 
   static _instance: EventSystem | null = null;
 
-  static getInstance() {
+  static getInstance(): EventSystem {
     if (!EventSystem._instance) {
       EventSystem._instance = new EventSystem();
     }
     return EventSystem._instance;
   }
 
-  static setInstance(instance) {
+  static setInstance(instance: EventSystem): void {
     EventSystem._instance = instance;
   }
+
   constructor() {
     this.listeners = new Map();
     this.oneTimeListeners = new Map();
@@ -36,7 +50,13 @@ export class EventSystem {
   /**
    * Add an event listener
    */
-  on(eventName, callback, context = null) {
+  on<K extends keyof GameEventMap>(
+    eventName: K,
+    callback: (...args: GameEventMap[K]) => void,
+    context?: any
+  ): this;
+  on(eventName: string, callback: (...args: any[]) => void, context?: any): this;
+  on(eventName: string, callback: (...args: any[]) => void, context: any = null) {
     if (!this.listeners.has(eventName)) {
       this.listeners.set(eventName, []);
     }
@@ -46,7 +66,7 @@ export class EventSystem {
       context: context,
     };
 
-    this.listeners.get(eventName).push(listener);
+    this.listeners.get(eventName)!.push(listener);
 
     if (this.debugMode) {
       console.log(`Event listener added: ${eventName}`);
@@ -58,7 +78,13 @@ export class EventSystem {
   /**
    * Add a one-time event listener
    */
-  once(eventName, callback, context = null) {
+  once<K extends keyof GameEventMap>(
+    eventName: K,
+    callback: (...args: GameEventMap[K]) => void,
+    context?: any
+  ): this;
+  once(eventName: string, callback: (...args: any[]) => void, context?: any): this;
+  once(eventName: string, callback: (...args: any[]) => void, context: any = null) {
     if (!this.oneTimeListeners.has(eventName)) {
       this.oneTimeListeners.set(eventName, []);
     }
@@ -68,7 +94,7 @@ export class EventSystem {
       context: context,
     };
 
-    this.oneTimeListeners.get(eventName).push(listener);
+    this.oneTimeListeners.get(eventName)!.push(listener);
 
     if (this.debugMode) {
       console.log(`One-time event listener added: ${eventName}`);
@@ -80,7 +106,7 @@ export class EventSystem {
   /**
    * Remove an event listener
    */
-  off(eventName, callback: ((...args: any[]) => void) | null = null) {
+  off(eventName: string, callback: ((...args: any[]) => void) | null = null): this {
     if (callback) {
       // Remove specific callback
       const listeners = this.listeners.get(eventName);
@@ -123,7 +149,9 @@ export class EventSystem {
   /**
    * Emit an event immediately
    */
-  emit(eventName, ...args) {
+  emit<K extends keyof GameEventMap>(eventName: K, ...args: GameEventMap[K]): boolean;
+  emit(eventName: string, ...args: any[]): boolean;
+  emit(eventName: string, ...args: any[]): boolean {
     if (this.debugMode) {
       console.log(`Event emitted: ${eventName}`, args);
     }
@@ -174,7 +202,9 @@ export class EventSystem {
   /**
    * Queue an event for later processing
    */
-  queue(eventName, ...args) {
+  queue<K extends keyof GameEventMap>(eventName: K, ...args: GameEventMap[K]): this;
+  queue(eventName: string, ...args: any[]): this;
+  queue(eventName: string, ...args: any[]): this {
     if (this.eventQueue.length >= this.maxQueueSize) {
       console.warn('Event queue is full, dropping oldest event');
       this.eventQueue.shift();
@@ -196,7 +226,7 @@ export class EventSystem {
   /**
    * Process all queued events
    */
-  processQueue() {
+  processQueue(): void {
     if (this.isProcessing) {
       return;
     }
@@ -205,7 +235,9 @@ export class EventSystem {
 
     while (this.eventQueue.length > 0) {
       const event = this.eventQueue.shift();
-      this.emit(event.eventName, ...event.args);
+      if (event) {
+        this.emit(event.eventName, ...event.args);
+      }
     }
 
     this.isProcessing = false;
@@ -214,7 +246,7 @@ export class EventSystem {
   /**
    * Clear all queued events
    */
-  clearQueue() {
+  clearQueue(): void {
     this.eventQueue = [];
     if (this.debugMode) {
       console.log('Event queue cleared');
@@ -224,7 +256,7 @@ export class EventSystem {
   /**
    * Get the number of listeners for an event
    */
-  getListenerCount(eventName) {
+  getListenerCount(eventName: string): number {
     const regularCount = this.listeners.get(eventName)?.length || 0;
     const oneTimeCount = this.oneTimeListeners.get(eventName)?.length || 0;
     return regularCount + oneTimeCount;
@@ -233,7 +265,7 @@ export class EventSystem {
   /**
    * Get all registered event names
    */
-  getEventNames() {
+  getEventNames(): string[] {
     const regularEvents = Array.from(this.listeners.keys());
     const oneTimeEvents = Array.from(this.oneTimeListeners.keys());
     return [...new Set([...regularEvents, ...oneTimeEvents])];
@@ -242,7 +274,7 @@ export class EventSystem {
   /**
    * Remove all listeners
    */
-  removeAllListeners() {
+  removeAllListeners(): void {
     this.listeners.clear();
     this.oneTimeListeners.clear();
     this.clearQueue();
@@ -255,7 +287,7 @@ export class EventSystem {
   /**
    * Enable or disable debug mode
    */
-  setDebugMode(enabled) {
+  setDebugMode(enabled: boolean): void {
     this.debugMode = enabled;
     console.log(`Event system debug mode: ${enabled ? 'enabled' : 'disabled'}`);
   }
@@ -263,7 +295,7 @@ export class EventSystem {
   /**
    * Get debug information
    */
-  getDebugInfo() {
+  getDebugInfo(): object {
     return {
       totalListeners: this.listeners.size,
       totalOneTimeListeners: this.oneTimeListeners.size,
@@ -277,21 +309,21 @@ export class EventSystem {
   /**
    * Create a namespaced event emitter
    */
-  createNamespace(namespace) {
+  createNamespace(namespace: string): object {
     return {
-      on: (eventName, callback, context) => {
+      on: (eventName: string, callback: (...args: any[]) => void, context?: any) => {
         return this.on(`${namespace}:${eventName}`, callback, context);
       },
-      once: (eventName, callback, context) => {
+      once: (eventName: string, callback: (...args: any[]) => void, context?: any) => {
         return this.once(`${namespace}:${eventName}`, callback, context);
       },
-      off: (eventName, callback) => {
-        return this.off(`${namespace}:${eventName}`, callback);
+      off: (eventName: string, callback?: (...args: any[]) => void) => {
+        return this.off(`${namespace}:${eventName}`, callback || null);
       },
-      emit: (eventName, ...args) => {
+      emit: (eventName: string, ...args: any[]) => {
         return this.emit(`${namespace}:${eventName}`, ...args);
       },
-      queue: (eventName, ...args) => {
+      queue: (eventName: string, ...args: any[]) => {
         return this.queue(`${namespace}:${eventName}`, ...args);
       },
     };
@@ -300,11 +332,11 @@ export class EventSystem {
   /**
    * Wait for an event to occur
    */
-  waitFor(eventName, timeout = 0) {
+  waitFor(eventName: string, timeout = 0): Promise<any[]> {
     return new Promise((resolve, reject) => {
-      let timeoutId: any = null;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-      const handler = (...args) => {
+      const handler = (...args: any[]) => {
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -325,7 +357,7 @@ export class EventSystem {
   /**
    * Chain events together
    */
-  chain(events) {
+  chain(events: Array<string | (() => any) | { name: string; timeout: number }>): Promise<void> {
     return events.reduce((promise, event) => {
       return promise.then(() => {
         if (typeof event === 'string') {

@@ -7,6 +7,15 @@ import { spellsMigration } from '../data/migrations/spells-v1.0.0.ts';
 import { conditionsMigration } from '../data/migrations/conditions-v1.0.0.ts';
 import { effectsMigration } from '../data/migrations/effects-v1.0.0.ts';
 import { monstersMigration } from '../data/migrations/monsters-v1.0.0.ts';
+import type {
+  CharacterData,
+  PartyData,
+  CampData,
+  SaveData,
+  MonsterData,
+  EquipmentItem,
+  SpellData,
+} from '../types/index.ts';
 
 /**
  * Storage Utilities
@@ -60,7 +69,7 @@ export class Storage {
   /**
    * Save game data
    */
-  static saveGame(gameData) {
+  static saveGame(gameData: Record<string, unknown>): boolean {
     try {
       const saveData = {
         ...gameData,
@@ -82,7 +91,7 @@ export class Storage {
   /**
    * Load game data
    */
-  static loadGame() {
+  static loadGame(): SaveData | null {
     try {
       const serialized = localStorage.getItem(this.SAVE_KEY);
 
@@ -109,7 +118,7 @@ export class Storage {
   /**
    * Check if a save game exists
    */
-  static hasSavedGame() {
+  static hasSavedGame(): boolean {
     const serialized = localStorage.getItem(this.SAVE_KEY);
     return serialized !== null;
   }
@@ -117,7 +126,7 @@ export class Storage {
   /**
    * Delete saved game
    */
-  static deleteSavedGame() {
+  static deleteSavedGame(): boolean {
     try {
       localStorage.removeItem(this.SAVE_KEY);
       console.log('Saved game deleted');
@@ -131,7 +140,7 @@ export class Storage {
   /**
    * Save game settings
    */
-  static saveSettings(settings) {
+  static saveSettings(settings: Record<string, unknown>): boolean {
     try {
       const settingsData = {
         ...settings,
@@ -151,7 +160,7 @@ export class Storage {
   /**
    * Load game settings
    */
-  static loadSettings() {
+  static loadSettings(): Record<string, unknown> {
     try {
       const serialized = localStorage.getItem(this.SETTINGS_KEY);
 
@@ -172,7 +181,7 @@ export class Storage {
   /**
    * Get default settings
    */
-  static getDefaultSettings() {
+  static getDefaultSettings(): Record<string, unknown> {
     return {
       volume: 0.7,
       soundEffects: true,
@@ -212,7 +221,7 @@ export class Storage {
    * Initialize IndexedDB for character storage
    * @returns {Promise<boolean>} Success status
    */
-  static async initializeDB() {
+  static async initializeDB(): Promise<boolean> {
     if (this._dbInitialized && this._db) {
       return true;
     }
@@ -238,7 +247,7 @@ export class Storage {
       };
 
       request.onupgradeneeded = (event) => {
-        const db = (event.target as any).result;
+        const db = (event.target as IDBOpenDBRequest).result;
 
         // Create characters store
         if (!db.objectStoreNames.contains(this.CHARACTER_STORE)) {
@@ -443,7 +452,7 @@ export class Storage {
    * @param {Object} character - Character object to save
    * @returns {Promise<boolean>} Success status
    */
-  static async saveCharacter(character) {
+  static async saveCharacter(character: any): Promise<boolean> {
     try {
       // NEW: Validate team membership before saving
       if (character.validateTeamMembership) {
@@ -530,7 +539,7 @@ export class Storage {
    * @param {string} characterId - Character ID to load
    * @returns {Promise<Object|null>} Character data or null
    */
-  static async loadCharacter(characterId) {
+  static async loadCharacter(characterId: string): Promise<CharacterData | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -565,7 +574,7 @@ export class Storage {
    * Load all characters from IndexedDB
    * @returns {Promise<Array>} Array of character objects
    */
-  static async loadAllCharacters() {
+  static async loadAllCharacters(): Promise<CharacterData[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -599,7 +608,7 @@ export class Storage {
    * @param {string} characterId - Character ID to delete
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteCharacter(characterId) {
+  static async deleteCharacter(characterId: string): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -632,7 +641,7 @@ export class Storage {
    * @param {Object} criteria - Query criteria (race, class, level, status, etc.)
    * @returns {Promise<Array>} Array of matching characters
    */
-  static async queryCharacters(criteria = {}) {
+  static async queryCharacters(criteria: Record<string, any> = {}): Promise<CharacterData[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -692,14 +701,26 @@ export class Storage {
    * Get character statistics
    * @returns {Promise<Object>} Character statistics
    */
-  static async getCharacterStatistics() {
+  static async getCharacterStatistics(): Promise<Record<string, unknown> | null> {
     try {
       const characters = await this.loadAllCharacters();
 
-      const stats = {
-        totalCharacters: (characters as any).length,
-        aliveCharacters: (characters as any).filter((c) => c.isAlive).length,
-        deadCharacters: (characters as any).filter((c) => !c.isAlive).length,
+      const stats: {
+        totalCharacters: number;
+        aliveCharacters: number;
+        deadCharacters: number;
+        byRace: Record<string, number>;
+        byClass: Record<string, number>;
+        byLevel: Record<string, number>;
+        byStatus: Record<string, number>;
+        averageLevel: number;
+        highestLevel: number;
+        oldestCharacter: CharacterData | null;
+        newestCharacter: CharacterData | null;
+      } = {
+        totalCharacters: characters.length,
+        aliveCharacters: characters.filter((c) => c.isAlive).length,
+        deadCharacters: characters.filter((c) => !c.isAlive).length,
         byRace: {},
         byClass: {},
         byLevel: {},
@@ -710,9 +731,9 @@ export class Storage {
         newestCharacter: null,
       };
 
-      if ((characters as any).length > 0) {
+      if (characters.length > 0) {
         // Calculate distributions
-        (characters as any).forEach((char) => {
+        characters.forEach((char) => {
           // Race distribution
           stats.byRace[char.race] = (stats.byRace[char.race] || 0) + 1;
 
@@ -727,12 +748,15 @@ export class Storage {
         });
 
         // Calculate averages and extremes
-        const levels = (characters as any).map((c) => c.level);
+        const levels = characters.map((c) => c.level);
         stats.averageLevel = Math.round(levels.reduce((a, b) => a + b, 0) / levels.length);
         stats.highestLevel = Math.max(...levels);
 
         // Find oldest and newest characters
-        const sortedByDate = (characters as any).sort((a, b) => a.dateCreated - b.dateCreated);
+        const sortedByDate = [...characters].sort(
+          (a: CharacterData, b: CharacterData) =>
+            ((a as any).dateCreated || 0) - ((b as any).dateCreated || 0)
+        );
         stats.oldestCharacter = sortedByDate[0];
         stats.newestCharacter = sortedByDate[sortedByDate.length - 1];
       }
@@ -749,12 +773,14 @@ export class Storage {
    * @param {string} partyId - Party ID to find members for
    * @returns {Promise<Array>} Array of active team members
    */
-  static async getActiveTeamMembers(partyId) {
+  static async getActiveTeamMembers(partyId: string): Promise<CharacterData[]> {
     try {
       const allCharacters = await this.loadAllCharacters();
-      return (allCharacters as any).filter(
+      return allCharacters.filter(
         (char) =>
-          char.partyId === partyId && !char.isPhasedOut && !this.isCharacterPermanentlyLost(char)
+          (char as any).partyId === partyId &&
+          !(char as any).isPhasedOut &&
+          !this.isCharacterPermanentlyLost(char)
       );
     } catch (error: any) {
       console.error('Failed to get active team members:', error);
@@ -767,10 +793,12 @@ export class Storage {
    * @param {string} partyId - Party ID to find phased out members for
    * @returns {Promise<Array>} Array of phased out team members
    */
-  static async getPhasedOutTeamMembers(partyId) {
+  static async getPhasedOutTeamMembers(partyId: string): Promise<CharacterData[]> {
     try {
       const allCharacters = await this.loadAllCharacters();
-      return (allCharacters as any).filter((char) => char.partyId === partyId && char.isPhasedOut);
+      return allCharacters.filter(
+        (char) => (char as any).partyId === partyId && (char as any).isPhasedOut
+      );
     } catch (error: any) {
       console.error('Failed to get phased out team members:', error);
       return [];
@@ -783,7 +811,7 @@ export class Storage {
    * @param {Object} character - Character to check
    * @returns {boolean} True if character is permanently lost
    */
-  static isCharacterPermanentlyLost(character) {
+  static isCharacterPermanentlyLost(character: Record<string, any> | null): boolean {
     if (!character) return false;
     return (
       character.status === 'lost' ||
@@ -796,7 +824,7 @@ export class Storage {
   /**
    * Save character templates (legacy localStorage method)
    */
-  static saveCharacterTemplates(templates) {
+  static saveCharacterTemplates(templates: CharacterData[]): boolean {
     try {
       const templatesData = {
         templates: templates,
@@ -816,7 +844,7 @@ export class Storage {
   /**
    * Load character templates
    */
-  static loadCharacterTemplates() {
+  static loadCharacterTemplates(): CharacterData[] {
     try {
       const serialized = localStorage.getItem(this.CHARACTERS_KEY);
 
@@ -835,7 +863,7 @@ export class Storage {
   /**
    * Validate save data structure
    */
-  static validateSaveData(saveData) {
+  static validateSaveData(saveData: Record<string, unknown>): boolean {
     if (!saveData || typeof saveData !== 'object') {
       return false;
     }
@@ -860,7 +888,7 @@ export class Storage {
   /**
    * Export save data as JSON string
    */
-  static exportSave() {
+  static exportSave(): string {
     const saveData = this.loadGame();
     if (!saveData) {
       throw new Error('No save data to export');
@@ -872,7 +900,7 @@ export class Storage {
   /**
    * Import save data from JSON string
    */
-  static importSave(jsonString) {
+  static importSave(jsonString: string): boolean {
     try {
       const saveData = JSON.parse(jsonString);
 
@@ -891,7 +919,7 @@ export class Storage {
   /**
    * Get storage usage information
    */
-  static getStorageInfo() {
+  static getStorageInfo(): Record<string, unknown> | null {
     try {
       const saveSize = localStorage.getItem(this.SAVE_KEY)?.length || 0;
       const settingsSize = localStorage.getItem(this.SETTINGS_KEY)?.length || 0;
@@ -915,7 +943,7 @@ export class Storage {
   /**
    * Clear all stored data
    */
-  static clearAll() {
+  static clearAll(): boolean {
     try {
       localStorage.removeItem(this.SAVE_KEY);
       localStorage.removeItem(this.SETTINGS_KEY);
@@ -932,13 +960,13 @@ export class Storage {
   /**
    * Check if localStorage is available
    */
-  static isAvailable() {
+  static isAvailable(): boolean {
     try {
       const test = '__storage_test__';
       localStorage.setItem(test, test);
       localStorage.removeItem(test);
       return true;
-    } catch (error: any) {
+    } catch {
       return false;
     }
   }
@@ -946,7 +974,7 @@ export class Storage {
   /**
    * Get available storage space
    */
-  static getAvailableSpace() {
+  static getAvailableSpace(): Record<string, number> | null {
     try {
       const totalSize = 5 * 1024 * 1024; // 5MB typical localStorage limit
       let usedSize = 0;
@@ -978,7 +1006,11 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Object} Save result
    */
-  static savePartyInDungeon(party, dungeon, gameState = {}) {
+  static savePartyInDungeon(
+    party: any,
+    dungeon: any,
+    _gameState: Record<string, unknown> = {}
+  ): Record<string, unknown> {
     try {
       const campId = `${this.CAMP_KEY_PREFIX}${party.id}_${Date.now()}`;
 
@@ -1039,7 +1071,7 @@ export class Storage {
    * @param {string} campId - Camp save ID to resume
    * @returns {Object} Resume result with party and dungeon data
    */
-  static resumePartyFromDungeon(campId) {
+  static resumePartyFromDungeon(campId: string): Record<string, unknown> {
     try {
       const serialized = localStorage.getItem(campId);
 
@@ -1103,8 +1135,8 @@ export class Storage {
    * Get list of all saved camps
    * @returns {Array} List of camp saves
    */
-  static getSavedCamps() {
-    const camps: any[] = [];
+  static getSavedCamps(): Record<string, any>[] {
+    const camps: Record<string, any>[] = [];
 
     try {
       for (let i = 0; i < localStorage.length; i++) {
@@ -1121,7 +1153,7 @@ export class Storage {
               campTime: campData.campTime,
               timeCamped: Date.now() - campData.campTime,
               memberCount: campData.members.length,
-              aliveCount: campData.members.filter((m) => m.isAlive).length,
+              aliveCount: campData.members.filter((m: any) => m.isAlive).length,
             });
           }
         }
@@ -1141,7 +1173,7 @@ export class Storage {
    * @param {string} campId - Camp ID to delete
    * @returns {boolean} Success status
    */
-  static deleteCamp(campId) {
+  static deleteCamp(campId: string): boolean {
     try {
       localStorage.removeItem(campId);
       console.log(`Deleted camp: ${campId}`);
@@ -1157,7 +1189,7 @@ export class Storage {
    * @param {Object} dungeon - Dungeon object to save
    * @returns {boolean} Success status
    */
-  static saveDungeonStateLocal(dungeon) {
+  static saveDungeonStateLocal(dungeon: Record<string, any>): boolean {
     try {
       const dungeonStates = this.loadDungeonStates() || {};
 
@@ -1190,7 +1222,7 @@ export class Storage {
    * @param {string} dungeonId - Dungeon ID to load
    * @returns {Object|null} Dungeon state or null
    */
-  static loadDungeonStateLocal(dungeonId = 'main_dungeon') {
+  static loadDungeonStateLocal(dungeonId: string = 'main_dungeon'): Record<string, unknown> | null {
     try {
       const dungeonStates = this.loadDungeonStates();
       return dungeonStates ? dungeonStates[dungeonId] : null;
@@ -1204,7 +1236,7 @@ export class Storage {
    * Load all dungeon states
    * @returns {Object|null} All dungeon states or null
    */
-  static loadDungeonStates() {
+  static loadDungeonStates(): Record<string, Record<string, unknown>> | null {
     try {
       const serialized = localStorage.getItem(this.DUNGEON_STATE_KEY);
       return serialized ? JSON.parse(serialized) : null;
@@ -1219,7 +1251,7 @@ export class Storage {
    * @param {Array} members - Party members array
    * @returns {Array} Serialized member data
    */
-  static serializePartyMembers(members) {
+  static serializePartyMembers(members: CharacterData[]): Record<string, any>[] {
     return members.map((member) => ({
       id: member.id,
       name: member.name,
@@ -1251,7 +1283,7 @@ export class Storage {
    * @param {Array} serializedMembers - Serialized member data
    * @returns {Array} Deserialized party members
    */
-  static deserializePartyMembers(serializedMembers) {
+  static deserializePartyMembers(serializedMembers: CharacterData[]): CharacterData[] {
     return serializedMembers.map((memberData) => {
       // Reconstruct member object with proper structure
       const member = { ...memberData };
@@ -1272,7 +1304,7 @@ export class Storage {
    * @param {Object} campData - Camp data to validate
    * @returns {boolean} Whether data is valid
    */
-  static validateCampData(campData) {
+  static validateCampData(campData: Record<string, any>): boolean {
     if (!campData || typeof campData !== 'object') return false;
 
     const requiredFields = [
@@ -1315,7 +1347,7 @@ export class Storage {
    * Get camp save statistics
    * @returns {Object} Camp save statistics
    */
-  static getCampStatistics() {
+  static getCampStatistics(): Record<string, unknown> {
     const camps = this.getSavedCamps();
 
     return {
@@ -1336,7 +1368,7 @@ export class Storage {
    * @param {number} maxAgeDays - Maximum age in days before cleanup
    * @returns {Object} Cleanup result
    */
-  static cleanupOldCamps(maxAgeDays = 30) {
+  static cleanupOldCamps(maxAgeDays: number = 30): Record<string, unknown> {
     const cutoffTime = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
     let deletedCount = 0;
 
@@ -1370,7 +1402,7 @@ export class Storage {
    * @param {string} campId - Camp ID to export
    * @returns {string|null} JSON string of camp data
    */
-  static exportCamp(campId) {
+  static exportCamp(campId: string): string | null {
     try {
       const serialized = localStorage.getItem(campId);
       if (!serialized) return null;
@@ -1388,7 +1420,7 @@ export class Storage {
    * @param {string} jsonString - JSON string of camp data
    * @returns {Object} Import result
    */
-  static importCamp(jsonString) {
+  static importCamp(jsonString: string): Record<string, unknown> {
     try {
       const campData = JSON.parse(jsonString);
 
@@ -1431,7 +1463,7 @@ export class Storage {
    * Check if entities need to be updated from JSON files
    * @returns {Promise<boolean>} Whether entities need updating
    */
-  static async needsEntityUpdate() {
+  static async needsEntityUpdate(): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         return true; // If DB fails, assume we need to load
@@ -1440,7 +1472,7 @@ export class Storage {
       const transaction = this._db!.transaction([this.VERSION_STORE], 'readonly');
       const store = transaction.objectStore(this.VERSION_STORE);
 
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         const request = store.get('entity_version');
 
         request.onsuccess = () => {
@@ -1469,7 +1501,7 @@ export class Storage {
    * Update entity version record
    * @returns {Promise<boolean>} Success status
    */
-  static async updateEntityVersion() {
+  static async updateEntityVersion(): Promise<boolean> {
     try {
       const transaction = this._db!.transaction([this.VERSION_STORE], 'readwrite');
       const store = transaction.objectStore(this.VERSION_STORE);
@@ -1505,7 +1537,7 @@ export class Storage {
    * @param {boolean} forceReload - Force reload even if version matches
    * @returns {Promise<boolean>} Success status
    */
-  static async loadEntitiesFromJSON(forceReload = false) {
+  static async loadEntitiesFromJSON(forceReload: boolean = false): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1561,7 +1593,10 @@ export class Storage {
    * @param {Object} entities - Object containing entities to save
    * @returns {Promise<boolean>} Success status
    */
-  static async bulkSaveEntities(storeName, entities) {
+  static async bulkSaveEntities(
+    storeName: string,
+    entities: Record<string, Record<string, unknown>>
+  ): Promise<boolean> {
     try {
       const transaction = this._db!.transaction([storeName], 'readwrite');
       const store = transaction.objectStore(storeName);
@@ -1594,7 +1629,7 @@ export class Storage {
    * @param {string} entityId - Entity ID to retrieve
    * @returns {Promise<Object|null>} Entity data or null
    */
-  static async getEntity(storeName, entityId) {
+  static async getEntity(storeName: string, entityId: string): Promise<any> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1626,7 +1661,7 @@ export class Storage {
    * @param {string} weaponId - Weapon ID to retrieve
    * @returns {Promise<Object|null>} Weapon data or null
    */
-  static async getWeapon(weaponId) {
+  static async getWeapon(weaponId: string): Promise<EquipmentItem | null> {
     return this.getEntity(this.WEAPON_STORE, weaponId);
   }
 
@@ -1635,7 +1670,7 @@ export class Storage {
    * @param {string} armorId - Armor ID to retrieve
    * @returns {Promise<Object|null>} Armor data or null
    */
-  static async getArmor(armorId) {
+  static async getArmor(armorId: string): Promise<EquipmentItem | null> {
     return this.getEntity(this.ARMOR_STORE, armorId);
   }
 
@@ -1644,7 +1679,7 @@ export class Storage {
    * @param {string} shieldId - Shield ID to retrieve
    * @returns {Promise<Object|null>} Shield data or null
    */
-  static async getShield(shieldId) {
+  static async getShield(shieldId: string): Promise<EquipmentItem | null> {
     return this.getEntity(this.SHIELD_STORE, shieldId);
   }
 
@@ -1653,7 +1688,7 @@ export class Storage {
    * @param {string} accessoryId - Accessory ID to retrieve
    * @returns {Promise<Object|null>} Accessory data or null
    */
-  static async getAccessory(accessoryId) {
+  static async getAccessory(accessoryId: string): Promise<EquipmentItem | null> {
     return this.getEntity(this.ACCESSORY_STORE, accessoryId);
   }
 
@@ -1662,7 +1697,7 @@ export class Storage {
    * @param {string} spellId - Spell ID to retrieve
    * @returns {Promise<Object|null>} Spell data or null
    */
-  static async getSpell(spellId) {
+  static async getSpell(spellId: string): Promise<SpellData | null> {
     return this.getEntity(this.SPELL_STORE, spellId);
   }
 
@@ -1671,7 +1706,7 @@ export class Storage {
    * @param {string} conditionId - Condition ID to retrieve
    * @returns {Promise<Object|null>} Condition data or null
    */
-  static async getCondition(conditionId) {
+  static async getCondition(conditionId: string): Promise<Record<string, any> | null> {
     return this.getEntity(this.CONDITION_STORE, conditionId);
   }
 
@@ -1680,7 +1715,7 @@ export class Storage {
    * @param {string} effectId - Effect ID to retrieve
    * @returns {Promise<Object|null>} Effect data or null
    */
-  static async getEffect(effectId) {
+  static async getEffect(effectId: string): Promise<Record<string, any> | null> {
     return this.getEntity(this.EFFECT_STORE, effectId);
   }
 
@@ -1689,7 +1724,7 @@ export class Storage {
    * @param {string} monsterId - Monster ID to retrieve
    * @returns {Promise<Object|null>} Monster data or null
    */
-  static async getMonster(monsterId) {
+  static async getMonster(monsterId: string): Promise<MonsterData | null> {
     return this.getEntity(this.MONSTER_STORE, monsterId);
   }
 
@@ -1698,7 +1733,7 @@ export class Storage {
    * @param {string} storeName - Name of the store
    * @returns {Promise<Array>} Array of entities
    */
-  static async getAllEntities(storeName) {
+  static async getAllEntities(storeName: string): Promise<any[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1729,7 +1764,7 @@ export class Storage {
    * Get all weapons
    * @returns {Promise<Array>} Array of weapons
    */
-  static async getAllWeapons() {
+  static async getAllWeapons(): Promise<EquipmentItem[]> {
     return this.getAllEntities(this.WEAPON_STORE);
   }
 
@@ -1737,7 +1772,7 @@ export class Storage {
    * Get all armor
    * @returns {Promise<Array>} Array of armor
    */
-  static async getAllArmor() {
+  static async getAllArmor(): Promise<EquipmentItem[]> {
     return this.getAllEntities(this.ARMOR_STORE);
   }
 
@@ -1745,7 +1780,7 @@ export class Storage {
    * Get all shields
    * @returns {Promise<Array>} Array of shields
    */
-  static async getAllShields() {
+  static async getAllShields(): Promise<EquipmentItem[]> {
     return this.getAllEntities(this.SHIELD_STORE);
   }
 
@@ -1753,7 +1788,7 @@ export class Storage {
    * Get all accessories
    * @returns {Promise<Array>} Array of accessories
    */
-  static async getAllAccessories() {
+  static async getAllAccessories(): Promise<EquipmentItem[]> {
     return this.getAllEntities(this.ACCESSORY_STORE);
   }
 
@@ -1761,7 +1796,7 @@ export class Storage {
    * Get all spells
    * @returns {Promise<Array>} Array of spells
    */
-  static async getAllSpells() {
+  static async getAllSpells(): Promise<SpellData[]> {
     return this.getAllEntities(this.SPELL_STORE);
   }
 
@@ -1769,7 +1804,7 @@ export class Storage {
    * Get all conditions
    * @returns {Promise<Array>} Array of conditions
    */
-  static async getAllConditions() {
+  static async getAllConditions(): Promise<Record<string, any>[]> {
     return this.getAllEntities(this.CONDITION_STORE);
   }
 
@@ -1777,7 +1812,7 @@ export class Storage {
    * Get all effects
    * @returns {Promise<Array>} Array of effects
    */
-  static async getAllEffects() {
+  static async getAllEffects(): Promise<Record<string, any>[]> {
     return this.getAllEntities(this.EFFECT_STORE);
   }
 
@@ -1785,7 +1820,7 @@ export class Storage {
    * Get all monsters
    * @returns {Promise<Array>} Array of monsters
    */
-  static async getAllMonsters() {
+  static async getAllMonsters(): Promise<MonsterData[]> {
     return this.getAllEntities(this.MONSTER_STORE);
   }
 
@@ -1795,7 +1830,10 @@ export class Storage {
    * @param {Object} criteria - Query criteria
    * @returns {Promise<Array>} Array of matching entities
    */
-  static async queryEntities(storeName, criteria = {}) {
+  static async queryEntities(
+    storeName: string,
+    criteria: Record<string, any> = {}
+  ): Promise<any[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1861,7 +1899,11 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Promise<Object>} Save result
    */
-  static async saveCampWithEntityReferences(party, dungeon, gameState = {}) {
+  static async saveCampWithEntityReferences(
+    party: any,
+    dungeon: any,
+    _gameState: any = {}
+  ): Promise<Record<string, unknown>> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1885,11 +1927,11 @@ export class Storage {
         partyName: party.name,
 
         // Store character entity references instead of full data
-        memberIds: party.members.map((member) => member.id),
+        memberIds: party.members.map((member: any) => member.id),
 
         // Quick stats for indexing
         memberCount: party.members.length,
-        aliveCount: party.members.filter((m) => m.isAlive).length,
+        aliveCount: party.members.filter((m: any) => m.isAlive).length,
 
         location: {
           currentFloor: dungeon.currentFloor,
@@ -1959,7 +2001,7 @@ export class Storage {
    * @param {string} campId - Camp ID to resume
    * @returns {Promise<Object>} Resume result with party and dungeon data
    */
-  static async resumeCampWithEntityReferences(campId) {
+  static async resumeCampWithEntityReferences(campId: string): Promise<Record<string, unknown>> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1990,7 +2032,7 @@ export class Storage {
       }
 
       // Load characters by entity references
-      const members: any[] = [];
+      const members: CharacterData[] = [];
       for (const memberId of (campData as any).memberIds) {
         const character = await this.loadCharacter(memberId);
         if (character) {
@@ -2032,7 +2074,7 @@ export class Storage {
    * @param {Object} criteria - Query criteria
    * @returns {Promise<Array>} Array of camp data
    */
-  static async getAllCamps(criteria = {}) {
+  static async getAllCamps(criteria: Record<string, any> = {}): Promise<CampData[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2050,7 +2092,7 @@ export class Storage {
    * @param {string} campId - Camp ID to delete
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteCampFromDB(campId) {
+  static async deleteCampFromDB(campId: string): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2084,7 +2126,10 @@ export class Storage {
    * @param {Object} dungeonData - Dungeon save data
    * @returns {Promise<boolean>} Success status
    */
-  static async saveDungeonState(dungeonId, dungeonData) {
+  static async saveDungeonState(
+    dungeonId: string,
+    dungeonData: Record<string, unknown>
+  ): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2124,7 +2169,7 @@ export class Storage {
    * @param {string} dungeonId - Dungeon ID to load
    * @returns {Promise<Object|null>} Dungeon data or null
    */
-  static async loadDungeonState(dungeonId) {
+  static async loadDungeonState(dungeonId: string): Promise<Record<string, unknown> | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2155,7 +2200,7 @@ export class Storage {
    * Force reload entities from JSON files (for development)
    * @returns {Promise<boolean>} Success status
    */
-  static async forceReloadEntities() {
+  static async forceReloadEntities(): Promise<boolean> {
     console.log('Force reloading entities from JSON files...');
     return await this.loadEntitiesFromJSON(true);
   }
@@ -2164,7 +2209,7 @@ export class Storage {
    * Clear all entity stores (for development)
    * @returns {Promise<boolean>} Success status
    */
-  static async clearAllEntities() {
+  static async clearAllEntities(): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2217,7 +2262,7 @@ export class Storage {
    * Get entity version information
    * @returns {Promise<Object>} Version information
    */
-  static async getEntityVersionInfo() {
+  static async getEntityVersionInfo(): Promise<Record<string, unknown> | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2254,7 +2299,9 @@ export class Storage {
   /**
    * Load entity migration by type
    */
-  static async loadEntityMigration(entityType) {
+  static async loadEntityMigration(
+    entityType: string
+  ): Promise<Record<string, Record<string, unknown>>> {
     try {
       let migration;
 
@@ -2298,9 +2345,9 @@ export class Storage {
       );
 
       // Apply any transformations
-      let data = migration.data;
+      let data: Record<string, any> = migration.data;
       if (migration.transform) {
-        data = Object.entries(data).reduce((acc, [key, value]) => {
+        data = Object.entries(data).reduce((acc: Record<string, any>, [key, value]) => {
           acc[key] = migration.transform(value);
           return acc;
         }, {});
@@ -2309,7 +2356,7 @@ export class Storage {
       // Validate data if validation function exists
       if (migration.validate) {
         const invalidEntries = Object.entries(data).filter(
-          ([key, value]) => !migration.validate(value)
+          ([_key, value]) => !migration.validate(value)
         );
         if (invalidEntries.length > 0) {
           console.warn(`Invalid entries in ${entityType}:`, invalidEntries);
@@ -2326,7 +2373,7 @@ export class Storage {
   /**
    * Get embedded weapons data (CORS fallback)
    */
-  static async getEmbeddedWeapons() {
+  static async getEmbeddedWeapons(): Promise<Record<string, Record<string, unknown>>> {
     return {
       weapon_dagger_001: {
         name: 'Dagger',
@@ -2435,7 +2482,7 @@ export class Storage {
   /**
    * Get embedded armor data (CORS fallback)
    */
-  static async getEmbeddedArmor() {
+  static async getEmbeddedArmor(): Promise<Record<string, Record<string, unknown>>> {
     return {
       armor_leather_001: {
         name: 'Leather Armor',
@@ -2503,7 +2550,7 @@ export class Storage {
   /**
    * Get embedded shields data (CORS fallback)
    */
-  static async getEmbeddedShields() {
+  static async getEmbeddedShields(): Promise<Record<string, Record<string, unknown>>> {
     return {
       shield_small_001: {
         name: 'Small Shield',
@@ -2549,7 +2596,7 @@ export class Storage {
   /**
    * Get embedded accessories data (CORS fallback)
    */
-  static async getEmbeddedAccessories() {
+  static async getEmbeddedAccessories(): Promise<Record<string, Record<string, unknown>>> {
     return {
       accessory_ring_protection_001: {
         name: 'Ring of Protection',
@@ -2648,7 +2695,7 @@ export class Storage {
   /**
    * Get embedded spells data (CORS fallback)
    */
-  static async getEmbeddedSpells() {
+  static async getEmbeddedSpells(): Promise<Record<string, Record<string, unknown>>> {
     return {
       // Arcane Level 1
       spell_magic_missile_001: {
@@ -2835,7 +2882,7 @@ export class Storage {
   /**
    * Get embedded conditions data (CORS fallback)
    */
-  static async getEmbeddedConditions() {
+  static async getEmbeddedConditions(): Promise<Record<string, Record<string, unknown>>> {
     return {
       condition_poisoned_001: {
         name: 'Poisoned',
@@ -2962,7 +3009,7 @@ export class Storage {
   /**
    * Get embedded effects data (CORS fallback)
    */
-  static async getEmbeddedEffects() {
+  static async getEmbeddedEffects(): Promise<Record<string, Record<string, unknown>>> {
     return {
       effect_haste_001: {
         name: 'Haste',
@@ -3119,7 +3166,7 @@ export class Storage {
   /**
    * Get embedded monsters data (CORS fallback)
    */
-  static async getEmbeddedMonsters() {
+  static async getEmbeddedMonsters(): Promise<Record<string, Record<string, unknown>>> {
     return {
       // Level 1 Monsters
       monster_kobold_001: {
@@ -3352,7 +3399,7 @@ export class Storage {
    * @param {string} partyId - ID of the party that owns this dungeon
    * @returns {Promise<string>} Dungeon ID if successful
    */
-  static async saveDungeon(dungeon, partyId) {
+  static async saveDungeon(dungeon: any, _partyId: string): Promise<string> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3370,7 +3417,7 @@ export class Storage {
         testMode: dungeon.testMode,
 
         // Convert Map to serializable object
-        floors: {},
+        floors: {} as Record<string, Record<string, unknown>>,
 
         // Metadata
         dateCreated: now,
@@ -3421,7 +3468,7 @@ export class Storage {
    * @param {string} dungeonId - ID of the dungeon to load
    * @returns {Promise<Object|null>} Dungeon data or null if not found
    */
-  static async loadDungeon(dungeonId) {
+  static async loadDungeon(dungeonId: string): Promise<Record<string, any> | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3492,7 +3539,7 @@ export class Storage {
    * @param {string} partyId - Party ID to find position for
    * @returns {Promise<Array>} Array containing party position if it exists
    */
-  static async getSavedDungeonsForParty(partyId) {
+  static async getSavedDungeonsForParty(partyId: string): Promise<Record<string, unknown>[]> {
     try {
       const partyPosition = await this.loadPartyPosition(partyId);
       return partyPosition ? [partyPosition] : [];
@@ -3507,7 +3554,7 @@ export class Storage {
    * @param {string} dungeonId - ID of the dungeon to delete
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteDungeon(dungeonId) {
+  static async deleteDungeon(dungeonId: string): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3542,7 +3589,11 @@ export class Storage {
    * @param {Object} positionData - Party position and state data
    * @returns {Promise<boolean>} Success status
    */
-  static async savePartyPosition(partyId, dungeonId, positionData) {
+  static async savePartyPosition(
+    partyId: string,
+    dungeonId: string,
+    positionData: Record<string, any>
+  ): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3595,7 +3646,7 @@ export class Storage {
    * @param {string} partyId - Party ID
    * @returns {Promise<Object|null>} Party position data or null if not found
    */
-  static async loadPartyPosition(partyId) {
+  static async loadPartyPosition(partyId: string): Promise<Record<string, unknown> | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3652,7 +3703,7 @@ export class Storage {
    * @param {string} dungeonId - Dungeon ID to search for parties
    * @returns {Promise<Array>} Array of party position records
    */
-  static async getPartiesInDungeon(dungeonId) {
+  static async getPartiesInDungeon(dungeonId: string): Promise<Record<string, unknown>[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3685,7 +3736,7 @@ export class Storage {
    * @param {string} partyId - Party ID to delete position for
    * @returns {Promise<boolean>} Success status
    */
-  static async deletePartyPosition(partyId) {
+  static async deletePartyPosition(partyId: string): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3720,7 +3771,7 @@ export class Storage {
    * @param {Object} party - Party object to save
    * @returns {Promise<boolean>} Success status
    */
-  static async saveParty(party) {
+  static async saveParty(party: any): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3731,14 +3782,14 @@ export class Storage {
         id: party.id,
         name: party.name || 'Unnamed Party',
         memberIds:
-          party.memberIds || (party.members ? party.members.map((member) => member.id) : []),
+          party.memberIds || (party.members ? party.members.map((member: any) => member.id) : []),
         memberCount:
           party.memberCount ||
           (party.members ? party.members.length : party.memberIds ? party.memberIds.length : 0),
         aliveCount:
           party.aliveCount ||
           (party.members
-            ? party.members.filter((m) => m.isAlive).length
+            ? party.members.filter((m: any) => m.isAlive).length
             : party.memberIds
               ? party.memberIds.length
               : 0),
@@ -3783,7 +3834,7 @@ export class Storage {
    * @param {string} partyId - Party ID to load
    * @returns {Promise<Object|null>} Party data or null if not found
    */
-  static async loadParty(partyId) {
+  static async loadParty(partyId: string): Promise<PartyData | null> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3818,7 +3869,7 @@ export class Storage {
    * Load all parties from IndexedDB
    * @returns {Promise<Array>} Array of party objects
    */
-  static async loadAllParties() {
+  static async loadAllParties(): Promise<PartyData[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3852,7 +3903,7 @@ export class Storage {
    * @param {Object} criteria - Query criteria (inTown, campId, etc.)
    * @returns {Promise<Array>} Array of matching parties
    */
-  static async queryParties(criteria = {}) {
+  static async queryParties(criteria: Record<string, any> = {}): Promise<PartyData[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3913,7 +3964,7 @@ export class Storage {
    * @param {string} partyId - Party ID to delete
    * @returns {Promise<boolean>} Success status
    */
-  static async deleteParty(partyId) {
+  static async deleteParty(partyId: string): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -3946,7 +3997,7 @@ export class Storage {
    * @param {string} partyId - Party ID to set as active
    * @returns {boolean} Success status
    */
-  static setActiveParty(partyId) {
+  static setActiveParty(partyId: string | null): boolean {
     try {
       if (partyId) {
         localStorage.setItem(this.ACTIVE_PARTY_KEY, partyId);
@@ -3966,7 +4017,7 @@ export class Storage {
    * Get the active party ID
    * @returns {string|null} Active party ID or null if none set
    */
-  static getActivePartyId() {
+  static getActivePartyId(): string | null {
     try {
       return localStorage.getItem(this.ACTIVE_PARTY_KEY);
     } catch (error: any) {
@@ -3979,7 +4030,7 @@ export class Storage {
    * Load the active party
    * @returns {Promise<Object|null>} Active party object or null if none exists
    */
-  static async loadActiveParty() {
+  static async loadActiveParty(): Promise<PartyData | null> {
     try {
       const activePartyId = this.getActivePartyId();
       if (!activePartyId) {
@@ -4035,11 +4086,11 @@ export class Storage {
    * Get all camping parties (parties with campId)
    * @returns {Promise<Array>} Array of camping parties
    */
-  static async getCampingParties() {
+  static async getCampingParties(): Promise<CampData[]> {
     try {
       // Get all parties and filter for those with campId
       const allParties = await this.loadAllParties();
-      return (allParties as any).filter((party) => party.campId != null);
+      return allParties.filter((party) => (party as any).campId != null) as unknown as CampData[];
     } catch (error: any) {
       console.error('Failed to get camping parties:', error);
       return [];
@@ -4050,12 +4101,12 @@ export class Storage {
    * Get all lost parties (parties marked as isLost: true)
    * @returns {Promise<Array>} Array of lost parties
    */
-  static async getLostParties() {
+  static async getLostParties(): Promise<PartyData[]> {
     try {
       const allParties = await this.loadAllParties();
 
       // Filter for parties that are marked as lost
-      return (allParties as any).filter((party) => party.isLost === true);
+      return allParties.filter((party) => (party as any).isLost === true);
     } catch (error: any) {
       console.error('Failed to get lost parties:', error);
       return [];

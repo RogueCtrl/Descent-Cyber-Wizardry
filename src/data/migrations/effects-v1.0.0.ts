@@ -175,7 +175,7 @@ export const effectsMigration = {
   /**
    * Validate effect data
    */
-  validate: (effectData) => {
+  validate: (effectData: any) => {
     const required = ['id', 'name', 'type', 'category'];
     return required.every((field) => effectData[field] !== undefined);
   },
@@ -183,7 +183,7 @@ export const effectsMigration = {
   /**
    * Transform effect data if needed (future migrations)
    */
-  transform: (effectData) => {
+  transform: (effectData: any) => {
     return effectData;
   },
 };

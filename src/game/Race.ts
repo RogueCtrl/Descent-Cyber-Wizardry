@@ -3,7 +3,7 @@
  * Handles race-specific attributes and restrictions
  */
 export class Race {
-  static getRaceData(raceName) {
+  static getRaceData(raceName: any) {
     const races = {
       Human: {
         name: 'Human',
@@ -42,7 +42,7 @@ export class Race {
       },
     };
 
-    return races[raceName] || null;
+    return (races as Record<string, any>)[raceName] || null;
   }
 
   static getAllRaces() {

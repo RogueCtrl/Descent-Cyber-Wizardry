@@ -71,7 +71,7 @@ export class DungeonTest {
     const walkableTiles = tiles
       .flat()
       .filter(
-        (tile) => tile === 'floor' || tile.startsWith('trap_') || tile === 'hidden_door'
+        (tile: any) => tile === 'floor' || tile.startsWith('trap_') || tile === 'hidden_door'
       ).length;
     this.assert(walkableTiles >= 120, 'Should have at least 30% walkable area'); // 30% of 400
 
@@ -162,8 +162,8 @@ export class DungeonTest {
     const tiles = this.dungeon.currentFloorData.tiles;
 
     // Count hidden features
-    const hiddenDoors = tiles.flat().filter((tile) => tile === 'hidden_door').length;
-    const secretPassages = tiles.flat().filter((tile) => tile === 'secret_passage').length;
+    const hiddenDoors = tiles.flat().filter((tile: any) => tile === 'hidden_door').length;
+    const secretPassages = tiles.flat().filter((tile: any) => tile === 'secret_passage').length;
 
     console.log(`Found ${hiddenDoors} hidden doors and ${secretPassages} secret passages`);
 
@@ -214,7 +214,7 @@ export class DungeonTest {
     const tiles = this.dungeon.currentFloorData.tiles;
 
     // Count trap types
-    const trapTiles = tiles.flat().filter((tile) => tile.startsWith('trap_'));
+    const trapTiles = tiles.flat().filter((tile: any) => tile.startsWith('trap_'));
     console.log(`Found ${trapTiles.length} trap tiles:`, [...new Set(trapTiles)]);
 
     // Test special squares array
@@ -226,7 +226,7 @@ export class DungeonTest {
     );
 
     // Test special square types
-    const specialTypes = new Set(specialSquares.map((s) => s.type));
+    const specialTypes = new Set(specialSquares.map((s: any) => s.type));
     console.log('Special square types found:', [...specialTypes]);
 
     const expectedTypes = [
@@ -243,7 +243,7 @@ export class DungeonTest {
     });
 
     // Test special square properties
-    specialSquares.forEach((special, index) => {
+    specialSquares.forEach((special: any, index: number) => {
       this.assert(typeof special.x === 'number', `Special ${index} should have numeric x`);
       this.assert(typeof special.y === 'number', `Special ${index} should have numeric y`);
       this.assert(special.x >= 1 && special.x <= 19, `Special ${index} x should be in bounds`);
@@ -265,7 +265,7 @@ export class DungeonTest {
     const encounters = this.dungeon.currentFloorData.encounters;
 
     // Test encounter properties
-    encounters.forEach((encounter, index) => {
+    encounters.forEach((encounter: any, index: number) => {
       this.assert(typeof encounter.x === 'number', `Encounter ${index} should have numeric x`);
       this.assert(typeof encounter.y === 'number', `Encounter ${index} should have numeric y`);
       this.assert(
@@ -292,8 +292,8 @@ export class DungeonTest {
     });
 
     // Test encounter distribution
-    const bossEncounters = encounters.filter((e) => e.type === 'boss').length;
-    const normalEncounters = encounters.filter((e) => e.type === 'normal').length;
+    const bossEncounters = encounters.filter((e: any) => e.type === 'boss').length;
+    const normalEncounters = encounters.filter((e: any) => e.type === 'normal').length;
 
     this.assert(normalEncounters > 0, 'Should have normal encounters');
     console.log(`Encounter distribution: ${normalEncounters} normal, ${bossEncounters} boss`);
@@ -519,7 +519,7 @@ export class DungeonTest {
     }
 
     // Test discovery structure if any found
-    discoveries.forEach((discovery, index) => {
+    discoveries.forEach((discovery: any, index: number) => {
       this.assert(typeof discovery.type === 'string', `Discovery ${index} should have type`);
       this.assert(typeof discovery.x === 'number', `Discovery ${index} should have x coordinate`);
       this.assert(typeof discovery.y === 'number', `Discovery ${index} should have y coordinate`);
@@ -532,7 +532,7 @@ export class DungeonTest {
   /**
    * Assert helper function
    */
-  assert(condition, message) {
+  assert(condition: any, message: string) {
     if (!condition) {
       throw new Error(`Assertion failed: ${message}`);
     }
@@ -541,7 +541,7 @@ export class DungeonTest {
   /**
    * Log test result
    */
-  logResult(passed, message) {
+  logResult(passed: boolean, message: string) {
     const result = {
       test: this.currentTest,
       passed: passed,

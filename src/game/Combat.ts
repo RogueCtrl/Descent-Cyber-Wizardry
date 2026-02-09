@@ -1,6 +1,115 @@
 import { Spells } from './Spells.ts';
 import { Random } from '../utils/Random.ts';
 import { TextManager } from '../utils/TextManager.ts';
+import type {
+  CharacterData,
+  MonsterInstance,
+  CombatAction,
+  ConditionInstance,
+  SpellData,
+} from '../types/index.ts';
+
+/** A combatant in the combat system - either a player character or enemy */
+interface Combatant {
+  id: string;
+  name: string;
+  isAlive: boolean;
+  currentHP: number;
+  maxHP: number;
+  status?: string;
+  attributes?: {
+    strength: number;
+    intelligence: number;
+    piety: number;
+    vitality: number;
+    agility: number;
+    luck: number;
+  };
+  class?: string;
+  level?: number;
+  equipment?: Record<string, any>;
+  memorizedSpells?: Record<string, any>;
+  conditions?: ConditionInstance[];
+  temporaryEffects?: any[];
+  isDefending?: boolean;
+  isPhasedOut?: boolean;
+  phaseOutReason?: string;
+  phaseOutDate?: string;
+  availability?: string;
+  agility?: number;
+  experienceValue?: number;
+  saveToStorage?: () => Promise<void>;
+  getCurrentWeapon?: () => { name: string; type: string };
+  phaseOut?: (reason: string) => void;
+  [key: string]: any;
+}
+
+/** Turn order entry */
+interface TurnOrderEntry {
+  combatant: Combatant;
+  initiative: number;
+  isPlayer: boolean;
+}
+
+/** Combat log entry */
+interface CombatLogEntry {
+  message: string;
+  type: string;
+  emoji: string | null;
+  timestamp: number;
+  turn: number;
+}
+
+/** Combat rewards */
+interface CombatRewards {
+  experience: number;
+  loot: any[];
+  gold: number;
+}
+
+/** Combat action for resolution */
+interface CombatActionInput {
+  type: string;
+  attacker?: Combatant;
+  target?: Combatant;
+  character?: Combatant;
+  fleer?: Combatant;
+  caster?: Combatant;
+  defender?: Combatant;
+  user?: Combatant;
+  spell?: SpellData;
+  item?: { name: string; [key: string]: any };
+}
+
+/** Combat action result */
+interface ActionResult {
+  success: boolean;
+  message: string;
+  damage?: number;
+  critical?: boolean;
+  instant?: boolean;
+  combatEnded?: boolean;
+  winner?: string;
+  nextActor?: TurnOrderEntry | null;
+  spellResult?: any;
+  disconnected?: boolean;
+  unconscious?: boolean;
+  blocked?: boolean;
+  attackResult?: ActionResult;
+}
+
+/** Disconnected character record */
+interface DisconnectedRecord {
+  character: Combatant;
+  reason: string;
+  timestamp: number;
+}
+
+/** Player party in combat */
+interface PlayerParty {
+  aliveMembers: Combatant[];
+  [key: string]: any;
+}
 
 /**
  * Combat System
@@ -10,24 +119,24 @@ export class Combat {
   engine: any;
   isActive: boolean;
   currentTurn: number;
-  combatants: any[];
-  actionQueue: any[];
-  turnOrder: any[];
+  combatants: Combatant[];
+  actionQueue: CombatActionInput[];
+  turnOrder: TurnOrderEntry[];
   currentTurnIndex: number;
   combatPhase: string;
-  pendingActions: Map<any, any>;
-  combatLog: any[];
-  surpriseRound: any;
+  pendingActions: Map<string, CombatActionInput>;
+  combatLog: CombatLogEntry[];
+  surpriseRound: 'party' | 'enemies' | null;
   playerParty: any;
   enemyParties: any[];
   currentEnemyPartyIndex: number;
   currentEnemyParty: any;
-  disconnectedCharacters: any[];
+  disconnectedCharacters: DisconnectedRecord[];
   spellSystem: Spells;
   spellSystemInitialized: boolean;
-  lastCombatRewards: any;
+  lastCombatRewards: CombatRewards | null;
 
-  constructor(engine = null) {
+  constructor(engine: any = null) {
     this.engine = engine;
     this.isActive = false;
     this.currentTurn = 0;
@@ -35,10 +144,10 @@ export class Combat {
     this.actionQueue = [];
     this.turnOrder = [];
     this.currentTurnIndex = 0;
-    this.combatPhase = 'initiative'; // initiative, action_selection, resolution, cleanup
+    this.combatPhase = 'initiative';
     this.pendingActions = new Map();
     this.combatLog = [];
-    this.surpriseRound = null; // 'party', 'enemies', or null
+    this.surpriseRound = null;
 
     // Party-based combat system
     this.playerParty = null;
@@ -52,6 +161,7 @@ export class Combat {
     // Initialize spell system
     this.spellSystem = new Spells();
     this.spellSystemInitialized = false;
+    this.lastCombatRewards = null;
   }
 
   /**
@@ -67,7 +177,11 @@ export class Combat {
   /**
    * Start combat with party vs enemy parties
    */
-  async startCombat(playerParty, enemyParties, surpriseType = null) {
+  async startCombat(
+    playerParty: any,
+    enemyParties: any,
+    surpriseType: 'party' | 'enemies' | null = null
+  ) {
     // Initialize spell system if not done
     await this.initializeCombat();
 
@@ -332,15 +446,15 @@ export class Combat {
   /**
    * Calculate combat rewards (experience and loot)
    */
-  calculateCombatRewards() {
-    const rewards = {
+  calculateCombatRewards(): CombatRewards {
+    const rewards: CombatRewards = {
       experience: 0,
       loot: [],
       gold: 0,
     };
 
     // Calculate total experience from all defeated enemies
-    const defeatedEnemies: any[] = [];
+    const defeatedEnemies: Combatant[] = [];
     this.enemyParties.forEach((party) => {
       const enemies = Array.isArray(party) ? party : [party];
       enemies.forEach((enemy) => {
@@ -361,7 +475,10 @@ export class Combat {
   /**
    * Generate loot from defeated enemies
    */
-  async generateLootFromEnemies(defeatedEnemies, rewards) {
+  async generateLootFromEnemies(
+    defeatedEnemies: Combatant[],
+    rewards: CombatRewards
+  ): Promise<void> {
     if (defeatedEnemies.length === 0) return;
 
     // Calculate average enemy level for loot generation
@@ -410,12 +527,18 @@ export class Combat {
   /**
    * Check for surprise round
    */
-  checkSurprise(party, enemies) {
+  checkSurprise(party: any, enemies: any): 'party' | 'enemies' | null {
+    const enemyArray = Array.isArray(enemies) ? enemies : [enemies];
     const partyAverageAgility =
-      party.aliveMembers.reduce((sum, member) => sum + member.attributes.agility, 0) /
-      party.aliveMembers.length;
+      party.aliveMembers.reduce(
+        (sum: number, member: Combatant) => sum + (member.attributes?.agility || 10),
+        0
+      ) / party.aliveMembers.length;
     const enemyAverageAgility =
-      enemies.reduce((sum, enemy) => sum + (enemy.agility || 10), 0) / enemies.length;
+      enemyArray.reduce(
+        (sum: number, enemy: Combatant) => sum + (enemy.agility || enemy.attributes?.agility || 10),
+        0
+      ) / enemyArray.length;
 
     const surpriseChance = Math.abs(partyAverageAgility - enemyAverageAgility) * 2;
 
@@ -442,7 +565,7 @@ export class Combat {
   /**
    * Get initiative value for a combatant
    */
-  getInitiative(combatant) {
+  getInitiative(combatant: Combatant): number {
     const baseAgility = combatant.attributes
       ? combatant.attributes.agility
       : combatant.agility || 10;
@@ -455,10 +578,10 @@ export class Combat {
   /**
    * Get class-specific initiative bonus
    */
-  getClassInitiativeBonus(combatant) {
+  getClassInitiativeBonus(combatant: Combatant): number {
     if (!combatant.class) return 0;
 
-    const bonuses = {
+    const bonuses: Record<string, number> = {
       Thief: 2,
       Ninja: 4,
       Mage: -1,
@@ -523,7 +646,7 @@ export class Combat {
   /**
    * Process a combat action
    */
-  async processAction(action) {
+  async processAction(action: CombatActionInput): Promise<ActionResult> {
     const result = await this.resolveAction(action);
     this.logMessage(result.message);
 
@@ -544,7 +667,7 @@ export class Combat {
   /**
    * Resolve a combat action
    */
-  async resolveAction(action) {
+  async resolveAction(action: CombatActionInput): Promise<ActionResult> {
     switch (action.type) {
       case 'attack':
         return await this.resolveAttack(action);
@@ -566,8 +689,9 @@ export class Combat {
   /**
    * Resolve attack action
    */
-  async resolveAttack(action) {
-    const { attacker, target } = action;
+  async resolveAttack(action: CombatActionInput): Promise<ActionResult> {
+    const attacker = action.attacker!;
+    const target = action.target;
 
     if (!target || !target.isAlive) {
       this.logMessage(`${attacker.name || 'Enemy'} swings wildly at nothing!`, 'combat', '💨');
@@ -754,8 +878,10 @@ export class Combat {
   /**
    * Resolve spell action
    */
-  resolveSpell(action) {
-    const { caster, spell, target } = action;
+  resolveSpell(action: CombatActionInput): ActionResult {
+    const caster = action.caster!;
+    const spell = action.spell!;
+    const target = action.target;
 
     // Check if caster can cast spell
     if (!this.canCastSpell(caster, spell)) {
@@ -800,8 +926,9 @@ export class Combat {
 
     // Dramatic spell success
     this.logMessage(`⚡ ${spell.name} is successfully cast!`, 'spell', '⚡');
-    if ((result as any).message) {
-      this.logMessage(`${(result as any).message}`, 'spell', '✨');
+    const resultMessage = (result as any)?.message || '';
+    if (resultMessage) {
+      this.logMessage(`${resultMessage}`, 'spell', '✨');
     }
 
     // Remove memorized spell
@@ -810,15 +937,15 @@ export class Combat {
     return {
       success: true,
       spellResult: result,
-      message: `${caster.name || 'Caster'} casts ${spell.name}! ${(result as any).message || ''}`,
+      message: `${caster.name || 'Caster'} casts ${spell.name}! ${resultMessage}`,
     };
   }
 
   /**
    * Resolve defend action
    */
-  resolveDefend(action) {
-    const { defender } = action;
+  resolveDefend(action: CombatActionInput): ActionResult {
+    const defender = action.defender!;
 
     // Add defensive bonus (implemented in getArmorClass)
     defender.isDefending = true;
@@ -844,8 +971,9 @@ export class Combat {
   /**
    * Resolve item use action
    */
-  resolveItem(action) {
-    const { user, item, target } = action;
+  resolveItem(action: CombatActionInput): ActionResult {
+    const user = action.user!;
+    const item = action.item!;
 
     // Simple item use - would be expanded based on item type
     return {
@@ -857,7 +985,7 @@ export class Combat {
   /**
    * Resolve flee action (unified with disconnect - same logic, different terminology)
    */
-  async resolveFlee(action) {
+  async resolveFlee(action: CombatActionInput): Promise<ActionResult> {
     // Unified flee system - redirect to disconnect logic
     const character = action.fleer || action.attacker || action.character;
     if (!character) {
@@ -874,7 +1002,7 @@ export class Combat {
   /**
    * Resolve individual character disconnect action
    */
-  async resolveDisconnect(action) {
+  async resolveDisconnect(action: CombatActionInput): Promise<ActionResult> {
     const character = action.character || action.attacker;
     if (!character) {
       return { success: false, message: 'No character to disconnect!' };
@@ -883,7 +1011,7 @@ export class Combat {
     // Check if character has confused/scrambled condition - prevent escape if so
     if (
       character.conditions &&
-      character.conditions.some((condition) => condition.type === 'confused')
+      character.conditions.some((condition: ConditionInstance) => condition.type === 'confused')
     ) {
       const confusedTerm = TextManager.getText('character_status_confused', 'Confused');
       const actionTerm = TextManager.getText('combat_disconnect', 'Run');
@@ -931,14 +1059,14 @@ export class Combat {
   /**
    * Calculate disconnect chance (50% base - no modifiers)
    */
-  calculateDisconnectChance(character) {
+  calculateDisconnectChance(_character: Combatant): number {
     return 50; // Fixed 50% - no formation or other calculations
   }
 
   /**
    * Handle successful disconnect - return character to town
    */
-  async handleSuccessfulDisconnect(character) {
+  async handleSuccessfulDisconnect(character: Combatant): Promise<ActionResult> {
     const successTerm = TextManager.getText('combat_disconnect', 'Run');
     const townTerm = TextManager.getText('town', 'Town');
 
@@ -979,8 +1107,8 @@ export class Combat {
       character.conditions = [];
     }
     character.conditions.push({
+      id: `confused_${Date.now()}`,
       type: 'confused',
-      name: TextManager.getText('character_status_confused', 'Confused'),
       duration: -1, // Permanent until healed
       source: 'disconnect',
     });
@@ -1012,7 +1140,7 @@ export class Combat {
   /**
    * Handle failed disconnect - character knocked unconscious by random monster attack
    */
-  async handleFailedDisconnect(character) {
+  async handleFailedDisconnect(character: Combatant): Promise<ActionResult> {
     const failTerm = TextManager.getText('combat_disconnect', 'Run');
 
     this.logMessage(`❌ ${character.name} fails to ${failTerm.toLowerCase()}!`, 'disconnect', '❌');
@@ -1023,11 +1151,11 @@ export class Combat {
 
     if (aliveEnemies.length > 0) {
       // Pick a random monster to attack
-      const attackingMonster = Random.choice(aliveEnemies);
+      const attackingMonster = Random.choice(aliveEnemies)!;
       this.logMessage(`${attackingMonster.name} strikes ${character.name} down!`, 'combat', '⚔️');
 
       // Monster does basic attack damage to knock character unconscious
-      const attackAction = {
+      const attackAction: CombatActionInput = {
         type: 'attack',
         attacker: attackingMonster,
         target: character,
@@ -1078,7 +1206,7 @@ export class Combat {
   /**
    * Remove character from combat arrays (for disconnects)
    */
-  removeCharacterFromCombat(character) {
+  removeCharacterFromCombat(character: Combatant): void {
     // Add to disconnected characters list for post-combat display
     this.disconnectedCharacters.push({
       character: character,
@@ -1105,7 +1233,7 @@ export class Combat {
   /**
    * Get attack bonus for combatant
    */
-  getAttackBonus(combatant) {
+  getAttackBonus(combatant: Combatant): number {
     let bonus = 0;
 
     if (combatant.attributes) {
@@ -1126,7 +1254,7 @@ export class Combat {
   /**
    * Get unarmed combat attack bonus
    */
-  getUnarmedAttackBonus(combatant) {
+  getUnarmedAttackBonus(combatant: Combatant): number {
     let bonus = 0;
 
     if (combatant.attributes) {
@@ -1146,7 +1274,7 @@ export class Combat {
   /**
    * Get armor class for combatant
    */
-  getArmorClass(combatant) {
+  getArmorClass(combatant: Combatant): number {
     let ac = 10; // Base AC
 
     if (combatant.attributes) {
@@ -1174,7 +1302,7 @@ export class Combat {
   /**
    * Roll damage for attacker
    */
-  rollDamage(attacker) {
+  rollDamage(attacker: Combatant): number {
     let damage = Random.die(6); // Base damage
 
     if (attacker.attributes) {
@@ -1194,7 +1322,7 @@ export class Combat {
   /**
    * Calculate unarmed combat damage
    */
-  getUnarmedDamage(attacker) {
+  getUnarmedDamage(attacker: Combatant): number {
     let damage = 1; // Base unarmed damage
 
     if (attacker.attributes) {
@@ -1214,8 +1342,8 @@ export class Combat {
   /**
    * Get unarmed combat bonus based on class
    */
-  getUnarmedClassBonus(characterClass) {
-    const unarmedBonuses = {
+  getUnarmedClassBonus(characterClass: string) {
+    const unarmedBonuses: Record<string, number> = {
       Fighter: 2, // Fighters are skilled in combat
       Thief: 1, // Thieves are scrappy
       Samurai: 3, // Samurai are disciplined warriors
@@ -1232,7 +1360,11 @@ export class Combat {
   /**
    * Check for critical hit
    */
-  checkCriticalHit(attacker, target, attackRoll) {
+  checkCriticalHit(
+    _attacker: Combatant,
+    _target: Combatant,
+    attackRoll: number
+  ): { multiplier: number; instant: boolean } {
     const result = { multiplier: 1, instant: false };
 
     // Natural 20 always threatens critical
@@ -1281,21 +1413,23 @@ export class Combat {
   /**
    * Check if combatant can cast spell
    */
-  canCastSpell(caster, spell) {
+  canCastSpell(caster: Combatant, spell: SpellData): boolean {
     if (!caster.memorizedSpells) return false;
 
-    const schoolSpells = caster.memorizedSpells[spell.school] || [];
-    return schoolSpells.some((memorizedSpell) => memorizedSpell.name === spell.name);
+    const schoolSpells = caster.memorizedSpells[spell.school || spell.type] || [];
+    return schoolSpells.some((memorizedSpell: SpellData) => memorizedSpell.name === spell.name);
   }
 
   /**
    * Roll for spell success
    */
-  rollSpellSuccess(caster, spell) {
+  rollSpellSuccess(caster: Combatant, spell: SpellData): boolean {
     const baseChance = 85;
     const levelDifference = (caster.level || 1) - spell.level;
     const attributeBonus = caster.attributes
-      ? (spell.school === 'arcane' ? caster.attributes.intelligence : caster.attributes.piety) - 10
+      ? ((spell.school || spell.type) === 'arcane'
+          ? caster.attributes.intelligence
+          : caster.attributes.piety) - 10
       : 0;
 
     const successChance = baseChance + levelDifference * 5 + attributeBonus;
@@ -1306,24 +1440,32 @@ export class Combat {
   /**
    * Execute spell effect
    */
-  async executeSpellEffect(spell, caster, target) {
+  async executeSpellEffect(
+    spell: SpellData,
+    caster: Combatant,
+    target: Combatant | Combatant[] | undefined
+  ) {
     // Use the initialized spell system for full spell effects
     await this.initializeCombat();
-    return this.spellSystem.executeSpellEffect(spell, caster, target);
+    return this.spellSystem.executeSpellEffect(
+      spell,
+      caster as unknown as CharacterData,
+      (target || null) as any
+    );
   }
 
   /**
    * Remove memorized spell from caster
    */
-  async removeMemorizedSpell(caster, spell) {
+  async removeMemorizedSpell(caster: Combatant, spell: SpellData): Promise<void> {
     await this.initializeCombat();
-    this.spellSystem.removeMemorizedSpell(caster, spell);
+    this.spellSystem.removeMemorizedSpell(caster as unknown as CharacterData, spell);
   }
 
   /**
    * Log combat message
    */
-  logMessage(message, type = 'combat', emoji: string | null = null) {
+  logMessage(message: string, type = 'combat', emoji: string | null = null) {
     const logEntry = {
       message,
       type,

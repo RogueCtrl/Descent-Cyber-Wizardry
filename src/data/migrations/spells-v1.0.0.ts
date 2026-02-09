@@ -195,7 +195,7 @@ export const spellsMigration = {
   /**
    * Validate spell data
    */
-  validate: (spellData) => {
+  validate: (spellData: any) => {
     const required = ['id', 'name', 'school', 'level'];
     return required.every((field) => spellData[field] !== undefined);
   },
@@ -203,7 +203,7 @@ export const spellsMigration = {
   /**
    * Transform spell data if needed (future migrations)
    */
-  transform: (spellData) => {
+  transform: (spellData: any) => {
     return spellData;
   },
 };

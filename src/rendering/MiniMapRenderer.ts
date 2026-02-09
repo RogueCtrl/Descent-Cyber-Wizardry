@@ -7,7 +7,7 @@ export class MiniMapRenderer {
   padding: number;
   tileSize: number;
   viewRadius: number;
-  colors: Record<string, any>;
+  colors: Record<string, string>;
 
   constructor() {
     // Configuration
@@ -36,7 +36,12 @@ export class MiniMapRenderer {
    * @param {number} viewportWidth - Width of the viewport
    * @param {number} viewportHeight - Height of the viewport
    */
-  render(ctx, dungeon, viewportWidth, viewportHeight) {
+  render(
+    ctx: CanvasRenderingContext2D,
+    dungeon: any,
+    viewportWidth: number,
+    viewportHeight: number
+  ) {
     if (!dungeon || !dungeon.currentFloorData) return;
 
     // Calculate map position (bottom right)
@@ -152,7 +157,16 @@ export class MiniMapRenderer {
    * @param {boolean} fill - Whether to fill
    * @param {boolean} stroke - Whether to stroke
    */
-  roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+    fill: boolean,
+    stroke: boolean
+  ) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -171,7 +185,7 @@ export class MiniMapRenderer {
   /**
    * Render a single tile
    */
-  renderTile(ctx, x, y, type) {
+  renderTile(ctx: CanvasRenderingContext2D, x: number, y: number, type: string) {
     ctx.beginPath();
 
     // Floor background
@@ -237,14 +251,23 @@ export class MiniMapRenderer {
   /**
    * Render visible monsters on the mini-map
    */
-  renderMonsters(ctx, dungeon, startX, endX, startY, endY, centerX, centerY) {
+  renderMonsters(
+    ctx: CanvasRenderingContext2D,
+    dungeon: any,
+    startX: number,
+    endX: number,
+    startY: number,
+    endY: number,
+    centerX: number,
+    centerY: number
+  ) {
     if (!dungeon.currentFloorData || !dungeon.currentFloorData.encounters) return;
 
     const encounters = dungeon.currentFloorData.encounters;
     const playerX = dungeon.playerX;
     const playerY = dungeon.playerY;
 
-    encounters.forEach((encounter) => {
+    encounters.forEach((encounter: any) => {
       // Only render if not triggered/defeated
       if (!encounter.triggered) {
         // Check if tile is explored
@@ -275,7 +298,7 @@ export class MiniMapRenderer {
   /**
    * Render player arrow
    */
-  renderPlayerArrow(ctx, x, y, direction) {
+  renderPlayerArrow(ctx: CanvasRenderingContext2D, x: number, y: number, direction: number) {
     ctx.save();
     ctx.translate(x, y);
 

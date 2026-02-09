@@ -8,8 +8,8 @@ import { EventSystem } from '../core/EventSystem.ts';
  */
 
 export class TextManager {
-  static mode = 'cyber'; // Default to cyber mode for the transformation
-  static callbacks = new Set(); // UI refresh callbacks
+  static mode: string = 'cyber'; // Default to cyber mode for the transformation
+  static callbacks: Set<(newMode: string, oldMode: string) => void> = new Set(); // UI refresh callbacks
 
   /**
    * Get text for a given key using current mode
@@ -17,14 +17,14 @@ export class TextManager {
    * @param {string} fallback - Fallback text if key not found
    * @returns {string} The appropriate text for current mode
    */
-  static getText(key, fallback = key) {
+  static getText(key: string, fallback: string = key): string {
     // Ensure TERMINOLOGY is loaded
     if (typeof TERMINOLOGY === 'undefined') {
       console.warn('TERMINOLOGY not loaded, using fallback');
       return fallback;
     }
 
-    const modeData = TERMINOLOGY[this.mode];
+    const modeData = (TERMINOLOGY as Record<string, any>)[this.mode];
     if (!modeData) {
       console.warn(`Unknown text mode: ${this.mode}, using fallback`);
       return fallback;
@@ -37,7 +37,7 @@ export class TextManager {
    * Update the current text mode and trigger UI refresh
    * @param {string} newMode - 'classic' or 'cyber'
    */
-  static updateMode(newMode) {
+  static updateMode(newMode: string): void {
     if (newMode !== 'classic' && newMode !== 'cyber') {
       console.warn(`Invalid text mode: ${newMode}, keeping current mode`);
       return;
@@ -68,7 +68,7 @@ export class TextManager {
    * Register a callback for when text mode changes
    * @param {Function} callback - Function to call on mode change
    */
-  static onModeChange(callback) {
+  static onModeChange(callback: (newMode: string, oldMode: string) => void): void {
     this.callbacks.add(callback);
   }
 
@@ -76,7 +76,7 @@ export class TextManager {
    * Unregister a mode change callback
    * @param {Function} callback - Function to remove
    */
-  static offModeChange(callback) {
+  static offModeChange(callback: (newMode: string, oldMode: string) => void): void {
     this.callbacks.delete(callback);
   }
 
@@ -85,14 +85,14 @@ export class TextManager {
    * @param {string} key - The terminology key
    * @returns {Object} Object with classic and cyber versions
    */
-  static getAllText(key) {
+  static getAllText(key: string): { classic: string; cyber: string } {
     if (typeof TERMINOLOGY === 'undefined') {
       return { classic: key, cyber: key };
     }
 
     return {
-      classic: TERMINOLOGY.classic[key] || key,
-      cyber: TERMINOLOGY.cyber[key] || key,
+      classic: (TERMINOLOGY.classic as Record<string, string>)[key] || key,
+      cyber: (TERMINOLOGY.cyber as Record<string, string>)[key] || key,
     };
   }
 
@@ -103,7 +103,11 @@ export class TextManager {
    * @param {string} className - CSS class name (optional)
    * @returns {HTMLElement} Element that updates with mode changes
    */
-  static createTextElement(key, tagName = 'span', className = '') {
+  static createTextElement(
+    key: string,
+    tagName: string = 'span',
+    className: string = ''
+  ): HTMLElement {
     const element = document.createElement(tagName);
     if (className) element.className = className;
 
@@ -130,7 +134,7 @@ export class TextManager {
    * @param {HTMLElement} element - Element to update
    * @param {string} key - The terminology key
    */
-  static applyToElement(element, key) {
+  static applyToElement(element: HTMLElement, key: string): void {
     if (!element) return;
 
     // Set initial text
@@ -144,7 +148,7 @@ export class TextManager {
     this.onModeChange(updateText);
 
     // Store cleanup function on element
-    element._textManagerCleanup = () => {
+    (element as any)._textManagerCleanup = () => {
       this.offModeChange(updateText);
     };
   }
@@ -153,7 +157,7 @@ export class TextManager {
    * Get current mode
    * @returns {string} Current text mode
    */
-  static getMode() {
+  static getMode(): string {
     return this.mode;
   }
 
@@ -161,7 +165,7 @@ export class TextManager {
    * Check if current mode is cyber
    * @returns {boolean} True if cyber mode
    */
-  static isCyberMode() {
+  static isCyberMode(): boolean {
     return this.mode === 'cyber';
   }
 
@@ -169,14 +173,14 @@ export class TextManager {
    * Check if current mode is classic
    * @returns {boolean} True if classic mode
    */
-  static isClassicMode() {
+  static isClassicMode(): boolean {
     return this.mode === 'classic';
   }
 
   /**
    * Toggle between classic and cyber modes
    */
-  static toggleMode() {
+  static toggleMode(): void {
     this.updateMode(this.mode === 'classic' ? 'cyber' : 'classic');
   }
 }

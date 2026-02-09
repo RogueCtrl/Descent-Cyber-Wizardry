@@ -98,7 +98,7 @@ class ResourceManagementTest {
       memorizedSpells: [],
       conditions: [],
       temporaryEffects: [],
-      ageCharacter: function (months) {
+      ageCharacter: function (months: number) {
         this.age += months;
         // Simple aging effects for testing
         if (this.age > 50) {
@@ -568,7 +568,7 @@ class ResourceManagementTest {
   /**
    * Assert test condition and record result
    */
-  assert(condition, message, testName) {
+  assert(condition: any, message: string, testName: string) {
     this.totalTests++;
     const passed = Boolean(condition);
 
@@ -584,7 +584,7 @@ class ResourceManagementTest {
   /**
    * Record test result
    */
-  recordTestResult(testName, passed, message, details = null) {
+  recordTestResult(testName: string, passed: boolean, message: string, details: any = null) {
     this.testResults.push({
       name: testName,
       passed,

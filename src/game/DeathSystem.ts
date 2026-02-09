@@ -7,7 +7,7 @@ import { Random } from '../utils/Random.ts';
 import { EventSystem } from '../core/EventSystem.ts';
 
 export class DeathSystem {
-  eventSystem: any;
+  eventSystem: EventSystem;
   DEATH_STATES: Record<string, any>;
   templeServices: Record<string, any>;
 
@@ -63,7 +63,7 @@ export class DeathSystem {
    * @param {Object} deathContext - Context about the death
    * @returns {Object} Death result with new status
    */
-  handleCharacterDeath(character, deathContext = {}) {
+  handleCharacterDeath(character: any, deathContext: any = {}) {
     const previousStatus = character.status;
     let newStatus;
     let deathMessage;
@@ -112,7 +112,11 @@ export class DeathSystem {
    * @param {Object} temple - Temple providing the service
    * @returns {Object} Resurrection result
    */
-  attemptResurrection(character, serviceType = 'resurrection', temple = {}) {
+  attemptResurrection(
+    character: any,
+    serviceType: string = 'resurrection',
+    temple: Record<string, any> = {}
+  ) {
     const service = this.templeServices[serviceType];
     if (!service) {
       throw new Error(`Unknown resurrection service: ${serviceType}`);
@@ -177,7 +181,7 @@ export class DeathSystem {
    * @param {Object} character - Character to degrade
    * @returns {Object} Degradation result
    */
-  degradeDeathState(character) {
+  degradeDeathState(character: any) {
     const currentStatus = character.status;
     let newStatus;
     let message;
@@ -216,7 +220,11 @@ export class DeathSystem {
    * @param {Object} temple - Temple providing service
    * @returns {number} Success percentage (0-100)
    */
-  calculateResurrectionChance(character, serviceType, temple = {}) {
+  calculateResurrectionChance(
+    character: any,
+    serviceType: string,
+    temple: Record<string, any> = {}
+  ) {
     const service = this.templeServices[serviceType];
     let baseChance = service.baseSuccessChance || 50;
 
@@ -261,7 +269,7 @@ export class DeathSystem {
    * @param {string} serviceType - Type of service
    * @returns {number} Cost in gold
    */
-  calculateRevivalCost(character, serviceType = 'resurrection') {
+  calculateRevivalCost(character: any, serviceType: string = 'resurrection') {
     const service = this.templeServices[serviceType];
     if (!service) return 0;
 
@@ -288,7 +296,7 @@ export class DeathSystem {
    * @param {Object} character - Character to check
    * @returns {boolean} Whether revival is possible
    */
-  canAttemptRevival(character) {
+  canAttemptRevival(character: any) {
     return character.status !== this.DEATH_STATES.LOST && character.status !== 'OK';
   }
 
@@ -297,7 +305,7 @@ export class DeathSystem {
    * @param {Object} character - Character to check
    * @returns {Array} Available temple services
    */
-  getAvailableServices(character) {
+  getAvailableServices(character: any) {
     const available: any[] = [];
 
     for (const [serviceKey, service] of Object.entries(this.templeServices)) {
@@ -323,7 +331,7 @@ export class DeathSystem {
    * @param {number} hours - Hours of rest
    * @returns {Object} Recovery result
    */
-  handleNaturalRecovery(character, hours = 8) {
+  handleNaturalRecovery(character: any, hours = 8) {
     if (character.status !== this.DEATH_STATES.UNCONSCIOUS) {
       return { success: false, message: 'Character is not unconscious' };
     }
@@ -362,7 +370,7 @@ export class DeathSystem {
    * @param {string} status - Death status
    * @returns {Object} Status information
    */
-  getStatusInfo(status) {
+  getStatusInfo(status: string) {
     const statusInfo = {
       [this.DEATH_STATES.UNCONSCIOUS]: {
         name: 'Unconscious',
@@ -391,7 +399,7 @@ export class DeathSystem {
     };
 
     return (
-      statusInfo[status] || {
+      (statusInfo as Record<string, any>)[status] || {
         name: 'Unknown',
         description: 'Status unknown',
         color: 'gray',
@@ -406,7 +414,7 @@ export class DeathSystem {
    * @param {number} hoursElapsed - Hours that have passed
    * @returns {Object} Time effect result
    */
-  processTimeEffects(character, hoursElapsed) {
+  processTimeEffects(character: any, hoursElapsed: number) {
     if (character.status === 'OK' || character.status === this.DEATH_STATES.LOST) {
       return { noChange: true };
     }

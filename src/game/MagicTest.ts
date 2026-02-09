@@ -67,8 +67,8 @@ export class MagicTest {
     console.log('Testing spell database...');
 
     try {
-      const spellCount = { arcane: 0, divine: 0 };
-      const levelCount = { arcane: {}, divine: {} };
+      const spellCount: Record<string, number> = { arcane: 0, divine: 0 };
+      const levelCount: Record<string, Record<number, number>> = { arcane: {}, divine: {} };
 
       // Count spells in database
       for (const school of ['arcane', 'divine']) {
@@ -177,7 +177,7 @@ export class MagicTest {
       const mage = this.createTestCharacter('Mage', 3);
 
       // Get available spells
-      const availableSpells = await this.spellSystem.getAvailableSpells(mage);
+      const availableSpells = await this.spellSystem.getAvailableSpells(mage as any);
 
       if (availableSpells.arcane.length === 0) {
         throw new Error('No arcane spells available for mage');
@@ -234,7 +234,7 @@ export class MagicTest {
       };
 
       // Cast healing spell
-      const castResult = this.spellSystem.castSpell(priest, 'Cure Light Wounds', target);
+      const castResult = this.spellSystem.castSpell(priest as any, 'Cure Light Wounds', target);
 
       if (!(castResult as any).success) {
         throw new Error(`Spell casting failed: ${(castResult as any).message}`);
@@ -268,13 +268,13 @@ export class MagicTest {
       const samurai = this.createTestCharacter('Samurai', 6);
 
       // Test Bishop (both schools)
-      const bishopArcane = (await this.spellSystem.getAvailableSpells(bishop)).arcane;
-      const bishopDivine = (await this.spellSystem.getAvailableSpells(bishop)).divine;
+      const bishopArcane = (await this.spellSystem.getAvailableSpells(bishop as any)).arcane;
+      const bishopDivine = (await this.spellSystem.getAvailableSpells(bishop as any)).divine;
       const bishopHasBoth = bishopArcane.length > 0 && bishopDivine.length > 0;
 
       // Test Samurai (limited arcane)
-      const samuraiArcane = (await this.spellSystem.getAvailableSpells(samurai)).arcane;
-      const samuraiDivine = (await this.spellSystem.getAvailableSpells(samurai)).divine;
+      const samuraiArcane = (await this.spellSystem.getAvailableSpells(samurai as any)).arcane;
+      const samuraiDivine = (await this.spellSystem.getAvailableSpells(samurai as any)).divine;
       const samuraiCorrect = samuraiArcane.length > 0 && samuraiDivine.length === 0;
 
       this.testResults.push({
@@ -308,9 +308,9 @@ export class MagicTest {
 
       // Test high-level character can access them
       const highLevelMage = this.createTestCharacter('Mage', 10);
-      const availableSpells = await this.spellSystem.getAvailableSpells(highLevelMage);
+      const availableSpells = await this.spellSystem.getAvailableSpells(highLevelMage as any);
 
-      const hasHighLevelSpells = availableSpells.arcane.some((spell) => spell.level >= 6);
+      const hasHighLevelSpells = availableSpells.arcane.some((spell: any) => spell.level >= 6);
 
       this.testResults.push({
         test: 'High-Level Spells',
@@ -339,13 +339,21 @@ export class MagicTest {
       // Test healing spell
       target.currentHP = 1;
       const healSpell = this.spellSystem.getSpell('Heal');
-      const healResult = this.spellSystem.executeSpellEffect(healSpell, caster, target);
+      const healResult = this.spellSystem.executeSpellEffect(
+        healSpell as any,
+        caster as any,
+        target
+      );
       const healWorked = target.currentHP === target.maxHP;
 
       // Test damage spell
       const target2 = this.createTestCharacter('Fighter', 3);
       const damageSpell = this.spellSystem.getSpell('Fireball');
-      const damageResult = this.spellSystem.executeSpellEffect(damageSpell, caster, target2);
+      const damageResult = this.spellSystem.executeSpellEffect(
+        damageSpell as any,
+        caster as any,
+        target2
+      );
       const damageWorked = target2.currentHP < target2.maxHP;
 
       this.testResults.push({
@@ -365,7 +373,7 @@ export class MagicTest {
   /**
    * Create a test character
    */
-  createTestCharacter(className, level) {
+  createTestCharacter(className: string, level: number) {
     const character = new Character(`Test ${className}`, 'Human', className);
     character.level = level;
     character.maxHP = level * 8;
@@ -384,7 +392,7 @@ export class MagicTest {
 
     // Add temporary effects tracking
     character.temporaryEffects = [];
-    character.addTemporaryEffect = function (effect) {
+    character.addTemporaryEffect = function (effect: any) {
       this.temporaryEffects.push(effect);
     };
 
@@ -427,7 +435,7 @@ export class MagicTest {
   /**
    * Run a specific test
    */
-  runSpecificTest(testName) {
+  runSpecificTest(testName: string) {
     console.log(`Running specific test: ${testName}`);
 
     switch (testName) {

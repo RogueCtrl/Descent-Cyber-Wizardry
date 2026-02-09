@@ -61,7 +61,7 @@ export class RestSystem {
    * @param {Object} options - Additional options for rest
    * @returns {Object} Rest result with success status and effects
    */
-  async restParty(party, location, options = {}) {
+  async restParty(party: any, location: string, options: any = {}) {
     const config = this.restConfigurations[location];
     if (!config) {
       throw new Error(`Unknown rest location: ${location}`);
@@ -78,7 +78,7 @@ export class RestSystem {
     };
 
     // Calculate total cost
-    const aliveMemberCount = party.members.filter((member) => member.isAlive).length;
+    const aliveMemberCount = party.members.filter((member: any) => member.isAlive).length;
     restResult.totalCost = config.baseCost * aliveMemberCount;
 
     // Check if party can afford the rest
@@ -135,7 +135,7 @@ export class RestSystem {
    * @param {Object} config - Rest configuration
    * @returns {Object} Character-specific rest results
    */
-  applyRestEffects(character, config) {
+  applyRestEffects(character: any, config: any) {
     const result = {
       character: character.name,
       hpBefore: character.currentHP,
@@ -181,19 +181,19 @@ export class RestSystem {
    * Clear conditions that are restored by rest
    * @param {Object} character - Character to clear conditions from
    */
-  clearRestorableConditions(character) {
+  clearRestorableConditions(character: any) {
     const restorableConditions = ['exhausted', 'fatigued', 'drained'];
 
     if (character.conditions) {
       character.conditions = character.conditions.filter(
-        (condition) => !restorableConditions.includes(condition.type)
+        (condition: any) => !restorableConditions.includes(condition.type)
       );
     }
 
     // Clear temporary spell effects that don't persist through rest
     if (character.temporaryEffects) {
       character.temporaryEffects = character.temporaryEffects.filter(
-        (effect) => effect.persistsThroughRest === true
+        (effect: any) => effect.persistsThroughRest === true
       );
     }
   }
@@ -204,7 +204,7 @@ export class RestSystem {
    * @param {Object} party - The resting party
    * @returns {Object} Encounter details
    */
-  generateRestEncounter(location, party) {
+  generateRestEncounter(location: string, party: any) {
     const encounters = {
       dungeon: [
         { description: 'wandering monsters', type: 'combat', difficulty: 'easy' },
@@ -220,11 +220,11 @@ export class RestSystem {
       ],
     };
 
-    const locationEncounters = encounters[location] || encounters.dungeon;
+    const locationEncounters = (encounters as Record<string, any>)[location] || encounters.dungeon;
     const encounter = Random.choice(locationEncounters);
 
     return {
-      ...encounter,
+      ...(encounter as any),
       partyLevel: this.calculatePartyLevel(party),
       timestamp: Date.now(),
     };
@@ -235,11 +235,11 @@ export class RestSystem {
    * @param {Object} party - The party
    * @returns {number} Average party level
    */
-  calculatePartyLevel(party) {
-    const aliveMembers = party.members.filter((member) => member.isAlive);
+  calculatePartyLevel(party: any) {
+    const aliveMembers = party.members.filter((member: any) => member.isAlive);
     if (aliveMembers.length === 0) return 1;
 
-    const totalLevels = aliveMembers.reduce((sum, member) => sum + member.level, 0);
+    const totalLevels = aliveMembers.reduce((sum: number, member: any) => sum + member.level, 0);
     return Math.round(totalLevels / aliveMembers.length);
   }
 
@@ -249,11 +249,11 @@ export class RestSystem {
    * @param {string} location - Rest location
    * @returns {number} Total cost for the party
    */
-  getRestCost(party, location) {
+  getRestCost(party: any, location: string) {
     const config = this.restConfigurations[location];
     if (!config) return 0;
 
-    const aliveMemberCount = party.members.filter((member) => member.isAlive).length;
+    const aliveMemberCount = party.members.filter((member: any) => member.isAlive).length;
     return config.baseCost * aliveMemberCount;
   }
 
@@ -263,7 +263,7 @@ export class RestSystem {
    * @param {string} location - Rest location
    * @returns {boolean} Whether party can afford the rest
    */
-  canAffordRest(party, location) {
+  canAffordRest(party: any, location: string) {
     return party.gold >= this.getRestCost(party, location);
   }
 
@@ -272,7 +272,7 @@ export class RestSystem {
    * @param {string} location - Rest location type
    * @returns {Object} Location configuration and details
    */
-  getLocationInfo(location) {
+  getLocationInfo(location: string) {
     const config = this.restConfigurations[location];
     if (!config) return null;
 
@@ -291,7 +291,7 @@ export class RestSystem {
    * @param {string} location - Rest location
    * @returns {Object} Extended rest results
    */
-  extendedRest(character, days, location = 'inn') {
+  extendedRest(character: any, days: number, location = 'inn') {
     const config = this.restConfigurations[location];
     const result = {
       character: character.name,

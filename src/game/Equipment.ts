@@ -1,6 +1,136 @@
 import { Storage } from '../utils/Storage.ts';
 import { Random } from '../utils/Random.ts';
 import { Helpers } from '../utils/Helpers.ts';
+import type { EquipmentItem, CharacterData, TemporaryEffect } from '../types/index.ts';
+
+/** Result of equipping or unequipping an item */
+interface EquipResult {
+  success: boolean;
+  reason?: string;
+  equipped?: EquipmentItem;
+  unequipped?: string | EquipmentItem | null;
+  previous?: string | EquipmentItem | null;
+  slot?: string;
+}
+
+/** Result of applying item wear */
+interface WearResult {
+  item: string;
+  wearAmount: number;
+  oldDurability: number;
+  newDurability: number;
+  broken: boolean;
+  warning: boolean;
+  message: string;
+  alreadyBroken?: boolean;
+}
+
+/** Result of breaking an item */
+interface BreakResult {
+  item: string;
+  message: string;
+}
+
+/** Result of repairing an item */
+interface RepairResult {
+  success: boolean;
+  item?: string;
+  repairAmount?: number;
+  newDurability?: number;
+  maxDurability?: number;
+  cost?: number;
+  fullyRepaired?: boolean;
+  message: string;
+}
+
+/** Repair status of an item */
+interface RepairStatus {
+  needsRepair: boolean;
+  condition: string;
+  durability?: number;
+  maxDurability?: number;
+  durabilityRatio?: number;
+  repairCost: number;
+}
+
+/** Item needing repair with context */
+interface ItemRepairInfo {
+  item: EquipmentItem;
+  status: RepairStatus;
+  slot: string | null;
+}
+
+/** Result of identifying an item */
+interface IdentificationResult {
+  success: boolean;
+  message: string;
+  item?: string | EquipmentItem;
+  identifier?: string;
+  identificationChance?: number;
+  cursed: boolean;
+  curseEffect?: CurseEffect;
+}
+
+/** Curse effect from failed identification */
+interface CurseEffect {
+  type: string;
+  stat?: string;
+  amount?: number;
+  duration: number | string;
+  message: string;
+}
+
+/** Equipment summary for a character */
+interface EquipmentSummary {
+  weapon: EquipmentItem | null;
+  armor: EquipmentItem | null;
+  shield: EquipmentItem | null;
+  accessory: EquipmentItem | null;
+  totalACBonus: number;
+  totalAttackBonus: number;
+  totalWeight: number;
+  isEncumbered: boolean;
+  [key: string]: EquipmentItem | null | number | boolean;
+}
+
+/** Options for creating item instances */
+interface CreateItemOptions {
+  state?: string;
+  identified?: boolean;
+  blessed?: boolean;
+  durability?: number;
+}
+
+/** Options for identification */
+interface IdentifyOptions {
+  identifySpell?: boolean;
+}
+
+/** Options for curse removal */
+interface RemoveCurseOptions {
+  removeCurseSpell?: boolean;
+  templeService?: boolean;
+  wishSpell?: boolean;
+}
+
+/** Options for repair */
+interface RepairOptions {
+  fullRepair?: boolean;
+}
+
+/** Options for magical item generation */
+interface MagicalItemOptions {
+  [key: string]: unknown;
+}
+
+/** Context for wear calculations */
+interface WearContext {
+  critical?: boolean;
+  damage?: number;
+  spellLevel?: number;
+  damageType?: string;
+  severity?: number;
+}
 
 /**
  * Equipment System
@@ -9,9 +139,9 @@ import { Helpers } from '../utils/Helpers.ts';
  * Updated to use entity reference system with IndexedDB storage
  */
 export class Equipment {
-  items: Map<any, any>;
-  entityCache: Map<any, any>;
-  ITEM_STATES: Record<string, any>;
+  items: Map<string, EquipmentItem>;
+  entityCache: Map<string, EquipmentItem>;
+  ITEM_STATES: Record<string, string>;
   entitiesLoaded: boolean;
 
   constructor() {
@@ -35,7 +165,7 @@ export class Equipment {
    * @param {boolean} forceReload - Force reload entities from JSON
    * @returns {Promise<boolean>} Success status
    */
-  async initializeEntities(forceReload = false) {
+  async initializeEntities(forceReload: boolean = false): Promise<boolean> {
     if (this.entitiesLoaded && !forceReload) return true;
 
     try {
@@ -62,7 +192,7 @@ export class Equipment {
    * DEPRECATED: Legacy equipment database (kept for compatibility)
    * Use getEntityFromStorage() instead
    */
-  initializeEquipmentDatabase() {
+  initializeEquipmentDatabase(): any {
     return {
       weapons: {
         // Basic Weapons
@@ -382,7 +512,7 @@ export class Equipment {
    * @param {string} itemName - Name of the item
    * @returns {Promise<Object|null>} Item data or null
    */
-  static async getItemData(itemName) {
+  static async getItemData(itemName: string) {
     const equipment = new Equipment();
     return await equipment.getItemByName(itemName);
   }
@@ -392,7 +522,7 @@ export class Equipment {
    * @param {string} entityId - Entity ID of the item
    * @returns {Promise<Object|null>} Item data or null
    */
-  static async getItemById(entityId) {
+  static async getItemById(entityId: string) {
     const equipment = new Equipment();
     return await equipment.getItemFromStorage(entityId);
   }
@@ -411,12 +541,12 @@ export class Equipment {
    * @param {string} entityId - Entity ID to retrieve
    * @returns {Promise<Object|null>} Item data or null
    */
-  async getItemFromStorage(entityId) {
+  async getItemFromStorage(entityId: string): Promise<EquipmentItem | null> {
     if (!entityId) return null;
 
     // Check cache first
     if (this.entityCache.has(entityId)) {
-      return { ...this.entityCache.get(entityId) };
+      return { ...this.entityCache.get(entityId) } as EquipmentItem;
     }
 
     await this.initializeEntities();
@@ -425,25 +555,25 @@ export class Equipment {
     let item = await Storage.getWeapon(entityId);
     if (item) {
       this.entityCache.set(entityId, item);
-      return { ...(item as any) };
+      return { ...item };
     }
 
     item = await Storage.getArmor(entityId);
     if (item) {
       this.entityCache.set(entityId, item);
-      return { ...(item as any) };
+      return { ...item };
     }
 
     item = await Storage.getShield(entityId);
     if (item) {
       this.entityCache.set(entityId, item);
-      return { ...(item as any) };
+      return { ...item };
     }
 
     item = await Storage.getAccessory(entityId);
     if (item) {
       this.entityCache.set(entityId, item);
-      return { ...(item as any) };
+      return { ...item };
     }
 
     return null;
@@ -454,18 +584,18 @@ export class Equipment {
    * @param {string} itemName - Name of the item
    * @returns {Promise<Object|null>} Item data or null
    */
-  async getItemByName(itemName) {
+  async getItemByName(itemName: string): Promise<EquipmentItem | null> {
     await this.initializeEntities();
 
     // Search all entity stores for matching name
     const stores = ['weapons', 'armor', 'shields', 'accessories'];
 
-    for (const store of stores as any) {
-      const entities: any = await Storage.queryEntities(
+    for (const store of stores) {
+      const entities: EquipmentItem[] = await Storage.queryEntities(
         (Storage as any)[store.toUpperCase() + '_STORE'],
         { name: itemName }
       );
-      if ((entities as any).length > 0) {
+      if (entities.length > 0) {
         const item = entities[0];
         this.entityCache.set(item.id, item);
         return { ...item };
@@ -479,7 +609,7 @@ export class Equipment {
    * DEPRECATED: Legacy getItem method (kept for compatibility)
    * Use getItemByName() or getItemFromStorage() instead
    */
-  getItem(itemName) {
+  getItem(itemName: string): EquipmentItem | undefined {
     // For backward compatibility, use synchronous fallback
     const equipmentDatabase = this.initializeEquipmentDatabase();
     for (const category of Object.values(equipmentDatabase) as any[]) {
@@ -487,7 +617,7 @@ export class Equipment {
         return { ...category[itemName] };
       }
     }
-    return null;
+    return undefined;
   }
 
   /**
@@ -495,10 +625,10 @@ export class Equipment {
    * @param {string} category - Category name (weapons, armor, shields, accessories)
    * @returns {Promise<Array>} Array of items in category
    */
-  async getItemsByCategory(category) {
+  async getItemsByCategory(category: string): Promise<EquipmentItem[]> {
     await this.initializeEntities();
 
-    const storeMap = {
+    const storeMap: Record<string, string> = {
       weapons: Storage.WEAPON_STORE,
       armor: Storage.ARMOR_STORE,
       shields: Storage.SHIELD_STORE,
@@ -508,7 +638,7 @@ export class Equipment {
     const storeName = storeMap[category];
     if (!storeName) return [];
 
-    return await Storage.getAllEntities(storeName);
+    return (await Storage.getAllEntities(storeName)) as EquipmentItem[];
   }
 
   /**
@@ -517,15 +647,18 @@ export class Equipment {
    * @param {string} category - Optional category filter
    * @returns {Promise<Array>} Array of available items
    */
-  async getAvailableItems(characterClass, category = null) {
+  async getAvailableItems(
+    characterClass: string,
+    category: string | null = null
+  ): Promise<EquipmentItem[]> {
     await this.initializeEntities();
 
-    const availableItems: any[] = [];
+    const availableItems: EquipmentItem[] = [];
     const categories = category ? [category] : ['weapons', 'armor', 'shields', 'accessories'];
 
-    for (const cat of categories as any) {
+    for (const cat of categories) {
       const items = await this.getItemsByCategory(cat);
-      (items as any).forEach((item) => {
+      items.forEach((item: EquipmentItem) => {
         if (this.canUseItem(characterClass, item)) {
           availableItems.push(item);
         }
@@ -538,7 +671,7 @@ export class Equipment {
   /**
    * Check if character can use item
    */
-  canUseItem(characterClass, item) {
+  canUseItem(characterClass: string, item: EquipmentItem): boolean {
     if (!item.allowedClasses) return true;
     if (item.allowedClasses.includes('all')) return true;
     return item.allowedClasses.includes(characterClass);
@@ -553,8 +686,11 @@ export class Equipment {
    * @param {Object} attacker - Attacking character
    * @returns {Promise<number>} Calculated damage
    */
-  async calculateWeaponDamage(weapon, attacker) {
-    let weaponData = weapon;
+  async calculateWeaponDamage(
+    weapon: EquipmentItem | string,
+    attacker: CharacterData
+  ): Promise<number> {
+    let weaponData: EquipmentItem | null = typeof weapon === 'string' ? null : weapon;
 
     // If weapon is an entity reference, resolve it
     if (typeof weapon === 'string') {
@@ -587,16 +723,14 @@ export class Equipment {
    * @param {Object} character - Character to calculate AC for
    * @returns {Promise<number>} Total AC bonus
    */
-  async calculateACBonus(character) {
+  async calculateACBonus(character: CharacterData): Promise<number> {
     let totalACBonus = 0;
+    const equip = character.equipment as Record<string, any>;
 
-    if (character.equipment) {
+    if (equip) {
       // Armor bonus
-      if (character.equipment.armor) {
-        const armorId =
-          typeof character.equipment.armor === 'string'
-            ? character.equipment.armor
-            : character.equipment.armor.name;
+      if (equip.armor) {
+        const armorId = typeof equip.armor === 'string' ? equip.armor : equip.armor.name;
         const armor =
           (await this.getItemFromStorage(armorId)) || (await this.getItemByName(armorId));
         if (armor && armor.acBonus) {
@@ -605,11 +739,8 @@ export class Equipment {
       }
 
       // Shield bonus
-      if (character.equipment.shield) {
-        const shieldId =
-          typeof character.equipment.shield === 'string'
-            ? character.equipment.shield
-            : character.equipment.shield.name;
+      if (equip.shield) {
+        const shieldId = typeof equip.shield === 'string' ? equip.shield : equip.shield.name;
         const shield =
           (await this.getItemFromStorage(shieldId)) || (await this.getItemByName(shieldId));
         if (shield && shield.acBonus) {
@@ -618,11 +749,9 @@ export class Equipment {
       }
 
       // Accessory bonus
-      if (character.equipment.accessory) {
+      if (equip.accessory) {
         const accessoryId =
-          typeof character.equipment.accessory === 'string'
-            ? character.equipment.accessory
-            : character.equipment.accessory.name;
+          typeof equip.accessory === 'string' ? equip.accessory : equip.accessory.name;
         const accessory =
           (await this.getItemFromStorage(accessoryId)) || (await this.getItemByName(accessoryId));
         if (accessory && accessory.acBonus) {
@@ -642,7 +771,7 @@ export class Equipment {
    * @param {Object} character - Character to calculate attack bonus for
    * @returns {Promise<number>} Total attack bonus
    */
-  async calculateAttackBonus(character) {
+  async calculateAttackBonus(character: CharacterData): Promise<number> {
     let totalAttackBonus = 0;
 
     // Strength bonus
@@ -654,11 +783,9 @@ export class Equipment {
     totalAttackBonus += character.level || 1;
 
     // Weapon bonus
-    if (character.equipment && character.equipment.weapon) {
-      const weaponId =
-        typeof character.equipment.weapon === 'string'
-          ? character.equipment.weapon
-          : character.equipment.weapon.name;
+    const equip = character.equipment as Record<string, any>;
+    if (equip && equip.weapon) {
+      const weaponId = typeof equip.weapon === 'string' ? equip.weapon : equip.weapon.name;
       const weapon =
         (await this.getItemFromStorage(weaponId)) || (await this.getItemByName(weaponId));
       if (weapon && weapon.attackBonus) {
@@ -672,7 +799,7 @@ export class Equipment {
   /**
    * Get weapon attack type
    */
-  getWeaponAttackType(weapon) {
+  getWeaponAttackType(weapon: EquipmentItem): string {
     if (!weapon) return 'melee';
 
     if (weapon.subtype === 'bow') return 'ranged';
@@ -685,14 +812,14 @@ export class Equipment {
   /**
    * Check if weapon is magical
    */
-  isWeaponMagical(weapon) {
+  isWeaponMagical(weapon: EquipmentItem): boolean {
     return weapon && weapon.magical === true;
   }
 
   /**
    * Equip item to character
    */
-  equipItem(character, item) {
+  equipItem(character: CharacterData, item: EquipmentItem): EquipResult {
     if (!this.canUseItem(character.class, item)) {
       return { success: false, reason: `${character.class} cannot use ${item.name}` };
     }
@@ -702,7 +829,7 @@ export class Equipment {
     }
 
     // Determine equipment slot
-    let slot;
+    let slot: string;
     switch (item.type) {
       case 'weapon':
         slot = 'weapon';
@@ -724,11 +851,11 @@ export class Equipment {
     const previousItem = character.equipment[slot];
 
     // Equip new item
-    character.equipment[slot] = item;
+    character.equipment[slot] = item.id;
 
     // Recalculate character stats if needed
-    if (character.recalculateStats) {
-      character.recalculateStats();
+    if ((character as any).recalculateStats) {
+      (character as any).recalculateStats();
     }
 
     return {
@@ -742,8 +869,8 @@ export class Equipment {
   /**
    * Unequip item from character
    */
-  unequipItem(character, slot) {
-    if (!character.equipment || !character.equipment[slot]) {
+  unequipItem(character: CharacterData, slot: string | null): EquipResult {
+    if (!character.equipment || !slot || !character.equipment[slot]) {
       return { success: false, reason: 'No item equipped in that slot' };
     }
 
@@ -751,8 +878,8 @@ export class Equipment {
     character.equipment[slot] = null;
 
     // Recalculate character stats if needed
-    if (character.recalculateStats) {
-      character.recalculateStats();
+    if ((character as any).recalculateStats) {
+      (character as any).recalculateStats();
     }
 
     return {
@@ -770,13 +897,13 @@ export class Equipment {
    * @param {Object} character - Character to calculate encumbrance for
    * @returns {Promise<number>} Total weight
    */
-  async calculateEncumbrance(character) {
+  async calculateEncumbrance(character: CharacterData): Promise<number> {
     let totalWeight = 0;
 
     if (character.equipment) {
-      for (const item of (await Object.values(character.equipment)) as any[]) {
+      for (const item of Object.values(character.equipment)) {
         if (item) {
-          const itemId = typeof item === 'string' ? item : (item as any).name;
+          const itemId = typeof item === 'string' ? item : item;
           const itemData =
             (await this.getItemFromStorage(itemId)) || (await this.getItemByName(itemId));
           if (itemData && itemData.weight) {
@@ -789,7 +916,7 @@ export class Equipment {
     // Add inventory weight (if implemented)
     if (character.inventory) {
       for (const item of character.inventory) {
-        const itemId = typeof item === 'string' ? item : item.name;
+        const itemId = typeof item === 'string' ? item : item;
         const itemData =
           (await this.getItemFromStorage(itemId)) || (await this.getItemByName(itemId));
         if (itemData && itemData.weight) {
@@ -809,7 +936,7 @@ export class Equipment {
    * @param {Object} character - Character to check
    * @returns {Promise<boolean>} Whether character is encumbered
    */
-  async isEncumbered(character) {
+  async isEncumbered(character: CharacterData): Promise<boolean> {
     const totalWeight = await this.calculateEncumbrance(character);
     const maxWeight = (character.attributes?.strength || 10) * 10; // 10 lbs per strength point
 
@@ -825,9 +952,9 @@ export class Equipment {
    * @param {number} quantity - Number of items to generate
    * @returns {Promise<Array>} Array of loot items
    */
-  async generateRandomLoot(level = 1, quantity = 1) {
-    const loot: any[] = [];
-    const allItems: any[] = [];
+  async generateRandomLoot(level: number = 1, quantity: number = 1): Promise<EquipmentItem[]> {
+    const loot: EquipmentItem[] = [];
+    const allItems: EquipmentItem[] = [];
 
     await this.initializeEntities();
 
@@ -837,21 +964,21 @@ export class Equipment {
     const shields = await Storage.getAllShields();
     const accessories = await Storage.getAllAccessories();
 
-    [...(weapons as any), ...(armor as any), ...(shields as any), ...(accessories as any)].forEach(
-      (item) => {
-        // Simple level-based filtering
-        const itemLevel = item.magical ? 3 : 1;
-        if (itemLevel <= level + 2) {
-          allItems.push(item);
-        }
+    [...weapons, ...armor, ...shields, ...accessories].forEach((item) => {
+      // Simple level-based filtering
+      const itemLevel = item.magical ? 3 : 1;
+      if (itemLevel <= level + 2) {
+        allItems.push(item);
       }
-    );
+    });
 
     // Select random items
     for (let i = 0; i < quantity; i++) {
       if (allItems.length > 0) {
         const randomItem = Random.choice(allItems);
-        loot.push({ ...randomItem }); // Copy to avoid mutation
+        if (randomItem) {
+          loot.push({ ...randomItem }); // Copy to avoid mutation
+        }
       }
     }
 
@@ -866,8 +993,8 @@ export class Equipment {
    * @param {Object} character - Character to get summary for
    * @returns {Promise<Object>} Equipment summary
    */
-  async getEquipmentSummary(character) {
-    const summary = {
+  async getEquipmentSummary(character: CharacterData): Promise<EquipmentSummary> {
+    const summary: EquipmentSummary = {
       weapon: null,
       armor: null,
       shield: null,
@@ -881,10 +1008,10 @@ export class Equipment {
     if (character.equipment) {
       for (const [slot, item] of Object.entries(character.equipment)) {
         if (item) {
-          const itemId = typeof item === 'string' ? item : (item as any).name;
+          const itemId = typeof item === 'string' ? item : item;
           const itemData =
             (await this.getItemFromStorage(itemId)) || (await this.getItemByName(itemId));
-          summary[slot] = itemData;
+          summary[slot] = itemData ?? null;
         }
       }
     }
@@ -900,7 +1027,7 @@ export class Equipment {
   /**
    * Add item to inventory
    */
-  addItem(item) {
+  addItem(item: EquipmentItem): string {
     const id = Helpers.generateId('item');
     this.items.set(id, item);
     return id;
@@ -909,7 +1036,7 @@ export class Equipment {
   /**
    * Remove item from inventory
    */
-  removeItem(itemId) {
+  removeItem(itemId: string): boolean {
     return this.items.delete(itemId);
   }
 
@@ -925,7 +1052,10 @@ export class Equipment {
    * @param {Object} options - Additional options for item creation
    * @returns {Promise<Object>} Item instance with state
    */
-  async createItemInstance(itemNameOrId, options = {}) {
+  async createItemInstance(
+    itemNameOrId: string,
+    options: CreateItemOptions = {}
+  ): Promise<EquipmentItem> {
     let itemData = await this.getItemFromStorage(itemNameOrId);
     if (!itemData) {
       itemData = await this.getItemByName(itemNameOrId);
@@ -934,23 +1064,23 @@ export class Equipment {
       throw new Error(`Item not found: ${itemNameOrId}`);
     }
 
-    const instance = {
-      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    const instance: EquipmentItem = {
       ...itemData,
+      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       state:
-        (options as any).state ||
+        options.state ||
         (itemData.cursed
           ? this.ITEM_STATES.CURSED
           : itemData.unidentified
             ? this.ITEM_STATES.UNIDENTIFIED
             : this.ITEM_STATES.IDENTIFIED),
       identified:
-        (options as any).identified !== undefined
-          ? (options as any).identified
+        options.identified !== undefined
+          ? options.identified
           : !itemData.unidentified && !itemData.cursed,
       cursed: itemData.cursed || false,
-      blessed: (options as any).blessed || false,
-      durability: (options as any).durability || 100,
+      blessed: options.blessed || false,
+      durability: options.durability || 100,
       maxDurability: 100,
       charges: itemData.charges || null,
       maxCharges: itemData.maxCharges || null,
@@ -975,19 +1105,24 @@ export class Equipment {
    * @param {Object} options - Additional options
    * @returns {Object} Identification result
    */
-  identifyItem(item, identifier, options = {}) {
+  identifyItem(
+    item: EquipmentItem,
+    identifier: CharacterData,
+    options: IdentifyOptions = {}
+  ): IdentificationResult {
     if (item.identified) {
       return {
         success: true,
         message: `${item.name} is already identified.`,
         item: item,
+        cursed: false,
       };
     }
 
     const identificationChance = this.calculateIdentificationChance(identifier, item, options);
     const success = Random.percent(identificationChance);
 
-    const result = {
+    const result: IdentificationResult = {
       identifier: identifier.name,
       item: item.name,
       identificationChance,
@@ -1022,7 +1157,7 @@ export class Equipment {
       if (Random.percent(10)) {
         const curseResult = this.applyCurseToCharacter(identifier);
         result.cursed = true;
-        (result as any).curseEffect = curseResult;
+        result.curseEffect = curseResult;
         result.message += ` ${curseResult.message}`;
       }
     }
@@ -1037,11 +1172,15 @@ export class Equipment {
    * @param {Object} options - Additional modifiers
    * @returns {number} Success percentage
    */
-  calculateIdentificationChance(identifier, item, options = {}) {
+  calculateIdentificationChance(
+    identifier: CharacterData,
+    item: EquipmentItem,
+    options: IdentifyOptions = {}
+  ): number {
     let baseChance = 50;
 
     // Intelligence bonus (primary factor)
-    const intelligence = identifier.intelligence || 10;
+    const intelligence = identifier.attributes?.intelligence || 10;
     const intBonus = (intelligence - 10) * 3;
 
     // Class bonuses
@@ -1058,7 +1197,7 @@ export class Equipment {
     const bishopBonus = identifier.class === 'Bishop' ? 20 : 0;
 
     // Spell assistance bonus
-    const spellBonus = (options as any).identifySpell ? 25 : 0;
+    const spellBonus = options.identifySpell ? 25 : 0;
 
     const finalChance = Math.max(
       5,
@@ -1082,8 +1221,8 @@ export class Equipment {
    * @param {string} characterClass - Character's class
    * @returns {number} Bonus percentage
    */
-  getClassIdentificationBonus(characterClass) {
-    const classBonuses = {
+  getClassIdentificationBonus(characterClass: string): number {
+    const classBonuses: Record<string, number> = {
       Mage: 15,
       Bishop: 20,
       Priest: 5,
@@ -1102,11 +1241,11 @@ export class Equipment {
    * @param {Object} character - Character to curse
    * @returns {Object} Curse effect result
    */
-  applyCurseToCharacter(character) {
-    const curses = [
+  applyCurseToCharacter(character: CharacterData): CurseEffect {
+    const curses: CurseEffect[] = [
       {
         type: 'stat_drain',
-        stat: Random.choice(['strength', 'intelligence', 'agility']),
+        stat: Random.choice(['strength', 'intelligence', 'agility'])!,
         amount: 1,
         duration: 'permanent',
         message: `${character.name} feels weakened by the failed identification attempt!`,
@@ -1128,21 +1267,28 @@ export class Equipment {
       },
     ];
 
-    const curse = Random.choice(curses);
+    const curse = Random.choice(curses)!;
 
     // Apply the curse effect
-    if (curse.type === 'stat_drain') {
-      character[curse.stat] = Math.max(3, character[curse.stat] - curse.amount);
+    if (curse.type === 'stat_drain' && curse.stat) {
+      const stat = curse.stat as keyof typeof character.attributes;
+      if (character.attributes && stat in character.attributes) {
+        (character.attributes as any)[stat] = Math.max(
+          3,
+          (character.attributes[stat] as number) - (curse.amount || 1)
+        );
+      }
     } else {
       // Add temporary effect
       if (!character.temporaryEffects) {
         character.temporaryEffects = [];
       }
       character.temporaryEffects.push({
+        id: `curse_${Date.now()}`,
         type: curse.type,
-        duration: curse.duration,
+        value: 0,
+        duration: curse.duration as number,
         source: 'failed_identification',
-        timestamp: Date.now(),
       });
     }
 
@@ -1156,7 +1302,11 @@ export class Equipment {
    * @param {Object} options - Removal options (spell assistance, etc.)
    * @returns {Object} Removal result
    */
-  removeCursedItem(character, item, options = {}) {
+  removeCursedItem(
+    character: CharacterData,
+    item: EquipmentItem,
+    options: RemoveCurseOptions = {}
+  ): { success: boolean; message: string } {
     if (!item.cursed) {
       return {
         success: true,
@@ -1167,11 +1317,11 @@ export class Equipment {
     let baseChance = 0; // Cursed items normally cannot be removed
 
     // Special methods for curse removal
-    if ((options as any).removeCurseSpell) {
+    if (options.removeCurseSpell) {
       baseChance = 80;
-    } else if ((options as any).templeService) {
+    } else if (options.templeService) {
       baseChance = 90;
-    } else if ((options as any).wishSpell) {
+    } else if (options.wishSpell) {
       baseChance = 100;
     }
 
@@ -1201,7 +1351,7 @@ export class Equipment {
    * @param {Object} item - Item to find
    * @returns {string|null} Slot name or null if not equipped
    */
-  getEquippedSlot(character, item) {
+  getEquippedSlot(character: CharacterData, item: EquipmentItem): string | null {
     if (!character.equipment) return null;
 
     for (const [slot, equippedItem] of Object.entries(character.equipment)) {
@@ -1217,7 +1367,7 @@ export class Equipment {
    * @param {Object} item - Item to check
    * @returns {boolean} Whether item can be unequipped
    */
-  canUnequipItem(item) {
+  canUnequipItem(item: EquipmentItem): boolean {
     return !item.cursed;
   }
 
@@ -1225,7 +1375,7 @@ export class Equipment {
    * Get cursed items from database
    * @returns {Object} Cursed items database
    */
-  getCursedItems() {
+  getCursedItems(): EquipmentItem[] {
     return (this as any).equipmentDatabase.cursedItems;
   }
 
@@ -1233,7 +1383,7 @@ export class Equipment {
    * Get unknown items from database
    * @returns {Object} Unknown items database
    */
-  getUnknownItems() {
+  getUnknownItems(): EquipmentItem[] {
     return (this as any).equipmentDatabase.unknownItems;
   }
 
@@ -1249,13 +1399,16 @@ export class Equipment {
    * @param {Object} options - Generation options
    * @returns {Promise<Object>} Generated item instance
    */
-  async generateMagicalItem(level = 1, options = {}) {
+  async generateMagicalItem(
+    level: number = 1,
+    _options: MagicalItemOptions = {}
+  ): Promise<EquipmentItem | null> {
     const cursedChance = Math.min(20, level * 2); // 2% per level, max 20%
     const unknownChance = Math.min(30, level * 3); // 3% per level, max 30%
 
     await this.initializeEntities();
 
-    let itemPool: any[] = [];
+    let itemPool: string[] = [];
 
     // Add normal magical items
     const weapons = await Storage.getAllWeapons();
@@ -1263,35 +1416,26 @@ export class Equipment {
     const shields = await Storage.getAllShields();
     const accessories = await Storage.getAllAccessories();
 
-    [...(weapons as any), ...(armor as any), ...(shields as any), ...(accessories as any)].forEach(
-      (item) => {
-        if (item.magical) itemPool.push(item.id);
-      }
-    );
+    const allEntities: EquipmentItem[] = [...weapons, ...armor, ...shields, ...accessories];
+
+    allEntities.forEach((item) => {
+      if (item.magical) itemPool.push(item.id);
+    });
 
     // Add cursed items based on chance
     if (Random.percent(cursedChance)) {
-      const cursedItems = [
-        ...(weapons as any),
-        ...(armor as any),
-        ...(shields as any),
-        ...(accessories as any),
-      ].filter((item) => item.cursed);
+      const cursedItems = allEntities.filter((item) => item.cursed);
       itemPool = [...itemPool, ...cursedItems.map((item) => item.id)];
     }
 
     // Add unknown items based on chance
     if (Random.percent(unknownChance)) {
-      const unknownItems = [
-        ...(weapons as any),
-        ...(armor as any),
-        ...(shields as any),
-        ...(accessories as any),
-      ].filter((item) => item.unidentified);
+      const unknownItems = allEntities.filter((item) => item.unidentified);
       itemPool = [...itemPool, ...unknownItems.map((item) => item.id)];
     }
 
     const selectedItemId = Random.choice(itemPool);
+    if (!selectedItemId) return null;
     return await this.createItemInstance(selectedItemId, {
       identified: !Random.percent(unknownChance),
     });
@@ -1306,9 +1450,22 @@ export class Equipment {
    * @param {Object} context - Additional context for wear calculation
    * @returns {Object} Wear result
    */
-  applyItemWear(item, useType = 'normal', context = {}) {
+  applyItemWear(
+    item: EquipmentItem,
+    useType: string = 'normal',
+    context: WearContext = {}
+  ): WearResult {
     if (!item.durability || item.durability <= 0) {
-      return { alreadyBroken: true, message: `${item.name} is already broken.` };
+      return {
+        alreadyBroken: true,
+        message: `${item.name} is already broken.`,
+        item: item.name,
+        wearAmount: 0,
+        oldDurability: 0,
+        newDurability: 0,
+        broken: true,
+        warning: false,
+      };
     }
 
     let wearAmount = this.calculateWearAmount(item, useType, context);
@@ -1355,28 +1512,28 @@ export class Equipment {
    * @param {Object} context - Additional context
    * @returns {number} Amount of durability to remove
    */
-  calculateWearAmount(item, useType, context) {
+  calculateWearAmount(item: EquipmentItem, useType: string, context: WearContext): number {
     let baseWear = 0;
 
     switch (useType) {
       case 'attack':
         baseWear = Random.integer(1, 3);
         // Critical hits cause more wear
-        if (context.critical) {
+        if (context.critical === true) {
           baseWear += Random.integer(1, 2);
         }
         break;
       case 'defend':
         baseWear = Random.integer(1, 2);
         // Blocking powerful attacks causes more wear
-        if (context.damage > 10) {
+        if ((context.damage || 0) > 10) {
           baseWear += 1;
         }
         break;
       case 'spell':
         // Spell focus items wear from casting
         baseWear = Random.integer(0, 1);
-        if (context.spellLevel > 5) {
+        if ((context.spellLevel || 0) > 5) {
           baseWear += 1;
         }
         break;
@@ -1400,9 +1557,9 @@ export class Equipment {
    * @param {Object} item - Item to check
    * @returns {number} Quality multiplier
    */
-  getItemQualityMultiplier(item) {
+  getItemQualityMultiplier(item: EquipmentItem): number {
     if (item.quality) {
-      const qualityMultipliers = {
+      const qualityMultipliers: Record<string, number> = {
         poor: 1.5,
         common: 1.0,
         uncommon: 0.8,
@@ -1414,9 +1571,9 @@ export class Equipment {
     }
 
     // Estimate quality from value
-    if (item.value > 2000) return 0.4; // Epic/Legendary
-    if (item.value > 1000) return 0.6; // Rare
-    if (item.value > 500) return 0.8; // Uncommon
+    if ((item.value || 0) > 2000) return 0.4; // Epic/Legendary
+    if ((item.value || 0) > 1000) return 0.6; // Rare
+    if ((item.value || 0) > 500) return 0.8; // Uncommon
     return 1.0; // Common
   }
 
@@ -1425,7 +1582,7 @@ export class Equipment {
    * @param {Object} item - Item to break
    * @returns {Object} Break result
    */
-  breakItem(item) {
+  breakItem(item: EquipmentItem): BreakResult {
     item.durability = 0;
     item.broken = true;
 
@@ -1459,7 +1616,7 @@ export class Equipment {
    * @param {Object} options - Repair options
    * @returns {Object} Repair result
    */
-  repairItem(item, options = {}) {
+  repairItem(item: EquipmentItem, options: RepairOptions = {}): RepairResult {
     if (!item.broken && item.durability === item.maxDurability) {
       return {
         success: false,
@@ -1468,15 +1625,15 @@ export class Equipment {
     }
 
     const repairCost = this.calculateRepairCost(item, options);
-    const repairAmount = (options as any).fullRepair
-      ? item.maxDurability - item.durability
-      : Math.min(50, item.maxDurability - item.durability);
+    const dur = item.durability || 0;
+    const maxDur = item.maxDurability || 100;
+    const repairAmount = options.fullRepair ? maxDur - dur : Math.min(50, maxDur - dur);
 
     // Restore durability
-    item.durability = Math.min(item.maxDurability, item.durability + repairAmount);
+    item.durability = Math.min(maxDur, dur + repairAmount);
 
     // If fully repaired and was broken, restore functionality
-    if (item.broken && item.durability === item.maxDurability) {
+    if (item.broken && item.durability === maxDur) {
       this.restoreBrokenItem(item);
     }
 
@@ -1488,7 +1645,7 @@ export class Equipment {
       maxDurability: item.maxDurability,
       cost: repairCost,
       fullyRepaired: item.durability === item.maxDurability,
-      message: `${item.name} has been repaired ${(options as any).fullRepair ? 'completely' : 'partially'}.`,
+      message: `${item.name} has been repaired ${options.fullRepair ? 'completely' : 'partially'}.`,
     };
   }
 
@@ -1496,7 +1653,7 @@ export class Equipment {
    * Restore a broken item to working condition
    * @param {Object} item - Item to restore
    */
-  restoreBrokenItem(item) {
+  restoreBrokenItem(item: EquipmentItem): void {
     if (!item.brokenState) return;
 
     // Restore original stats
@@ -1518,14 +1675,15 @@ export class Equipment {
    * @param {Object} options - Repair options
    * @returns {number} Repair cost in gold
    */
-  calculateRepairCost(item, options = {}) {
-    const baseCost = Math.floor(item.value * 0.1); // 10% of item value
-    const damageRatio = (item.maxDurability - item.durability) / item.maxDurability;
+  calculateRepairCost(item: EquipmentItem, options: RepairOptions = {}): number {
+    const baseCost = Math.floor((item.value || 0) * 0.1); // 10% of item value
+    const damageRatio =
+      ((item.maxDurability || 100) - (item.durability || 0)) / (item.maxDurability || 100);
 
     let cost = Math.floor(baseCost * damageRatio);
 
     // Full repair costs more
-    if ((options as any).fullRepair) {
+    if (options.fullRepair) {
       cost = Math.floor(cost * 1.5);
     }
 
@@ -1540,7 +1698,7 @@ export class Equipment {
     }
 
     // Quality affects cost
-    const qualityMultiplier = {
+    const qualityMultiplier: Record<string, number> = {
       poor: 0.5,
       common: 1.0,
       uncommon: 1.5,
@@ -1561,12 +1719,12 @@ export class Equipment {
    * @param {Object} item - Item to check
    * @returns {Object} Repair status
    */
-  getRepairStatus(item) {
+  getRepairStatus(item: EquipmentItem): RepairStatus {
     if (!item.durability) {
-      return { needsRepair: false, condition: 'N/A' };
+      return { needsRepair: false, condition: 'N/A', repairCost: 0 };
     }
 
-    const durabilityRatio = item.durability / item.maxDurability;
+    const durabilityRatio = item.durability / (item.maxDurability || 100);
     let condition, needsRepair;
 
     if (item.broken || item.durability === 0) {
@@ -1601,18 +1759,19 @@ export class Equipment {
    * @param {Object} character - Character to check
    * @returns {Array} Items needing repair
    */
-  getItemsNeedingRepair(character) {
-    const itemsNeedingRepair: any[] = [];
+  getItemsNeedingRepair(character: CharacterData): ItemRepairInfo[] {
+    const itemsNeedingRepair: ItemRepairInfo[] = [];
 
     if (character.equipment) {
       Object.values(character.equipment).forEach((item) => {
-        if (item && (item as any).durability !== undefined) {
-          const status = this.getRepairStatus(item);
+        if (item && typeof item !== 'string' && (item as EquipmentItem).durability !== undefined) {
+          const equipItem = item as unknown as EquipmentItem;
+          const status = this.getRepairStatus(equipItem);
           if (status.needsRepair) {
             itemsNeedingRepair.push({
-              item,
+              item: equipItem,
               status,
-              slot: this.getEquippedSlot(character, item),
+              slot: this.getEquippedSlot(character, equipItem),
             });
           }
         }
@@ -1629,25 +1788,35 @@ export class Equipment {
    * @param {number} severity - Damage severity (1-5)
    * @returns {Array} Results for each damaged item
    */
-  processEnvironmentalDamage(character, damageType, severity = 2) {
-    const results: any[] = [];
+  processEnvironmentalDamage(
+    character: CharacterData,
+    damageType: string,
+    severity: number = 2
+  ): WearResult[] {
+    const results: WearResult[] = [];
 
     if (!character.equipment) return results;
 
     Object.values(character.equipment).forEach((item) => {
-      if (item && (item as any).durability > 0) {
+      if (
+        item &&
+        typeof item !== 'string' &&
+        (item as unknown as EquipmentItem).durability &&
+        (item as unknown as EquipmentItem).durability! > 0
+      ) {
+        const equipItem = item as unknown as EquipmentItem;
         // Different damage types affect different items differently
         let affectsItem = false;
 
         switch (damageType) {
           case 'acid':
-            affectsItem = (item as any).type === 'armor' || (item as any).type === 'weapon';
+            affectsItem = equipItem.type === 'armor' || equipItem.type === 'weapon';
             break;
           case 'fire':
-            affectsItem = (item as any).subtype !== 'magical'; // Magic items resist fire
+            affectsItem = equipItem.subtype !== 'magical'; // Magic items resist fire
             break;
           case 'water':
-            affectsItem = (item as any).type === 'weapon' && (item as any).subtype !== 'magical';
+            affectsItem = equipItem.type === 'weapon' && equipItem.subtype !== 'magical';
             break;
           case 'wear':
           default:
@@ -1656,11 +1825,11 @@ export class Equipment {
         }
 
         if (affectsItem) {
-          const wearResult = this.applyItemWear(item, 'environmental', {
+          const wearResult = this.applyItemWear(equipItem, 'environmental', {
             damageType,
             severity,
           });
-          if ((wearResult as any).wearAmount > 0) {
+          if (wearResult.wearAmount > 0) {
             results.push(wearResult);
           }
         }

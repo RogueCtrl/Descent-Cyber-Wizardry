@@ -1,6 +1,6 @@
 # Combat System
 
-> **Files**: `src/game/Combat.js`, `src/game/Formation.js`, `src/game/CombatInterface.js`
+> **Files**: `src/game/Combat.ts`, `src/game/Formation.ts`, `src/game/CombatInterface.ts`
 > **Total Lines**: ~2,100
 
 ## Overview
@@ -32,10 +32,43 @@ Turn-based combat with initiative system, formation mechanics, and multi-wave en
 
 ---
 
+## Combat.ts
+
+### Key Properties
+
+```typescript
+export class Combat {
+  engine: any;
+  isActive: boolean;
+  currentTurn: number;
+  combatants: any[];
+  actionQueue: any[];
+  turnOrder: any[];
+  currentTurnIndex: number;
+  combatPhase: string;              // 'initiative', 'action_selection', 'resolution', 'cleanup'
+  pendingActions: Map<any, any>;
+  combatLog: any[];
+  surpriseRound: any;               // 'party', 'enemies', or null
+
+  // Multi-wave combat
+  playerParty: any;
+  enemyParties: any[];
+  currentEnemyPartyIndex: number;
+  currentEnemyParty: any;
+
+  // Tracking
+  disconnectedCharacters: any[];
+  spellSystem: Spells;
+  lastCombatRewards: any;
+}
+```
+
+---
+
 ## Initiative System
 
-```javascript
-calculateInitiative() {
+```typescript
+calculateInitiative(): void {
     this.turnOrder = combatants.map(c => ({
         combatant: c,
         initiative: this.getInitiative(c),
@@ -43,7 +76,7 @@ calculateInitiative() {
     })).sort((a, b) => b.initiative - a.initiative);
 }
 
-getInitiative(combatant) {
+getInitiative(combatant: any): number {
     const baseAgility = combatant.attributes?.agility || 10;
     const classBonus = this.getClassInitiativeBonus(combatant);
     const randomFactor = Random.die(6);
@@ -65,7 +98,7 @@ getInitiative(combatant) {
 ## Action Types
 
 ### Attack
-```javascript
+```typescript
 {
     type: 'attack',
     attacker: character,
@@ -77,7 +110,7 @@ getInitiative(combatant) {
 - Critical on natural 20 (2x damage, 5% instant kill)
 
 ### Spell
-```javascript
+```typescript
 {
     type: 'spell',
     caster: character,
@@ -106,14 +139,14 @@ getInitiative(combatant) {
 ## Damage Calculations
 
 ### Attack Roll
-```
+```typescript
 attackRoll = d20 + attackBonus
 HIT if attackRoll >= targetAC
 ```
 
 ### Damage Roll
-```javascript
-rollDamage(attacker) {
+```typescript
+rollDamage(attacker: any): number {
     let damage = Random.die(6);  // Base 1d6
     damage += Math.floor((attacker.attributes.strength - 10) / 2);
     damage += attacker.equipment?.weapon?.damageBonus || 0;
@@ -122,8 +155,8 @@ rollDamage(attacker) {
 ```
 
 ### Armor Class
-```javascript
-getArmorClass(combatant) {
+```typescript
+getArmorClass(combatant: any): number {
     let ac = 10;  // Base
     ac -= Math.floor((combatant.attributes.agility - 10) / 2);
     ac -= combatant.equipment?.armor?.acBonus || 0;
@@ -134,7 +167,7 @@ getArmorClass(combatant) {
 ```
 
 ### Critical Hits
-```javascript
+```typescript
 if (attackRoll >= 20) {  // Natural 20
     const critRoll = Random.die(20);
     if (critRoll >= 18) result.multiplier = 2;
@@ -153,6 +186,22 @@ if (attackRoll >= 20) {  // Natural 20
 - **Back Row**: 0-3 positions (caster/ranged)
 - **Max Party Size**: 4
 
+### Formation.ts Properties
+
+```typescript
+export class Formation {
+  frontRow: any[];
+  backRow: any[];
+  maxFrontRow: number = 3;
+  maxBackRow: number = 3;
+
+  setupFromParty(party: any): FormationData;
+  shouldBeInFrontRow(character: any): boolean;
+  setFormation(frontRowMembers: any[], backRowMembers: any[]): any;
+  moveCharacter(character: any, targetRow: 'front' | 'back'): any;
+}
+```
+
 ### Default Placement
 | Front Row | Back Row |
 |-----------|----------|
@@ -160,7 +209,7 @@ if (attackRoll >= 20) {  // Natural 20
 
 ### Position Effects
 
-```javascript
+```typescript
 // Front Row
 damageBonus: 0
 accuracyBonus: 0
@@ -188,7 +237,7 @@ Enemies target front row first; back row only when front is eliminated.
 
 ### AI Types
 
-```javascript
+```typescript
 // 'cowardly' - Targets weakest
 target = targets.sort((a,b) => a.currentHP - b.currentHP)[0];
 
@@ -215,17 +264,17 @@ score += hitChance;
 
 ## Multi-Wave Combat
 
-```javascript
+```typescript
 // Setup multiple waves
 await combat.startCombat(party, [wave1, wave2, wave3]);
 
 // Between waves
-advanceToNextEnemyParty() {
+advanceToNextEnemyParty(): boolean {
     this.currentEnemyPartyIndex++;
     if (this.currentEnemyPartyIndex >= this.enemyParties.length) {
         return false;  // All waves defeated
     }
-    this.currentWaveCombatants = this.enemyParties[this.currentEnemyPartyIndex];
+    this.currentEnemyParty = this.enemyParties[this.currentEnemyPartyIndex];
     this.calculateInitiative();
     return true;
 }
@@ -233,9 +282,34 @@ advanceToNextEnemyParty() {
 
 ---
 
+## Type Definitions
+
+Combat types are defined in `src/types/index.ts`:
+
+```typescript
+export interface CombatAction {
+  type: 'attack' | 'spell' | 'item' | 'defend' | 'flee' | 'parry';
+  actorId: string;
+  targetId?: string;
+  spellId?: string;
+  itemId?: string;
+}
+
+export interface CombatResult {
+  hit: boolean;
+  damage: number;
+  critical: boolean;
+  message: string;
+}
+
+export type AIType = 'aggressive' | 'defensive' | 'caster' | 'support' | 'random';
+```
+
+---
+
 ## Combat Events
 
-```javascript
+```typescript
 // Start
 emit('combat-started', {
     encounter, formation, difficulty, firstActor, surpriseRound
@@ -271,14 +345,14 @@ emit('character-disconnected', { character, reason });
 ### New Action Type
 
 1. **Add handler in resolveAction():**
-```javascript
+```typescript
 case 'newAction':
     return this.resolveNewAction(action);
 ```
 
 2. **Implement resolver:**
-```javascript
-async resolveNewAction(action) {
+```typescript
+async resolveNewAction(action: CombatAction): Promise<CombatResult> {
     const { actor, target } = action;
     this.logMessage(`${actor.name} performs new action!`);
     return { success: true, message: 'Action performed' };
@@ -286,16 +360,25 @@ async resolveNewAction(action) {
 ```
 
 3. **Update validation:**
-```javascript
+```typescript
 // In CombatInterface.validateAction()
 case 'newAction':
     // Validate prerequisites
     break;
 ```
 
+4. **(Optional) Add to type definition:**
+```typescript
+// In src/types/index.ts
+export interface CombatAction {
+  type: 'attack' | 'spell' | 'item' | 'defend' | 'flee' | 'parry' | 'newAction';
+  // ...
+}
+```
+
 ### New Formation Effect
 
-```javascript
+```typescript
 // In Formation.applyFormationEffects()
 effects.spellPowerBonus = position.row === 'back' ? 1 : 0;
 effects.critChance = position.row === 'front' ? 5 : 0;
@@ -303,11 +386,11 @@ effects.critChance = position.row === 'front' ? 5 : 0;
 
 ### New Status Condition
 
-```javascript
+```typescript
 character.conditions.push({
     type: 'poisoned',
     duration: 3,
-    effect: (char) => { char.currentHP -= 5; }
+    effect: (char: CharacterData) => { char.currentHP -= 5; }
 });
 
 // Apply each turn
@@ -318,7 +401,7 @@ combatant.conditions?.forEach(c => c.effect?.(combatant));
 
 ## Testing
 
-```javascript
+```typescript
 // Create test combat
 const party = new Party();
 const monster = await Monster.createFromData('Kobold');

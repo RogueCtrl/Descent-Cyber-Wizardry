@@ -9,8 +9,8 @@ export class Formation {
   maxBackRow: number;
 
   constructor() {
-    this.frontRow = []; // positions 0-2
-    this.backRow = []; // positions 3-5
+    this.frontRow = [] as any[];
+    this.backRow = [] as any[];
     this.maxFrontRow = 3;
     this.maxBackRow = 3;
   }
@@ -18,14 +18,14 @@ export class Formation {
   /**
    * Set up formation from party
    */
-  setupFromParty(party) {
+  setupFromParty(party: any) {
     this.frontRow = [];
     this.backRow = [];
 
     const aliveMembers = party.aliveMembers;
 
     // Default formation assignment based on class
-    aliveMembers.forEach((member, index) => {
+    aliveMembers.forEach((member: any, index: number) => {
       if (this.shouldBeInFrontRow(member) && this.frontRow.length < this.maxFrontRow) {
         this.frontRow.push(member);
       } else if (this.backRow.length < this.maxBackRow) {
@@ -41,7 +41,7 @@ export class Formation {
   /**
    * Determine if character should default to front row
    */
-  shouldBeInFrontRow(character) {
+  shouldBeInFrontRow(character: any) {
     const frontRowClasses = ['Fighter', 'Lord', 'Samurai', 'Thief', 'Ninja'];
     return frontRowClasses.includes(character.class);
   }
@@ -49,7 +49,7 @@ export class Formation {
   /**
    * Set custom formation
    */
-  setFormation(frontRowMembers, backRowMembers) {
+  setFormation(frontRowMembers: any[], backRowMembers: any[]) {
     if (frontRowMembers.length > this.maxFrontRow || backRowMembers.length > this.maxBackRow) {
       return { success: false, reason: 'Too many members in row' };
     }
@@ -63,7 +63,7 @@ export class Formation {
   /**
    * Move character between rows
    */
-  moveCharacter(character, targetRow) {
+  moveCharacter(character: any, targetRow: string) {
     // Remove from current position
     this.frontRow = this.frontRow.filter((member) => member.id !== character.id);
     this.backRow = this.backRow.filter((member) => member.id !== character.id);
@@ -100,7 +100,7 @@ export class Formation {
   /**
    * Check if character can attack from their position
    */
-  canAttackFromPosition(attacker, target, attackType = 'melee') {
+  canAttackFromPosition(attacker: any, target: any, attackType: string = 'melee') {
     const attackerPosition = this.getCharacterPosition(attacker);
     const targetPosition = this.getCharacterPosition(target, true); // true for enemy
 
@@ -123,7 +123,7 @@ export class Formation {
   /**
    * Get character's position in formation
    */
-  getCharacterPosition(character, isEnemy = false) {
+  getCharacterPosition(character: any, isEnemy: boolean = false) {
     if (isEnemy) {
       // Simplified enemy positioning
       return { row: 'front', index: 0 };
@@ -145,7 +145,7 @@ export class Formation {
   /**
    * Check if melee attack is possible
    */
-  canMeleeAttack(attackerPos, targetPos) {
+  canMeleeAttack(attackerPos: any, targetPos: any) {
     // Front row can melee attack front row
     if (attackerPos.row === 'front') {
       return true;
@@ -162,7 +162,7 @@ export class Formation {
   /**
    * Check if ranged attack is possible
    */
-  canRangedAttack(attackerPos, targetPos) {
+  canRangedAttack(attackerPos: any, targetPos: any) {
     // Ranged attacks can be made from any position
     // But may have penalties based on position and line of sight
     return true;
@@ -171,7 +171,7 @@ export class Formation {
   /**
    * Check if reach attack is possible
    */
-  canReachAttack(attackerPos, targetPos) {
+  canReachAttack(attackerPos: any, targetPos: any) {
     // Reach weapons can attack from back row
     return true;
   }
@@ -179,7 +179,7 @@ export class Formation {
   /**
    * Check if spell can be cast
    */
-  canCastSpell(attackerPos, targetPos) {
+  canCastSpell(attackerPos: any, targetPos: any) {
     // Most spells can be cast from any position
     // Some may require line of sight
     return true;
@@ -188,7 +188,7 @@ export class Formation {
   /**
    * Check if character has reach weapon
    */
-  hasReachWeapon(character) {
+  hasReachWeapon(character: any) {
     if (!character.equipment || !character.equipment.weapon) return false;
 
     const reachWeapons = ['Spear', 'Halberd', 'Pike', 'Poleaxe'];
@@ -198,8 +198,8 @@ export class Formation {
   /**
    * Get targeting priority for enemies
    */
-  getTargetPriority(enemyFormation) {
-    const targets: any[] = [];
+  getTargetPriority(enemyFormation: any) {
+    const targets = [] as any[];
 
     // Front row gets targeted first
     this.frontRow.forEach((character, index) => {
@@ -233,7 +233,7 @@ export class Formation {
   /**
    * Apply formation effects to combat
    */
-  applyFormationEffects(character, actionType = 'attack') {
+  applyFormationEffects(character: any, actionType: string = 'attack') {
     const position = this.getCharacterPosition(character);
     if (!position) return {};
 
@@ -328,7 +328,7 @@ export class Formation {
   /**
    * Calculate character AC (simplified)
    */
-  calculateAC(character) {
+  calculateAC(character: any) {
     let ac = 10; // Base AC
 
     // Dexterity modifier
@@ -436,7 +436,7 @@ export class Formation {
   /**
    * Get front row priority score for character
    */
-  getFrontRowPriority(character) {
+  getFrontRowPriority(character: any) {
     const classPriorities = {
       Fighter: 10,
       Lord: 9,
@@ -448,7 +448,7 @@ export class Formation {
       Bishop: 1,
     };
 
-    let priority = classPriorities[character.class] || 5;
+    let priority = (classPriorities as Record<string, number>)[character.class] || 5;
 
     // Adjust for HP
     const hpRatio = character.currentHP / character.maxHP;

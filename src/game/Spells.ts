@@ -1,14 +1,93 @@
 import { Storage } from '../utils/Storage.ts';
 import { Class } from './CharacterClass.ts';
 import { Random } from '../utils/Random.ts';
+import type { SpellData, CharacterData, TemporaryEffect } from '../types/index.ts';
+
+/** Target of a spell - can be a character or monster-like entity */
+interface SpellTarget {
+  name?: string;
+  level?: number;
+  currentHP: number;
+  maxHP: number;
+  isAlive: boolean;
+  status: string;
+  attributes?: { intelligence?: number; piety?: number; vitality?: number; [key: string]: any };
+  temporaryEffects?: TemporaryEffect[];
+  addTemporaryEffect?: (effect: Record<string, unknown>) => void;
+  ageCharacter?: (years: number) => void;
+  [key: string]: any;
+}
+
+/** Result of executing a spell effect */
+interface SpellEffectResult {
+  message: string;
+  damage?: number;
+  healing?: number;
+  success?: boolean;
+  ageIncrease?: number;
+}
+
+/** Result of casting a spell */
+interface CastSpellResult {
+  success: boolean;
+  message: string;
+  spell?: SpellData;
+  result?: SpellEffectResult;
+}
+
+/** Available spells organized by school */
+interface AvailableSpells {
+  arcane: SpellData[];
+  divine: SpellData[];
+}
+
+/** Spell description for UI display */
+interface SpellDescription {
+  name: string;
+  level: number;
+  school?: string;
+  description?: string;
+  range?: string;
+  duration?: string;
+  components: string;
+}
+
+/** Spell selection input for memorization */
+interface SpellSelection {
+  name: string;
+  [key: string]: any;
+}
+
+/** Selected spells for memorization, organized by school */
+interface SelectedSpells {
+  arcane?: SpellSelection[];
+  divine?: SpellSelection[];
+  [key: string]: SpellSelection[] | undefined;
+}
+
+/** Memorized spells result */
+interface MemorizedResult {
+  arcane: SpellData[];
+  divine: SpellData[];
+  [key: string]: SpellData[];
+}
+
+/** Legacy spell database structure */
+interface LegacySpellDatabase {
+  [school: string]: {
+    [level: number]: {
+      [spellName: string]: Record<string, unknown>;
+    };
+  };
+}
 
 /**
  * Spell System
  * Handles magic spells and spell casting
  */
 export class Spells {
-  knownSpells: Map<any, any>;
-  spellCache: Map<any, any>;
+  knownSpells: Map<string, SpellData>;
+  spellCache: Map<string, SpellData>;
   entitiesLoaded: boolean;
 
   constructor() {
@@ -24,7 +103,7 @@ export class Spells {
    * @param {boolean} forceReload - Force reload entities from JSON
    * @returns {Promise<boolean>} Success status
    */
-  async initializeEntities(forceReload = false) {
+  async initializeEntities(forceReload: boolean = false): Promise<boolean> {
     if (this.entitiesLoaded && !forceReload) return true;
 
     try {
@@ -51,7 +130,7 @@ export class Spells {
    * DEPRECATED: Legacy spell database (kept for compatibility)
    * Use getSpellFromStorage() instead
    */
-  initializeSpellDatabase() {
+  initializeSpellDatabase(): LegacySpellDatabase {
     return {
       // Arcane Spells (Mage School)
       arcane: {
@@ -543,7 +622,7 @@ export class Spells {
   /**
    * Get spell data
    */
-  static getSpellData(spellName, school: string | null = null) {
+  static getSpellData(spellName: string, school: string | null = null) {
     const spells = new Spells();
     return spells.getSpell(spellName, school);
   }
@@ -553,20 +632,20 @@ export class Spells {
    * @param {string} spellId - Spell entity ID
    * @returns {Promise<Object|null>} Spell data or null
    */
-  async getSpellFromStorage(spellId) {
+  async getSpellFromStorage(spellId: string): Promise<SpellData | null> {
     if (!spellId) return null;
 
     // Check cache first
     if (this.spellCache.has(spellId)) {
-      return { ...this.spellCache.get(spellId) };
+      return { ...this.spellCache.get(spellId) } as SpellData;
     }
 
     await this.initializeEntities();
 
     const spell = await Storage.getSpell(spellId);
     if (spell) {
-      this.spellCache.set(spellId, spell);
-      return { ...(spell as any) };
+      this.spellCache.set(spellId, spell as SpellData);
+      return { ...spell } as SpellData;
     }
 
     return null;
@@ -578,16 +657,16 @@ export class Spells {
    * @param {string} school - Optional school filter
    * @returns {Promise<Object|null>} Spell data or null
    */
-  async getSpellByName(spellName, school: string | null = null) {
+  async getSpellByName(spellName: string, school: string | null = null): Promise<SpellData | null> {
     await this.initializeEntities();
 
-    const criteria: any = { name: spellName };
+    const criteria: Record<string, string | number> = { name: spellName };
     if (school) {
       criteria.school = school;
     }
 
-    const spells: any = await Storage.queryEntities(Storage.SPELL_STORE, criteria);
-    if ((spells as any).length > 0) {
+    const spells = (await Storage.queryEntities(Storage.SPELL_STORE, criteria)) as SpellData[];
+    if (spells.length > 0) {
       const spell = spells[0];
       this.spellCache.set(spell.id, spell);
       return { ...spell };
@@ -600,13 +679,13 @@ export class Spells {
    * DEPRECATED: Legacy getSpell method (kept for compatibility)
    * Use getSpellByName() or getSpellFromStorage() instead
    */
-  getSpell(spellName, school: string | null = null) {
+  getSpell(spellName: string, school: string | null = null): Record<string, unknown> | null {
     // For backward compatibility, use synchronous fallback
     const spellDatabase = this.initializeSpellDatabase();
 
     // Search in specified school first
     if (school && spellDatabase[school]) {
-      for (const level of Object.values(spellDatabase[school]) as any[]) {
+      for (const level of Object.values(spellDatabase[school])) {
         if (level[spellName]) {
           return level[spellName];
         }
@@ -615,7 +694,7 @@ export class Spells {
 
     // Search all schools if not found or no school specified
     for (const schoolName of Object.keys(spellDatabase)) {
-      for (const level of Object.values(spellDatabase[schoolName]) as any[]) {
+      for (const level of Object.values(spellDatabase[schoolName])) {
         if (level[spellName]) {
           return level[spellName];
         }
@@ -631,26 +710,26 @@ export class Spells {
    * @param {number} level - Spell level
    * @returns {Promise<Array>} Array of spells
    */
-  async getSpellsBySchoolAndLevel(school, level) {
+  async getSpellsBySchoolAndLevel(school: string, level: number): Promise<SpellData[]> {
     await this.initializeEntities();
 
     const spells = await Storage.queryEntities(Storage.SPELL_STORE, {
       school: school,
       level: level,
     });
-    return spells;
+    return spells as SpellData[];
   }
 
   /**
    * Get available spells for character based on class and level
    */
-  async getAvailableSpells(character) {
+  async getAvailableSpells(character: CharacterData): Promise<AvailableSpells> {
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) {
-      return { arcane: [] as any[], divine: [] as any[] };
+      return { arcane: [], divine: [] };
     }
 
-    const availableSpells = { arcane: [] as any[], divine: [] as any[] };
+    const availableSpells: AvailableSpells = { arcane: [], divine: [] };
 
     // Determine which schools the character can access
     const canCastArcane =
@@ -667,9 +746,7 @@ export class Spells {
       const arcaneSlots = Class.getSpellSlots(character, 'arcane');
       for (let level = 1; level <= arcaneSlots.length; level++) {
         if (arcaneSlots[level - 1] > 0) {
-          availableSpells.arcane.push(
-            ...((await this.getSpellsBySchoolAndLevel('arcane', level)) as any[])
-          );
+          availableSpells.arcane.push(...(await this.getSpellsBySchoolAndLevel('arcane', level)));
         }
       }
     }
@@ -678,9 +755,7 @@ export class Spells {
       const divineSlots = Class.getSpellSlots(character, 'divine');
       for (let level = 1; level <= divineSlots.length; level++) {
         if (divineSlots[level - 1] > 0) {
-          availableSpells.divine.push(
-            ...((await this.getSpellsBySchoolAndLevel('divine', level)) as any[])
-          );
+          availableSpells.divine.push(...(await this.getSpellsBySchoolAndLevel('divine', level)));
         }
       }
     }
@@ -698,7 +773,11 @@ export class Spells {
    * @param {Object} target - Target of the spell
    * @returns {Promise<Object>} Casting result
    */
-  async castSpell(caster, spellNameOrId, target: any = null) {
+  async castSpell(
+    caster: CharacterData,
+    spellNameOrId: string,
+    target: SpellTarget | null = null
+  ): Promise<CastSpellResult> {
     let spell = await this.getSpellFromStorage(spellNameOrId);
     if (!spell) {
       spell = await this.getSpellByName(spellNameOrId);
@@ -741,7 +820,7 @@ export class Spells {
   /**
    * Check if character can cast a spell
    */
-  canCastSpell(caster, spell) {
+  canCastSpell(caster: CharacterData, spell: SpellData): boolean {
     const classData = Class.getClassData(caster.class);
     if (!classData || !classData.spells) return false;
 
@@ -759,27 +838,29 @@ export class Spells {
     if (!canCastSchool) return false;
 
     // Check if character has spell slots of the required level
-    const spellSlots = Class.getSpellSlots(caster, spell.school);
+    const spellSlots = Class.getSpellSlots(caster, spell.school!);
     return spellSlots.length >= spell.level && spellSlots[spell.level - 1] > 0;
   }
 
   /**
    * Check if spell is memorized
    */
-  isSpellMemorized(caster, spell) {
-    if (!caster.memorizedSpells || !caster.memorizedSpells[spell.school]) {
+  isSpellMemorized(caster: CharacterData, spell: SpellData): boolean {
+    if (!caster.memorizedSpells || !spell.school || !caster.memorizedSpells[spell.school]) {
       return false;
     }
 
-    return caster.memorizedSpells[spell.school].some(
-      (memorizedSpell) => memorizedSpell.name === spell.name
+    return caster.memorizedSpells[spell.school].some((memorizedSpell: string | SpellData) =>
+      typeof memorizedSpell === 'string'
+        ? memorizedSpell === spell.name
+        : (memorizedSpell as SpellData).name === spell.name
     );
   }
 
   /**
    * Calculate spell success chance
    */
-  calculateSpellSuccessChance(caster, spell) {
+  calculateSpellSuccessChance(caster: CharacterData, spell: SpellData): number {
     const baseChance = 85;
     const levelDifference = caster.level - spell.level;
     const attributeBonus =
@@ -795,7 +876,11 @@ export class Spells {
   /**
    * Execute spell effect
    */
-  executeSpellEffect(spell, caster, target) {
+  executeSpellEffect(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     switch (spell.effect) {
       case 'damage':
         return this.executeDamageSpell(spell, caster, target);
@@ -823,14 +908,18 @@ export class Spells {
   /**
    * Execute damage spell
    */
-  executeDamageSpell(spell, caster, target) {
+  executeDamageSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     if (!target) {
       return { message: 'No target for damage spell' };
     }
 
     let damage = 0;
     if (spell.dice) {
-      damage = Random.dice(spell.dice.count, spell.dice.sides) + (spell.dice.bonus || 0);
+      damage = Random.dice(spell.dice.count || 1, spell.dice.sides || 6) + (spell.dice.bonus || 0);
     }
 
     // Apply caster level bonus for some spells
@@ -879,7 +968,11 @@ export class Spells {
   /**
    * Execute healing spell
    */
-  executeHealSpell(spell, caster, target) {
+  executeHealSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     if (!target) {
       return { message: 'No target for healing spell' };
     }
@@ -895,7 +988,7 @@ export class Spells {
       // Remove all negative effects
       if (target.temporaryEffects) {
         target.temporaryEffects = target.temporaryEffects.filter(
-          (effect) => effect.type === 'buff' || effect.type === 'protection'
+          (effect: TemporaryEffect) => effect.type === 'buff' || effect.type === 'protection'
         );
       }
 
@@ -912,7 +1005,7 @@ export class Spells {
     }
 
     if (spell.dice) {
-      healing = Random.dice(spell.dice.count, spell.dice.sides) + (spell.dice.bonus || 0);
+      healing = Random.dice(spell.dice.count || 1, spell.dice.sides || 6) + (spell.dice.bonus || 0);
     }
 
     const oldHP = target.currentHP;
@@ -928,17 +1021,24 @@ export class Spells {
   /**
    * Execute buff spell
    */
-  executeBuffSpell(spell, caster, target) {
-    const targets = spell.areaEffect ? [caster] : [target || caster]; // Simplified area effect
+  executeBuffSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
+    const casterAsTarget = caster as unknown as SpellTarget;
+    const targets: SpellTarget[] = spell.areaEffect ? [casterAsTarget] : [target || casterAsTarget];
 
     targets.forEach((t) => {
       if (t && t.temporaryEffects) {
-        t.addTemporaryEffect({
-          type: 'buff',
-          source: spell.name,
-          bonus: spell.bonus || 1,
-          duration: spell.duration,
-        });
+        if (t.addTemporaryEffect) {
+          t.addTemporaryEffect({
+            type: 'buff',
+            source: spell.name,
+            bonus: spell.bonus || 1,
+            duration: spell.duration,
+          });
+        }
       }
     });
 
@@ -950,10 +1050,14 @@ export class Spells {
   /**
    * Execute protection spell
    */
-  executeProtectionSpell(spell, caster, target) {
-    const recipient = target || caster;
+  executeProtectionSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
+    const recipient: SpellTarget = target || (caster as unknown as SpellTarget);
 
-    if (recipient.temporaryEffects) {
+    if (recipient.temporaryEffects && recipient.addTemporaryEffect) {
       recipient.addTemporaryEffect({
         type: 'ac_bonus',
         source: spell.name,
@@ -970,7 +1074,11 @@ export class Spells {
   /**
    * Execute control spell
    */
-  executeControlSpell(spell, caster, target) {
+  executeControlSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     if (!target) {
       return { message: 'No target for control spell' };
     }
@@ -982,7 +1090,7 @@ export class Spells {
       return { message: `${target.name || 'Target'} resists the spell` };
     }
 
-    if (target.temporaryEffects) {
+    if (target.temporaryEffects && target.addTemporaryEffect) {
       target.addTemporaryEffect({
         type: 'control',
         source: spell.name,
@@ -999,7 +1107,11 @@ export class Spells {
   /**
    * Execute utility spell
    */
-  executeUtilitySpell(spell, caster, target) {
+  executeUtilitySpell(
+    spell: SpellData,
+    caster: CharacterData,
+    _target: SpellTarget | null
+  ): SpellEffectResult {
     // Utility spells have various effects
     return {
       message: `${spell.name} takes effect`,
@@ -1009,7 +1121,11 @@ export class Spells {
   /**
    * Execute dispel spell
    */
-  executeDispelSpell(spell, caster, target) {
+  executeDispelSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     if (!target) {
       return { message: 'No target for dispel spell' };
     }
@@ -1029,7 +1145,7 @@ export class Spells {
   /**
    * Calculate save chance against spell
    */
-  calculateSaveChance(target, spell) {
+  calculateSaveChance(target: SpellTarget, spell: SpellData): number {
     const baseSave = 50;
     const levelBonus = (target.level || 1) * 5;
     const attributeBonus =
@@ -1043,13 +1159,15 @@ export class Spells {
   /**
    * Remove memorized spell
    */
-  removeMemorizedSpell(caster, spell) {
-    if (!caster.memorizedSpells || !caster.memorizedSpells[spell.school]) {
+  removeMemorizedSpell(caster: CharacterData, spell: SpellData): void {
+    if (!caster.memorizedSpells || !spell.school || !caster.memorizedSpells[spell.school]) {
       return;
     }
 
     const spells = caster.memorizedSpells[spell.school];
-    const index = spells.findIndex((s) => s.name === spell.name);
+    const index = spells.findIndex((s: string | SpellData) =>
+      typeof s === 'string' ? s === spell.name : (s as SpellData).name === spell.name
+    );
     if (index !== -1) {
       spells.splice(index, 1);
     }
@@ -1058,13 +1176,13 @@ export class Spells {
   /**
    * Memorize spells for character
    */
-  memorizeSpells(character, selectedSpells) {
-    const availableSlots = {
+  memorizeSpells(character: CharacterData, selectedSpells: SelectedSpells): MemorizedResult {
+    const availableSlots: Record<string, number[]> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const memorized = { arcane: [], divine: [] };
+    const memorized: MemorizedResult = { arcane: [], divine: [] };
 
     // Process each school
     for (const school of ['arcane', 'divine']) {
@@ -1072,29 +1190,34 @@ export class Spells {
       const slots = availableSlots[school];
 
       for (const spellSelection of schoolSpells) {
-        const spell = this.getSpell(spellSelection.name, school);
+        const spell = this.getSpell(spellSelection.name, school) as SpellData | null;
         if (!spell) continue;
 
         const levelIndex = spell.level - 1;
         if (levelIndex < slots.length && slots[levelIndex] > 0) {
-          memorized[school].push(spell);
+          memorized[school].push(spell as SpellData);
           slots[levelIndex]--;
         }
       }
     }
 
-    character.memorizedSpells = memorized;
+    character.memorizedSpells = memorized as unknown as CharacterData['memorizedSpells'];
     return memorized;
   }
 
   /**
    * Execute concealment spell (invisibility, etc.)
    */
-  executeConcealmentSpell(spell, caster, target) {
-    const targets = spell.areaEffect ? [caster] : [target || caster]; // For mass invisibility
+  executeConcealmentSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
+    const casterAsTarget = caster as unknown as SpellTarget;
+    const targets: SpellTarget[] = spell.areaEffect ? [casterAsTarget] : [target || casterAsTarget];
 
     targets.forEach((t) => {
-      if (t && t.temporaryEffects) {
+      if (t && t.temporaryEffects && t.addTemporaryEffect) {
         t.addTemporaryEffect({
           type: 'concealment',
           source: spell.name,
@@ -1112,7 +1235,11 @@ export class Spells {
   /**
    * Execute resurrection spell
    */
-  executeResurrectionSpell(spell, caster, target) {
+  executeResurrectionSpell(
+    spell: SpellData,
+    caster: CharacterData,
+    target: SpellTarget | null
+  ): SpellEffectResult {
     if (!target) {
       return { message: 'No target for resurrection spell' };
     }
@@ -1128,7 +1255,7 @@ export class Spells {
 
     // Calculate resurrection chance
     const baseChance = spell.special === 'perfect' ? 95 : 75; // Perfect resurrection has higher chance
-    const levelPenalty = Math.max(0, (target.level - caster.level) * 5);
+    const levelPenalty = Math.max(0, ((target.level || 1) - caster.level) * 5);
     const vitalityBonus = (target.attributes?.vitality || 10) - 10;
 
     const successChance = Math.min(95, Math.max(5, baseChance - levelPenalty + vitalityBonus));
@@ -1176,7 +1303,7 @@ export class Spells {
   /**
    * Get spell descriptions for UI
    */
-  getSpellDescriptions(spells) {
+  getSpellDescriptions(spells: SpellData[]): SpellDescription[] {
     return spells.map((spell) => ({
       name: spell.name,
       level: spell.level,

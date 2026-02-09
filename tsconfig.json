@@ -9,7 +9,7 @@
             "DOM.Iterable"
         ],
         "strict": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "allowJs": true,
         "checkJs": false,
         "noEmit": true,

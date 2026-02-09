@@ -18,7 +18,7 @@ export class CombatInterface {
   encounterGenerator: EncounterGenerator;
   equipmentInitialized: boolean;
 
-  constructor(eventSystem, engine: any = null) {
+  constructor(eventSystem: any, engine: any = null) {
     this.eventSystem = eventSystem;
     this.engine = engine;
     this.combat = new Combat(engine);
@@ -55,7 +55,7 @@ export class CombatInterface {
   /**
    * Initialize specific combat encounter with specific monster
    */
-  async initiateSpecificCombat(party, monsterId, message = null) {
+  async initiateSpecificCombat(party: any, monsterId: string, message: string | null = null) {
     // Initialize equipment system
     await this.initializeEquipment();
 
@@ -114,7 +114,7 @@ export class CombatInterface {
   /**
    * Initialize combat encounter
    */
-  async initiateCombat(party, encounterType = 'random', dungeonLevel = 1) {
+  async initiateCombat(party: any, encounterType = 'random', dungeonLevel = 1) {
     // Initialize equipment system
     await this.initializeEquipment();
     // Generate encounter
@@ -134,8 +134,8 @@ export class CombatInterface {
     }
 
     // Convert monsters to enemy party structure for backward compatibility
-    if (encounter.monsters && !encounter.enemyParties) {
-      encounter.enemyParties = [encounter.monsters]; // Wrap monsters in party structure
+    if ((encounter as any).monsters && !encounter.enemyParties) {
+      encounter.enemyParties = [(encounter as any).monsters]; // Wrap monsters in party structure
     }
 
     // Setup formation
@@ -172,7 +172,7 @@ export class CombatInterface {
   /**
    * Handle combat start event
    */
-  handleCombatStart(data) {
+  handleCombatStart(data: { party: any; encounterType?: string; dungeonLevel?: number }) {
     const { party, encounterType, dungeonLevel } = data;
     return this.initiateCombat(party, encounterType, dungeonLevel);
   }
@@ -180,7 +180,7 @@ export class CombatInterface {
   /**
    * Process combat action
    */
-  processAction(action) {
+  processAction(action: any) {
     // Validate action
     const validation = this.validateAction(action);
     if (!validation.valid) {
@@ -217,7 +217,7 @@ export class CombatInterface {
   /**
    * Handle action selection event
    */
-  handleActionSelected(data) {
+  handleActionSelected(data: { actionType: string; actor: any; target: any; options?: any }) {
     const { actionType, actor, target, options } = data;
 
     const action = {
@@ -233,7 +233,7 @@ export class CombatInterface {
   /**
    * Validate combat action
    */
-  validateAction(action) {
+  validateAction(action: any) {
     if (!action.type) {
       return { valid: false, reason: 'Action type is required' };
     }
@@ -290,13 +290,13 @@ export class CombatInterface {
   /**
    * Validate spell casting
    */
-  validateSpellCasting(caster, spell) {
+  validateSpellCasting(caster: any, spell: any) {
     if (!caster.memorizedSpells) {
       return { valid: false, reason: 'No spells memorized' };
     }
 
     const schoolSpells = caster.memorizedSpells[spell.school] || [];
-    const hasSpell = schoolSpells.some((memorized) => memorized.name === spell.name);
+    const hasSpell = schoolSpells.some((memorized: any) => memorized.name === spell.name);
 
     if (!hasSpell) {
       return { valid: false, reason: 'Spell not memorized' };
@@ -308,7 +308,7 @@ export class CombatInterface {
   /**
    * Handle formation change
    */
-  handleFormationChange(data) {
+  handleFormationChange(data: { character: any; targetRow: string }) {
     const { character, targetRow } = data;
 
     const result = this.formation.moveCharacter(character, targetRow);
@@ -327,7 +327,7 @@ export class CombatInterface {
   /**
    * Handle flee attempt
    */
-  handleFleeAttempt(data) {
+  handleFleeAttempt(data: { character: any }) {
     const { character } = data;
 
     const fleeAction = {
@@ -341,7 +341,7 @@ export class CombatInterface {
   /**
    * Handle individual character disconnect attempt
    */
-  handleDisconnectAttempt(data) {
+  handleDisconnectAttempt(data: { character: any }) {
     const { character } = data;
 
     const disconnectAction = {
@@ -355,7 +355,7 @@ export class CombatInterface {
   /**
    * Handle combat end
    */
-  handleCombatEnd(data) {
+  handleCombatEnd(data: { winner: string; experience?: number; treasure?: any }) {
     this.combat.endCombat();
 
     this.eventSystem.emit('combat-ended', {
@@ -407,7 +407,7 @@ export class CombatInterface {
   /**
    * Calculate gold reward from enemy
    */
-  calculateGoldReward(enemy) {
+  calculateGoldReward(enemy: any) {
     const baseGold = {
       poor: () => Random.dice(2, 6),
       standard: () => Random.dice(3, 6) * 10,
@@ -417,7 +417,7 @@ export class CombatInterface {
     };
 
     const treasureType = enemy.treasureType || 'none';
-    const goldFunction = baseGold[treasureType] || baseGold['none'];
+    const goldFunction = (baseGold as Record<string, any>)[treasureType] || baseGold['none'];
 
     return goldFunction();
   }
@@ -425,7 +425,7 @@ export class CombatInterface {
   /**
    * Generate item rewards from enemy
    */
-  generateItemRewards(enemy) {
+  generateItemRewards(enemy: any) {
     const treasureType = enemy.treasureType || 'none';
 
     if (treasureType === 'none' || treasureType === 'poor') {
@@ -438,7 +438,7 @@ export class CombatInterface {
       hoard: 75,
     };
 
-    const chance = itemChances[treasureType] || 0;
+    const chance = (itemChances as Record<string, any>)[treasureType] || 0;
 
     if (Random.percent(chance)) {
       const itemLevel = enemy.level || 1;
@@ -477,7 +477,7 @@ export class CombatInterface {
   /**
    * Get available actions for current actor
    */
-  getAvailableActions(actor) {
+  getAvailableActions(actor: any) {
     if (!actor || !actor.isAlive) {
       return [];
     }
@@ -583,7 +583,7 @@ export class CombatInterface {
   /**
    * Process AI turn for monsters
    */
-  async processAITurn(monster) {
+  async processAITurn(monster: any) {
     const playerTargets = this.combat.combatants.filter(
       (c) => c.hasOwnProperty('class') && c.isAlive
     );
@@ -640,7 +640,7 @@ export class CombatInterface {
   /**
    * Calculate total damage dealt by side
    */
-  calculateTotalDamage(side) {
+  calculateTotalDamage(side: any) {
     // This would need to be tracked throughout combat
     // For now, return placeholder
     return 0;

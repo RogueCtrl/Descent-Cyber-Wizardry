@@ -41,7 +41,7 @@ export class Party {
   /**
    * Add a character to the party
    */
-  addMember(character) {
+  addMember(character: any) {
     if (this.members.length >= this.maxSize) {
       return false;
     }
@@ -61,7 +61,7 @@ export class Party {
   /**
    * Remove a character from the party
    */
-  removeMember(character) {
+  removeMember(character: any) {
     const index = this.members.indexOf(character);
     if (index === -1) {
       return false;
@@ -110,7 +110,7 @@ export class Party {
   /**
    * Update party (called each frame)
    */
-  update(deltaTime) {
+  update(deltaTime: any) {
     this.members.forEach((member) => {
       if (member.update) {
         member.update(deltaTime);
@@ -135,7 +135,7 @@ export class Party {
   /**
    * Load from save data
    */
-  loadFromSave(saveData) {
+  loadFromSave(saveData: any) {
     if (!saveData) return;
 
     this.id = saveData.id || this.id; // Keep existing ID if not in save data
@@ -145,7 +145,7 @@ export class Party {
     this.experience = saveData.experience || 0;
 
     // Rehydrate members
-    this.members = (saveData.members || []).map((memberData) => {
+    this.members = (saveData.members || []).map((memberData: any) => {
       const character = new Character();
       character.loadFromSave(memberData);
       return character;
@@ -203,7 +203,7 @@ export class Party {
   /**
    * Load party from persistent storage
    */
-  static async load(partyId) {
+  static async load(partyId: any) {
     try {
       const partyData = await Storage.loadParty(partyId);
       if (!partyData) {
@@ -309,7 +309,7 @@ export class Party {
   /**
    * Set camp reference
    */
-  setCamp(campId) {
+  setCamp(campId: any) {
     this.campId = campId;
     this.lastModified = Date.now();
   }

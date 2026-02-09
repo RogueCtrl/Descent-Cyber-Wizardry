@@ -6,10 +6,10 @@ import { AttributeRoller } from '../utils/AttributeRoller.ts';
  * Handles the character creation process
  */
 export class CharacterCreator {
-  currentCharacter: any;
+  currentCharacter: Character | null;
   step: string;
-  availableRaces: any[];
-  availableClasses: any[];
+  availableRaces: string[];
+  availableClasses: string[];
 
   constructor() {
     this.currentCharacter = null;
@@ -29,9 +29,9 @@ export class CharacterCreator {
   /**
    * Set character race
    */
-  setRace(race) {
+  setRace(race: string) {
     if (this.availableRaces.includes(race)) {
-      this.currentCharacter.race = race;
+      this.currentCharacter!.race = race;
       this.step = 'attributes';
       return true;
     }
@@ -43,7 +43,7 @@ export class CharacterCreator {
    */
   rollAttributes() {
     const attributes = AttributeRoller.rollAllAttributes();
-    this.currentCharacter.attributes = attributes;
+    this.currentCharacter!.attributes = attributes;
     this.step = 'class';
     return attributes;
   }
@@ -51,9 +51,9 @@ export class CharacterCreator {
   /**
    * Set character class
    */
-  setClass(characterClass) {
+  setClass(characterClass: string) {
     if (this.availableClasses.includes(characterClass)) {
-      this.currentCharacter.class = characterClass;
+      this.currentCharacter!.class = characterClass;
       this.step = 'finalize';
       return true;
     }
@@ -63,8 +63,8 @@ export class CharacterCreator {
   /**
    * Finalize character creation
    */
-  finalizeCharacter(name) {
-    this.currentCharacter.name = name;
+  finalizeCharacter(name: string) {
+    this.currentCharacter!.name = name;
     const character = this.currentCharacter;
     this.currentCharacter = null;
     this.step = 'race';

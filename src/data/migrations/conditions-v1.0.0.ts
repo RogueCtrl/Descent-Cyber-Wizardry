@@ -143,7 +143,7 @@ export const conditionsMigration = {
   /**
    * Validate condition data
    */
-  validate: (conditionData) => {
+  validate: (conditionData: any) => {
     const required = ['id', 'name', 'type', 'category'];
     return required.every((field) => conditionData[field] !== undefined);
   },
@@ -151,7 +151,7 @@ export const conditionsMigration = {
   /**
    * Transform condition data if needed (future migrations)
    */
-  transform: (conditionData) => {
+  transform: (conditionData: any) => {
     return conditionData;
   },
 };

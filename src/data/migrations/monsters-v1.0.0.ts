@@ -38,7 +38,7 @@ export const monstersMigration = {
       preferredTargets: ['weakest'],
       experienceValue: 25,
       treasureType: 'poor',
-      asciiArt: '  👺\n /||\ \n  /\\  ',
+      asciiArt: '  👺\n /||\\ \n  /\\  ',
       portraitModel: {
         type: 'wireframe',
         vertices: [
@@ -544,7 +544,7 @@ export const monstersMigration = {
   /**
    * Validate monster data
    */
-  validate: (monsterData) => {
+  validate: (monsterData: any) => {
     const required = ['id', 'name', 'type', 'level', 'hitDie'];
     return required.every((field) => monsterData[field] !== undefined);
   },
@@ -552,7 +552,7 @@ export const monstersMigration = {
   /**
    * Transform monster data if needed (future migrations)
    */
-  transform: (monsterData) => {
+  transform: (monsterData: any) => {
     return monsterData;
   },
 };
