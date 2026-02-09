@@ -71,7 +71,9 @@ jobs:
           fi
 
           TAG="v${NEXT}"
+          BRANCH="release/${TAG}"
           echo "Expected next tag: $TAG"
+          echo "Expected next branch: $BRANCH"
 
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists locally, deleting..."
@@ -81,6 +83,11 @@ jobs:
           if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
             echo "Tag $TAG exists on remote, deleting..."
             git push origin ":refs/tags/$TAG"
+          fi
+
+          if git ls-remote origin "refs/heads/$BRANCH" | grep -q "$BRANCH"; then
+            echo "Branch $BRANCH exists on remote, deleting..."
+            git push origin ":refs/heads/$BRANCH"
           fi
 
       - name: Run standard-version
