@@ -8,7 +8,7 @@ import { TextManager } from './TextManager.ts';
 export class PartySetupModal {
   eventSystem: any;
   modal: any;
-  onComplete: any;
+  onComplete: ((partyName: string) => void) | null;
 
   constructor(eventSystem: any) {
     this.eventSystem = eventSystem;
@@ -20,7 +20,7 @@ export class PartySetupModal {
    * Show the party setup modal
    * @param {Function} onComplete - Callback when setup is complete
    */
-  show(onComplete: any) {
+  show(onComplete: (partyName: string) => void) {
     this.onComplete = onComplete;
     this.createModal();
   }
@@ -104,7 +104,7 @@ export class PartySetupModal {
     // Party name input handler
     const partyNameInput = modalElement.querySelector('#party-name');
     if (partyNameInput) {
-      partyNameInput.addEventListener('input', (e: any) => {
+      partyNameInput.addEventListener('input', (e: Event) => {
         this.updatePartyNamePlaceholder();
       });
 
@@ -121,7 +121,7 @@ export class PartySetupModal {
     }
 
     // Enter key handler for party name input
-    modalElement.addEventListener('keydown', (e: any) => {
+    modalElement.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         this.handleBeginAdventure();
@@ -162,7 +162,7 @@ export class PartySetupModal {
   /**
    * Update mode toggle button display (matches UI.js implementation)
    */
-  updateModeToggleDisplay(toggleBtn: any) {
+  updateModeToggleDisplay(toggleBtn: Element) {
     if (!toggleBtn || typeof TextManager === 'undefined') return;
 
     const currentMode = TextManager.getMode();
@@ -218,10 +218,10 @@ export class PartySetupModal {
     if (typeof TextManager === 'undefined' || !this.modal.element) return;
 
     const textElements = this.modal.element.querySelectorAll('[data-text-key]');
-    textElements.forEach((element: any) => {
+    textElements.forEach((element: Element) => {
       const textKey = element.getAttribute('data-text-key');
       if (textKey) {
-        TextManager.applyToElement(element, textKey);
+        TextManager.applyToElement(element as HTMLElement, textKey);
       }
     });
   }

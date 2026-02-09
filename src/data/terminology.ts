@@ -772,6 +772,16 @@ export const TERMINOLOGY = {
   },
 };
 
+/** Anything that carries a name and optional cyberName for dual-mode display. */
+interface NamedEntity {
+  name?: string;
+  cyberName?: string;
+  displayName?: string;
+  digitalClassification?: string;
+  programClass?: string;
+  type?: string;
+}
+
 // Dual-display utility functions
 export const TerminologyUtils = {
   /**
@@ -779,7 +789,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with name and cyberName properties
    * @returns {Object} Object with classic and cyber display names
    */
-  getDualNames(entity: any) {
+  getDualNames(entity: NamedEntity) {
     return {
       classic: entity.name || entity.displayName || 'Unknown',
       cyber: entity.cyberName || entity.name || 'Unknown',
@@ -792,7 +802,7 @@ export const TerminologyUtils = {
    * @param {string} separator - Separator between names (default: ' / ')
    * @returns {string} Formatted dual display string
    */
-  formatDualDisplay(entity: any, separator = ' / ') {
+  formatDualDisplay(entity: NamedEntity, separator = ' / ') {
     const names = this.getDualNames(entity);
     if (names.classic === names.cyber) {
       return names.classic; // Don't show duplicate names
@@ -805,7 +815,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with name and cyberName properties
    * @returns {string} Name appropriate for current mode
    */
-  getContextualName(entity: any) {
+  getContextualName(entity: NamedEntity) {
     if (typeof TextManager !== 'undefined' && TextManager.isCyberMode()) {
       return entity.cyberName || entity.name || 'Unknown';
     }
@@ -817,7 +827,7 @@ export const TerminologyUtils = {
    * @param {Object} entity - Entity with classification properties
    * @returns {string} Formatted classification string
    */
-  getClassificationDisplay(entity: any) {
+  getClassificationDisplay(entity: NamedEntity) {
     if (entity.digitalClassification && entity.programClass) {
       return `${entity.programClass} (${entity.digitalClassification})`;
     }

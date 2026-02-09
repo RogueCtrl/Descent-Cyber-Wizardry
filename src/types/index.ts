@@ -310,7 +310,9 @@ export interface MonsterAttack {
   name: string;
   damage: DiceRoll;
   element?: string;
-  special?: string;
+  special?: string[];
+  range?: string;
+  magical?: boolean;
 }
 
 export interface PortraitModel {

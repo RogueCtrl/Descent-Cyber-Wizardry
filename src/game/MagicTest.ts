@@ -339,13 +339,13 @@ export class MagicTest {
       // Test healing spell
       target.currentHP = 1;
       const healSpell = this.spellSystem.getSpell('Heal');
-      const healResult = this.spellSystem.executeSpellEffect(healSpell, caster as any, target);
+      const healResult = this.spellSystem.executeSpellEffect(healSpell as any, caster as any, target);
       const healWorked = target.currentHP === target.maxHP;
 
       // Test damage spell
       const target2 = this.createTestCharacter('Fighter', 3);
       const damageSpell = this.spellSystem.getSpell('Fireball');
-      const damageResult = this.spellSystem.executeSpellEffect(damageSpell, caster as any, target2);
+      const damageResult = this.spellSystem.executeSpellEffect(damageSpell as any, caster as any, target2);
       const damageWorked = target2.currentHP < target2.maxHP;
 
       this.testResults.push({

@@ -27,7 +27,7 @@ export class SpellMemorization {
   /**
    * Prepare spells for character during rest
    */
-  async prepareSpells(character: any, spellSelections: any) {
+  async prepareSpells(character: any, spellSelections: Record<string, { name: string }[]>) {
     await this.initializeSpellSystem();
 
     const result = await this.validateSpellSelections(character, spellSelections);
@@ -51,7 +51,7 @@ export class SpellMemorization {
   /**
    * Validate spell selections against character's capabilities
    */
-  async validateSpellSelections(character: any, spellSelections: any) {
+  async validateSpellSelections(character: any, spellSelections: Record<string, { name: string }[]>) {
     await this.initializeSpellSystem();
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) {
@@ -85,10 +85,11 @@ export class SpellMemorization {
 
       // Validate each spell selection
       for (const spellSelection of schoolSpells) {
-        const spell = this.spellSystem.getSpell(spellSelection.name, school);
-        if (!spell) {
+        const spellRaw = this.spellSystem.getSpell(spellSelection.name, school);
+        if (!spellRaw) {
           return { valid: false, reason: `Spell ${spellSelection.name} not found` };
         }
+        const spell = spellRaw as { name: string; level: number; [key: string]: unknown };
 
         // Check if character has the required spell level
         const levelIndex = spell.level - 1;
@@ -121,7 +122,7 @@ export class SpellMemorization {
 
     // Recommend spells based on class and situation
     for (const school of ['arcane', 'divine']) {
-      const schoolSpells = availableSpells[school];
+      const schoolSpells = (availableSpells as unknown as Record<string, any[]>)[school];
       const schoolSlots = slots[school];
 
       for (let level = 1; level <= schoolSlots.length; level++) {
@@ -141,7 +142,7 @@ export class SpellMemorization {
   /**
    * Select recommended spells for a specific level
    */
-  selectRecommendedSpells(availableSpells: any, slotCount: any, character: any) {
+  selectRecommendedSpells(availableSpells: any[], slotCount: number, character: any) {
     if (availableSpells.length === 0) return [];
 
     // Priority system based on spell utility
@@ -289,7 +290,7 @@ export class SpellMemorization {
   /**
    * Rest and recover spell slots
    */
-  restAndRecover(character: any, restType: any = 'full') {
+  restAndRecover(character: any, restType: string = 'full') {
     const multiplier = restType === 'full' ? 1.0 : 0.5;
 
     // Update spell slots based on current level

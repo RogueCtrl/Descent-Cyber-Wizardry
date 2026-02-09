@@ -9,9 +9,9 @@ import { Character } from './Character.ts';
  */
 export class CharacterRoster {
   static instance: CharacterRoster | null = null;
-  allCharacters: Map<any, any>;
-  activeParties: Map<any, any>;
-  characterIndex: Record<string, any>;
+  allCharacters: Map<string, any>;
+  activeParties: Map<string, any>;
+  characterIndex: Record<string, Map<any, Set<string>>>;
 
   constructor() {
     this.allCharacters = new Map(); // Character ID -> Character object
@@ -56,7 +56,7 @@ export class CharacterRoster {
   /**
    * Remove a character from the roster
    */
-  removeCharacter(characterId: any) {
+  removeCharacter(characterId: string) {
     const character = this.allCharacters.get(characterId);
     if (!character) return false;
 
@@ -77,7 +77,7 @@ export class CharacterRoster {
   /**
    * Get a character by ID
    */
-  getCharacter(characterId: any) {
+  getCharacter(characterId: string) {
     return this.allCharacters.get(characterId);
   }
 
@@ -100,7 +100,7 @@ export class CharacterRoster {
   /**
    * Get characters by class
    */
-  getCharactersByClass(className: any) {
+  getCharactersByClass(className: string) {
     const characterIds = this.characterIndex.byClass.get(className) || new Set();
     return Array.from(characterIds)
       .map((id) => this.allCharacters.get(id))
@@ -110,7 +110,7 @@ export class CharacterRoster {
   /**
    * Get characters by level range
    */
-  getCharactersByLevel(minLevel: any, maxLevel: any = null) {
+  getCharactersByLevel(minLevel: number, maxLevel: number | null = null) {
     const characters: any[] = [];
     const endLevel = maxLevel || minLevel;
 
@@ -128,7 +128,7 @@ export class CharacterRoster {
   /**
    * Create a new party from character IDs
    */
-  createParty(partyName: any, characterIds: any) {
+  createParty(partyName: string, characterIds: string[]) {
     // Validate party composition
     const validationResult = this.validatePartyComposition(characterIds);
     if (!validationResult.valid) {
@@ -159,7 +159,7 @@ export class CharacterRoster {
   /**
    * Validate party composition
    */
-  validatePartyComposition(characterIds: any) {
+  validatePartyComposition(characterIds: string[]) {
     if (characterIds.length === 0) {
       return { valid: false, reason: 'Party cannot be empty' };
     }
@@ -190,7 +190,7 @@ export class CharacterRoster {
   /**
    * Disband a party and return characters to available pool
    */
-  disbandParty(partyId: any) {
+  disbandParty(partyId: string) {
     const party = this.activeParties.get(partyId);
     if (!party) return false;
 
@@ -209,7 +209,7 @@ export class CharacterRoster {
   /**
    * Save party in dungeon (camping)
    */
-  savePartyInDungeon(partyId: any, dungeonState: any) {
+  savePartyInDungeon(partyId: string, dungeonState: Record<string, any>) {
     const party = this.activeParties.get(partyId);
     if (!party) return false;
 
@@ -228,7 +228,7 @@ export class CharacterRoster {
   /**
    * Resume camped party
    */
-  resumeCampedParty(partyId: any) {
+  resumeCampedParty(partyId: string) {
     const party = this.activeParties.get(partyId);
     if (!party) return { success: false, reason: 'Party not found' };
 
@@ -249,7 +249,7 @@ export class CharacterRoster {
   /**
    * Handle character death in dungeon
    */
-  handleCharacterDeath(characterId: any, deathType: any = 'dead') {
+  handleCharacterDeath(characterId: string, deathType: string = 'dead') {
     const character = this.allCharacters.get(characterId);
     if (!character) return false;
 
@@ -266,7 +266,7 @@ export class CharacterRoster {
   /**
    * Create rescue party for recovering dead/lost characters
    */
-  createRescueParty(rescuerIds: any, targetLocation: any) {
+  createRescueParty(rescuerIds: string[], targetLocation: Record<string, any>) {
     const rescueParty = this.createParty('Rescue Mission', rescuerIds);
     if (!rescueParty.success) return rescueParty;
 
@@ -279,7 +279,7 @@ export class CharacterRoster {
   /**
    * Attempt to rescue a character
    */
-  rescueCharacter(rescuerPartyId: any, targetCharacterId: any) {
+  rescueCharacter(rescuerPartyId: string, targetCharacterId: string) {
     const rescuerParty = this.activeParties.get(rescuerPartyId);
     const targetCharacter = this.allCharacters.get(targetCharacterId);
 
@@ -326,25 +326,25 @@ export class CharacterRoster {
     if (!this.characterIndex.byClass.has(character.class)) {
       this.characterIndex.byClass.set(character.class, new Set());
     }
-    this.characterIndex.byClass.get(character.class).add(character.id);
+    this.characterIndex.byClass.get(character.class)!.add(character.id);
 
     // By level
     if (!this.characterIndex.byLevel.has(character.level)) {
       this.characterIndex.byLevel.set(character.level, new Set());
     }
-    this.characterIndex.byLevel.get(character.level).add(character.id);
+    this.characterIndex.byLevel.get(character.level)!.add(character.id);
 
     // By status
     if (!this.characterIndex.byStatus.has(character.availability)) {
       this.characterIndex.byStatus.set(character.availability, new Set());
     }
-    this.characterIndex.byStatus.get(character.availability).add(character.id);
+    this.characterIndex.byStatus.get(character.availability)!.add(character.id);
 
     // By race
     if (!this.characterIndex.byRace.has(character.race)) {
       this.characterIndex.byRace.set(character.race, new Set());
     }
-    this.characterIndex.byRace.get(character.race).add(character.id);
+    this.characterIndex.byRace.get(character.race)!.add(character.id);
   }
 
   /**
@@ -416,7 +416,7 @@ export class CharacterRoster {
   /**
    * Load from save data
    */
-  loadFromSave(saveData: any) {
+  loadFromSave(saveData: Record<string, any>) {
     if (!saveData) return;
 
     // Clear current data

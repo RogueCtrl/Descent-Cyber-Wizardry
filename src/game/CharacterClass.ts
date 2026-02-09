@@ -3,7 +3,7 @@
  * Handles character class requirements and abilities
  */
 export class CharacterClass {
-  static getClassData(className: any) {
+  static getClassData(className: string) {
     const classes = {
       // Base Classes (available at creation)
       Fighter: {
@@ -116,7 +116,7 @@ export class CharacterClass {
     return (classes as Record<string, any>)[className] || null;
   }
 
-  static checkRequirements(className: any, attributes: any) {
+  static checkRequirements(className: string, attributes: Record<string, number>) {
     const classData = this.getClassData(className);
     if (!classData) return false;
 
@@ -141,11 +141,11 @@ export class CharacterClass {
     return ['Bishop', 'Samurai', 'Lord', 'Ninja'];
   }
 
-  static isEliteClass(className: any) {
+  static isEliteClass(className: string) {
     return this.getEliteClasses().includes(className);
   }
 
-  static checkClassChangeRequirements(character: any, newClassName: any) {
+  static checkClassChangeRequirements(character: any, newClassName: string) {
     const classData = this.getClassData(newClassName);
     if (!classData) return { canChange: false, reason: 'Invalid class' };
 
@@ -186,7 +186,7 @@ export class CharacterClass {
     return { canChange: true };
   }
 
-  static getSpellSlots(character: any, spellSchool: any) {
+  static getSpellSlots(character: any, spellSchool: string) {
     const classData = this.getClassData(character.class);
     if (!classData || !classData.spellProgression) return [];
 
@@ -198,7 +198,7 @@ export class CharacterClass {
     return this.calculateSpellSlots(level, primaryStat, classData.spellProgression, spellSchool);
   }
 
-  static calculateSpellSlots(level: any, primaryStat: any, progression: any, school: any) {
+  static calculateSpellSlots(level: number, primaryStat: number, progression: string, school: string) {
     const slots = [];
 
     // Base spell progression tables (simplified)

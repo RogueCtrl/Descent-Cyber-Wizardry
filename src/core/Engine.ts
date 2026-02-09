@@ -311,7 +311,7 @@ export class Engine {
   /**
    * Check if a party is considered wiped (no alive members)
    */
-  isPartyWiped(party: any) {
+  isPartyWiped(party: Record<string, any>) {
     if (!party || !party.members || party.members.length === 0) {
       return true;
     }
@@ -1169,7 +1169,7 @@ export class Engine {
   /**
    * Handle player actions
    */
-  async handlePlayerAction(action: any) {
+  async handlePlayerAction(action: string | Record<string, any>) {
     if (!this.gameState!.isState('playing')) {
       return;
     }
@@ -1515,7 +1515,7 @@ export class Engine {
 
     if (discoveries.length > 0) {
       discoveries.forEach((discovery) => {
-        this.ui!.addMessage(discovery.message);
+        this.ui!.addMessage(discovery.message || '');
       });
     } else {
       this.ui!.addMessage('You find nothing of interest.');
@@ -1596,7 +1596,7 @@ export class Engine {
   /**
    * Handle healing fountain interaction
    */
-  handleHealingFountain(special: any) {
+  handleHealingFountain(special: Record<string, any>) {
     this.ui!.addMessage('You drink from the crystal clear waters...');
 
     let totalHealed = 0;
@@ -1627,7 +1627,7 @@ export class Engine {
   /**
    * Handle stamina fountain interaction
    */
-  handleStaminaFountain(special: any) {
+  handleStaminaFountain(special: Record<string, any>) {
     this.ui!.addMessage('You drink from the energizing waters...');
 
     // TODO: Restore spell points when spell system is fully integrated
@@ -1639,7 +1639,7 @@ export class Engine {
   /**
    * Handle poison fountain interaction
    */
-  handlePoisonFountain(special: any) {
+  handlePoisonFountain(special: Record<string, any>) {
     this.ui!.addMessage('You cautiously drink from the tainted waters...');
 
     if (Random.chance(0.3)) {
@@ -1667,7 +1667,7 @@ export class Engine {
   /**
    * Handle teleporter interaction
    */
-  handleTeleporter(special: any) {
+  handleTeleporter(special: Record<string, any>) {
     this.ui!.addMessage('You step onto the magical portal...');
 
     // Teleport to random location on current floor
@@ -1684,7 +1684,7 @@ export class Engine {
   /**
    * Handle treasure chest interaction
    */
-  handleTreasureChest(special: any) {
+  handleTreasureChest(special: Record<string, any>) {
     this.ui!.addMessage('You attempt to open the treasure chest...');
 
     // Check for chest trap
@@ -1974,14 +1974,14 @@ export class Engine {
       }
     } else {
       console.log('Dungeon entry validation failed:', validation.reason);
-      this.ui!.addMessage(validation.reason);
+      this.ui!.addMessage(validation.reason || 'Validation failed');
     }
   }
 
   /**
    * Handle encounter triggered in dungeon
    */
-  async handleEncounterTriggered(data: any) {
+  async handleEncounterTriggered(data: Record<string, any>) {
     console.log('Encounter triggered:', data);
 
     const { encounter, x, y, floor } = data;
@@ -2039,7 +2039,7 @@ export class Engine {
   /**
    * Handle trap triggered in dungeon
    */
-  handleTrapTriggered(data: any) {
+  handleTrapTriggered(data: Record<string, any>) {
     console.log('Trap triggered:', data);
 
     const { type, x, y, floor } = data;
@@ -2114,7 +2114,7 @@ export class Engine {
   /**
    * Handle special square found in dungeon
    */
-  handleSpecialSquareFound(data: any) {
+  handleSpecialSquareFound(data: Record<string, any>) {
     console.log('Special square found:', data);
 
     const { special, x, y, floor } = data;
@@ -2169,7 +2169,7 @@ export class Engine {
   /**
    * Handle combat start
    */
-  handleCombatStart(data: any) {
+  handleCombatStart(data: Record<string, any>) {
     console.log('Combat started:', data);
     this.ui!.addMessage('Combat begins!');
 
@@ -2180,7 +2180,7 @@ export class Engine {
   /**
    * Handle combat end
    */
-  handleCombatEnd(data: any) {
+  handleCombatEnd(data: Record<string, any>) {
     console.log('Combat ended:', data);
 
     const { victory, fled, casualties } = data;

@@ -1,4 +1,79 @@
 import { Storage } from '../utils/Storage.ts';
+
+/** Extended character with team assignment properties */
+interface TeamCharacter {
+  id: string;
+  name: string;
+  isAlive: boolean;
+  status: string;
+  partyId?: string;
+  originalTeamAssignment?: string | null;
+  teamAssignmentDate?: string | null;
+  teamLoyalty?: number;
+  availability?: string;
+  isPhasedOut?: boolean;
+  phaseOutReason?: string | null;
+  phaseOutDate?: string | null;
+  canPhaseBackIn?: boolean;
+  [key: string]: any;
+}
+
+/** Party/team data from storage */
+interface TeamParty {
+  id: string;
+  name: string;
+  memberIds?: string[];
+  memberCount?: number;
+  aliveCount?: number;
+  [key: string]: any;
+}
+
+/** Orphaned character info */
+interface OrphanedCharacterInfo {
+  id: string;
+  name: string;
+  status: string;
+}
+
+/** Validation report */
+interface ValidationReport {
+  totalCharacters: number;
+  orphanedCharacters: OrphanedCharacterInfo[];
+  memorialCharacters: string[];
+  assignedCharacters: string[];
+  warnings: string[];
+  errors: string[];
+}
+
+/** Fix report for orphaned characters */
+interface FixReport {
+  orphanedCount: number;
+  fixedCharacters: string[];
+  createdTeams: string[];
+  errors: string[];
+}
+
+/** Migration report */
+interface MigrationReport {
+  totalCharacters: number;
+  migratedCharacters: number;
+  skippedCharacters: number;
+  errors: string[];
+  details: string[];
+}
+
+/** Team membership statistics */
+interface TeamMembershipStats {
+  totalCharacters: number;
+  totalTeams: number;
+  charactersWithTeams: number;
+  charactersWithoutTeams: number;
+  memorialCharacters: number;
+  phasedOutCharacters: number;
+  teamSizes: Record<string, number>;
+  averageTeamSize: number;
+}
+
 /**
  * TeamAssignmentService
  *
@@ -13,22 +88,22 @@ export class TeamAssignmentService {
    * @param {Character} character - Character to assign to team
    * @returns {Promise<Object>} The assigned party/team
    */
-  static async assignCharacterToTeam(character: any) {
+  static async assignCharacterToTeam(character: TeamCharacter): Promise<TeamParty> {
     try {
       console.log(`Assigning character ${character.name} to Strike Team...`);
 
       // Get current active party or create one
-      let activeParty: any = await Storage.loadActiveParty();
+      let activeParty = (await Storage.loadActiveParty()) as TeamParty | null;
 
       if (!activeParty) {
         // Create new default team for character
         console.log('No active party found, creating new Strike Team');
-        activeParty = await Storage.createNewActiveParty(`${character.name}'s Strike Team`);
+        activeParty = (await Storage.createNewActiveParty(`${character.name}'s Strike Team`)) as TeamParty;
       }
 
       // Assign character to team
-      character.partyId = (activeParty as any).id;
-      character.originalTeamAssignment = (activeParty as any).id;
+      character.partyId = activeParty.id;
+      character.originalTeamAssignment = activeParty.id;
       character.teamAssignmentDate = new Date().toISOString();
       character.availability = 'in_party';
 
@@ -38,17 +113,17 @@ export class TeamAssignmentService {
       }
 
       // Add to party members list if needed
-      if (!(activeParty as any).memberIds) {
-        (activeParty as any).memberIds = [];
+      if (!activeParty.memberIds) {
+        activeParty.memberIds = [];
       }
 
       // Only add if not already in the party
-      if (!(activeParty as any).memberIds.includes(character.id)) {
-        (activeParty as any).memberIds.push(character.id);
+      if (!activeParty.memberIds.includes(character.id)) {
+        activeParty.memberIds.push(character.id);
 
         // Update party member count
-        (activeParty as any).memberCount = (activeParty as any).memberIds.length;
-        (activeParty as any).aliveCount = (activeParty as any).memberIds.length; // Assume all new members are alive
+        activeParty.memberCount = activeParty.memberIds.length;
+        activeParty.aliveCount = activeParty.memberIds.length; // Assume all new members are alive
       }
 
       // Save both character and party
@@ -56,7 +131,7 @@ export class TeamAssignmentService {
       await Storage.saveParty(activeParty);
 
       console.log(
-        `Character ${character.name} assigned to Strike Team: ${(activeParty as any).name}`
+        `Character ${character.name} assigned to Strike Team: ${activeParty.name}`
       );
       return activeParty;
     } catch (error: any) {
@@ -71,16 +146,16 @@ export class TeamAssignmentService {
    * @param {string} teamName - Name for the new Strike Team
    * @returns {Promise<Object>} The created party/team
    */
-  static async createTeamForCharacters(characters: any[], teamName: string) {
+  static async createTeamForCharacters(characters: TeamCharacter[], teamName: string): Promise<TeamParty> {
     try {
       console.log(`Creating new Strike Team: ${teamName} for ${characters.length} characters`);
 
-      const newParty = await Storage.createNewActiveParty(teamName);
+      const newParty = (await Storage.createNewActiveParty(teamName)) as TeamParty;
 
       // Assign all characters to the new team
       for (const character of characters) {
-        character.partyId = newParty!.id;
-        character.originalTeamAssignment = newParty!.id;
+        character.partyId = newParty.id;
+        character.originalTeamAssignment = newParty.id;
         character.teamAssignmentDate = new Date().toISOString();
         character.availability = 'in_party';
 
@@ -93,9 +168,9 @@ export class TeamAssignmentService {
       }
 
       // Update party with member IDs
-      (newParty as any).memberIds = characters.map((c: any) => c.id);
-      (newParty as any).memberCount = characters.length;
-      (newParty as any).aliveCount = characters.filter((c: any) => c.isAlive).length;
+      newParty.memberIds = characters.map((c: TeamCharacter) => c.id);
+      newParty.memberCount = characters.length;
+      newParty.aliveCount = characters.filter((c: TeamCharacter) => c.isAlive).length;
 
       await Storage.saveParty(newParty);
 
@@ -112,21 +187,21 @@ export class TeamAssignmentService {
    * Used for migration and integrity checks
    * @returns {Promise<Object>} Validation report
    */
-  static async validateAllCharacterTeamMembership() {
+  static async validateAllCharacterTeamMembership(): Promise<ValidationReport> {
     try {
       console.log('Validating team membership for all characters...');
 
-      const allCharacters = await Storage.loadAllCharacters();
-      const report = {
-        totalCharacters: (allCharacters as any).length,
-        orphanedCharacters: [] as any[],
-        memorialCharacters: [] as any[],
-        assignedCharacters: [] as any[],
-        warnings: [] as string[],
-        errors: [] as string[],
+      const allCharacters = (await Storage.loadAllCharacters()) as TeamCharacter[];
+      const report: ValidationReport = {
+        totalCharacters: allCharacters.length,
+        orphanedCharacters: [],
+        memorialCharacters: [],
+        assignedCharacters: [],
+        warnings: [],
+        errors: [],
       };
 
-      for (const character of allCharacters as any) {
+      for (const character of allCharacters) {
         try {
           // Check if character is permanently lost (memorial)
           if (Storage.isCharacterPermanentlyLost(character)) {
@@ -163,16 +238,16 @@ export class TeamAssignmentService {
    * @param {boolean} createNewTeams - Whether to create new teams for orphaned characters
    * @returns {Promise<Object>} Fix report
    */
-  static async fixOrphanedCharacters(createNewTeams = true) {
+  static async fixOrphanedCharacters(createNewTeams = true): Promise<FixReport> {
     try {
       console.log('Fixing orphaned characters...');
 
       const validation = await this.validateAllCharacterTeamMembership();
-      const fixReport = {
+      const fixReport: FixReport = {
         orphanedCount: validation.orphanedCharacters.length,
-        fixedCharacters: [] as any[],
-        createdTeams: [] as any[],
-        errors: [] as string[],
+        fixedCharacters: [],
+        createdTeams: [],
+        errors: [],
       };
 
       for (const orphanedInfo of validation.orphanedCharacters) {
@@ -181,17 +256,18 @@ export class TeamAssignmentService {
           const character = await Storage.loadCharacter(orphanedInfo.id);
 
           if (character) {
+            const teamChar = character as TeamCharacter;
             if (createNewTeams) {
               // Create individual team for each orphaned character
-              const teamName = `${(character as any).name}'s Strike Team`;
-              const newTeam = await this.createTeamForCharacters([character], teamName);
+              const teamName = `${teamChar.name}'s Strike Team`;
+              const newTeam = await this.createTeamForCharacters([teamChar], teamName);
 
-              fixReport.fixedCharacters.push((character as any).id);
-              fixReport.createdTeams.push(newTeam!.id);
+              fixReport.fixedCharacters.push(teamChar.id);
+              fixReport.createdTeams.push(newTeam.id);
             } else {
               // Assign to existing active party or create one
-              const assignedTeam = await this.assignCharacterToTeam(character);
-              fixReport.fixedCharacters.push((character as any).id);
+              await this.assignCharacterToTeam(teamChar);
+              fixReport.fixedCharacters.push(teamChar.id);
             }
           }
         } catch (fixError: any) {
@@ -212,22 +288,22 @@ export class TeamAssignmentService {
    * Assigns team membership to orphaned characters and initializes new properties
    * @returns {Promise<Object>} Migration report
    */
-  static async migrateCharactersToTeamSystem() {
+  static async migrateCharactersToTeamSystem(): Promise<MigrationReport> {
     try {
       console.log('Starting character migration to Team System...');
 
-      const migrationReport = {
+      const migrationReport: MigrationReport = {
         totalCharacters: 0,
         migratedCharacters: 0,
         skippedCharacters: 0,
-        errors: [] as string[],
-        details: [] as string[],
+        errors: [],
+        details: [],
       };
 
-      const allCharacters = await Storage.loadAllCharacters();
-      migrationReport.totalCharacters = (allCharacters as any).length;
+      const allCharacters = (await Storage.loadAllCharacters()) as TeamCharacter[];
+      migrationReport.totalCharacters = allCharacters.length;
 
-      for (const character of allCharacters as any) {
+      for (const character of allCharacters) {
         try {
           let needsMigration = false;
           const changes: string[] = [];
@@ -286,7 +362,7 @@ export class TeamAssignmentService {
           if (!character.partyId) {
             const assignedTeam = await this.assignCharacterToTeam(character);
             needsMigration = true;
-            changes.push(`assigned to team: ${(assignedTeam as any).name}`);
+            changes.push(`assigned to team: ${assignedTeam.name}`);
           } else {
             // Update team assignment tracking for existing team members
             if (!character.originalTeamAssignment) {
@@ -330,14 +406,14 @@ export class TeamAssignmentService {
    * Get team membership statistics
    * @returns {Promise<Object>} Team membership statistics
    */
-  static async getTeamMembershipStats() {
+  static async getTeamMembershipStats(): Promise<TeamMembershipStats> {
     try {
-      const allCharacters = await Storage.loadAllCharacters();
-      const allParties = await Storage.loadAllParties();
+      const allCharacters = (await Storage.loadAllCharacters()) as TeamCharacter[];
+      const allParties = (await Storage.loadAllParties()) as TeamParty[];
 
-      const stats = {
-        totalCharacters: (allCharacters as any).length,
-        totalTeams: (allParties as any).length,
+      const stats: TeamMembershipStats = {
+        totalCharacters: allCharacters.length,
+        totalTeams: allParties.length,
         charactersWithTeams: 0,
         charactersWithoutTeams: 0,
         memorialCharacters: 0,
@@ -347,7 +423,7 @@ export class TeamAssignmentService {
       };
 
       // Analyze characters
-      for (const character of allCharacters as any) {
+      for (const character of allCharacters) {
         if (Storage.isCharacterPermanentlyLost(character)) {
           stats.memorialCharacters++;
         } else if (character.partyId) {
@@ -361,16 +437,16 @@ export class TeamAssignmentService {
       }
 
       // Analyze team sizes
-      for (const party of allParties as any) {
+      for (const party of allParties) {
         const memberCount = party.memberIds ? party.memberIds.length : 0;
-        (stats.teamSizes as Record<string, any>)[party.id] = memberCount;
+        stats.teamSizes[party.id] = memberCount;
       }
 
       // Calculate average team size
       const teamSizes = Object.values(stats.teamSizes);
       if (teamSizes.length > 0) {
         stats.averageTeamSize =
-          (teamSizes as number[]).reduce((a, b) => a + b, 0) / teamSizes.length;
+          teamSizes.reduce((a, b) => a + b, 0) / teamSizes.length;
       }
 
       return stats;

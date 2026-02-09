@@ -25,7 +25,7 @@ export class Formation {
     const aliveMembers = party.aliveMembers;
 
     // Default formation assignment based on class
-    aliveMembers.forEach((member: any, index: any) => {
+    aliveMembers.forEach((member: any, index: number) => {
       if (this.shouldBeInFrontRow(member) && this.frontRow.length < this.maxFrontRow) {
         this.frontRow.push(member);
       } else if (this.backRow.length < this.maxBackRow) {
@@ -63,7 +63,7 @@ export class Formation {
   /**
    * Move character between rows
    */
-  moveCharacter(character: any, targetRow: any) {
+  moveCharacter(character: any, targetRow: string) {
     // Remove from current position
     this.frontRow = this.frontRow.filter((member) => member.id !== character.id);
     this.backRow = this.backRow.filter((member) => member.id !== character.id);
@@ -100,7 +100,7 @@ export class Formation {
   /**
    * Check if character can attack from their position
    */
-  canAttackFromPosition(attacker: any, target: any, attackType: any = 'melee') {
+  canAttackFromPosition(attacker: any, target: any, attackType: string = 'melee') {
     const attackerPosition = this.getCharacterPosition(attacker);
     const targetPosition = this.getCharacterPosition(target, true); // true for enemy
 
@@ -123,7 +123,7 @@ export class Formation {
   /**
    * Get character's position in formation
    */
-  getCharacterPosition(character: any, isEnemy: any = false) {
+  getCharacterPosition(character: any, isEnemy: boolean = false) {
     if (isEnemy) {
       // Simplified enemy positioning
       return { row: 'front', index: 0 };
@@ -233,7 +233,7 @@ export class Formation {
   /**
    * Apply formation effects to combat
    */
-  applyFormationEffects(character: any, actionType: any = 'attack') {
+  applyFormationEffects(character: any, actionType: string = 'attack') {
     const position = this.getCharacterPosition(character);
     if (!position) return {};
 

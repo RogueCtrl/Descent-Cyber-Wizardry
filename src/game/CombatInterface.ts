@@ -55,7 +55,7 @@ export class CombatInterface {
   /**
    * Initialize specific combat encounter with specific monster
    */
-  async initiateSpecificCombat(party: any, monsterId: any, message = null) {
+  async initiateSpecificCombat(party: any, monsterId: string, message: string | null = null) {
     // Initialize equipment system
     await this.initializeEquipment();
 
@@ -172,7 +172,7 @@ export class CombatInterface {
   /**
    * Handle combat start event
    */
-  handleCombatStart(data: any) {
+  handleCombatStart(data: { party: any; encounterType?: string; dungeonLevel?: number }) {
     const { party, encounterType, dungeonLevel } = data;
     return this.initiateCombat(party, encounterType, dungeonLevel);
   }
@@ -217,7 +217,7 @@ export class CombatInterface {
   /**
    * Handle action selection event
    */
-  handleActionSelected(data: any) {
+  handleActionSelected(data: { actionType: string; actor: any; target: any; options?: any }) {
     const { actionType, actor, target, options } = data;
 
     const action = {
@@ -308,7 +308,7 @@ export class CombatInterface {
   /**
    * Handle formation change
    */
-  handleFormationChange(data: any) {
+  handleFormationChange(data: { character: any; targetRow: string }) {
     const { character, targetRow } = data;
 
     const result = this.formation.moveCharacter(character, targetRow);
@@ -327,7 +327,7 @@ export class CombatInterface {
   /**
    * Handle flee attempt
    */
-  handleFleeAttempt(data: any) {
+  handleFleeAttempt(data: { character: any }) {
     const { character } = data;
 
     const fleeAction = {
@@ -341,7 +341,7 @@ export class CombatInterface {
   /**
    * Handle individual character disconnect attempt
    */
-  handleDisconnectAttempt(data: any) {
+  handleDisconnectAttempt(data: { character: any }) {
     const { character } = data;
 
     const disconnectAction = {
@@ -355,7 +355,7 @@ export class CombatInterface {
   /**
    * Handle combat end
    */
-  handleCombatEnd(data: any) {
+  handleCombatEnd(data: { winner: string; experience?: number; treasure?: any }) {
     this.combat.endCombat();
 
     this.eventSystem.emit('combat-ended', {

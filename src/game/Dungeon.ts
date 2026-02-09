@@ -2,21 +2,119 @@ import { Storage } from '../utils/Storage.ts';
 import { Monster } from './Monster.ts';
 import { Random } from '../utils/Random.ts';
 import { TextManager } from '../utils/TextManager.ts';
-import type { DungeonFloor, DungeonTile, RoomData, EncounterData, Direction } from '../types/index.ts';
+import type { DungeonFloor, DungeonTile, RoomData, EncounterData, Direction, MonsterData } from '../types/index.ts';
+
+/** Floor data for generated dungeon floors */
+interface FloorData {
+  number: number;
+  width: number;
+  height: number;
+  tiles: string[][];
+  rooms: RoomData[];
+  monsters: any[];
+  treasures: any[];
+  encounters: DungeonEncounter[];
+  specialSquares: SpecialSquare[];
+  jacks: JackPositions;
+  stairs: Record<string, { x: number; y: number } | undefined>;
+}
+
+/** Encounter on the dungeon floor */
+interface DungeonEncounter {
+  x: number;
+  y: number;
+  level: number;
+  triggered: boolean;
+  type: string;
+  monsterId?: string;
+  monster?: MonsterData;
+  message?: string;
+}
+
+/** Special square on the dungeon floor */
+interface SpecialSquare {
+  x: number;
+  y: number;
+  type: string;
+  used: boolean;
+  message: string;
+}
+
+/** Jack egress point positions */
+interface JackPositions {
+  entry?: { x: number; y: number };
+  deep?: { x: number; y: number };
+  up?: { x: number; y: number };
+  down?: { x: number; y: number };
+  [key: string]: { x: number; y: number } | undefined;
+}
+
+/** Secret discovery result */
+interface SecretDiscovery {
+  x: number;
+  y: number;
+  type: string;
+  direction?: string;
+  message?: string;
+}
+
+/** Viewing info wall/door/object entry */
+interface ViewElement {
+  distance: number;
+  x: number;
+  y: number;
+  offset?: number;
+  side?: 'left' | 'right';
+  type?: string;
+  framing?: boolean;
+  monster?: MonsterData;
+}
+
+/** Door position candidate */
+interface DoorCandidate {
+  x: number;
+  y: number;
+  type: string;
+}
+
+/** Dungeon save data */
+interface DungeonSaveData {
+  currentFloor: number;
+  maxFloors: number;
+  playerX: number;
+  playerY: number;
+  playerDirection: number;
+  floors: [number, FloorData][];
+  discoveredSecrets: string[];
+  disarmedTraps: string[];
+  usedSpecials: string[];
+}
+
+/** Party position save data */
+interface PartyPositionData {
+  currentFloor: number;
+  playerX: number;
+  playerY: number;
+  playerDirection: number;
+  testMode: boolean;
+  discoveredSecrets: Set<string>;
+  disarmedTraps: Set<string>;
+  usedSpecials: Set<string>;
+}
 
 /**
  * Dungeon Management
  * Handles authentic Wizardry-style dungeon layout, navigation, and events
  */
 export class Dungeon {
-  eventSystem: any;
+  eventSystem: any; // Class instance - EventSystem
   currentFloor: number;
   maxFloors: number;
   playerX: number;
   playerY: number;
   playerDirection: number;
-  floors: Map<number, any>;
-  currentFloorData: any;
+  floors: Map<number, FloorData>;
+  currentFloorData: FloorData | null;
   discoveredSecrets: Set<string>;
   disarmedTraps: Set<string>;
   usedSpecials: Set<string>;
@@ -59,8 +157,8 @@ export class Dungeon {
     const height = this.testMode ? 5 : 20;
 
     // generateWizardryMaze now returns { tiles, rooms } for room-aware features
-    let tiles: any,
-      rooms: any[] = [];
+    let tiles: string[][],
+      rooms: RoomData[] = [];
     if (this.testMode) {
       tiles = this.generateTestMap();
       rooms = []; // Test mode has no formal rooms
@@ -105,7 +203,7 @@ export class Dungeon {
   /**
    * Hydrate encounters with full monster data (including portraits)
    */
-  async hydrateEncounters(encounters: any[]): Promise<void> {
+  async hydrateEncounters(encounters: DungeonEncounter[]): Promise<void> {
     if (!encounters || encounters.length === 0) return;
 
     console.log('Hydrating encounters with monster data...');
@@ -114,7 +212,7 @@ export class Dungeon {
         // Fetch full monster data
         const monsterData = await Monster.getMonsterData(encounter.monsterId);
         if (monsterData) {
-          encounter.monster = monsterData;
+          encounter.monster = monsterData as MonsterData;
           console.log(
             `Hydrated encounter at (${encounter.x}, ${encounter.y}) with ${monsterData.name}`
           );
@@ -181,7 +279,7 @@ export class Dungeon {
    * Generate authentic Wizardry-style maze with complex layouts
    * Returns { tiles, rooms } for room-aware features
    */
-  generateWizardryMaze(width: number, height: number, floorNumber: number): { tiles: any[][]; rooms: RoomData[] } {
+  generateWizardryMaze(width: number, height: number, floorNumber: number): { tiles: string[][]; rooms: RoomData[] } {
     const tiles = Array(height)
       .fill(null)
       .map(() => Array(width).fill('wall'));
@@ -265,7 +363,7 @@ export class Dungeon {
   /**
    * Carve rooms into the maze
    */
-  carveRooms(tiles: any[][], rooms: RoomData[]): void {
+  carveRooms(tiles: string[][], rooms: RoomData[]): void {
     rooms.forEach((room) => {
       for (let y = room.y; y < room.y + room.height; y++) {
         for (let x = room.x; x < room.x + room.width; x++) {
@@ -278,7 +376,7 @@ export class Dungeon {
   /**
    * Create main corridor network
    */
-  carveMainCorridors(tiles: any[][], width: number, height: number): void {
+  carveMainCorridors(tiles: string[][], width: number, height: number): void {
     // Create primary horizontal corridors
     const corridorSpacing = 4;
     for (let y = 2; y < height - 2; y += corridorSpacing) {
@@ -302,7 +400,7 @@ export class Dungeon {
   /**
    * Connect rooms to corridor network
    */
-  connectRoomsToCorridors(tiles: any[][], rooms: RoomData[]): void {
+  connectRoomsToCorridors(tiles: string[][], rooms: RoomData[]): void {
     rooms.forEach((room) => {
       // Find the nearest corridor for each room
       const centerX = Math.floor(room.x + room.width / 2);
@@ -316,11 +414,11 @@ export class Dungeon {
   /**
    * Create path from point to nearest floor tile
    */
-  createPathToNearestFloor(tiles: any[][], startX: number, startY: number): void {
+  createPathToNearestFloor(tiles: string[][], startX: number, startY: number): void {
     const width = tiles[0].length;
     const height = tiles.length;
     const visited = new Set();
-    const queue = [{ x: startX, y: startY, path: [] as any[] }];
+    const queue = [{ x: startX, y: startY, path: [] as Array<{ px: number; py: number }> }];
 
     while (queue.length > 0) {
       const { x, y, path } = queue.shift()!;
@@ -361,7 +459,7 @@ export class Dungeon {
   /**
    * Add maze-like passages for complexity
    */
-  addMazePassages(tiles: any[][], width: number, height: number, complexity: number): void {
+  addMazePassages(tiles: string[][], width: number, height: number, complexity: number): void {
     const passageCount = Math.floor(width * height * complexity * 0.1);
 
     for (let i = 0; i < passageCount; i++) {
@@ -377,7 +475,7 @@ export class Dungeon {
   /**
    * Carve a single maze passage using random walk
    */
-  carveMazePassage(tiles: any[][], startX: number, startY: number, width: number, height: number): void {
+  carveMazePassage(tiles: string[][], startX: number, startY: number, width: number, height: number): void {
     const directions = [
       [0, 1],
       [1, 0],
@@ -425,7 +523,7 @@ export class Dungeon {
    * @param {number} height - Grid height
    * @param {Array} rooms - Array of room objects {x, y, width, height}
    */
-  generateDoors(tiles: any[][], width: number, height: number, rooms: RoomData[] = []): void {
+  generateDoors(tiles: string[][], width: number, height: number, rooms: RoomData[] = []): void {
     if (!rooms || rooms.length === 0) {
       console.log('No rooms defined - skipping door generation');
       return;
@@ -450,7 +548,7 @@ export class Dungeon {
       return this.isFloorTile(tile) && !isRoomTile(x, y);
     };
 
-    const potentialDoors: any[] = [];
+    const potentialDoors: DoorCandidate[] = [];
 
     // Find wall tiles that separate rooms from corridors
     for (let y = 1; y < height - 1; y++) {
@@ -523,7 +621,7 @@ export class Dungeon {
    * A valid door must create a proper corridor passage, not a corner
    * Stricter check: ALL 4 diagonal tiles must be walls to ensure it's a true doorway
    */
-  isValidDoorPosition(tiles: any[][], x: number, y: number): 'horizontal' | 'vertical' | null {
+  isValidDoorPosition(tiles: string[][], x: number, y: number): 'horizontal' | 'vertical' | null {
     const north = tiles[y - 1] && tiles[y - 1][x];
     const south = tiles[y + 1] && tiles[y + 1][x];
     const east = tiles[y][x + 1];
@@ -563,25 +661,25 @@ export class Dungeon {
   /**
    * Check if a tile is a floor-like tile (walkable)
    */
-  isFloorTile(tile: any): boolean {
+  isFloorTile(tile: string | null): boolean {
     return (
       tile === 'floor' ||
       tile === 'open_door' ||
-      (tile && tile.startsWith && tile.startsWith('trap_'))
+      !!(tile && tile.startsWith && tile.startsWith('trap_'))
     );
   }
 
   /**
    * Check if a tile is a wall-like tile (blocking)
    */
-  isWallTile(tile: any): boolean {
+  isWallTile(tile: string | null): boolean {
     return tile === 'wall' || tile === 'door' || tile === 'hidden_door';
   }
 
   /**
    * Add secret features (hidden doors and secret passages)
    */
-  addSecretFeatures(tiles: any[][], width: number, height: number, secretChance: number): void {
+  addSecretFeatures(tiles: string[][], width: number, height: number, secretChance: number): void {
     const secretCount = Math.floor(width * height * secretChance);
 
     for (let i = 0; i < secretCount; i++) {
@@ -601,7 +699,7 @@ export class Dungeon {
   /**
    * Check if a secret feature can be placed at location
    */
-  canPlaceSecret(tiles: any[][], x: number, y: number): boolean {
+  canPlaceSecret(tiles: string[][], x: number, y: number): boolean {
     // Use strict door placement logic for secret doors too
     // This prevents corner doors and ensures valid placement
     return this.isValidDoorPosition(tiles, x, y) !== null;
@@ -610,7 +708,7 @@ export class Dungeon {
   /**
    * Add trap squares
    */
-  addTraps(tiles: any[][], width: number, height: number, trapChance: number, floorNumber: number): void {
+  addTraps(tiles: string[][], width: number, height: number, trapChance: number, floorNumber: number): void {
     const trapTypes = ['pit_trap', 'poison_dart', 'teleport_trap', 'alarm_trap'];
     const trapCount = Math.floor(width * height * trapChance);
 
@@ -628,7 +726,7 @@ export class Dungeon {
   /**
    * Check if a trap can be placed at location
    */
-  canPlaceTrap(tiles: any[][], x: number, y: number): boolean {
+  canPlaceTrap(tiles: string[][], x: number, y: number): boolean {
     // Don't place traps adjacent to stairs or special squares
     const adjacentSpecial = [
       [0, 1],
@@ -646,9 +744,9 @@ export class Dungeon {
   /**
    * Generate encounters for the floor with monster assignments
    */
-  generateEncounters(floorNumber: number, tiles: any[][]): any[] {
+  generateEncounters(floorNumber: number, tiles: string[][]): DungeonEncounter[] {
     const encounterCount = Random.integer(5, 12);
-    const encounters: any[] = [];
+    const encounters: DungeonEncounter[] = [];
     const width = tiles[0].length;
     const height = tiles.length;
 
@@ -703,7 +801,7 @@ export class Dungeon {
         level: floorNumber + Random.integer(-1, 2),
         triggered: false,
         type: isBoss ? 'boss' : 'normal',
-        monsterId: monsterName, // Now assigned for hydration!
+        monsterId: monsterName || pool[0], // Now assigned for hydration!
       });
     }
 
@@ -713,7 +811,7 @@ export class Dungeon {
   /**
    * Generate encounters for training grounds (test mode)
    */
-  generateTrainingGroundsEncounters(): any[] {
+  generateTrainingGroundsEncounters(): DungeonEncounter[] {
     // Place the deadly boss encounter in the corridor between rooms A and B
     // Based on the test map: corridor is at (3,2) and (4,2)
     // We'll place the boss at (4,2) - the entrance to the corridor from Room A
@@ -739,7 +837,7 @@ export class Dungeon {
   /**
    * Generate special squares (fountains, teleporters, etc.)
    */
-  generateSpecialSquares(floorNumber: number): any[] {
+  generateSpecialSquares(floorNumber: number): SpecialSquare[] {
     const specialTypes = [
       'healing_fountain',
       'stamina_fountain',
@@ -750,13 +848,13 @@ export class Dungeon {
     ];
 
     const specialCount = Random.integer(2, 5);
-    const specials: any[] = [];
+    const specials: SpecialSquare[] = [];
 
     for (let i = 0; i < specialCount; i++) {
       specials.push({
         x: Random.integer(1, 19),
         y: Random.integer(1, 19),
-        type: Random.choice(specialTypes),
+        type: Random.choice(specialTypes)!,
         used: false,
         message: this.generateSpecialMessage(Random.choice(specialTypes)!),
       });
@@ -805,8 +903,8 @@ export class Dungeon {
    * - jack_entry: Return to previous node (town on floor 1)
    * - jack_deep: Go to next node (deeper into dungeon)
    */
-  generateJacks(floorNumber: number, tiles: any[][]): Record<string, { x: number; y: number }> {
-    const jacks = {};
+  generateJacks(floorNumber: number, tiles: string[][]): JackPositions {
+    const jacks: JackPositions = {};
     const width = tiles[0].length;
     const height = tiles.length;
     const usedPositions = new Set();
@@ -842,7 +940,7 @@ export class Dungeon {
     // Entry jack (return to previous node / town) - every floor has one
     const entryPos = findValidJackPosition();
     if (entryPos) {
-      (jacks as any).entry = entryPos;
+      jacks.entry = entryPos;
       tiles[entryPos.y][entryPos.x] = 'jack_entry';
     }
 
@@ -850,14 +948,14 @@ export class Dungeon {
     if (floorNumber < this.maxFloors) {
       const deepPos = findValidJackPosition();
       if (deepPos) {
-        (jacks as any).deep = deepPos;
+        jacks.deep = deepPos;
         tiles[deepPos.y][deepPos.x] = 'jack_deep';
       }
     }
 
     // Legacy compatibility - populate stairs object for existing code
-    (jacks as any).up = (jacks as any).entry; // Entry goes "up" / out
-    (jacks as any).down = (jacks as any).deep; // Deep goes "down" / in
+    jacks.up = jacks.entry; // Entry goes "up" / out
+    jacks.down = jacks.deep; // Deep goes "down" / in
 
     return jacks;
   }
@@ -865,7 +963,7 @@ export class Dungeon {
   /**
    * Validate maze and fix connectivity issues
    */
-  validateAndFixMaze(tiles: any[][], width: number, height: number): void {
+  validateAndFixMaze(tiles: string[][], width: number, height: number): void {
     // Ensure there are enough floor tiles
     const floorCount = tiles
       .flat()
@@ -901,7 +999,7 @@ export class Dungeon {
   /**
    * Set starting position on floor
    */
-  setStartPosition(floor: any): void {
+  setStartPosition(floor: FloorData): void {
     if (this.testMode) {
       // Fixed starting position in Room A center for consistent testing
       this.playerX = 1; // Center of Room A (x: 0-2, center = 1)
@@ -979,7 +1077,7 @@ export class Dungeon {
   /**
    * Get tile at position
    */
-  getTile(x: number, y: number, floor: number | null = null): any {
+  getTile(x: number, y: number, floor: number | null = null): string {
     const floorData = floor ? this.floors.get(floor) : this.currentFloorData;
 
     if (!floorData) {
@@ -1021,6 +1119,7 @@ export class Dungeon {
    * Move player with wrap-around support
    */
   movePlayer(direction: 'forward' | 'backward'): boolean {
+    if (!this.currentFloorData) return false;
     let newX = this.playerX;
     let newY = this.playerY;
 
@@ -1326,13 +1425,14 @@ export class Dungeon {
    * Check for random encounters
    */
   checkRandomEncounter(): void {
+    if (!this.currentFloorData) return;
     // Debug: Log current position and available encounters
     console.log(`Checking encounters at position ${this.playerX}, ${this.playerY}`);
     console.log('Available encounters:', this.currentFloorData.encounters);
 
     // First check for fixed encounters at exact position (training grounds boss)
     const fixedEncounter = this.currentFloorData.encounters.find(
-      (enc: any) => enc.x === this.playerX && enc.y === this.playerY && !enc.triggered
+      (enc: DungeonEncounter) => enc.x === this.playerX && enc.y === this.playerY && !enc.triggered
     );
 
     if (fixedEncounter) {
@@ -1356,7 +1456,7 @@ export class Dungeon {
 
     if (Random.chance(baseChance)) {
       const encounter = this.currentFloorData.encounters.find(
-        (enc: any) =>
+        (enc: DungeonEncounter) =>
           Math.abs(enc.x - this.playerX) <= 1 &&
           Math.abs(enc.y - this.playerY) <= 1 &&
           !enc.triggered
@@ -1396,7 +1496,7 @@ export class Dungeon {
 
     // Find and mark the encounter as triggered/defeated
     const encounter = floorData.encounters.find(
-      (enc: any) => enc.x === x && enc.y === y && !enc.triggered
+      (enc: DungeonEncounter) => enc.x === x && enc.y === y && !enc.triggered
     );
 
     if (encounter) {
@@ -1413,8 +1513,9 @@ export class Dungeon {
    * Check for special squares
    */
   checkSpecialSquare(): void {
+    if (!this.currentFloorData) return;
     const special = this.currentFloorData.specialSquares.find(
-      (spec: any) => spec.x === this.playerX && spec.y === this.playerY
+      (spec: SpecialSquare) => spec.x === this.playerX && spec.y === this.playerY
     );
 
     if (special) {
@@ -1435,9 +1536,9 @@ export class Dungeon {
   /**
    * Search for hidden features at current position
    */
-  searchArea(): any[] {
+  searchArea(): SecretDiscovery[] {
     const searchRadius = 1;
-    const discoveries: any[] = [];
+    const discoveries: SecretDiscovery[] = [];
 
     for (let dx = -searchRadius; dx <= searchRadius; dx++) {
       for (let dy = -searchRadius; dy <= searchRadius; dy++) {
@@ -1524,6 +1625,7 @@ export class Dungeon {
    * direction: 'up' = jack out (return to previous node), 'down' = jack in deeper
    */
   changeFloor(direction: 'up' | 'down'): boolean | 'town' {
+    if (!this.currentFloorData) return false;
     const currentTile = this.getTile(this.playerX, this.playerY);
     const jacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
 
@@ -1538,18 +1640,18 @@ export class Dungeon {
       if (!this.floors.has(this.currentFloor)) {
         this.initializeFloor(this.currentFloor);
       }
-      this.currentFloorData = this.floors.get(this.currentFloor);
+      this.currentFloorData = this.floors.get(this.currentFloor) || null;
 
       // Position at deep jack on previous floor (since we came from there)
-      const prevJacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
+      const prevJacks = this.currentFloorData!.jacks || this.currentFloorData!.stairs || {};
       if (prevJacks.deep || prevJacks.down) {
-        const pos = prevJacks.deep || prevJacks.down;
+        const pos = (prevJacks.deep || prevJacks.down)!;
         this.playerX = pos.x;
         this.playerY = pos.y;
         console.log(`Positioned at deep jack: (${pos.x}, ${pos.y})`);
       } else {
         // Fallback: scan tiles for jack_deep position
-        const tiles = this.currentFloorData.tiles;
+        const tiles = this.currentFloorData!.tiles;
         let found = false;
         for (let y = 0; y < tiles.length && !found; y++) {
           for (let x = 0; x < tiles[y].length && !found; x++) {
@@ -1575,18 +1677,18 @@ export class Dungeon {
       if (!this.floors.has(this.currentFloor)) {
         this.initializeFloor(this.currentFloor);
       }
-      this.currentFloorData = this.floors.get(this.currentFloor);
+      this.currentFloorData = this.floors.get(this.currentFloor) || null;
 
       // Position at entry jack on new floor (since we're entering)
-      const newJacks = this.currentFloorData.jacks || this.currentFloorData.stairs || {};
+      const newJacks = this.currentFloorData!.jacks || this.currentFloorData!.stairs || {};
       if (newJacks.entry || newJacks.up) {
-        const pos = newJacks.entry || newJacks.up;
+        const pos = (newJacks.entry || newJacks.up)!;
         this.playerX = pos.x;
         this.playerY = pos.y;
         console.log(`Positioned at entry jack: (${pos.x}, ${pos.y})`);
       } else {
         // Fallback: scan tiles for jack_entry position
-        const tiles = this.currentFloorData.tiles;
+        const tiles = this.currentFloorData!.tiles;
         let found = false;
         for (let y = 0; y < tiles.length && !found; y++) {
           for (let x = 0; x < tiles[y].length && !found; x++) {
@@ -1620,7 +1722,7 @@ export class Dungeon {
   /**
    * Get save data
    */
-  getSaveData(): any {
+  getSaveData(): DungeonSaveData {
     return {
       currentFloor: this.currentFloor,
       maxFloors: this.maxFloors,
@@ -1637,7 +1739,7 @@ export class Dungeon {
   /**
    * Load from save data
    */
-  loadFromSave(saveData: any): void {
+  loadFromSave(saveData: DungeonSaveData): void {
     if (!saveData) return;
 
     this.currentFloor = saveData.currentFloor || 1;
@@ -1648,7 +1750,7 @@ export class Dungeon {
 
     if (saveData.floors) {
       this.floors = new Map(saveData.floors);
-      this.currentFloorData = this.floors.get(this.currentFloor);
+      this.currentFloorData = this.floors.get(this.currentFloor) || null;
     }
 
     if (saveData.discoveredSecrets) {
@@ -1671,7 +1773,7 @@ export class Dungeon {
   /**
    * Get current floor info
    */
-  getCurrentFloorInfo(): any {
+  getCurrentFloorInfo() {
     return {
       number: this.currentFloor,
       width: this.currentFloorData ? this.currentFloorData.width : 0,
@@ -1685,13 +1787,13 @@ export class Dungeon {
   /**
    * Get viewing information for 3D rendering
    */
-  getViewingInfo(): any {
-    const viewDistance = 5; // How far ahead to check
-    const walls: any[] = [];
-    const doors: any[] = [];
-    const passages: any[] = [];
-    const monsters: any[] = [];
-    const objects: any[] = [];
+  getViewingInfo(): Record<string, any> {
+    const viewDistance = 5;
+    const walls: ViewElement[] = [];
+    const doors: ViewElement[] = [];
+    const passages: ViewElement[] = [];
+    const monsters: ViewElement[] = [];
+    const objects: ViewElement[] = [];
 
     // Check front tiles until we hit a wall or reach max distance
     let frontWallDistance = viewDistance + 1; // Default to beyond max distance
@@ -1773,8 +1875,8 @@ export class Dungeon {
         // Check for visible monsters
         // Only show monsters if there isn't a wall blocking the view or if the monster is in front of the wall
         if (offset === 0 && !centerBlocked) {
-          const encounter = this.currentFloorData.encounters.find(
-            (enc: any) => enc.x === offX && enc.y === offY && !enc.triggered
+          const encounter = this.currentFloorData!.encounters.find(
+            (enc: DungeonEncounter) => enc.x === offX && enc.y === offY && !enc.triggered
           );
 
           if (encounter && encounter.monster) {
@@ -1938,7 +2040,7 @@ export class Dungeon {
   /**
    * Add framing walls for corridor entrances and transitions
    */
-  addFramingWalls(walls: any[], distance: number, leftX: number, leftY: number, rightX: number, rightY: number): void {
+  addFramingWalls(walls: ViewElement[], distance: number, leftX: number, leftY: number, rightX: number, rightY: number): void {
     // Check for walls that would frame corridor entrances
     if (this.isValidCoordinate(leftX, leftY)) {
       const leftTile = this.getTile(leftX, leftY);
@@ -2041,9 +2143,10 @@ export class Dungeon {
       }
 
       // Apply shared dungeon data to this instance
-      this.maxFloors = (dungeonData as any).maxFloors;
-      this.testMode = (dungeonData as any).testMode;
-      this.floors = (dungeonData as any).floors;
+      const data = dungeonData as any;
+      this.maxFloors = data.maxFloors;
+      this.testMode = data.testMode;
+      this.floors = data.floors;
 
       // Load party position if provided
       if (partyId) {
@@ -2051,29 +2154,30 @@ export class Dungeon {
 
         if (positionData) {
           // Apply party position data
-          this.currentFloor = (positionData as any).currentFloor;
-          this.playerX = (positionData as any).playerX;
-          this.playerY = (positionData as any).playerY;
-          this.playerDirection = (positionData as any).playerDirection;
-          this.discoveredSecrets = (positionData as any).discoveredSecrets;
-          this.disarmedTraps = (positionData as any).disarmedTraps;
-          this.usedSpecials = (positionData as any).usedSpecials;
+          const posData = positionData as any;
+          this.currentFloor = posData.currentFloor;
+          this.playerX = posData.playerX;
+          this.playerY = posData.playerY;
+          this.playerDirection = posData.playerDirection;
+          this.discoveredSecrets = posData.discoveredSecrets;
+          this.disarmedTraps = posData.disarmedTraps;
+          this.usedSpecials = posData.usedSpecials;
 
           console.log(
             `Party position loaded: Floor ${this.currentFloor}, Position (${this.playerX}, ${this.playerY})`
           );
         } else {
           // Use default starting position
-          this.setStartPosition(this.floors.get(1));
+          this.setStartPosition(this.floors.get(1)!);
           console.log('No saved position found, using default starting position');
         }
       } else {
         // Use default starting position
-        this.setStartPosition(this.floors.get(1));
+        this.setStartPosition(this.floors.get(1)!);
       }
 
       // Set current floor data
-      this.currentFloorData = this.floors.get(this.currentFloor);
+      this.currentFloorData = this.floors.get(this.currentFloor) || null;
 
       console.log(
         `Dungeon loaded from database: Floor ${this.currentFloor}, Position (${this.playerX}, ${this.playerY})`
@@ -2224,8 +2328,8 @@ export class Dungeon {
    * Search for secret doors and passages in all cardinal directions
    * Returns array of discovered secrets
    */
-  searchForSecrets(): any[] {
-    const discovered: any[] = [];
+  searchForSecrets(): SecretDiscovery[] {
+    const discovered: SecretDiscovery[] = [];
     const directions = [
       { dx: 0, dy: -1, name: 'north' }, // North
       { dx: 1, dy: 0, name: 'east' }, // East
@@ -2286,7 +2390,7 @@ export class Dungeon {
    * @param {string} partyId - Party ID to find dungeons for
    * @returns {Promise<Array>} Array of party position records
    */
-  static async getSavedDungeonsForParty(partyId: string): Promise<any[]> {
+  static async getSavedDungeonsForParty(partyId: string): Promise<Record<string, any>[]> {
     try {
       return await Storage.getSavedDungeonsForParty(partyId);
     } catch (error) {
