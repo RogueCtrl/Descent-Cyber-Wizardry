@@ -21,7 +21,7 @@
     width: 100vw;
     height: 100vh;
     background-color: var(--bg-primary);
-    background-image: url('../assets/gui/circuit_board.png');
+    background-image: url('/assets/gui/circuit_board.png');
     background-size: 1024px 1024px;
     background-position: center;
     background-repeat: no-repeat;
