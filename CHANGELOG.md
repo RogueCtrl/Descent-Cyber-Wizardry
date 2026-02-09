@@ -2,6 +2,135 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.3 (2026-02-09)
+
+
+### Features
+
+* Add a new skill to remove black backgrounds from images by converting near-black pixels to transparent using Jimp. ([da75421](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/da754211f3e892aa128a3ad99e91b475e8c2f3d6))
+* adding encounter support ([93ca2af](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/93ca2afac21031df8144e29cdb8012aaccf55b22))
+* basic background music ([1ac9cb9](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/1ac9cb97485c64d4228bb7aa7c276fcfc8df456c))
+* basic combat sounds ([859fc2b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/859fc2b89b42e32fcea1f1fe22da057830c7c3aa))
+* camping and resuming game support ([f6b68c6](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f6b68c663322818eb54faed6b3d9dc512b282d5a))
+* Character Roster ([f9472df](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f9472dfd923cce0217c4b71380cd3be14551c84a))
+* complete rework of storage system to use an async entity system with versioning. ([24a6a49](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/24a6a49904e41acc6f76eae1553e68dfc4af2d14))
+* Default Dungeon to procedural map generation with dynamic floor sizes and use `setStartPosition` for player placement. ([7dadcff](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/7dadcff664949be3c2e0e008d04f2765ba60f9b0))
+* Enhance dungeon generation by returning and storing room data, then placing doors specifically at room entrances. ([72206ed](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/72206ed1848b67c5fe2f45d3dad2e7ac42d1bb24))
+* foundation for wizardy-tron with entity migration ([b02e2fa](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/b02e2fab20c290bd04a1615994eab2c05810c89a))
+* Implement 'jacks' as new dungeon egress points, replacing stairs, and enhance encounter generation with monster assignments. ([e387052](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e38705222b475b447e554e5c3ad9f4e4981349d8))
+* Implement comprehensive CI/CD, testing, and documentation infrastructure, alongside extensive game logic and data migration updates. ([8940117](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/8940117e2426354b679bd617693dd5f1a7c428c7))
+* Implement door generation within the dungeon creation process. ([18031f1](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/18031f126ab606ffc910892fb5432bb0b9b4f8be))
+* Implement player search action for discovering secrets, enhance door generation, and improve trap mechanics. ([ff2f271](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ff2f271a13d12f5e36ea020ef91b835c02329486))
+* Implement player search action to discover hidden doors and passages. ([c968f81](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/c968f81b7228caf848c792e69578ce4986b10ad5))
+* Implement proper character rehydration, enhance secret door interaction and placement, and improve combat timeout management with a new party status UI. ([6aaf751](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6aaf7513c91994a3b6946d23f563be61b42cab59))
+* Implement TypeScript and Vite build setup, adding various scripts to address strict mode, async/await, and type-related compilation errors. ([9c1730a](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/9c1730a364bc3ed153fb951d7682a298677d43a6))
+* Integrated dual game mode into major systems. ([56e1903](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/56e190325b58a1d5ed851f207d56ba11ef990456))
+* Introduce a cyber-themed dashboard UI with dynamic town music selection and supporting assets. ([6c6a456](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6c6a4568ce3f7d28bae7743b2ff5e8b3df10f130))
+* Introduce CI/CD workflows for automated releases and builds, and enhance developer experience with new tooling and documentation. ([03f9e82](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/03f9e82ae3e7cc44128c91438bb264dc5fd8e6eb))
+* Introduce temporary in-memory parties that are saved and made permanent when named. ([d501f1c](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/d501f1cf2d874e3ee67a81fd726f33d975911301))
+* memorial and agent database udpate ([a2c17b3](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/a2c17b337a6467efa67630ecf2a1208ad04e79d9))
+* monster portrait ([1196635](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/1196635ad5a85b5d10e03efbfc0ccc44d7542cda))
+* Monster vector portraits ([e9d78f4](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e9d78f4916cc82c5ade573f564e7a3957f37ae88))
+* New character roster accessible from the Training Grounds ([0b1c579](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/0b1c57934ca08aa2e6f97cc64291683af07702e0))
+* Overhaul dashboard UI with new CRT and noise visual effects, interactive panel hovers, updated panel content, and a new News/Lore panel. ([90f8bb0](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/90f8bb041e07e1d47a198d129d0e60c4d9028867))
+* persistent dungeon ([12c513f](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/12c513f854e9f74561e802c126b4ce1bbcf61108))
+* persistent parties ([e770789](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e7707896b766d3eb0a99a6955541071dc68ca38a))
+* post combat screens ([2258fdc](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/2258fdc6e464d572dd2fc9ee8104dda2b2c33f23))
+* Restore the procedural dungeon layout from save data when resuming a game. ([e11d008](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e11d008031a93a97463a098be8abda7c7e33efe2))
+* store characters to IndexedDB ([62219b5](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/62219b578b66909687d760c86b0ff2e916f2bcad))
+* town audiotrack ([08f53b8](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/08f53b89f4ec5b20770fcbc82d16caebbd1d6504))
+* treasure chest ([b90a4ae](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/b90a4ae2215bc61198d785407a33a65fd0fdfefd))
+* victory screen ([62a4049](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/62a40490be36a205ba40e10a58ecb1c7fbb42141))
+* Wizardy-Tron Fusion ([ea3a82f](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ea3a82f75076c9d6ba8d64c1ee882e86d329d05a))
+* wizardy-tron-foundation ([e8ab33e](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e8ab33eef85b23928c9643ffd45ab160101f3ca5))
+
+
+### Bug Fixes
+
+* agents are no longer set to lost when their strike team is deleted and it was located in town. ([6184aa2](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6184aa227ddfcf9441c9dee036cb131aee4f4fa6))
+* agents not uninstalled on lost party deletion ([6973234](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6973234757e9a7156d7ccb8d5a383f2a5bfa7aee))
+* button state during combat turns ([33b0c88](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/33b0c883723b611330e8be39da8ce84307344a33))
+* canvas management and dungeon re-enter. ([ba139a4](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ba139a436f10279133e7d53f6e7fcfd3715a1df6))
+* casualties not showing ([f1b7dc9](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f1b7dc9ed7d7bc2fa1c2acd56736519661f6987a))
+* casualties show in post combat modal ([5d7b5f4](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/5d7b5f4ec547da0b05374ed37248f105e9f5cdb0))
+* combat end event misfire and loading character details card from roster. ([63ff341](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/63ff3417201570fcc68b4184543e19cf089b3ecc))
+* combat transitions ([c4204ae](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/c4204aee25230ab771fb77c48f2e5abfaf0d9e70))
+* Correct database name typo in CLAUDE.MD ([98250b1](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/98250b15c28ea0e361c2aeff71ca258085fdacd3))
+* double event listener for turning, added preview of rendering to readme ([05ea3f7](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/05ea3f7caf865db290080e57957cd94644d3c2ff))
+* dungeon initialization ([f4ccbbf](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f4ccbbf69f50dbee2e6e68ba9b8205adebf1067f))
+* dungeon interface layout ([0be06b6](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/0be06b6161d15bd27dddaa8c2e748056f55b3df0))
+* dungeon interface rendering ([771591b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/771591badd2437144f7b0dc34bc2dc5611d6d02a))
+* dungeon interface UI updates due to await and promise. ([0b4d437](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/0b4d437ba7ff9cf29ba806e7ad4b88d33edbfab1))
+* first pass side wall rendering issue ([a93a4fb](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/a93a4fb4031c95f7b94d580c1514f6313c1084e4))
+* improperly triggered encounters on party start not on win ([22c92b0](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/22c92b081f72f10c10303ba096eb51f898779d53))
+* improved rendering ([fca62cb](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/fca62cb170541f41435f0a4e8497bf5fef3d445f))
+* manually removed ceiling and flooring. ([bd783ed](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/bd783ed9ebafbd6ad862b88a04bc20b9fcd1d7f3))
+* mark characters as Lost on camp deletion ([5f8ac89](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/5f8ac89465f3925dedc68339cd72911103710a13))
+* memorial modal styling ([ebff925](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ebff925b81c025c340753e6c9ab6980bbe4322da))
+* multiple character combat targetting ([f5da191](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f5da191b5e68f5590a5ce2533c9ebf7b2e947771))
+* multiple character support ([e5e9ce2](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/e5e9ce2ab4eaa4462e7a2805010d35ab35351cb7))
+* orphaned party spawning and party naming ([15a4455](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/15a4455b72f4be141fa532e3b1682f9858950fc1))
+* party life-cycle management and juggling parties in town or in dungeon ([5192288](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/5192288ec6aa0591c574aeb1a28648889a4fd699))
+* race condition on AI action ([03c1f7b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/03c1f7b7521f5890b7e245e4c0ac8618d79c6e3e))
+* regression with lost agents ([aa346fa](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/aa346fa0f758703169ede330224920160bc96404))
+* remove fat finger ([2e7478b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/2e7478baabcf15bf4e855c3984eb592487399fc4))
+* remove return to town from post victory flow ([b5f5775](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/b5f5775b23e7b4fcc55c01708f483c2f2c3ee821))
+* removed timestamps from combat log ([864577a](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/864577abde89cd1ae975d309ecc084e5ac0ff5ff))
+* replace Jekyll with Vite-based GitHub Pages deployment ([42fffd9](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/42fffd9c77b80d7c98ee2ded81f96cb07947da11))
+* rework combat music ([3eae010](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/3eae0102b2ee3919ff3bc261354f751a4f6ae9d2))
+* roster/database UX ([16e179b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/16e179bc5869893abb649ffe9351633dc4d9b2bd))
+* step text for fantasy ([760021a](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/760021a4d583d7a8f9ddcfa9e217462721a32769))
+* styling anchor point of portrait ([a81de93](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/a81de9371cf17e82edd4eac596f85c44ae199266))
+* total party wipe still active ([b2aed4b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/b2aed4b17878f92986ef2b92f6ea78e5980122d6))
+* updated death states ([db290da](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/db290da80576fead0c3b8f2f6d640a222599175a))
+* victory back to town flow ([8da78bc](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/8da78bc77e3f7638e5d949f8d2d34fd67744d724))
+
+
+### Tests
+
+* static room to investigate rendering issues. ([2612c98](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/2612c985c93ab3b4b0995b077edf2700249e0937))
+
+
+### Documentation
+
+* Add rendering issue documentation with supporting images and enable a static test map for 3D viewport debugging. ([6d4e067](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6d4e0670f4002265e3378c3e4d66e537c8838a3e))
+* breaking changes ([c635f2c](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/c635f2c8d7cc74997af5ec2d0b9e6706895470d9))
+* Create comprehensive CLAUDE.MD project documentation ([d21f649](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/d21f649b76722e0850a32140c8483c7c43201a69))
+* Create comprehensive CLAUDE.MD project documentation ([2457788](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/24577887f58b335f4aabf713d365d6a3871a72ee)), closes [#5](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/issues/5)
+* project readme update ([6455b34](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6455b3488e1827db634b671d3e34b5f9d9c40476))
+* removed outdated file ([3646f95](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/3646f951fd1b533d254ef9536ff00bb31ced0752))
+* test room ([c61a8e9](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/c61a8e91f2fdd4b15bd1f53439bde24d0d5c781d))
+* updated readme ([3c05de4](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/3c05de414f46e703dadf85ff988138cf5f9fb482))
+* updated readme, and bump monster migration for our first portrait ([1396765](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/13967656380ae9beac3c00429e4e730d0d8422b5))
+* updated test room ([ff3b248](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ff3b248f95c7fabcd39e76df48cd269ebe2b2d95))
+
+
+### Refactoring
+
+* Add comprehensive TypeScript type annotations and remove obsolete helper scripts. ([44ab932](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/44ab9327e7fdf3c756987165c5d87de3a9973aa7))
+* Add non-null assertions and type annotations to improve TypeScript strictness across Engine properties. ([a4a9330](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/a4a933033bf52daf795b7698a4ff662eea319e74))
+* Adjust logo image path to relative and reformat conditional rendering within UI template literals. ([704f3c9](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/704f3c96fa76b6bc1508cb76990aa659e13d4482))
+* Clean up unused variables and parameters, update gitignore, and correct monster ASCII art. ([79d973c](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/79d973c2aa74b965ca010cd3cb4614d1c5eca531))
+* code cleanup after debugging ([f217461](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f2174612ec27fb1736b1bf7286ce995cebed8dcd))
+* Convert from JavaScript to TypeScript ([d9fa9f8](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/d9fa9f805b94c7ea7e9b4e194d48beebef708b47))
+* creation 4 - confirm ([dfda026](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/dfda0265d1c147ae7904ccb961870817310a672e))
+* creation complete ([f88ed5d](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/f88ed5dbdb62cd25dd15dbe8205814c7544f5d05))
+* Enable noImplicitAny and fix 975 TypeScript errors ([4314de1](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/4314de19e6d8a3ab810206206cefd88064e0cd40))
+* Enhance type safety across game systems and add AI-assisted documentation and logs. ([6363895](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/636389596c0927c4d05c413136887d09d0e547b6))
+* Enhance TypeScript type strictness and error handling across game systems and utilities. ([545dd54](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/545dd54d4a403e8e7729720191a2acfbb724a6ea))
+* manual tweaks ([ca3ffdc](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ca3ffdcc04dd400bd92f53f53c0e75e86bfeb06a))
+* prepare for new game theme mechanic ([ed13e48](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/ed13e48db082e18937130c95b526ba1c4dc91d1c))
+* Redesign dashboard UI with new GUI assets and remove obsolete readme and issue documentation. ([2610844](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/261084469295e1ab2df62547bbaa8dc767ef04e5))
+* remove unused `markExplored` method from `Dungeon` class ([b1826b2](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/b1826b2b412a0c61857095d65692e248913aa962))
+* step 2 of creation - attributes or configuration ([06ea224](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/06ea22482e0966a37d2249956ae6d57d38bbec61))
+* step 3 creation - classes & specializations ([7dbb0a5](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/7dbb0a58c5e23c4cfb1d497331af599b7d39563e))
+* terminology ([901d37b](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/901d37b9b27d61e896d5dcf94cb1cd12841ce296))
+* Town square and typing refactor ([a0ab3d8](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/a0ab3d8803da94921b90edc1d04e0f71dd9e9028))
+* update `createTownThemeCyber` from a synthwave to an atmospheric dungeon-style theme. ([1f979e4](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/1f979e4a70c7b12a98804bd48fd150350c1f58ed))
+* update step 1 of creation to use new text system ([6a762a1](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/6a762a1bff3dd0b1d71ce6da7bc86dc39d48197b))
+* update Training Grounds / AgentOps to use new text system. Streamlined UX ([c9b0f88](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/c9b0f8848a6f0fcb0f19fd7b761b6cb7e4106c50))
+* updated town menu to support dual gameplay mode ([01a6a0e](https://github.com/RogueCtrl/Descent-Cyber-Wizardry/commit/01a6a0e189c5b4886a7c77e5738983b28740f720))
+
 ### 1.0.2 (2026-02-08)
 
 
