@@ -38,7 +38,7 @@ export const monstersMigration = {
       preferredTargets: ['weakest'],
       experienceValue: 25,
       treasureType: 'poor',
-      asciiArt: '  👺\n /||\ \n  /\\  ',
+      asciiArt: '  👺\n /||\\ \n  /\\  ',
       portraitModel: {
         type: 'wireframe',
         vertices: [

@@ -405,7 +405,7 @@ export class AudioManager {
     };
 
     return () => {
-      const pattern: any[] = [];
+      // const pattern: any[] = []; // Removed unused variable
       state.measureCount++;
 
       // Randomly switch modes occasionally
@@ -468,7 +468,7 @@ export class AudioManager {
   /**
    * Generate active cyber segment (driving beat)
    */
-  generateCyberActiveSegment(state: any): MusicNote[] {
+  generateCyberActiveSegment(_state: any): MusicNote[] {
     const segment: any[] = [];
     const baseFreq = 110; // A2
 
@@ -537,7 +537,7 @@ export class AudioManager {
   /**
    * Generate stealth cyber segment (atmospheric)
    */
-  generateCyberStealthSegment(state: any): MusicNote[] {
+  generateCyberStealthSegment(_state: any): MusicNote[] {
     const segment: any[] = [];
 
     // Sparse, echoey pings
@@ -744,14 +744,15 @@ export class AudioManager {
     if (!this.isPlaying) return;
 
     let sequence: MusicNote[];
-    let isDynamic = false;
+    // let isDynamic = false;
 
     // Handle dynamic patterns (generators)
     if (typeof pattern === 'function') {
       sequence = pattern();
-      isDynamic = true;
+      // isDynamic = true;
     } else {
       sequence = pattern;
+      // isDynamic = false;
     }
 
     let currentTime = 0;
@@ -759,7 +760,7 @@ export class AudioManager {
     sequence.forEach((note) => {
       if (this.isPlaying) {
         // Determine volume based on note or default
-        const vol = note.volume || (note.wave === 'sawtooth' ? 0.15 : 0.2); // Reduce base volume slightly as we have more notes
+        // const vol = note.volume || (note.wave === 'sawtooth' ? 0.15 : 0.2); // Reduce base volume slightly as we have more notes
 
         // Hack: We don't have volume passed to playNote in the simplified method signature...
         // I need to update playNote to check for note.volume?
@@ -798,7 +799,7 @@ export class AudioManager {
     this.currentOscillators.forEach((osc) => {
       try {
         osc.stop();
-      } catch (e) {
+      } catch (_e) {
         // Oscillator might already be stopped
       }
     });
@@ -819,7 +820,7 @@ export class AudioManager {
   /**
    * Fade to a new track
    */
-  fadeToTrack(trackName: string, fadeTime: number = 1000): void {
+  fadeToTrack(trackName: string, _fadeTime: number = 1000): void {
     if (!this.isEnabled) return;
 
     if (this.currentTrack === trackName && this.isPlaying) return; // Already playing this track
@@ -940,7 +941,7 @@ export class AudioManager {
         try {
           oscillator.disconnect();
           effectGain.disconnect();
-        } catch (e) {
+        } catch (_e) {
           // Already disconnected
         }
       },

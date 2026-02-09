@@ -4,6 +4,6 @@ dist/
 .vite/
 coverage/
 
+docs/issues/
 docs/temp/
 llm-context/
-llm-context

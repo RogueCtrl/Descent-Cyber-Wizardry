@@ -9,7 +9,7 @@ import { EventSystem } from '../core/EventSystem.ts';
 
 export class TextManager {
   static mode: string = 'cyber'; // Default to cyber mode for the transformation
-  static callbacks: Set<Function> = new Set(); // UI refresh callbacks
+  static callbacks: Set<(newMode: string, oldMode: string) => void> = new Set(); // UI refresh callbacks
 
   /**
    * Get text for a given key using current mode
@@ -68,7 +68,7 @@ export class TextManager {
    * Register a callback for when text mode changes
    * @param {Function} callback - Function to call on mode change
    */
-  static onModeChange(callback: Function): void {
+  static onModeChange(callback: (newMode: string, oldMode: string) => void): void {
     this.callbacks.add(callback);
   }
 
@@ -76,7 +76,7 @@ export class TextManager {
    * Unregister a mode change callback
    * @param {Function} callback - Function to remove
    */
-  static offModeChange(callback: Function): void {
+  static offModeChange(callback: (newMode: string, oldMode: string) => void): void {
     this.callbacks.delete(callback);
   }
 

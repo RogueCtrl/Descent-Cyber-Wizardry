@@ -63,7 +63,7 @@ export class Viewport3D {
   /**
    * Render 3D dungeon view based on actual dungeon data
    */
-  render(dungeon: any, party: any) {
+  render(dungeon: any, _party: any) {
     if (!dungeon || !dungeon.getViewingInfo) {
       this.renderPlaceholder();
       return;
@@ -673,7 +673,7 @@ export class Viewport3D {
   renderMonsterWireframe(model: any, perspective: any, centerX: number, offset: number) {
     if (!model || !model.vertices || !model.edges) return;
 
-    const { wallWidth, wallHeight, topY, bottomY } = perspective;
+    const { wallWidth, wallHeight } = perspective;
 
     // Calculate center position for the monster
     // Use offset to handle positioning if we ever support side-monsters (though mainly center for now)
@@ -702,7 +702,7 @@ export class Viewport3D {
         z = vz;
 
       if (model.rotation) {
-        const [rotX, rotY, rotZ] = model.rotation;
+        const [, rotY] = model.rotation;
 
         // Apply Y rotation (most common)
         if (rotY !== 0) {
@@ -772,7 +772,7 @@ export class Viewport3D {
    * Render a treasure chest / data cache
    */
   renderTreasure(perspective: any, centerX: number, offset: number) {
-    const { wallWidth, wallHeight, topY, bottomY } = perspective;
+    const { wallWidth, wallHeight, bottomY } = perspective;
 
     // Calculate center position
     const objCenterX = centerX + offset * wallWidth;
@@ -780,7 +780,7 @@ export class Viewport3D {
     // Chest dimensions relative to wall
     const chestWidth = wallWidth * 0.4;
     const chestHeight = wallHeight * 0.25;
-    const chestDepth = wallWidth * 0.3; // Estimated depth distortion
+    // const chestDepth = wallWidth * 0.3; // Estimated depth distortion
 
     // Position on floor
     const chestBottom = bottomY - wallHeight * 0.05; // Slightly raised or on floor

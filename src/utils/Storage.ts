@@ -15,10 +15,6 @@ import type {
   MonsterData,
   EquipmentItem,
   SpellData,
-  Position,
-  DungeonTile,
-  DungeonFloor,
-  GameSettings,
 } from '../types/index.ts';
 
 /**
@@ -963,7 +959,7 @@ export class Storage {
       localStorage.setItem(test, test);
       localStorage.removeItem(test);
       return true;
-    } catch (error: any) {
+    } catch {
       return false;
     }
   }
@@ -1003,7 +999,7 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Object} Save result
    */
-  static savePartyInDungeon(party: any, dungeon: any, gameState: Record<string, unknown> = {}): Record<string, unknown> {
+  static savePartyInDungeon(party: any, dungeon: any, _gameState: Record<string, unknown> = {}): Record<string, unknown> {
     try {
       const campId = `${this.CAMP_KEY_PREFIX}${party.id}_${Date.now()}`;
 
@@ -1465,7 +1461,7 @@ export class Storage {
       const transaction = this._db!.transaction([this.VERSION_STORE], 'readonly');
       const store = transaction.objectStore(this.VERSION_STORE);
 
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         const request = store.get('entity_version');
 
         request.onsuccess = () => {
@@ -1886,7 +1882,7 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Promise<Object>} Save result
    */
-  static async saveCampWithEntityReferences(party: any, dungeon: any, gameState: any = {}): Promise<Record<string, unknown>> {
+  static async saveCampWithEntityReferences(party: any, dungeon: any, _gameState: any = {}): Promise<Record<string, unknown>> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2334,7 +2330,7 @@ export class Storage {
       // Validate data if validation function exists
       if (migration.validate) {
         const invalidEntries = Object.entries(data).filter(
-          ([key, value]) => !migration.validate(value)
+          ([_key, value]) => !migration.validate(value)
         );
         if (invalidEntries.length > 0) {
           console.warn(`Invalid entries in ${entityType}:`, invalidEntries);
@@ -3377,7 +3373,7 @@ export class Storage {
    * @param {string} partyId - ID of the party that owns this dungeon
    * @returns {Promise<string>} Dungeon ID if successful
    */
-  static async saveDungeon(dungeon: any, partyId: string): Promise<string> {
+  static async saveDungeon(dungeon: any, _partyId: string): Promise<string> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
