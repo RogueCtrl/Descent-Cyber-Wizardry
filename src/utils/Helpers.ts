@@ -264,7 +264,11 @@ export class Helpers {
   /**
    * Retry a function with exponential backoff
    */
-  static async retry<T>(func: () => Promise<T>, maxAttempts: number = 3, delay: number = 1000): Promise<T | undefined> {
+  static async retry<T>(
+    func: () => Promise<T>,
+    maxAttempts: number = 3,
+    delay: number = 1000
+  ): Promise<T | undefined> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await func();

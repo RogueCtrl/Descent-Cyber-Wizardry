@@ -176,7 +176,14 @@ export class Renderer {
   /**
    * Draw a rectangle
    */
-  drawRect(x: number, y: number, width: number, height: number, filled: boolean = false, color: string | null = null) {
+  drawRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    filled: boolean = false,
+    color: string | null = null
+  ) {
     this.ctx.strokeStyle = color || this.wireframeColor;
     this.ctx.fillStyle = color || this.wireframeColor;
 

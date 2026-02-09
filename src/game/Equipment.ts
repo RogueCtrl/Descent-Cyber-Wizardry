@@ -638,7 +638,7 @@ export class Equipment {
     const storeName = storeMap[category];
     if (!storeName) return [];
 
-    return await Storage.getAllEntities(storeName) as EquipmentItem[];
+    return (await Storage.getAllEntities(storeName)) as EquipmentItem[];
   }
 
   /**
@@ -647,7 +647,10 @@ export class Equipment {
    * @param {string} category - Optional category filter
    * @returns {Promise<Array>} Array of available items
    */
-  async getAvailableItems(characterClass: string, category: string | null = null): Promise<EquipmentItem[]> {
+  async getAvailableItems(
+    characterClass: string,
+    category: string | null = null
+  ): Promise<EquipmentItem[]> {
     await this.initializeEntities();
 
     const availableItems: EquipmentItem[] = [];
@@ -683,7 +686,10 @@ export class Equipment {
    * @param {Object} attacker - Attacking character
    * @returns {Promise<number>} Calculated damage
    */
-  async calculateWeaponDamage(weapon: EquipmentItem | string, attacker: CharacterData): Promise<number> {
+  async calculateWeaponDamage(
+    weapon: EquipmentItem | string,
+    attacker: CharacterData
+  ): Promise<number> {
     let weaponData: EquipmentItem | null = typeof weapon === 'string' ? null : weapon;
 
     // If weapon is an entity reference, resolve it
@@ -724,10 +730,7 @@ export class Equipment {
     if (equip) {
       // Armor bonus
       if (equip.armor) {
-        const armorId =
-          typeof equip.armor === 'string'
-            ? equip.armor
-            : equip.armor.name;
+        const armorId = typeof equip.armor === 'string' ? equip.armor : equip.armor.name;
         const armor =
           (await this.getItemFromStorage(armorId)) || (await this.getItemByName(armorId));
         if (armor && armor.acBonus) {
@@ -737,10 +740,7 @@ export class Equipment {
 
       // Shield bonus
       if (equip.shield) {
-        const shieldId =
-          typeof equip.shield === 'string'
-            ? equip.shield
-            : equip.shield.name;
+        const shieldId = typeof equip.shield === 'string' ? equip.shield : equip.shield.name;
         const shield =
           (await this.getItemFromStorage(shieldId)) || (await this.getItemByName(shieldId));
         if (shield && shield.acBonus) {
@@ -751,9 +751,7 @@ export class Equipment {
       // Accessory bonus
       if (equip.accessory) {
         const accessoryId =
-          typeof equip.accessory === 'string'
-            ? equip.accessory
-            : equip.accessory.name;
+          typeof equip.accessory === 'string' ? equip.accessory : equip.accessory.name;
         const accessory =
           (await this.getItemFromStorage(accessoryId)) || (await this.getItemByName(accessoryId));
         if (accessory && accessory.acBonus) {
@@ -787,10 +785,7 @@ export class Equipment {
     // Weapon bonus
     const equip = character.equipment as Record<string, any>;
     if (equip && equip.weapon) {
-      const weaponId =
-        typeof equip.weapon === 'string'
-          ? equip.weapon
-          : equip.weapon.name;
+      const weaponId = typeof equip.weapon === 'string' ? equip.weapon : equip.weapon.name;
       const weapon =
         (await this.getItemFromStorage(weaponId)) || (await this.getItemByName(weaponId));
       if (weapon && weapon.attackBonus) {
@@ -969,15 +964,13 @@ export class Equipment {
     const shields = await Storage.getAllShields();
     const accessories = await Storage.getAllAccessories();
 
-    [...weapons, ...armor, ...shields, ...accessories].forEach(
-      (item) => {
-        // Simple level-based filtering
-        const itemLevel = item.magical ? 3 : 1;
-        if (itemLevel <= level + 2) {
-          allItems.push(item);
-        }
+    [...weapons, ...armor, ...shields, ...accessories].forEach((item) => {
+      // Simple level-based filtering
+      const itemLevel = item.magical ? 3 : 1;
+      if (itemLevel <= level + 2) {
+        allItems.push(item);
       }
-    );
+    });
 
     // Select random items
     for (let i = 0; i < quantity; i++) {
@@ -1059,7 +1052,10 @@ export class Equipment {
    * @param {Object} options - Additional options for item creation
    * @returns {Promise<Object>} Item instance with state
    */
-  async createItemInstance(itemNameOrId: string, options: CreateItemOptions = {}): Promise<EquipmentItem> {
+  async createItemInstance(
+    itemNameOrId: string,
+    options: CreateItemOptions = {}
+  ): Promise<EquipmentItem> {
     let itemData = await this.getItemFromStorage(itemNameOrId);
     if (!itemData) {
       itemData = await this.getItemByName(itemNameOrId);
@@ -1109,7 +1105,11 @@ export class Equipment {
    * @param {Object} options - Additional options
    * @returns {Object} Identification result
    */
-  identifyItem(item: EquipmentItem, identifier: CharacterData, options: IdentifyOptions = {}): IdentificationResult {
+  identifyItem(
+    item: EquipmentItem,
+    identifier: CharacterData,
+    options: IdentifyOptions = {}
+  ): IdentificationResult {
     if (item.identified) {
       return {
         success: true,
@@ -1172,7 +1172,11 @@ export class Equipment {
    * @param {Object} options - Additional modifiers
    * @returns {number} Success percentage
    */
-  calculateIdentificationChance(identifier: CharacterData, item: EquipmentItem, options: IdentifyOptions = {}): number {
+  calculateIdentificationChance(
+    identifier: CharacterData,
+    item: EquipmentItem,
+    options: IdentifyOptions = {}
+  ): number {
     let baseChance = 50;
 
     // Intelligence bonus (primary factor)
@@ -1269,7 +1273,10 @@ export class Equipment {
     if (curse.type === 'stat_drain' && curse.stat) {
       const stat = curse.stat as keyof typeof character.attributes;
       if (character.attributes && stat in character.attributes) {
-        (character.attributes as any)[stat] = Math.max(3, (character.attributes[stat] as number) - (curse.amount || 1));
+        (character.attributes as any)[stat] = Math.max(
+          3,
+          (character.attributes[stat] as number) - (curse.amount || 1)
+        );
       }
     } else {
       // Add temporary effect
@@ -1295,7 +1302,11 @@ export class Equipment {
    * @param {Object} options - Removal options (spell assistance, etc.)
    * @returns {Object} Removal result
    */
-  removeCursedItem(character: CharacterData, item: EquipmentItem, options: RemoveCurseOptions = {}): { success: boolean; message: string } {
+  removeCursedItem(
+    character: CharacterData,
+    item: EquipmentItem,
+    options: RemoveCurseOptions = {}
+  ): { success: boolean; message: string } {
     if (!item.cursed) {
       return {
         success: true,
@@ -1388,7 +1399,10 @@ export class Equipment {
    * @param {Object} options - Generation options
    * @returns {Promise<Object>} Generated item instance
    */
-  async generateMagicalItem(level: number = 1, _options: MagicalItemOptions = {}): Promise<EquipmentItem | null> {
+  async generateMagicalItem(
+    level: number = 1,
+    _options: MagicalItemOptions = {}
+  ): Promise<EquipmentItem | null> {
     const cursedChance = Math.min(20, level * 2); // 2% per level, max 20%
     const unknownChance = Math.min(30, level * 3); // 3% per level, max 30%
 
@@ -1404,11 +1418,9 @@ export class Equipment {
 
     const allEntities: EquipmentItem[] = [...weapons, ...armor, ...shields, ...accessories];
 
-    allEntities.forEach(
-      (item) => {
-        if (item.magical) itemPool.push(item.id);
-      }
-    );
+    allEntities.forEach((item) => {
+      if (item.magical) itemPool.push(item.id);
+    });
 
     // Add cursed items based on chance
     if (Random.percent(cursedChance)) {
@@ -1438,9 +1450,22 @@ export class Equipment {
    * @param {Object} context - Additional context for wear calculation
    * @returns {Object} Wear result
    */
-  applyItemWear(item: EquipmentItem, useType: string = 'normal', context: WearContext = {}): WearResult {
+  applyItemWear(
+    item: EquipmentItem,
+    useType: string = 'normal',
+    context: WearContext = {}
+  ): WearResult {
     if (!item.durability || item.durability <= 0) {
-      return { alreadyBroken: true, message: `${item.name} is already broken.`, item: item.name, wearAmount: 0, oldDurability: 0, newDurability: 0, broken: true, warning: false };
+      return {
+        alreadyBroken: true,
+        message: `${item.name} is already broken.`,
+        item: item.name,
+        wearAmount: 0,
+        oldDurability: 0,
+        newDurability: 0,
+        broken: true,
+        warning: false,
+      };
     }
 
     let wearAmount = this.calculateWearAmount(item, useType, context);
@@ -1602,9 +1627,7 @@ export class Equipment {
     const repairCost = this.calculateRepairCost(item, options);
     const dur = item.durability || 0;
     const maxDur = item.maxDurability || 100;
-    const repairAmount = options.fullRepair
-      ? maxDur - dur
-      : Math.min(50, maxDur - dur);
+    const repairAmount = options.fullRepair ? maxDur - dur : Math.min(50, maxDur - dur);
 
     // Restore durability
     item.durability = Math.min(maxDur, dur + repairAmount);
@@ -1654,7 +1677,8 @@ export class Equipment {
    */
   calculateRepairCost(item: EquipmentItem, options: RepairOptions = {}): number {
     const baseCost = Math.floor((item.value || 0) * 0.1); // 10% of item value
-    const damageRatio = ((item.maxDurability || 100) - (item.durability || 0)) / (item.maxDurability || 100);
+    const damageRatio =
+      ((item.maxDurability || 100) - (item.durability || 0)) / (item.maxDurability || 100);
 
     let cost = Math.floor(baseCost * damageRatio);
 
@@ -1764,13 +1788,22 @@ export class Equipment {
    * @param {number} severity - Damage severity (1-5)
    * @returns {Array} Results for each damaged item
    */
-  processEnvironmentalDamage(character: CharacterData, damageType: string, severity: number = 2): WearResult[] {
+  processEnvironmentalDamage(
+    character: CharacterData,
+    damageType: string,
+    severity: number = 2
+  ): WearResult[] {
     const results: WearResult[] = [];
 
     if (!character.equipment) return results;
 
     Object.values(character.equipment).forEach((item) => {
-      if (item && typeof item !== 'string' && (item as unknown as EquipmentItem).durability && (item as unknown as EquipmentItem).durability! > 0) {
+      if (
+        item &&
+        typeof item !== 'string' &&
+        (item as unknown as EquipmentItem).durability &&
+        (item as unknown as EquipmentItem).durability! > 0
+      ) {
         const equipItem = item as unknown as EquipmentItem;
         // Different damage types affect different items differently
         let affectsItem = false;

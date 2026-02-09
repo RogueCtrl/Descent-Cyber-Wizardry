@@ -115,7 +115,12 @@ export class MonsterPortraitRenderer extends Viewport3D {
   /**
    * Transform 3D vertices for portrait display
    */
-  transformPortraitVertices(vertices: number[][], scale: number, rotation: number[], _options: any = {}) {
+  transformPortraitVertices(
+    vertices: number[][],
+    scale: number,
+    rotation: number[],
+    _options: any = {}
+  ) {
     const [rotX, rotY] = rotation;
     const combinedScale = scale * this.portraitScale;
 

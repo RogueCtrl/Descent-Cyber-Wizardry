@@ -198,7 +198,12 @@ export class CharacterClass {
     return this.calculateSpellSlots(level, primaryStat, classData.spellProgression, spellSchool);
   }
 
-  static calculateSpellSlots(level: number, primaryStat: number, progression: string, school: string) {
+  static calculateSpellSlots(
+    level: number,
+    primaryStat: number,
+    progression: string,
+    school: string
+  ) {
     const slots = [];
 
     // Base spell progression tables (simplified)

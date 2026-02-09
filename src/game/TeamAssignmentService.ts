@@ -98,7 +98,9 @@ export class TeamAssignmentService {
       if (!activeParty) {
         // Create new default team for character
         console.log('No active party found, creating new Strike Team');
-        activeParty = (await Storage.createNewActiveParty(`${character.name}'s Strike Team`)) as TeamParty;
+        activeParty = (await Storage.createNewActiveParty(
+          `${character.name}'s Strike Team`
+        )) as TeamParty;
       }
 
       // Assign character to team
@@ -130,9 +132,7 @@ export class TeamAssignmentService {
       await Storage.saveCharacter(character);
       await Storage.saveParty(activeParty);
 
-      console.log(
-        `Character ${character.name} assigned to Strike Team: ${activeParty.name}`
-      );
+      console.log(`Character ${character.name} assigned to Strike Team: ${activeParty.name}`);
       return activeParty;
     } catch (error: any) {
       console.error(`Failed to assign character ${character.name} to team:`, error);
@@ -146,7 +146,10 @@ export class TeamAssignmentService {
    * @param {string} teamName - Name for the new Strike Team
    * @returns {Promise<Object>} The created party/team
    */
-  static async createTeamForCharacters(characters: TeamCharacter[], teamName: string): Promise<TeamParty> {
+  static async createTeamForCharacters(
+    characters: TeamCharacter[],
+    teamName: string
+  ): Promise<TeamParty> {
     try {
       console.log(`Creating new Strike Team: ${teamName} for ${characters.length} characters`);
 
@@ -445,8 +448,7 @@ export class TeamAssignmentService {
       // Calculate average team size
       const teamSizes = Object.values(stats.teamSizes);
       if (teamSizes.length > 0) {
-        stats.averageTeamSize =
-          teamSizes.reduce((a, b) => a + b, 0) / teamSizes.length;
+        stats.averageTeamSize = teamSizes.reduce((a, b) => a + b, 0) / teamSizes.length;
       }
 
       return stats;

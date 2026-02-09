@@ -145,7 +145,10 @@ export class Random {
   /**
    * Generate a random string of specified length
    */
-  static string(length: number, chars: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
+  static string(
+    length: number,
+    chars: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  ): string {
     let result = '';
     for (let i = 0; i < length; i++) {
       result += chars.charAt(this.integer(0, chars.length - 1));

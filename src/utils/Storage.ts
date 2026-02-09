@@ -753,7 +753,10 @@ export class Storage {
         stats.highestLevel = Math.max(...levels);
 
         // Find oldest and newest characters
-        const sortedByDate = [...characters].sort((a: CharacterData, b: CharacterData) => ((a as any).dateCreated || 0) - ((b as any).dateCreated || 0));
+        const sortedByDate = [...characters].sort(
+          (a: CharacterData, b: CharacterData) =>
+            ((a as any).dateCreated || 0) - ((b as any).dateCreated || 0)
+        );
         stats.oldestCharacter = sortedByDate[0];
         stats.newestCharacter = sortedByDate[sortedByDate.length - 1];
       }
@@ -775,7 +778,9 @@ export class Storage {
       const allCharacters = await this.loadAllCharacters();
       return allCharacters.filter(
         (char) =>
-          (char as any).partyId === partyId && !(char as any).isPhasedOut && !this.isCharacterPermanentlyLost(char)
+          (char as any).partyId === partyId &&
+          !(char as any).isPhasedOut &&
+          !this.isCharacterPermanentlyLost(char)
       );
     } catch (error: any) {
       console.error('Failed to get active team members:', error);
@@ -791,7 +796,9 @@ export class Storage {
   static async getPhasedOutTeamMembers(partyId: string): Promise<CharacterData[]> {
     try {
       const allCharacters = await this.loadAllCharacters();
-      return allCharacters.filter((char) => (char as any).partyId === partyId && (char as any).isPhasedOut);
+      return allCharacters.filter(
+        (char) => (char as any).partyId === partyId && (char as any).isPhasedOut
+      );
     } catch (error: any) {
       console.error('Failed to get phased out team members:', error);
       return [];
@@ -999,7 +1006,11 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Object} Save result
    */
-  static savePartyInDungeon(party: any, dungeon: any, _gameState: Record<string, unknown> = {}): Record<string, unknown> {
+  static savePartyInDungeon(
+    party: any,
+    dungeon: any,
+    _gameState: Record<string, unknown> = {}
+  ): Record<string, unknown> {
     try {
       const campId = `${this.CAMP_KEY_PREFIX}${party.id}_${Date.now()}`;
 
@@ -1582,7 +1593,10 @@ export class Storage {
    * @param {Object} entities - Object containing entities to save
    * @returns {Promise<boolean>} Success status
    */
-  static async bulkSaveEntities(storeName: string, entities: Record<string, Record<string, unknown>>): Promise<boolean> {
+  static async bulkSaveEntities(
+    storeName: string,
+    entities: Record<string, Record<string, unknown>>
+  ): Promise<boolean> {
     try {
       const transaction = this._db!.transaction([storeName], 'readwrite');
       const store = transaction.objectStore(storeName);
@@ -1816,7 +1830,10 @@ export class Storage {
    * @param {Object} criteria - Query criteria
    * @returns {Promise<Array>} Array of matching entities
    */
-  static async queryEntities(storeName: string, criteria: Record<string, any> = {}): Promise<any[]> {
+  static async queryEntities(
+    storeName: string,
+    criteria: Record<string, any> = {}
+  ): Promise<any[]> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -1882,7 +1899,11 @@ export class Storage {
    * @param {Object} gameState - Current game state
    * @returns {Promise<Object>} Save result
    */
-  static async saveCampWithEntityReferences(party: any, dungeon: any, _gameState: any = {}): Promise<Record<string, unknown>> {
+  static async saveCampWithEntityReferences(
+    party: any,
+    dungeon: any,
+    _gameState: any = {}
+  ): Promise<Record<string, unknown>> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2105,7 +2126,10 @@ export class Storage {
    * @param {Object} dungeonData - Dungeon save data
    * @returns {Promise<boolean>} Success status
    */
-  static async saveDungeonState(dungeonId: string, dungeonData: Record<string, unknown>): Promise<boolean> {
+  static async saveDungeonState(
+    dungeonId: string,
+    dungeonData: Record<string, unknown>
+  ): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');
@@ -2275,7 +2299,9 @@ export class Storage {
   /**
    * Load entity migration by type
    */
-  static async loadEntityMigration(entityType: string): Promise<Record<string, Record<string, unknown>>> {
+  static async loadEntityMigration(
+    entityType: string
+  ): Promise<Record<string, Record<string, unknown>>> {
     try {
       let migration;
 
@@ -3563,7 +3589,11 @@ export class Storage {
    * @param {Object} positionData - Party position and state data
    * @returns {Promise<boolean>} Success status
    */
-  static async savePartyPosition(partyId: string, dungeonId: string, positionData: Record<string, any>): Promise<boolean> {
+  static async savePartyPosition(
+    partyId: string,
+    dungeonId: string,
+    positionData: Record<string, any>
+  ): Promise<boolean> {
     try {
       if (!(await this.initializeDB())) {
         throw new Error('Failed to initialize database');

@@ -51,7 +51,10 @@ export class SpellMemorization {
   /**
    * Validate spell selections against character's capabilities
    */
-  async validateSpellSelections(character: any, spellSelections: Record<string, { name: string }[]>) {
+  async validateSpellSelections(
+    character: any,
+    spellSelections: Record<string, { name: string }[]>
+  ) {
     await this.initializeSpellSystem();
     const classData = Class.getClassData(character.class);
     if (!classData || !classData.spells) {
@@ -230,7 +233,10 @@ export class SpellMemorization {
       divine: Class.getSpellSlots(character, 'divine'),
     };
 
-    const memorized: Record<string, any[]> = character.memorizedSpells || { arcane: [], divine: [] };
+    const memorized: Record<string, any[]> = character.memorizedSpells || {
+      arcane: [],
+      divine: [],
+    };
 
     // Check if there are available slots that aren't filled
     for (const school of ['arcane', 'divine']) {
@@ -249,7 +255,10 @@ export class SpellMemorization {
    * Get spell casting statistics
    */
   getSpellStatistics(character: any) {
-    const memorized: Record<string, any[]> = character.memorizedSpells || { arcane: [], divine: [] };
+    const memorized: Record<string, any[]> = character.memorizedSpells || {
+      arcane: [],
+      divine: [],
+    };
     const slots: Record<string, any> = {
       arcane: Class.getSpellSlots(character, 'arcane'),
       divine: Class.getSpellSlots(character, 'divine'),

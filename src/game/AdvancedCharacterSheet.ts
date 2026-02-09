@@ -347,7 +347,9 @@ export class AdvancedCharacterSheet {
    * Render content for the active tab
    */
   renderTabContent(tabId: string | null) {
-    const contentContainer = this.characterSheetModal?.querySelector('#character-sheet-tab-content');
+    const contentContainer = this.characterSheetModal?.querySelector(
+      '#character-sheet-tab-content'
+    );
     if (!contentContainer) return;
 
     switch (tabId) {

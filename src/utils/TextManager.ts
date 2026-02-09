@@ -103,7 +103,11 @@ export class TextManager {
    * @param {string} className - CSS class name (optional)
    * @returns {HTMLElement} Element that updates with mode changes
    */
-  static createTextElement(key: string, tagName: string = 'span', className: string = ''): HTMLElement {
+  static createTextElement(
+    key: string,
+    tagName: string = 'span',
+    className: string = ''
+  ): HTMLElement {
     const element = document.createElement(tagName);
     if (className) element.className = className;
 

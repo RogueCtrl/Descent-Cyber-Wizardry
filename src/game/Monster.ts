@@ -660,7 +660,9 @@ export class Monster {
     // Equipment bonuses (if available)
     if (target.equipment) {
       const equipment = new Equipment();
-      ac -= (await equipment.calculateACBonus(target as unknown as import('../types/index.ts').CharacterData)) as number;
+      ac -= (await equipment.calculateACBonus(
+        target as unknown as import('../types/index.ts').CharacterData
+      )) as number;
     }
 
     return ac;
@@ -1030,7 +1032,10 @@ export class EncounterGenerator {
     const table = this.encounterTables[effectiveLevel];
 
     // Choose encounter type based on weights
-    const totalWeight = table.reduce((sum: number, entry: EncounterTableEntry) => sum + entry.weight, 0);
+    const totalWeight = table.reduce(
+      (sum: number, entry: EncounterTableEntry) => sum + entry.weight,
+      0
+    );
     const roll = Random.integer(1, totalWeight);
 
     let currentWeight = 0;
@@ -1133,11 +1138,17 @@ export class EncounterGenerator {
     if (encounter.enemyParties) {
       // New format: sum XP from all parties
       for (const enemyParty of encounter.enemyParties) {
-        totalXP += enemyParty.reduce((sum: number, monster: Monster) => sum + monster.experienceValue, 0);
+        totalXP += enemyParty.reduce(
+          (sum: number, monster: Monster) => sum + monster.experienceValue,
+          0
+        );
       }
     } else if (encounter.monsters) {
       // Backward compatibility: use monsters array
-      totalXP = encounter.monsters.reduce((sum: number, monster: Monster) => sum + monster.experienceValue, 0);
+      totalXP = encounter.monsters.reduce(
+        (sum: number, monster: Monster) => sum + monster.experienceValue,
+        0
+      );
     }
 
     const expectedXPPerCharacter = partyLevel * 100;

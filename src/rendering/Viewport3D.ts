@@ -240,7 +240,13 @@ export class Viewport3D {
   /**
    * Render left side wall segment with improved continuity
    */
-  renderLeftWallSegment(perspective: any, centerX: number, distance: number, viewInfo: any, offset: number = -1) {
+  renderLeftWallSegment(
+    perspective: any,
+    centerX: number,
+    distance: number,
+    viewInfo: any,
+    offset: number = -1
+  ) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Ensure offset is negative for left side
@@ -319,7 +325,13 @@ export class Viewport3D {
   /**
    * Render right side wall segment with improved continuity
    */
-  renderRightWallSegment(perspective: any, centerX: number, distance: number, viewInfo: any, offset: number = 1) {
+  renderRightWallSegment(
+    perspective: any,
+    centerX: number,
+    distance: number,
+    viewInfo: any,
+    offset: number = 1
+  ) {
     const { wallWidth, topY, bottomY } = perspective;
 
     // Ensure offset is positive for right side

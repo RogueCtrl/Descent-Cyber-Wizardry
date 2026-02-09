@@ -364,8 +364,8 @@ export interface GameEventMap {
   'party-setup-complete': [data: { partyName: string }];
 
   // ─── Input Events ────────────────────────────────────────
-  'keydown': [event: KeyboardEvent];
-  'keyup': [event: KeyboardEvent];
+  keydown: [event: KeyboardEvent];
+  keyup: [event: KeyboardEvent];
   'canvas-click': [event: MouseEvent];
   'window-resize': [];
 
@@ -402,7 +402,11 @@ export interface GameEventMap {
 
   // ─── Dungeon & Exploration ───────────────────────────────
   'dungeon-entered': [];
-  'encounter-triggered': [data: { encounter: EncounterData; x: number; y: number; floor: number } | { encounter: EncounterData; position: Position }];
+  'encounter-triggered': [
+    data:
+      | { encounter: EncounterData; x: number; y: number; floor: number }
+      | { encounter: EncounterData; position: Position },
+  ];
   'exit-tile-entered': [data: { x: number; y: number; floor: number }];
   'exit-tile-left': [];
   'jack-entry-tile-entered': [data: { x: number; y: number; floor: number }];

@@ -2,7 +2,14 @@ import { Storage } from '../utils/Storage.ts';
 import { Monster } from './Monster.ts';
 import { Random } from '../utils/Random.ts';
 import { TextManager } from '../utils/TextManager.ts';
-import type { DungeonFloor, DungeonTile, RoomData, EncounterData, Direction, MonsterData } from '../types/index.ts';
+import type {
+  DungeonFloor,
+  DungeonTile,
+  RoomData,
+  EncounterData,
+  Direction,
+  MonsterData,
+} from '../types/index.ts';
 
 /** Floor data for generated dungeon floors */
 interface FloorData {
@@ -279,7 +286,11 @@ export class Dungeon {
    * Generate authentic Wizardry-style maze with complex layouts
    * Returns { tiles, rooms } for room-aware features
    */
-  generateWizardryMaze(width: number, height: number, floorNumber: number): { tiles: string[][]; rooms: RoomData[] } {
+  generateWizardryMaze(
+    width: number,
+    height: number,
+    floorNumber: number
+  ): { tiles: string[][]; rooms: RoomData[] } {
     const tiles = Array(height)
       .fill(null)
       .map(() => Array(width).fill('wall'));
@@ -475,7 +486,13 @@ export class Dungeon {
   /**
    * Carve a single maze passage using random walk
    */
-  carveMazePassage(tiles: string[][], startX: number, startY: number, width: number, height: number): void {
+  carveMazePassage(
+    tiles: string[][],
+    startX: number,
+    startY: number,
+    width: number,
+    height: number
+  ): void {
     const directions = [
       [0, 1],
       [1, 0],
@@ -506,8 +523,8 @@ export class Dungeon {
       // Small chance to branch
       if (Random.chance(0.3)) {
         const branchDir = Random.choice(availableDirections);
-        const bx = x + (branchDir!)[0];
-        const by = y + (branchDir!)[1];
+        const bx = x + branchDir![0];
+        const by = y + branchDir![1];
         if (bx >= 1 && bx < width - 1 && by >= 1 && by < height - 1) {
           tiles[by][bx] = 'floor';
         }
@@ -708,7 +725,13 @@ export class Dungeon {
   /**
    * Add trap squares
    */
-  addTraps(tiles: string[][], width: number, height: number, trapChance: number, floorNumber: number): void {
+  addTraps(
+    tiles: string[][],
+    width: number,
+    height: number,
+    trapChance: number,
+    floorNumber: number
+  ): void {
     const trapTypes = ['pit_trap', 'poison_dart', 'teleport_trap', 'alarm_trap'];
     const trapCount = Math.floor(width * height * trapChance);
 
@@ -894,7 +917,10 @@ export class Dungeon {
       ),
     };
 
-    return (messages as Record<string, string>)[type] || TextManager.getText('special_unknown', 'Something unusual is here.');
+    return (
+      (messages as Record<string, string>)[type] ||
+      TextManager.getText('special_unknown', 'Something unusual is here.')
+    );
   }
 
   /**
@@ -1920,7 +1946,10 @@ export class Dungeon {
       }
 
       // Variables to track corridor framing positions (usually at offset 1)
-      let framingLeftX: number = checkX - 1, framingLeftY: number = checkY, framingRightX: number = checkX + 1, framingRightY: number = checkY;
+      let framingLeftX: number = checkX - 1,
+        framingLeftY: number = checkY,
+        framingRightX: number = checkX + 1,
+        framingRightY: number = checkY;
 
       // Initialize framing coordinates to offset 1 (default corridor width)
       switch (this.playerDirection) {
@@ -1952,7 +1981,8 @@ export class Dungeon {
 
       // Scan for Left Wall (Room Boundary)
       for (let offset = 1; offset <= 3; offset++) {
-        let leftX: number = checkX - offset, leftY: number = checkY;
+        let leftX: number = checkX - offset,
+          leftY: number = checkY;
         // Calculate left position at this offset
         switch (this.playerDirection) {
           case 0: // North -> Left is X-
@@ -1984,7 +2014,8 @@ export class Dungeon {
 
       // Scan for Right Wall (Room Boundary)
       for (let offset = 1; offset <= 3; offset++) {
-        let rightX: number = checkX + offset, rightY: number = checkY;
+        let rightX: number = checkX + offset,
+          rightY: number = checkY;
         // Calculate right position at this offset
         switch (this.playerDirection) {
           case 0: // North -> Right is X+
@@ -2040,7 +2071,14 @@ export class Dungeon {
   /**
    * Add framing walls for corridor entrances and transitions
    */
-  addFramingWalls(walls: ViewElement[], distance: number, leftX: number, leftY: number, rightX: number, rightY: number): void {
+  addFramingWalls(
+    walls: ViewElement[],
+    distance: number,
+    leftX: number,
+    leftY: number,
+    rightX: number,
+    rightY: number
+  ): void {
     // Check for walls that would frame corridor entrances
     if (this.isValidCoordinate(leftX, leftY)) {
       const leftTile = this.getTile(leftX, leftY);

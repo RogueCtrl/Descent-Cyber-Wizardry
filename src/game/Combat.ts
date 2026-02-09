@@ -1,7 +1,13 @@
 import { Spells } from './Spells.ts';
 import { Random } from '../utils/Random.ts';
 import { TextManager } from '../utils/TextManager.ts';
-import type { CharacterData, MonsterInstance, CombatAction, ConditionInstance, SpellData } from '../types/index.ts';
+import type {
+  CharacterData,
+  MonsterInstance,
+  CombatAction,
+  ConditionInstance,
+  SpellData,
+} from '../types/index.ts';
 
 /** A combatant in the combat system - either a player character or enemy */
 interface Combatant {
@@ -171,7 +177,11 @@ export class Combat {
   /**
    * Start combat with party vs enemy parties
    */
-  async startCombat(playerParty: any, enemyParties: any, surpriseType: 'party' | 'enemies' | null = null) {
+  async startCombat(
+    playerParty: any,
+    enemyParties: any,
+    surpriseType: 'party' | 'enemies' | null = null
+  ) {
     // Initialize spell system if not done
     await this.initializeCombat();
 
@@ -465,7 +475,10 @@ export class Combat {
   /**
    * Generate loot from defeated enemies
    */
-  async generateLootFromEnemies(defeatedEnemies: Combatant[], rewards: CombatRewards): Promise<void> {
+  async generateLootFromEnemies(
+    defeatedEnemies: Combatant[],
+    rewards: CombatRewards
+  ): Promise<void> {
     if (defeatedEnemies.length === 0) return;
 
     // Calculate average enemy level for loot generation
@@ -517,10 +530,15 @@ export class Combat {
   checkSurprise(party: any, enemies: any): 'party' | 'enemies' | null {
     const enemyArray = Array.isArray(enemies) ? enemies : [enemies];
     const partyAverageAgility =
-      party.aliveMembers.reduce((sum: number, member: Combatant) => sum + (member.attributes?.agility || 10), 0) /
-      party.aliveMembers.length;
+      party.aliveMembers.reduce(
+        (sum: number, member: Combatant) => sum + (member.attributes?.agility || 10),
+        0
+      ) / party.aliveMembers.length;
     const enemyAverageAgility =
-      enemyArray.reduce((sum: number, enemy: Combatant) => sum + (enemy.agility || enemy.attributes?.agility || 10), 0) / enemyArray.length;
+      enemyArray.reduce(
+        (sum: number, enemy: Combatant) => sum + (enemy.agility || enemy.attributes?.agility || 10),
+        0
+      ) / enemyArray.length;
 
     const surpriseChance = Math.abs(partyAverageAgility - enemyAverageAgility) * 2;
 
@@ -1342,7 +1360,11 @@ export class Combat {
   /**
    * Check for critical hit
    */
-  checkCriticalHit(_attacker: Combatant, _target: Combatant, attackRoll: number): { multiplier: number; instant: boolean } {
+  checkCriticalHit(
+    _attacker: Combatant,
+    _target: Combatant,
+    attackRoll: number
+  ): { multiplier: number; instant: boolean } {
     const result = { multiplier: 1, instant: false };
 
     // Natural 20 always threatens critical
@@ -1405,7 +1427,9 @@ export class Combat {
     const baseChance = 85;
     const levelDifference = (caster.level || 1) - spell.level;
     const attributeBonus = caster.attributes
-      ? ((spell.school || spell.type) === 'arcane' ? caster.attributes.intelligence : caster.attributes.piety) - 10
+      ? ((spell.school || spell.type) === 'arcane'
+          ? caster.attributes.intelligence
+          : caster.attributes.piety) - 10
       : 0;
 
     const successChance = baseChance + levelDifference * 5 + attributeBonus;
@@ -1416,10 +1440,18 @@ export class Combat {
   /**
    * Execute spell effect
    */
-  async executeSpellEffect(spell: SpellData, caster: Combatant, target: Combatant | Combatant[] | undefined) {
+  async executeSpellEffect(
+    spell: SpellData,
+    caster: Combatant,
+    target: Combatant | Combatant[] | undefined
+  ) {
     // Use the initialized spell system for full spell effects
     await this.initializeCombat();
-    return this.spellSystem.executeSpellEffect(spell, caster as unknown as CharacterData, (target || null) as any);
+    return this.spellSystem.executeSpellEffect(
+      spell,
+      caster as unknown as CharacterData,
+      (target || null) as any
+    );
   }
 
   /**

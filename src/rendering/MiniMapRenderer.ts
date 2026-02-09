@@ -36,7 +36,12 @@ export class MiniMapRenderer {
    * @param {number} viewportWidth - Width of the viewport
    * @param {number} viewportHeight - Height of the viewport
    */
-  render(ctx: CanvasRenderingContext2D, dungeon: any, viewportWidth: number, viewportHeight: number) {
+  render(
+    ctx: CanvasRenderingContext2D,
+    dungeon: any,
+    viewportWidth: number,
+    viewportHeight: number
+  ) {
     if (!dungeon || !dungeon.currentFloorData) return;
 
     // Calculate map position (bottom right)
@@ -152,7 +157,16 @@ export class MiniMapRenderer {
    * @param {boolean} fill - Whether to fill
    * @param {boolean} stroke - Whether to stroke
    */
-  roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number, fill: boolean, stroke: boolean) {
+  roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+    fill: boolean,
+    stroke: boolean
+  ) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -237,7 +251,16 @@ export class MiniMapRenderer {
   /**
    * Render visible monsters on the mini-map
    */
-  renderMonsters(ctx: CanvasRenderingContext2D, dungeon: any, startX: number, endX: number, startY: number, endY: number, centerX: number, centerY: number) {
+  renderMonsters(
+    ctx: CanvasRenderingContext2D,
+    dungeon: any,
+    startX: number,
+    endX: number,
+    startY: number,
+    endY: number,
+    centerX: number,
+    centerY: number
+  ) {
     if (!dungeon.currentFloorData || !dungeon.currentFloorData.encounters) return;
 
     const encounters = dungeon.currentFloorData.encounters;

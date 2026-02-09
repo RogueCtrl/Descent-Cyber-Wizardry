@@ -112,7 +112,11 @@ export class DeathSystem {
    * @param {Object} temple - Temple providing the service
    * @returns {Object} Resurrection result
    */
-  attemptResurrection(character: any, serviceType: string = 'resurrection', temple: Record<string, any> = {}) {
+  attemptResurrection(
+    character: any,
+    serviceType: string = 'resurrection',
+    temple: Record<string, any> = {}
+  ) {
     const service = this.templeServices[serviceType];
     if (!service) {
       throw new Error(`Unknown resurrection service: ${serviceType}`);
@@ -216,7 +220,11 @@ export class DeathSystem {
    * @param {Object} temple - Temple providing service
    * @returns {number} Success percentage (0-100)
    */
-  calculateResurrectionChance(character: any, serviceType: string, temple: Record<string, any> = {}) {
+  calculateResurrectionChance(
+    character: any,
+    serviceType: string,
+    temple: Record<string, any> = {}
+  ) {
     const service = this.templeServices[serviceType];
     let baseChance = service.baseSuccessChance || 50;
 

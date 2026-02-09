@@ -395,7 +395,7 @@ export class AudioManager {
   /**
    * Create dungeon theme - Dynamic Cyber Generator
    */
-  createDungeonTheme(): (() => MusicNote[]) {
+  createDungeonTheme(): () => MusicNote[] {
     // Return a generator function that maintains state
     let state = {
       mode: 'stealth', // 'stealth', 'active', 'transition'
@@ -650,7 +650,12 @@ export class AudioManager {
   /**
    * Play a musical note
    */
-  playNote(frequency: number, duration: number, waveType: OscillatorType = 'square', startTime: number = 0): void {
+  playNote(
+    frequency: number,
+    duration: number,
+    waveType: OscillatorType = 'square',
+    startTime: number = 0
+  ): void {
     if (!this.isEnabled || !this.audioContext) return;
 
     if (frequency === 0) return; // Rest
@@ -1019,7 +1024,13 @@ export class AudioManager {
   /**
    * Get current track info
    */
-  getCurrentTrackInfo(): { name: string; title: string; isPlaying: boolean; volume: number; enabled: boolean } | null {
+  getCurrentTrackInfo(): {
+    name: string;
+    title: string;
+    isPlaying: boolean;
+    volume: number;
+    enabled: boolean;
+  } | null {
     if (!this.currentTrack) return null;
 
     return {

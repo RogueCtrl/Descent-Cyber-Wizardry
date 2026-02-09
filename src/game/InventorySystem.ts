@@ -635,7 +635,10 @@ export class InventorySystem {
     const maxWeightEl = this.inventoryModal.querySelector('#max-weight');
     const itemCountEl = this.inventoryModal.querySelector('#item-count');
 
-    if (currentWeightEl) currentWeightEl.textContent = (currentWeight as any).toFixed ? (currentWeight as any).toFixed(1) : String(currentWeight);
+    if (currentWeightEl)
+      currentWeightEl.textContent = (currentWeight as any).toFixed
+        ? (currentWeight as any).toFixed(1)
+        : String(currentWeight);
     if (maxWeightEl) maxWeightEl.textContent = maxWeight;
     if (itemCountEl) itemCountEl.textContent = itemCount;
   }
