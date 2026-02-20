@@ -13,11 +13,11 @@
 <table>
   <tr>
     <td align="center">
-      <img src="assets/readme/dungeon-exploration.png" alt="Dungeon Exploration" width="400"/><br/>
+      <img src="public/assets/readme/dungeon-exploration.png" alt="Dungeon Exploration" width="400"/><br/>
       <b>3D Wireframe Dungeon</b>
     </td>
     <td align="center">
-      <img src="assets/readme/combat-ogre.png" alt="Combat System" width="400"/><br/>
+      <img src="public/assets/readme/combat-ogre.png" alt="Combat System" width="400"/><br/>
       <b>Turn-Based Combat</b>
     </td>
   </tr>
@@ -38,12 +38,12 @@ Toggle between fantasy and cyberpunk at any time. This isn't just a skin—it's 
 <table>
   <tr>
     <td align="center">
-      <img src="assets/readme/tg-step3.jpg" alt="Fantasy Mode" width="400"/><br/>
+      <img src="public/assets/readme/tg-step3.jpg" alt="Fantasy Mode" width="400"/><br/>
       <b>Fantasy Mode</b><br/>
       <i>"Dwarven Priest" • "Dungeon" • "Party"</i>
     </td>
     <td align="center">
-      <img src="assets/readme/ao-step3.jpg" alt="Cyber Mode" width="400"/><br/>
+      <img src="public/assets/readme/ao-step3.jpg" alt="Cyber Mode" width="400"/><br/>
       <b>Cyber Mode</b><br/>
       <i>"Iron Kernel Infrastructure" • "Corrupted Network" • "Strike Team"</i>
     </td>
@@ -64,13 +64,13 @@ Authentic retro-3D rendering built from scratch using HTML5 Canvas. Features pro
 <table>
   <tr>
     <td align="center">
-      <img src="assets/readme/door-open-corridor.png" alt="Corridor View" width="260"/>
+      <img src="public/assets/readme/door-open-corridor.png" alt="Corridor View" width="260"/>
     </td>
     <td align="center">
-      <img src="assets/readme/door-closed.png" alt="Door View" width="260"/>
+      <img src="public/assets/readme/door-closed.png" alt="Door View" width="260"/>
     </td>
     <td align="center">
-      <img src="assets/readme/minimap-fogofwar.png" alt="Mini-map" width="260"/>
+      <img src="public/assets/readme/minimap-fogofwar.png" alt="Mini-map" width="260"/>
     </td>
   </tr>
   <tr>
@@ -86,7 +86,7 @@ Authentic retro-3D rendering built from scratch using HTML5 Canvas. Features pro
 Tactical turn-based combat with 3D wireframe monster portraits that react to damage with glitching and fragmentation effects.
 
 <div align="center">
-  <img src="assets/readme/ogre-encounter.png" alt="Monster Encounter" width="500"/><br/>
+  <img src="public/assets/readme/ogre-encounter.png" alt="Monster Encounter" width="500"/><br/>
   <i>3D Monster Portraits with Health-Based Visual Effects</i>
 </div>
 
@@ -104,11 +104,11 @@ Create characters from 5 races and 8 classes. Manage multiple parties in a persi
 <table>
   <tr>
     <td align="center">
-      <img src="assets/readme/tg-step1.jpg" alt="Character Creation" width="400"/><br/>
+      <img src="public/assets/readme/tg-step1.jpg" alt="Character Creation" width="400"/><br/>
       <i>Character Creation</i>
     </td>
     <td align="center">
-      <img src="assets/readme/tg-step5.jpg" alt="Party Formation" width="400"/><br/>
+      <img src="public/assets/readme/tg-step5.jpg" alt="Party Formation" width="400"/><br/>
       <i>Party Formation</i>
     </td>
   </tr>
