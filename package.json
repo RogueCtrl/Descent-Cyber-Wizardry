@@ -1,6 +1,6 @@
 {
   "name": "descent-cyber-wizardry",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "description": "A browser-based Wizardry homage with dual-mode fantasy/cyberpunk aesthetics",
