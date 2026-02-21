@@ -13,6 +13,8 @@ import { Spells } from '../game/Spells.ts';
 import { Monster } from '../game/Monster.ts';
 import { Random } from '../utils/Random.ts';
 import { TeamAssignmentService } from '../game/TeamAssignmentService.ts';
+import { Character } from '../game/Character.ts';
+import { AttributeRoller } from '../utils/AttributeRoller.ts';
 import type { CharacterData, EncounterData } from '../types/index.ts';
 
 interface PlayerState {
@@ -172,7 +174,7 @@ export class Engine {
           const partySetupModal = new PartySetupModal(this.eventSystem);
           partySetupModal.show((partyName: string) => {
             console.log(`Party setup completed with name: "${partyName}"`);
-            this.handlePartySetupComplete(partyName);
+            this.handlePartySetupComplete(partyName, true);
             resolve(undefined as any);
           });
         });
@@ -187,7 +189,7 @@ export class Engine {
   /**
    * Handle completion of party setup modal
    */
-  async handlePartySetupComplete(partyName: string) {
+  async handlePartySetupComplete(partyName: string, isFirstTimePlay: boolean = false) {
     try {
       // Set the party name
       if (this.party) {
@@ -213,15 +215,81 @@ export class Engine {
       // Mark as played before
       localStorage.setItem('descent_has_played', 'true');
 
-      // Now transition to town
-      this.gameState!.setState('town');
-      this.ui!.addMessage("You arrive at the town near the Mad Overlord's castle.");
-      this.ui!.addMessage('Visit the Training Grounds to create your party of adventurers.');
+      if (isFirstTimePlay) {
+        // Generate 4 characters
+        await this.generateQuickStartParty();
+
+        // Ensure dungeon interface is fully initialized before entering
+        this.ui!.hideCharacterCreation();
+        this.initializeDungeonInterface();
+
+        // Enter dungeon directly
+        await this.enterDungeon();
+        this.ui!.addMessage("Your Strike Team has been deployed directly into the network.");
+      } else {
+        // Now transition to town
+        this.gameState!.setState('town');
+        this.ui!.addMessage("You arrive at the town near the Mad Overlord's castle.");
+        this.ui!.addMessage('Visit the Training Grounds to create your party of adventurers.');
+      }
 
       // Emit event for any listeners
       this.eventSystem!.emit('party-setup-complete', { partyName });
     } catch (error: any) {
       console.error('Error handling party setup completion:', error);
+    }
+  }
+
+  /**
+   * Generate a pre-built party of 4 for quick start
+   */
+  async generateQuickStartParty(): Promise<void> {
+    const classes = ['Fighter', 'Thief', 'Mage', 'Priest'];
+    const newMembers = [];
+
+    for (let i = 0; i < classes.length; i++) {
+      const charClass = classes[i];
+      const character = new Character();
+      character.name = `Agent ${i + 1}`;
+      const races = ['Human', 'Elf', 'Dwarf', 'Hobbit', 'Gnome'];
+      character.race = races[Math.floor(Math.random() * races.length)];
+      character.class = charClass;
+      do {
+        character.attributes = AttributeRoller.rollAllAttributes();
+      } while (!AttributeRoller.isAcceptableRoll(character.attributes, 65));
+
+      // Recalculate max HP based on initial attributes
+      character.recalculateHP();
+      character.currentHP = character.maxHP;
+
+      character.availability = 'in_party';
+
+      newMembers.push(character);
+    }
+
+    if (!this.party) {
+      this.party = new Party();
+    }
+
+    for (const character of newMembers) {
+      character.partyId = this.party!.id;
+      character.originalTeamAssignment = this.party!.id;
+      character.teamAssignmentDate = new Date().toISOString();
+      character.teamLoyalty = 100;
+
+      await Storage.saveCharacter(character);
+      this.party!.addMember(character);
+    }
+
+    const partyAny: any = this.party;
+    partyAny.memberIds = this.party!.members.map(m => m.id);
+    partyAny.memberCount = this.party!.members.length;
+    partyAny.aliveCount = this.party!.members.filter(m => m.isAlive).length;
+
+    await this.party!.save();
+
+    if (this.ui) {
+      this.ui!.updatePartyDisplay(this.party);
     }
   }
 
@@ -885,14 +953,17 @@ export class Engine {
     // Sync player direction with dungeon direction system
     this.syncPlayerDirectionWithDungeon();
 
-    // Resize canvas to fit the viewport
-    this.resizeCanvasToViewport();
-
-    // Update viewport with current dungeon view - use renderer directly for now
-    this.updateDungeonView();
-
     // Enable movement controls
     this.enableMovementControls();
+
+    // Wait for DOM to update display:block before calculating sizing
+    requestAnimationFrame(() => {
+      // Resize canvas to fit the viewport
+      this.resizeCanvasToViewport();
+
+      // Update viewport with current dungeon view - use renderer directly for now
+      this.updateDungeonView();
+    });
   }
 
   /**
@@ -902,6 +973,7 @@ export class Engine {
     const viewport = document.getElementById('viewport');
     if (viewport && this.canvas && this.renderer) {
       const rect = viewport.getBoundingClientRect();
+      console.log(`Resizing canvas to ${rect.width}x${rect.height}`);
       // Use renderer's setSize method for consistent sizing
       this.renderer.setSize(rect.width, rect.height);
     }
@@ -1905,8 +1977,8 @@ export class Engine {
     }
 
     // Check if we're in a valid state to enter dungeon
-    // Allow entry from town state, training-grounds state (AgentOps), or combat state (post-combat return)
-    const validStates = ['town', 'training-grounds'];
+    // Allow entry from town state, training-grounds state (AgentOps), combat state (post-combat return), or loading state (Quick Start)
+    const validStates = ['town', 'training-grounds', 'loading'];
     if (postCombatReturn) {
       validStates.push('combat'); // Allow return from combat with casualties
     }
