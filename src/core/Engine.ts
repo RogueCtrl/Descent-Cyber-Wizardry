@@ -225,7 +225,7 @@ export class Engine {
 
         // Enter dungeon directly
         await this.enterDungeon();
-        this.ui!.addMessage("Your Strike Team has been deployed directly into the network.");
+        this.ui!.addMessage('Your Strike Team has been deployed directly into the network.');
       } else {
         // Now transition to town
         this.gameState!.setState('town');
@@ -282,9 +282,9 @@ export class Engine {
     }
 
     const partyAny: any = this.party;
-    partyAny.memberIds = this.party!.members.map(m => m.id);
+    partyAny.memberIds = this.party!.members.map((m) => m.id);
     partyAny.memberCount = this.party!.members.length;
-    partyAny.aliveCount = this.party!.members.filter(m => m.isAlive).length;
+    partyAny.aliveCount = this.party!.members.filter((m) => m.isAlive).length;
 
     await this.party!.save();
 
