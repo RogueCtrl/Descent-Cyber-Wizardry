@@ -119,6 +119,16 @@ handleStateChange(newState: GameStateName): void {
 }
 ```
 
+### Town Action Flow
+
+```
+handleTownLocationSelection()
+    ↓
+├─ 'training-grounds' → gameState.setState('training-grounds')
+├─ 'dungeon' → Show entrance confirmation
+└─ 'trading-post' → ui.showTradingPost() → ShopSystem loop
+```
+
 ### Player Action Flow
 
 ```

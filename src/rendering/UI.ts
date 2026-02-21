@@ -27,6 +27,7 @@ export class UI {
   maxMessages: number;
   characterUI: CharacterUI;
   townModal: any;
+  tradingPostModal: any;
   trainingModal: any;
   postCombatModal: any;
   treasureModal: any;
@@ -66,6 +67,9 @@ export class UI {
 
     // Town Modal
     this.townModal = null;
+
+    // Trading Post Modal
+    this.tradingPostModal = null;
 
     // Training Grounds Modal
     this.trainingModal = null;
@@ -516,12 +520,12 @@ export class UI {
                                 </div>
 
                                 <!-- Trading Post -->
-                                <div class="town-card disabled" id="trading-post-btn">
+                                <div class="town-card" id="trading-post-btn" ${hasActiveParty ? '' : 'disabled'}>
                                     <div class="card-icon">🏬</div>
                                     <div class="card-content">
                                         <h3 data-text-key="data_exchange">Trading Post</h3>
                                         <p data-text-key="data_exchange_flavor">Buy and sell equipment and supplies</p>
-                                        <div class="card-action-text disabled-text">COMING SOON</div>
+                                        <div class="card-action-text ${hasActiveParty ? 'active-text' : 'disabled-text'}">${hasActiveParty ? 'ENTER SHOP' : 'PARTY REQUIRED'}</div>
                                     </div>
                                 </div>
                             </div>
@@ -595,6 +599,7 @@ export class UI {
   setupTownCenterEventListeners(viewport: HTMLElement) {
     const trainingBtn = viewport.querySelector('#training-grounds-btn');
     const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
+    const tradingPostBtn = viewport.querySelector('#trading-post-btn');
     const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
     const exitBtn = viewport.querySelector('#dashboard-exit-btn');
 
@@ -620,6 +625,16 @@ export class UI {
           this.engine.audioManager.playSoundEffect('dungeonClick');
         }
         this.eventSystem.emit('town-location-selected', 'dungeon');
+      });
+    }
+
+    if (tradingPostBtn && !tradingPostBtn.classList.contains('disabled')) {
+      tradingPostBtn.addEventListener('click', () => {
+        if (this.engine?.audioManager) {
+          // Play standard click sound
+          this.engine.audioManager.playSoundEffect('menuClick');
+        }
+        this.eventSystem.emit('town-location-selected', 'trading-post');
       });
     }
 
@@ -6240,5 +6255,143 @@ export class UI {
         this.addMessage('Failed to return to town.', 'error');
       }
     }
+  }
+
+  hideTradingPost() {
+    if (this.tradingPostModal) {
+      this.tradingPostModal.hide();
+      this.tradingPostModal = null;
+    }
+  }
+
+  async showTradingPost(party: any, shopSystem: any, equipmentSystem: any) {
+    this.hideTradingPost();
+
+    const stock = await shopSystem.getStandardInventory(equipmentSystem);
+    const gold = party.gold || 0;
+
+    let stockHTML = stock.map((item: any) => `
+      <div class="shop-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px;">
+        <span>${item.name} (${item.value}G)</span>
+        <button class="buy-btn action-btn small" data-item="${item.name}" data-cost="${item.value}">Buy</button>
+      </div>
+    `).join('');
+
+    let inventoryHTML = (party.inventory || []).map((item: any, index: number) => {
+      const baseValue = item.value || 0;
+      const sellValue = Math.floor(baseValue / 2);
+      const isUnidentified = item.unidentified && item.state !== 'IDENTIFIED' && item.identified !== true;
+      const trueValue = baseValue || 100;
+      const identifyFee = Math.max(50, Math.floor(trueValue * 0.1));
+
+      return `
+      <div class="shop-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px;">
+        <span style="flex: 1;">${item.apparentName || item.name} (Sell: ${sellValue}G)</span>
+        <div style="display: flex; gap: 5px;">
+          ${isUnidentified ? `<button class="identify-btn action-btn small" data-index="${index}" data-fee="${identifyFee}">Identify (${identifyFee}G)</button>` : ''}
+          <button class="sell-btn action-btn small" data-index="${index}">Sell</button>
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    if ((party.inventory || []).length === 0) {
+      inventoryHTML = '<p>No items to sell.</p>';
+    }
+
+    const content = `
+      <div class="trading-post-modal-content" style="padding: 20px; color: #fff;">
+        <h2 data-text-key="data_exchange" style="text-align: center; border-bottom: 2px solid #555; padding-bottom: 10px;">Trading Post</h2>
+        <h3 class="gold-display" style="text-align: center; margin-bottom: 20px;"><span data-text-key="credits">Gold</span>: <span id="party-gold">${gold}</span></h3>
+        
+        <div class="shop-split-view" style="display: flex; gap: 20px; height: 400px; overflow-y: auto;">
+          <div class="shop-pane merchant-stock" style="flex: 1; border: 1px solid #666; padding: 10px;">
+            <h3 style="border-bottom: 1px solid #666; padding-bottom: 5px;">Merchant Stock</h3>
+            <div class="shop-list">${stockHTML}</div>
+          </div>
+          <div class="shop-pane party-inventory" style="flex: 1; border: 1px solid #666; padding: 10px;">
+            <h3 style="border-bottom: 1px solid #666; padding-bottom: 5px;">Party Inventory</h3>
+            <div class="shop-list">${inventoryHTML}</div>
+          </div>
+        </div>
+
+        <div class="shop-footer" style="text-align: center; margin-top: 20px;">
+          <button id="close-shop-btn" class="action-btn secondary large">Leave Shop</button>
+        </div>
+      </div>
+    `;
+
+    this.tradingPostModal = new Modal({
+      className: 'modal trading-post-modal cyber-interface',
+      closeOnEscape: true,
+      closeOnBackdrop: true,
+    });
+
+    this.tradingPostModal.setOnClose(() => {
+      this.hideTradingPost();
+    });
+
+    this.tradingPostModal.create(content);
+    this.tradingPostModal.show();
+    this.applyGlobalTextManager();
+    this.setupTradingPostListeners(this.tradingPostModal.getBody(), party, shopSystem, equipmentSystem);
+  }
+
+  setupTradingPostListeners(modalEl: HTMLElement, party: any, shopSystem: any, equipmentSystem: any) {
+    const buyBtns = modalEl.querySelectorAll('.buy-btn');
+    const sellBtns = modalEl.querySelectorAll('.sell-btn');
+    const identifyBtns = modalEl.querySelectorAll('.identify-btn');
+    const closeBtn = modalEl.querySelector('#close-shop-btn');
+
+    closeBtn?.addEventListener('click', () => {
+      this.hideTradingPost();
+    });
+
+    buyBtns.forEach((btn) => {
+      btn.addEventListener('click', async (e: any) => {
+        const target = e.currentTarget as HTMLElement;
+        const itemName = target.getAttribute('data-item')!;
+        const cost = parseInt(target.getAttribute('data-cost') || '0', 10);
+        if (party.gold < cost) {
+          this.addMessage('Not enough gold!', 'error');
+          return;
+        }
+        const result = await shopSystem.buyItem(party, itemName, equipmentSystem);
+        if (result.success) {
+          this.addMessage(`Purchased ${itemName}.`, 'success');
+          this.showTradingPost(party, shopSystem, equipmentSystem);
+        } else {
+          this.addMessage(result.message, 'error');
+        }
+      });
+    });
+
+    sellBtns.forEach((btn) => {
+      btn.addEventListener('click', async (e: any) => {
+        const target = e.currentTarget as HTMLElement;
+        const idx = parseInt(target.getAttribute('data-index') || '0', 10);
+        const result = await shopSystem.sellItem(party, idx);
+        if (result.success) {
+          this.addMessage(`Sold item for ${result.price}G.`, 'success');
+          this.showTradingPost(party, shopSystem, equipmentSystem);
+        } else {
+          this.addMessage(result.message, 'error');
+        }
+      });
+    });
+
+    identifyBtns.forEach((btn) => {
+      btn.addEventListener('click', async (e: any) => {
+        const target = e.currentTarget as HTMLElement;
+        const idx = parseInt(target.getAttribute('data-index') || '0', 10);
+        const result = await shopSystem.identifyItem(party, idx);
+        if (result.success) {
+          this.addMessage(`Identified item: ${result.item.name}.`, 'success');
+          this.showTradingPost(party, shopSystem, equipmentSystem);
+        } else {
+          this.addMessage(result.message, 'error');
+        }
+      });
+    });
   }
 }

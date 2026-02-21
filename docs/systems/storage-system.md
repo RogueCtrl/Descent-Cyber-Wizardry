@@ -126,6 +126,8 @@ const stats = await Storage.getCharacterStatistics();
 
 ### Parties
 
+*Note: The Party object's `gold` and `inventory` arrays are actively mutated and saved by the `ShopSystem` during Trading Post transactions.*
+
 ```typescript
 // Save/Load
 await Storage.saveParty(party: PartyData): Promise<boolean>;
