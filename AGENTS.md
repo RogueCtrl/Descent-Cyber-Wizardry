@@ -143,7 +143,11 @@ await Storage.saveDungeon(dungeon, partyId);
 await Storage.savePartyPosition(partyId, dungeonId, { x, y, floor, direction });
 ```
 
-### 5. ES Module System
+### 5. Inventory Integration
+
+Items are managed through a shared `Party` inventory system to pool resources, while `Character` objects track personal equipment and overflow. Both models persist their inventory states through IndexedDB, retaining unique equipment instantiations such as stats, durability, and curse states.
+
+### 6. ES Module System
 
 All files are ES modules imported through `src/main.ts`:
 

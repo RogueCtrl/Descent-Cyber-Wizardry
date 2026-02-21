@@ -97,7 +97,7 @@ Tactical turn-based combat with 3D wireframe monster portraits that react to dam
 - **Monster AI**: Different behavior patterns (aggressive, tactical, pack, intelligent)
 
 ### 📜 Deep Party Management
-Create characters from 5 races and 8 classes. Manage multiple parties in a persistent shared world. Handle permadeath, resurrection, and future rescue missions.
+Create characters from 5 races and 8 classes. Manage multiple parties in a persistent shared world. Handle permadeath, resurrection, and future rescue missions. The system includes a shared party inventory for centralized loot and equipment management.
 
 <div align="center">
 
@@ -262,10 +262,7 @@ Detailed system documentation: [`docs/systems/`](docs/systems/)
 
 The following features and integrations are planned for future releases:
 
-### Inventory System Integration
-- Implement party inventory system for treasure distribution (`UI.ts:4192`, `UI.ts:6029`)
-- Add gold collection to party treasury (`Engine.ts:1686`, `Engine.ts:2189`)
-- Generate and add magical items to party inventory (`Engine.ts:1691`, `Engine.ts:2195`)
+
 
 ### Dungeon Mechanics
 - Implement poison tile effect system (`Engine.ts:2031`)

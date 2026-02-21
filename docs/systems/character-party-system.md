@@ -185,6 +185,7 @@ character.changeClass('Samurai');
     maxSize: 4,
     currentLeader: Character,
     gold: number,
+    inventory: any[],
     inTown: boolean,
     campId: string | null
 }

@@ -337,8 +337,9 @@ export class InventorySystem {
     const inventoryContainer = this.inventoryModal.querySelector('#inventory-items');
     if (!inventoryContainer) return;
 
-    // Get character inventory (placeholder - implement based on actual inventory structure)
-    const inventory = this.currentCharacter.inventory || [];
+    // Get party inventory (shared pool instead of individual character inventory)
+    const party = this.eventSystem.engine?.party;
+    const inventory = party?.inventory || [];
 
     // Filter and sort items
     let filteredItems = this.filterItems(inventory);
@@ -670,23 +671,73 @@ export class InventorySystem {
     this.selectedItem = itemElement.getAttribute('data-item-id');
   }
 
-  equipItem(itemId: any) {
+  async equipItem(itemId: any) {
     console.log('Equip item:', itemId);
-    // Implement equipment logic
+    const party = this.eventSystem.engine?.party;
+    if (!party) return;
+
+    const itemIndex = party.inventory.findIndex((i: any) => (i.id || i) === itemId);
+    if (itemIndex === -1) return;
+    const item = party.inventory[itemIndex];
+
+    const result = this.equipment.equipItem(this.currentCharacter, item);
+    if (result.success) {
+      party.inventory.splice(itemIndex, 1);
+
+      if (result.previous) {
+        let prevItem = result.previous;
+        if (typeof prevItem === 'string') {
+          prevItem = (await this.equipment.getItemFromStorage(prevItem)) || prevItem;
+        }
+        party.inventory.push(prevItem);
+      }
+
+      await this.currentCharacter.saveToStorage();
+      await party.save();
+      await this.renderInventoryContent();
+    } else {
+      console.warn('Failed to equip item:', result.reason);
+      if (this.eventSystem.engine?.ui) {
+        this.eventSystem.engine.ui.addMessage(result.reason, 'error');
+      }
+    }
   }
 
-  unequipItem(slot: any) {
+  async unequipItem(slot: any) {
     console.log('Unequip item from slot:', slot);
-    // Implement unequip logic
+    const party = this.eventSystem.engine?.party;
+    if (!party) return;
+
+    const result = this.equipment.unequipItem(this.currentCharacter, slot);
+    if (result.success && result.unequipped) {
+      let unequippedItem = result.unequipped;
+      if (typeof unequippedItem === 'string') {
+        unequippedItem =
+          (await this.equipment.getItemFromStorage(unequippedItem)) || unequippedItem;
+      }
+      party.inventory.push(unequippedItem);
+
+      await this.currentCharacter.saveToStorage();
+      await party.save();
+      await this.renderInventoryContent();
+    }
   }
 
-  useItem(itemId: any) {
+  async useItem(itemId: any) {
     console.log('Use item:', itemId);
     // Implement use item logic
   }
 
-  dropItem(itemId: any) {
+  async dropItem(itemId: any) {
     console.log('Drop item:', itemId);
-    // Implement drop item logic
+    const party = this.eventSystem.engine?.party;
+    if (!party) return;
+
+    const itemIndex = party.inventory.findIndex((i: any) => (i.id || i) === itemId);
+    if (itemIndex !== -1) {
+      party.inventory.splice(itemIndex, 1);
+      await party.save();
+      await this.renderInventoryContent();
+    }
   }
 }

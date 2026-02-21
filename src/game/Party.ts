@@ -19,6 +19,7 @@ export class Party {
   gold: number;
   experience: number;
   inTown: boolean;
+  inventory: any[];
   campId: any;
   dateCreated: number;
   lastModified: number;
@@ -33,6 +34,7 @@ export class Party {
     this.gold = 0;
     this.experience = 0;
     this.inTown = true; // Parties start in town
+    this.inventory = []; // Pool for all unequipped items and loot
     this.campId = null; // Reference to camp if party is camping
     this.dateCreated = Date.now();
     this.lastModified = Date.now();
@@ -129,6 +131,7 @@ export class Party {
       formation: this.formation,
       gold: this.gold,
       experience: this.experience,
+      inventory: [...this.inventory],
     };
   }
 
@@ -143,6 +146,7 @@ export class Party {
     this.formation = saveData.formation || 'default';
     this.gold = saveData.gold || 0;
     this.experience = saveData.experience || 0;
+    this.inventory = saveData.inventory || [];
 
     // Rehydrate members
     this.members = (saveData.members || []).map((memberData: any) => {
@@ -168,6 +172,7 @@ export class Party {
       formation: this.formation,
       gold: this.gold,
       experience: this.experience,
+      inventory: this.inventory,
       members: this.members,
       currentLeader: this.currentLeader ? this.currentLeader.id : null,
       inTown: this.inTown,
@@ -216,6 +221,7 @@ export class Party {
       party.formation = (partyData as any).formation || 'default';
       party.gold = (partyData as any).gold || 0;
       party.experience = (partyData as any).experience || 0;
+      party.inventory = (partyData as any).inventory || [];
       party.inTown = (partyData as any).inTown !== undefined ? (partyData as any).inTown : true;
       party.campId = (partyData as any).campId || null;
       party.dateCreated = (partyData as any).dateCreated || Date.now();

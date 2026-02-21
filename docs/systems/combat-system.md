@@ -26,7 +26,7 @@ Turn-based combat with initiative system, formation mechanics, and multi-wave en
    └─ Repeat until victory/defeat
 
 3. Combat End:
-   ├─ Victory: calculateRewards(), emit 'combat-ended'
+   ├─ Victory: calculateRewards(), save loot/gold to active Party inventory, emit 'combat-ended'
    └─ Defeat: emit 'party-defeated'
 ```
 
@@ -323,7 +323,7 @@ emit('combat-action-processed', {
 // Victory
 emit('combat-ended', {
     victory: true,
-    rewards: { experience, loot, gold },
+    rewards: { experience, loot, gold }, // Loot is automatically deposited to party.inventory before emit
     casualties, disconnectedCharacters
 });
 
