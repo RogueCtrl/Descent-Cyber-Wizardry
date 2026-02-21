@@ -15,6 +15,7 @@ import { Random } from '../utils/Random.ts';
 import { TeamAssignmentService } from '../game/TeamAssignmentService.ts';
 import { Character } from '../game/Character.ts';
 import { AttributeRoller } from '../utils/AttributeRoller.ts';
+import { ShopSystem } from '../game/ShopSystem.ts';
 import type { CharacterData, EncounterData } from '../types/index.ts';
 
 interface PlayerState {
@@ -65,6 +66,7 @@ export class Engine {
   audioManager: AudioManager | null = null;
   combatInterface: CombatInterface | null = null;
   currentEncounterLocation: { x: number; y: number; floor: number } | null = null;
+  shopSystem: ShopSystem | null = null;
 
   constructor() {
     this.gameState = null;
@@ -120,6 +122,7 @@ export class Engine {
       await this.initializeParty();
       this.dungeon = new Dungeon(this.eventSystem);
       this.combatInterface = new CombatInterface(this.eventSystem, this);
+      this.shopSystem = new ShopSystem();
 
       // Pass engine reference to UI and its children
       this.ui.setEngine(this);
@@ -1917,6 +1920,15 @@ export class Engine {
         console.log('Attempting dungeon entry...');
         // Show dungeon entrance confirmation modal
         this.ui!.showDungeonEntranceConfirmation();
+        break;
+
+      case 'trading-post':
+        if (this.party && this.shopSystem) {
+          const equipmentSys = new Equipment();
+          this.ui!.showTradingPost(this.party, this.shopSystem, equipmentSys);
+        } else {
+          this.ui!.addMessage('Party required to visit the trading post.');
+        }
         break;
 
       default:

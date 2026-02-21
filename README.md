@@ -97,7 +97,7 @@ Tactical turn-based combat with 3D wireframe monster portraits that react to dam
 - **Monster AI**: Different behavior patterns (aggressive, tactical, pack, intelligent)
 
 ### 📜 Deep Party Management
-Create characters from 5 races and 8 classes. Manage multiple parties in a persistent shared world. Handle permadeath, resurrection, and future rescue missions. The system includes a shared party inventory for centralized loot and equipment management.
+Create characters from 5 races and 8 classes. Manage multiple parties in a persistent shared world. Handle permadeath, resurrection, and future rescue missions. The system includes a shared party inventory for centralized loot and equipment management, as well as a fully functional Trading Post economy for buying, selling, and identifying gear.
 
 <div align="center">
 
