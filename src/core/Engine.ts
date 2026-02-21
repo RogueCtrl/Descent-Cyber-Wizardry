@@ -264,6 +264,28 @@ export class Engine {
 
       character.availability = 'in_party';
 
+      // Assign default equipment
+      const equipmentSys = new Equipment();
+      const defaultGear: Record<string, string[]> = {
+        Fighter: ['Short Sword', 'Leather Armor'],
+        Lord: ['Short Sword', 'Leather Armor'],
+        Samurai: ['Short Sword', 'Leather Armor'],
+        Thief: ['Dagger', 'Leather Armor'],
+        Ninja: ['Dagger', 'Leather Armor'],
+        Priest: ['Mace', 'Leather Armor'],
+        Bishop: ['Mace', 'Leather Armor'],
+        Mage: ['Staff'],
+      };
+      const gearToEquip = defaultGear[character.class] || [];
+      for (const itemName of gearToEquip) {
+        try {
+          const itemInstance = await equipmentSys.createItemInstance(itemName);
+          equipmentSys.equipItem(character as any, itemInstance);
+        } catch (err) {
+          console.warn(`Failed to equip starter item ${itemName}: `, err);
+        }
+      }
+
       newMembers.push(character);
     }
 

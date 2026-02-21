@@ -450,35 +450,28 @@ export class UI {
     // Use passed party or fallback to engine
     const partyObj = party || (this.engine?.party ?? null);
     const hasActiveParty = partyObj && partyObj.size > 0;
-
-    // Check for camp management states
-    // let campingPartiesCount = 0;
-    let activePartiesCount = 0;
-    // let lostPartiesCount = 0;
+    let lastSaveText = 'Never';
     let charStats: Record<string, any> | null = null;
     let hasCamps = false;
 
     try {
+      charStats = await Storage.getCharacterStatistics();
       const allParties = await Storage.loadAllParties();
       if (allParties && (allParties as any).length > 0) {
         const partiesWithMembers = (allParties as any).filter(
           (p: any) => p.members && p.members.length > 0
         );
-        // const campingParties = await Storage.getCampingParties();
-        // const lostParties = (allParties as any).filter((p: any) => p.isLost);
-
-        activePartiesCount = partiesWithMembers.length;
-        //         campingPartiesCount = campingParties.length;
-        //         lostPartiesCount = lostParties.length;
-
         hasCamps = (allParties as any).length > 1 || partiesWithMembers.length > 0;
       }
-      charStats = await Storage.getCharacterStatistics();
     } catch (error: any) {
-      console.error('Error checking for camps:', error);
+      console.error('Error fetching stats/camps for town:', error);
     }
 
-    // Render the Dashboard — Logo + Two-Column Layout
+    if (charStats && charStats.lastModified) {
+      const date = new Date(charStats.lastModified);
+      lastSaveText = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
     const townContent = `
             <div class="town-menu">
                 <div class="noise-overlay"></div>
@@ -489,152 +482,88 @@ export class UI {
                     <img src="assets/gui/game_logo.png" alt="Descent: Cyber Wizardry">
                 </div>
 
-                <!-- Dashboard Body: Left Column | Center (empty) | Right Column -->
-                <div class="dashboard-body">
-                    
-                    <!-- LEFT COLUMN -->
-                    <div class="dashboard-column">
-
-                        <!-- AgentOps Status -->
-                        <div class="dashboard-panel panel-agentops">
-                            <header class="panel-header">
-                                <div class="panel-title"><span class="icon">👤</span> AGENTOPS STATUS</div>
-                                <div class="panel-controls">
-                                    <span class="status-indicator">ONLINE</span>
-                                </div>
-                            </header>
-                            <div class="panel-content">
-                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                    <span>ACTIVE AGENTS:</span>
-                                    <span style="color: var(--accent-success);">${charStats ? charStats.byStatus['Ok'] || 0 : 0}</span>
-                                 </div>
-                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                    <span>INJURED:</span>
-                                    <span style="color: var(--accent-warning);">0</span>
-                                 </div>
-                                 <div class="stat-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                    <span>M.I.A.:</span>
-                                    <span style="color: var(--accent-alert);">${charStats ? (charStats.byStatus['Dead'] || 0) + (charStats.byStatus['Lost'] || 0) : 0}</span>
-                                 </div>
-
-                                 <div class="recruitment-status" style="margin-top: auto; font-size: 0.8em; color: var(--text-muted);">
-                                    RECRUITMENT POOL: <span style="color: var(--text-primary);">OPEN</span>
-                                 </div>
-
-                                <div class="panel-actions">
-                                    <button id="training-grounds-btn" class="panel-action-btn primary">[ACCESS REGISTRY]</button> 
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Med-Bay -->
-                        <div class="dashboard-panel panel-restoration">
-                            <header class="panel-header">
-                                 <div class="panel-title"><span class="icon">☣️</span> MED-BAY</div>
-                            </header>
-                            <div class="panel-content">
-                                <div class="panel-info-row">
-                                    <div class="panel-info-icon">☣️</div>
-                                    <div class="panel-info-text">
-                                        <div style="color: var(--accent-warning); font-family: monospace; text-transform: uppercase;">BIOMASS DEPLETED</div>
-                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">OFFLINE FOR MAINTENANCE</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Strike Team -->
-                        <div class="dashboard-panel panel-manifest">
-                           <header class="panel-header">
-                                <div class="panel-title"><span class="icon">⚡</span> STRIKE TEAM</div>
-                            </header>
-                            <div class="panel-content">
-                                <div class="panel-info-row">
-                                    <div class="panel-info-icon">🛡️</div>
-                                    <div class="panel-info-text">
-                                        <div style="text-transform: uppercase;">SQUAD CAPACITY: <span style="color: var(--text-primary);">${activePartiesCount}/5</span></div>
-                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">READY FOR DEPLOYMENT</div>
-                                    </div>
-                                </div>
-                                <div class="panel-actions">
-                                    <button id="strike-team-management-btn" class="panel-action-btn primary" ${hasCamps ? '' : 'disabled'}>
-                                        [CREATE]
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
+                <div class="town-container-wrapper">
+                    <!-- Title -->
+                    <div class="town-title">
+                        <h2 data-text-key="town">Town Center</h2>
+                        <p class="town-subtitle" data-text-key="town_description">The bustling hub of Llylgamyn, where adventurers prepare for their descent into the Mad Overlord's maze.</p>
                     </div>
 
-                    <!-- CENTER PANE (Reserved for future content) -->
-                    <div class="dashboard-center"></div>
-
-                    <!-- RIGHT COLUMN -->
-                    <div class="dashboard-column">
-
-                        <!-- Link Status -->
-                        <div class="dashboard-panel panel-network">
-                            <header class="panel-header">
-                                <div class="panel-title"><span class="icon">🌐</span> LINK STATUS</div>
-                                <div class="panel-controls">
-                                    <button class="panel-btn-icon" id="dashboard-exit-btn" title="Exit Grid" style="border: 1px solid var(--accent-alert); color: var(--accent-alert);">X</button>
+                    <!-- Main Grid -->
+                    <div class="town-grid-container">
+                        
+                        <!-- Top Row: Training, Dungeon, Trading Post -->
+                        <div class="town-grid-row">
+                            <!-- Training Grounds: Primary large button -->
+                            <div class="town-card primary-action" id="training-grounds-btn">
+                                <div class="card-icon">⚔️</div>
+                                <div class="card-content">
+                                    <h3 data-text-key="training_grounds">Training Grounds</h3>
+                                    <p data-text-key="training_grounds_flavor">Create and manage your party of adventurers</p>
+                                    <div class="card-action-text" data-text-key="initialize_agent">INITIALIZE AGENT</div>
                                 </div>
-                            </header>
-                            <div class="panel-content">
-                                 <div class="live-terminal-text" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-alert); opacity: 0.8; line-height: 1.4;">
-                                    > ESTABLISHING CONNECTION...<br>
-                                    > ERROR: SECTOR 7 UNSTABLE<br>
-                                    > MANA FLUX: 89% CRITICAL<br>
-                                    > ENEMY SIGNATURES DETECTED
-                                 </div>
-
-                                <div class="panel-actions">
-                                    <button id="dungeon-entrance-btn" class="panel-action-btn alert" ${hasActiveParty ? '' : 'disabled'}>
-                                        ${hasActiveParty ? '[INITIATE DIVE]' : 'NO ACTIVE TEAM'}
-                                    </button>
-                                </div>
-
-                                <div class="panel-status-badge status-critical">INTEGRITY: UNSTABLE</div>
                             </div>
-                        </div>
 
-                        <!-- Data Vault -->
-                        <div class="dashboard-panel panel-data">
-                            <header class="panel-header">
-                                <div class="panel-title"><span class="icon">🔒</span> DATA VAULT</div>
-                            </header>
-                            <div class="panel-content">
-                                <div class="panel-info-row">
-                                    <div class="panel-info-icon">🔒</div>
-                                    <div class="panel-info-text">
-                                        <div style="color: var(--accent-primary); font-family: monospace; text-transform: uppercase;">ENCRYPTION LEVEL 5</div>
-                                        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">ACCESS DENIED</div>
+                            <div class="town-card-column">
+                                <!-- Dungeon Entrance -->
+                                <div class="town-card" id="dungeon-entrance-btn" ${hasActiveParty ? '' : 'disabled'}>
+                                    <div class="card-icon">🏰</div>
+                                    <div class="card-content">
+                                        <h3 data-text-key="dungeon_entrance">Dungeon Entrance</h3>
+                                        <p data-text-key="dungeon_entrance_flavor">Enter the Mad Overlord's treacherous maze</p>
+                                        <div class="card-action-text ${hasActiveParty ? 'active-text' : 'disabled-text'}">${hasActiveParty ? 'ENTER MAZE' : 'PARTY REQUIRED'}</div>
                                     </div>
                                 </div>
 
-                                <div class="panel-status-badge status-alert">LOCKED</div>
-                            </div>
-                        </div>
-
-                        <!-- Signal Feed -->
-                        <div class="dashboard-panel panel-news">
-                            <header class="panel-header">
-                                <div class="panel-title"><span class="icon">📡</span> SIGNAL FEED</div>
-                            </header>
-                            <div class="panel-content" style="overflow: hidden;">
-                                <div class="news-feed" style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
-                                    <div style="margin-bottom: 10px; color: var(--accent-primary);">>> LATEST INTERCEPTS:</div>
-                                    <ul style="list-style: none; padding: 0;">
-                                        <li style="margin-bottom: 8px;">- * CorpSec increasing patrols...</li>
-                                        <li style="margin-bottom: 8px;">- "Project Ascension" rumors...</li>
-                                        <li style="margin-bottom: 8px;">- Bioware upgrades now available...</li>
-                                    </ul>
+                                <!-- Trading Post -->
+                                <div class="town-card disabled" id="trading-post-btn">
+                                    <div class="card-icon">🏬</div>
+                                    <div class="card-content">
+                                        <h3 data-text-key="data_exchange">Trading Post</h3>
+                                        <p data-text-key="data_exchange_flavor">Buy and sell equipment and supplies</p>
+                                        <div class="card-action-text disabled-text">COMING SOON</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Bottom Row: Temple, Camp -->
+                        <div class="town-grid-row dual-cards">
+                            <!-- Temple -->
+                            <div class="town-card disabled" id="temple-btn">
+                                <div class="card-icon">⛪</div>
+                                <div class="card-content">
+                                    <h3 data-text-key="restoration_center">Temple</h3>
+                                    <p data-text-key="restoration_center_flavor">Heal wounds and resurrect fallen heroes</p>
+                                    <div class="card-action-text disabled-text">COMING SOON</div>
+                                </div>
+                            </div>
+
+                            <!-- Strike Team Manifest -->
+                            <div class="town-card" id="strike-team-management-btn" ${hasCamps ? '' : 'disabled'}>
+                                <div class="card-icon">⚡</div>
+                                <div class="card-content">
+                                    <h3 data-text-key="party_management">Party Management</h3>
+                                    <p data-text-key="party_management_flavor">Manage and view multiple saved strike teams or lost Agents</p>
+                                    <div class="card-action-text ${hasCamps ? 'active-text' : 'disabled-text'}" data-text-key="manifest_title">STRIKE TEAM MANIFEST</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Footer Status -->
+                    <div class="party-status-footer">
+                        <div class="status-left">
+                            <span class="status-label">Party Status:</span> 
+                            <span class="status-value ${hasActiveParty ? 'status-active' : 'status-inactive'}">
+                                ${hasActiveParty ? `${partyObj.name} (${partyObj.aliveMembers.length}/${partyObj.size} Active)` : 'No Active Party'}
+                            </span>
+                        </div>
+                        <div class="status-right">
+                            <span class="status-label">Last Save:</span>
+                            <span class="status-value">${lastSaveText}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -666,7 +595,6 @@ export class UI {
   setupTownCenterEventListeners(viewport: HTMLElement) {
     const trainingBtn = viewport.querySelector('#training-grounds-btn');
     const dungeonBtn = viewport.querySelector('#dungeon-entrance-btn');
-    const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
     const modeToggleBtn = viewport.querySelector('#terminology-mode-toggle');
     const exitBtn = viewport.querySelector('#dashboard-exit-btn');
 
@@ -686,7 +614,7 @@ export class UI {
       });
     }
 
-    if (dungeonBtn && !(dungeonBtn as HTMLButtonElement).disabled) {
+    if (dungeonBtn && !dungeonBtn.classList.contains('disabled')) {
       dungeonBtn.addEventListener('click', () => {
         if (this.engine?.audioManager) {
           this.engine.audioManager.playSoundEffect('dungeonClick');
@@ -695,7 +623,8 @@ export class UI {
       });
     }
 
-    if (strikeTeamBtn && !(strikeTeamBtn as HTMLButtonElement).disabled) {
+    const strikeTeamBtn = viewport.querySelector('#strike-team-management-btn');
+    if (strikeTeamBtn && !strikeTeamBtn.classList.contains('disabled')) {
       strikeTeamBtn.addEventListener('click', () => {
         if (this.engine?.audioManager) {
           this.engine.audioManager.playSoundEffect('strikeTeamClick');
@@ -3125,9 +3054,6 @@ export class UI {
                 </div>
                 
                 <div class="combat-body">
-                    <div class="combat-side-panel">
-                        <div id="party-combat-status" class="party-combat-status"></div>
-                    </div>
                     <div class="combat-main-area">
                         <!-- Monster Visual Panel -->
                         <div class="combat-monster-visual" id="combat-monster-visual">
@@ -3293,9 +3219,6 @@ export class UI {
   updateCombatStatus() {
     console.log('Updating combat status...');
 
-    // Update party status
-    this.updatePartyStatus();
-
     // Update wave indicator and monster visual
     this.updateWaveIndicator();
     this.updateMonsterVisual();
@@ -3305,32 +3228,10 @@ export class UI {
   }
 
   /**
-   * Update party status in new layout
+   * Update party status is now handled in the left rail only
    */
   updatePartyStatus() {
-    const partyStatusDiv = document.getElementById('party-combat-status');
-
-    if (partyStatusDiv && this.engine?.party) {
-      const party = this.engine.party;
-      console.log('Party data:', party, 'Alive members:', party.aliveMembers);
-      partyStatusDiv.innerHTML = party.aliveMembers
-        .map(
-          (member: any) => `
-                <div class="combatant-status">
-                    <div class="combatant-name">${member.name} (${member.class})</div>
-                    <div class="combatant-hp">HP: ${member.currentHP}/${member.maxHP}</div>
-                    <div class="combatant-weapon">${member.getCurrentWeapon().name}</div>
-                </div>
-            `
-        )
-        .join('');
-    } else {
-      console.log('Party status div or party not found:', {
-        partyStatusDiv: !!partyStatusDiv,
-        engine: !!this.engine,
-        party: !!this.engine?.party,
-      });
-    }
+    // Deprecated: No longer rendering party status in the central combat UI
   }
 
   /**
@@ -4212,10 +4113,13 @@ export class UI {
 
     // Add loot to party inventory (if inventory system exists)
     if (rewards.loot && rewards.loot.length > 0) {
+      if (!party.inventory) party.inventory = [];
       rewards.loot.forEach((item: any) => {
         this.addMessage(`Found: ${item.name}`, 'loot');
-        // TODO: Add to party inventory when inventory system is implemented
+        party.inventory.push(item);
       });
+      // Save the party to persist the new inventory items
+      await Storage.saveParty(party);
     }
   }
 

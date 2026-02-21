@@ -27,6 +27,7 @@ export class Character {
   memorizedSpells: Record<string, any>;
   equipment: Record<string, any>;
   temporaryEffects: any[];
+  inventory: any[];
   availability: string;
   partyId: any;
   isPhasedOut: boolean;
@@ -86,6 +87,9 @@ export class Character {
 
     // Temporary effects (curses, buffs, etc.)
     this.temporaryEffects = [];
+
+    // Personal inventory (fallback to party inventory)
+    this.inventory = [];
 
     // Availability status for multi-party system
     this.availability = 'available'; // available, in_party, dead, missing
@@ -352,6 +356,7 @@ export class Character {
       memorizedSpells: { ...this.memorizedSpells },
       equipment: { ...this.equipment },
       temporaryEffects: [...this.temporaryEffects],
+      inventory: [...this.inventory],
       availability: this.availability,
       partyId: this.partyId,
 
@@ -395,6 +400,7 @@ export class Character {
     this.memorizedSpells = saveData.memorizedSpells || { arcane: [], divine: [] };
     this.equipment = { ...this.equipment, ...saveData.equipment };
     this.temporaryEffects = saveData.temporaryEffects || [];
+    this.inventory = saveData.inventory || [];
     this.availability = saveData.availability || 'available';
     this.partyId = saveData.partyId || null;
 

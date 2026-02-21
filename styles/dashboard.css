@@ -98,48 +98,244 @@
 
 
 /* ========================================= */
-/* Main Dashboard Body — 3-column grid       */
-/* Left panels | Center (empty) | Right      */
+/* Main Dashboard Body — 5-Card Grid         */
 /* ========================================= */
-.dashboard-body {
+.town-container-wrapper {
     position: relative;
     z-index: 2;
     flex: 1;
-    display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    gap: var(--space-4);
-    /* 220px top padding provides space for the logo */
-    /* 300px top padding provides space for the larger logo */
-    padding: 300px var(--space-4) var(--space-4);
-
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     /* Strict constraint to match 1024x1024 background art */
     max-width: 1024px;
     height: 1024px;
-
     margin: 0 auto;
     width: 100%;
+    padding: 240px var(--space-4) var(--space-4);
 }
 
+.town-title {
+    text-align: center;
+    margin-bottom: var(--space-6);
+}
 
-/* ========================================= */
-/* Dashboard Columns (Left / Right)          */
-/* ========================================= */
-.dashboard-column {
+.town-title h2 {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #00f2ff;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
+    margin-bottom: var(--space-2);
+}
+
+.town-title p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    max-width: 500px;
+}
+
+.town-grid-container {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    min-height: 0;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: var(--space-6);
 }
 
+.town-grid-row {
+    display: flex;
+    gap: var(--space-4);
+    width: 100%;
+}
+
+.town-grid-row.dual-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.town-card-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    flex: 1;
+}
 
 /* ========================================= */
-/* Center Pane (Reserved for future content) */
+/* Dashboard Card Base Style                 */
+/* Cyber panels with neon glow borders       */
 /* ========================================= */
-.dashboard-center {
+.town-card {
+    background: rgba(0, 20, 25, 0.75);
+    border: 1px solid rgba(0, 242, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 242, 255, 0.08), inset 0 0 4px rgba(0, 242, 255, 0.04);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: stretch;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.town-card.primary-action {
+    flex: 1.5;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-6);
+}
+
+.town-card.primary-action .card-icon {
+    font-size: 3rem;
+    margin-right: 0;
+    margin-bottom: var(--space-4);
+}
+
+.town-card:not(.primary-action) {
+    padding: var(--space-4);
+    flex: 1;
+}
+
+.town-card:hover:not(.disabled) {
+    border-color: rgba(0, 242, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3), inset 0 0 8px rgba(0, 242, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.town-card.primary-action:hover:not(.disabled) {
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.4), inset 0 0 12px rgba(0, 242, 255, 0.2);
+}
+
+.town-card.disabled {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(10, 10, 10, 0.6);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-right: var(--space-4);
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 0;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15));
+}
+
+.town-card.disabled .card-icon {
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.card-content h3 {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00f2ff;
+    text-shadow: 0 0 5px rgba(0, 242, 255, 0.3);
+    margin: 0 0 var(--space-1) 0;
+    padding: 0;
+    border: none;
+    text-align: left;
+}
+
+.town-card.primary-action .card-content h3 {
+    text-align: center;
+    font-size: var(--font-size-xl);
+}
+
+.town-card.disabled .card-content h3 {
+    color: var(--text-muted);
+    text-shadow: none;
+}
+
+.card-content p {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-3);
+    line-height: 1.4;
+}
+
+.card-action-text {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-success);
+    margin-top: auto;
+}
+
+.card-action-text.active-text {
+    color: var(--accent-primary);
+}
+
+.card-action-text.disabled-text {
+    color: var(--accent-alert);
+}
+
+.town-card.disabled .card-action-text {
+    color: var(--text-muted);
+}
+
+/* ========================================= */
+/* Status Footer                             */
+/* ========================================= */
+.party-status-footer {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    margin-top: auto;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-left, .status-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.status-label {
+    color: var(--text-muted);
+}
+
+.status-value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.status-value.status-active {
+    color: var(--accent-success);
+    text-shadow: 0 0 5px rgba(16, 185, 129, 0.4);
+}
+
+.status-value.status-inactive {
+    color: var(--accent-alert);
 }
 
 
